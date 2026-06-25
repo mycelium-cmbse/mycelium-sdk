@@ -4,7 +4,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <LangVersion>14.0</LangVersion>
         <Company>Starion Group S.A.</Company>
-        <Authors>Sam Gerene</Authors>
+        <Authors>Sam Gerene, Antoine Théate, Régis André, Tanase-Marius Manafu, Omrane Haj Mohamed</Authors>
         <Description>Nunit test suite for the Mycelium.SDK Library</Description>
         <Copyright>Copyright © Starion Group S.A.</Copyright>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
