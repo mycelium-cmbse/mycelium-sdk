@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
-        <LangVersion>12.0</LangVersion>
+        <LangVersion>14.0</LangVersion>
         <Version>0.0.1</Version>
         <Description>The SDK for the Mycelium platform.</Description>
         <PackageId>Mycelium.SDK</PackageId>
