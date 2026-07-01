@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<xmi:XMI xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmlns:uml="http://www.omg.org/spec/UML/20161101">
+  <uml:Package xmi:type="uml:Package" xmi:id="EAPK_C3B24B01_31B1_4566_A2CE_96896E7A14C2" name="Primitives">
+    <packagedElement xmi:type="uml:PrimitiveType" xmi:id="EAID_5A174943_DF4B_4223_AB56_590429667355" name="DateTime" />
+    <packagedElement xmi:type="uml:PrimitiveType" xmi:id="EAID_8451AA96_A2B7_4914_B931_BF848355CDA2" name="Guid" />
+    <packagedElement xmi:type="uml:PrimitiveType" xmi:id="EAID_22870794_6112_48be_B11D_0E5641FDBFF9" name="Uri" />
+  </uml:Package>
+</xmi:XMI>
