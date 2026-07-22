@@ -189,7 +189,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
         {
             return QueryPackage(result, "FunctionalData");
         }
-
+ 
         private static XmiReaderResult Read(string fileName)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
