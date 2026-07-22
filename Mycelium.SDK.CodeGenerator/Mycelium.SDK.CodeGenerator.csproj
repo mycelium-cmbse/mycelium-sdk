@@ -7,4 +7,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="uml4net.xmi" Version="8.2.1" />
+    </ItemGroup>
+
 </Project>
