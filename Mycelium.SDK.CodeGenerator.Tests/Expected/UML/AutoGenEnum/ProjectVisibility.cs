@@ -15,6 +15,8 @@ namespace Mycelium.SDK
 {
     using System.CodeDom.Compiler;
 
+    using Mycelium.SDK.DTO;
+
     /// <summary>
     /// Controls who can discover and access a <see cref="FunctionalProject" />.
     /// </summary>

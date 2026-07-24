@@ -15,6 +15,8 @@ namespace Mycelium.SDK
 {
     using System.CodeDom.Compiler;
 
+    using Mycelium.SDK.DTO;
+
     /// <summary>
     /// Defines the lifecycle phase of a <see cref="FunctionalProject" />, controlling which roles may perform
     /// editing operations.

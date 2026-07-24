@@ -15,6 +15,8 @@ namespace Mycelium.SDK
 {
     using System.CodeDom.Compiler;
 
+    using Mycelium.SDK.DTO;
+
     /// <summary>
     /// Defines the editing mode of a <see cref="FunctionalProject" />, controlling whether ownership enforcement
     /// is active.

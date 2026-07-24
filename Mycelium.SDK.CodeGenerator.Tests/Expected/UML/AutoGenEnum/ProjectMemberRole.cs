@@ -15,6 +15,8 @@ namespace Mycelium.SDK
 {
     using System.CodeDom.Compiler;
 
+    using Mycelium.SDK.DTO;
+
     /// <summary>
     /// Defines the role a <see cref="User" /> holds within a <see cref="FunctionalProject" />, governing editing
     /// permissions and ownership enforcement.

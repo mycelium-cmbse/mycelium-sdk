@@ -15,6 +15,8 @@ namespace Mycelium.SDK
 {
     using System.CodeDom.Compiler;
 
+    using Mycelium.SDK.DTO;
+
     /// <summary>
     /// Tracks the progression of a <see cref="Review" /> through its lifecycle from creation to closure.
     /// </summary>

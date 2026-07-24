@@ -15,6 +15,8 @@ namespace Mycelium.SDK
 {
     using System.CodeDom.Compiler;
 
+    using Mycelium.SDK.DTO;
+
     /// <summary>
     /// Defines the lifecycle status shared by <see cref="User" /> and <see cref="Organization" /> entities,
     /// controlling platform access and visibility.
