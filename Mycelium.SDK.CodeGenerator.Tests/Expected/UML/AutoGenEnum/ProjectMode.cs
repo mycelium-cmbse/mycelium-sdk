@@ -18,8 +18,8 @@ namespace Mycelium.SDK
     using Mycelium.SDK.DTO;
 
     /// <summary>
-    /// Defines the editing mode of a <see cref="FunctionalProject" />, controlling whether ownership enforcement
-    /// is active.
+    /// Defines the editing mode of a <see cref="FunctionalProject" />, controlling whether ownership
+    /// enforcement is active.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public enum ProjectMode
@@ -30,8 +30,8 @@ namespace Mycelium.SDK
         Regular,
 
         /// <summary>
-        /// Strict ownership enforcement active. Participants can only modify elements annotated with their assigned
-        /// <see cref="Ownership" />.
+        /// Strict ownership enforcement active. Participants can only modify elements annotated with their
+        /// assigned <see cref="Ownership" />.
         /// </summary>
         Concurrent,
     }

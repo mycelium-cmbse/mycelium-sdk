@@ -24,7 +24,8 @@ namespace Mycelium.SDK
     public enum OrganizationMembershipRole
     {
         /// <summary>
-        /// Full administrative control over the organization, its members, projects, and authentication settings.
+        /// Full administrative control over the organization, its members, projects, and authentication
+        /// settings.
         /// </summary>
         Administrator,
 

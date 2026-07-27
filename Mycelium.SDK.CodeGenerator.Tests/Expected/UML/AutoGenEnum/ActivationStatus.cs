@@ -45,7 +45,8 @@ namespace Mycelium.SDK
         Archived,
 
         /// <summary>
-        /// Soft-deleted. Record retained for referential integrity within the data retention window before hard deletion.
+        /// Soft-deleted. Record retained for referential integrity within the data retention window before hard
+        /// deletion.
         /// </summary>
         Deleted,
     }

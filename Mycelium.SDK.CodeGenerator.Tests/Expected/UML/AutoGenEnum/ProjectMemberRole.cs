@@ -18,8 +18,8 @@ namespace Mycelium.SDK
     using Mycelium.SDK.DTO;
 
     /// <summary>
-    /// Defines the role a <see cref="User" /> holds within a <see cref="FunctionalProject" />, governing editing
-    /// permissions and ownership enforcement.
+    /// Defines the role a <see cref="User" /> holds within a <see cref="FunctionalProject" />, governing
+    /// editing permissions and ownership enforcement.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public enum ProjectMemberRole

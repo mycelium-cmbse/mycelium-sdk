@@ -18,19 +18,21 @@ namespace Mycelium.SDK
     using Mycelium.SDK.DTO;
 
     /// <summary>
-    /// Defines the lifecycle phase of a <see cref="FunctionalProject" />, controlling which roles may perform
-    /// editing operations.
+    /// Defines the lifecycle phase of a <see cref="FunctionalProject" />, controlling which roles may
+    /// perform editing operations.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public enum ProjectLifecyleKind
     {
         /// <summary>
-        /// Project is being configured. Only the Project Administrator may edit structure, team, and reference data.
+        /// Project is being configured. Only the Project Administrator may edit structure, team, and reference
+        /// data.
         /// </summary>
         Preparation,
 
         /// <summary>
-        /// Active modeling phase. All Participants may create and modify elements within their assigned Ownership.
+        /// Active modeling phase. All Participants may create and modify elements within their assigned
+        /// Ownership.
         /// </summary>
         Open,
 
