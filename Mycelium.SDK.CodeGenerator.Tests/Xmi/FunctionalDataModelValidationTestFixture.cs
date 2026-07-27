@@ -9,8 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
 {
-    using System.Collections.Generic;
-
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
 
     using uml4net.Classification;
@@ -43,11 +41,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            var result =
-                XmiLoadingTestFixture.ReadFunctionalData();
+            var result = XmiLoadingTestFixture.ReadFunctionalData();
 
-            var functionalData =
-                XmiLoadingTestFixture.QueryFunctionalDataPackage(result);
+            var functionalData = XmiLoadingTestFixture.QueryFunctionalDataPackage(result);
 
             this.classes = functionalData.PackagedElement
                 .OfType<IClass>()
@@ -60,79 +56,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             this.associations = functionalData.PackagedElement
                 .OfType<IAssociation>()
                 .ToArray();
-        }
-
-        [Test]
-        public void Verify_that_model_element_counts_are_exact()
-        {
-            Assert.Multiple(() =>
-            {
-                Assert.That(
-                    this.classes,
-                    Has.Length.EqualTo(ExpectedClassCount));
-
-                Assert.That(
-                    this.enumerations,
-                    Has.Length.EqualTo(ExpectedEnumerationCount));
-
-                Assert.That(
-                    this.associations,
-                    Has.Length.EqualTo(ExpectedAssociationCount));
-            });
-        }
-
-        [Test]
-        public void Verify_that_class_names_are_expected_and_unique()
-        {
-            var actualNames = this.classes
-                .Select(umlClass => umlClass.Name)
-                .ToArray();
-
-            var expectedNames = new ExpectedClasses().ToArray();
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(
-                    actualNames,
-                    Is.Unique,
-                    "UML class names must be unique.");
-
-                Assert.That(
-                    actualNames,
-                    Is.EquivalentTo(expectedNames));
-            });
-        }
-
-        [Test]
-        public void Verify_that_enumeration_names_are_expected_unique_and_exactly_spelled()
-        {
-            var actualNames = this.enumerations
-                .Select(enumeration => enumeration.Name)
-                .ToArray();
-
-            var expectedNames =
-                new ExpectedEnumerations().ToArray();
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(
-                    actualNames,
-                    Is.Unique,
-                    "UML enumeration names must be unique.");
-
-                Assert.That(
-                    actualNames,
-                    Is.EquivalentTo(expectedNames));
-
-                Assert.That(
-                    actualNames,
-                    Does.Contain(LifecycleEnumerationName));
-
-                Assert.That(
-                    actualNames,
-                    Does.Not.Contain("ProjectLifecycleKind"),
-                    $"The exported model intentionally uses '{LifecycleEnumerationName}'.");
-            });
         }
 
         [Test]
@@ -149,9 +72,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                 .ToArray();
 
             var expectedConcreteClassNames = new ExpectedClasses()
-                .Except(
-                    ExpectedAbstractClassNames,
-                    StringComparer.Ordinal)
+                .Except(ExpectedAbstractClassNames, StringComparer.Ordinal)
                 .ToArray();
 
             Assert.Multiple(() =>
@@ -171,49 +92,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                 Assert.That(
                     concreteClassNames,
                     Is.EquivalentTo(expectedConcreteClassNames));
-            });
-        }
-
-        [Test]
-        public void Verify_that_generalizations_and_property_types_are_resolved()
-        {
-            Assert.Multiple(() =>
-            {
-                foreach (var umlClass in this.classes)
-                {
-                    foreach (var generalization in umlClass.Generalization)
-                    {
-                        Assert.That(
-                            generalization.General,
-                            Is.Not.Null,
-                            $"Class '{umlClass.Name}' has an unresolved generalization.");
-                    }
-
-                    foreach (var property in umlClass.OwnedAttribute)
-                    {
-                        Assert.That(
-                            property.Type,
-                            Is.Not.Null,
-                            $"Property '{umlClass.Name}.{property.Name}' has no resolved type.");
-                    }
-                }
-            });
-        }
-
-        [Test]
-        public void Verify_that_property_multiplicities_are_valid()
-        {
-            Assert.Multiple(() =>
-            {
-                foreach (var umlClass in this.classes)
-                {
-                    foreach (var property in umlClass.OwnedAttribute)
-                    {
-                        AssertValidMultiplicity(
-                            property,
-                            $"Property '{umlClass.Name}.{property.Name}'");
-                    }
-                }
             });
         }
 
@@ -285,9 +163,103 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             });
         }
 
-        private static void AssertValidMultiplicity(
-            IMultiplicityElement multiplicity,
-            string description)
+        [Test]
+        public void Verify_that_class_names_are_expected_and_unique()
+        {
+            var actualNames = this.classes
+                .Select(umlClass => umlClass.Name)
+                .ToArray();
+
+            var expectedNames = new ExpectedClasses().ToArray();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(actualNames, Is.Unique, "UML class names must be unique.");
+
+                Assert.That(actualNames, Is.EquivalentTo(expectedNames));
+            });
+        }
+
+        [Test]
+        public void Verify_that_enumeration_names_are_expected_unique_and_exactly_spelled()
+        {
+            var actualNames = this.enumerations
+                .Select(enumeration => enumeration.Name)
+                .ToArray();
+
+            var expectedNames = new ExpectedEnumerations().ToArray();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(actualNames, Is.Unique, "UML enumeration names must be unique.");
+
+                Assert.That(actualNames, Is.EquivalentTo(expectedNames));
+
+                Assert.That(actualNames, Does.Contain(LifecycleEnumerationName));
+
+                Assert.That(actualNames,
+                    Does.Not.Contain("ProjectLifecycleKind"),
+                    $"The exported model intentionally uses '{LifecycleEnumerationName}'.");
+            });
+        }
+
+        [Test]
+        public void Verify_that_generalizations_and_property_types_are_resolved()
+        {
+            Assert.Multiple(() =>
+            {
+                foreach (var umlClass in this.classes)
+                {
+                    foreach (var generalization in umlClass.Generalization)
+                    {
+                        Assert.That(
+                            generalization.General,
+                            Is.Not.Null,
+                            $"Class '{umlClass.Name}' has an unresolved generalization.");
+                    }
+
+                    foreach (var property in umlClass.OwnedAttribute)
+                    {
+                        Assert.That(
+                            property.Type,
+                            Is.Not.Null,
+                            $"Property '{umlClass.Name}.{property.Name}' has no resolved type.");
+                    }
+                }
+            });
+        }
+
+        [Test]
+        public void Verify_that_model_element_counts_are_exact()
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(this.classes, Has.Length.EqualTo(ExpectedClassCount));
+
+                Assert.That(this.enumerations, Has.Length.EqualTo(ExpectedEnumerationCount));
+
+                Assert.That(this.associations, Has.Length.EqualTo(ExpectedAssociationCount));
+            });
+        }
+
+        [Test]
+        public void Verify_that_property_multiplicities_are_valid()
+        {
+            Assert.Multiple(() =>
+            {
+                foreach (var umlClass in this.classes)
+                {
+                    foreach (var property in umlClass.OwnedAttribute)
+                    {
+                        AssertValidMultiplicity(
+                            property,
+                            $"Property '{umlClass.Name}.{property.Name}'");
+                    }
+                }
+            });
+        }
+
+        private static void AssertValidMultiplicity(IMultiplicityElement multiplicity, string description)
         {
             Assert.That(
                 multiplicity.Lower,
@@ -299,9 +271,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                 return;
             }
 
-            var hasNumericUpperBound = int.TryParse(
-                multiplicity.Upper,
-                out var upper);
+            var hasNumericUpperBound = int.TryParse(multiplicity.Upper, out var upper);
 
             Assert.That(
                 hasNumericUpperBound,
@@ -319,26 +289,20 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                 $"{description} has upper multiplicity '{upper}' below lower multiplicity '{multiplicity.Lower}'.");
         }
 
-        private static string DescribeAssociation(
-            IAssociation association)
+        private static string DescribeAssociation(IAssociation association)
         {
-            var description = string.Join(
-                " <-> ",
-                association.MemberEnd.Select(DescribeAssociationEnd));
+            var description = string.Join(" <-> ", association.MemberEnd.Select(DescribeAssociationEnd));
 
             return string.IsNullOrEmpty(description)
                 ? "<unnamed association>"
                 : description;
         }
 
-        private static string DescribeAssociationEnd(
-            IProperty associationEnd)
+        private static string DescribeAssociationEnd(IProperty associationEnd)
         {
-            var typeName =
-                associationEnd.Type?.Name ?? "<unresolved>";
+            var typeName = associationEnd.Type?.Name ?? "<unresolved>";
 
-            var roleName =
-                associationEnd.Name ?? "<unnamed>";
+            var roleName = associationEnd.Name ?? "<unnamed>";
 
             return $"{typeName}:{roleName}";
         }

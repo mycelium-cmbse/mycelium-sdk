@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="ReviewStatus.cs" company="Starion Group S.A.">
+//  <copyright file="OrganizationMembershipRole.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -18,36 +18,26 @@ namespace Mycelium.SDK
     using Mycelium.SDK.DTO;
 
     /// <summary>
-    /// Tracks the progression of a <see cref="Review" /> through its lifecycle from creation to closure.
+    /// Defines the role a <see cref="User" /> holds within an <see cref="Organization" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public enum ReviewStatus
+    public enum OrganizationMembershipRole
     {
         /// <summary>
-        /// Review is being prepared by the author and has not yet been submitted to reviewers.
+        /// Full administrative control over the organization, its members, projects, and authentication
+        /// settings.
         /// </summary>
-        Draft,
+        Administrator,
 
         /// <summary>
-        /// Submitted to designated reviewers and awaiting verdicts.
+        /// Regular organization member. Can create projects if permitted by the organization policy.
         /// </summary>
-        Ready,
+        Member,
 
         /// <summary>
-        /// All required reviewers have approved. The merge is permitted subject to branch protection rules.
+        /// Defines the owner of an Organization.
         /// </summary>
-        Approved,
-
-        /// <summary>
-        /// At least one reviewer has requested changes. The merge is blocked until the author addresses the
-        /// feedback.
-        /// </summary>
-        RequestedChanged,
-
-        /// <summary>
-        /// Review has been closed, either by a completed merge or by dismissal without merging.
-        /// </summary>
-        Closed,
+        Owner,
     }
 }
 

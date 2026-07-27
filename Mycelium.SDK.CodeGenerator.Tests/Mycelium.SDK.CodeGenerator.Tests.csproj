@@ -21,6 +21,7 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="uml4net.xmi.Extensions.EnterpriseArchitect" Version="8.2.1" />
     </ItemGroup>
 
     <ItemGroup>

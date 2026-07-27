@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="ReviewStatus.cs" company="Starion Group S.A.">
+//  <copyright file="ProjectMemberRole.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -18,36 +18,27 @@ namespace Mycelium.SDK
     using Mycelium.SDK.DTO;
 
     /// <summary>
-    /// Tracks the progression of a <see cref="Review" /> through its lifecycle from creation to closure.
+    /// Defines the role a <see cref="User" /> holds within a <see cref="FunctionalProject" />, governing
+    /// editing permissions and ownership enforcement.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public enum ReviewStatus
+    public enum ProjectMemberRole
     {
         /// <summary>
-        /// Review is being prepared by the author and has not yet been submitted to reviewers.
+        /// Full control over the project: team, branches, lifecycle state, ownership assignments, and merges.
         /// </summary>
-        Draft,
+        Administrator,
 
         /// <summary>
-        /// Submitted to designated reviewers and awaiting verdicts.
+        /// Subject matter specialist who creates and modifies model elements within their assigned
+        /// <see cref="Ownership" />.
         /// </summary>
-        Ready,
+        Participant,
 
         /// <summary>
-        /// All required reviewers have approved. The merge is permitted subject to branch protection rules.
+        /// Read-only observer. Cannot create, modify, or delete any model element.
         /// </summary>
-        Approved,
-
-        /// <summary>
-        /// At least one reviewer has requested changes. The merge is blocked until the author addresses the
-        /// feedback.
-        /// </summary>
-        RequestedChanged,
-
-        /// <summary>
-        /// Review has been closed, either by a completed merge or by dismissal without merging.
-        /// </summary>
-        Closed,
+        Viewer,
     }
 }
 

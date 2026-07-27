@@ -8,7 +8,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="uml4net.xmi" Version="8.2.1" />
+        <PackageReference Include="Microsoft.CodeAnalysis" Version="5.3.0"/>
+        <PackageReference Include="uml4net.HandleBars" Version="8.2.1"/>
+        <PackageReference Include="uml4net.xmi" Version="8.2.1"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <None Update="Templates\Uml\enumeration-uml-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+    
 </Project>

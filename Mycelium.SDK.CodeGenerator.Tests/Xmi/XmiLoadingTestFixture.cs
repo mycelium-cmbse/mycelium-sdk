@@ -18,13 +18,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
     using uml4net.xmi;
     using uml4net.xmi.Readers;
     using uml4net.xmi.Settings;
+    using uml4net.xmi.Extensions.EnterpriseArchitect.Extender;
+    using uml4net.xmi.Extensions.EnterpriseArchitect.Structure.Readers;
     using Microsoft.Extensions.Logging.Abstractions;
 
     [TestFixture]
     public class XmiLoadingTestFixture
     {
-        private const string PrimitiveTypesUri =
-            "http://www.omg.org/spec/UML/20161101/PrimitiveTypes.xmi";
+        private const string PrimitiveTypesUri = "http://www.omg.org/spec/UML/20161101/PrimitiveTypes.xmi";
 
         private static readonly string[] StandardPrimitiveNames =
         [
@@ -42,15 +43,12 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             "Uri"
         ];
 
-        private static string ResourcesDirectory =>
-            Path.Combine(AppContext.BaseDirectory, "Resources");
+        private static string ResourcesDirectory => Path.Combine(AppContext.BaseDirectory, "Resources");
 
         [TestCase("FunctionalData.xmi", "FunctionalData")]
         [TestCase("CSharp_Primitives.xmi", "Primitives")]
         [TestCase("PrimitiveTypes.xmi", "PrimitiveTypes")]
-        public void Verify_that_Xmi_resources_can_be_read(
-            string fileName,
-            string expectedPackageName)
+        public void Verify_that_Xmi_resources_can_be_read(string fileName, string expectedPackageName)
         {
             var result = Read(fileName);
             var package = QueryPackage(result, expectedPackageName);
@@ -77,17 +75,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                     settings.LocalReferenceBasePath,
                     Is.EqualTo(ResourcesDirectory));
 
-                Assert.That(
-                    settings.PathMaps.TryGetValue(
-                        PrimitiveTypesUri,
-                        out var primitiveTypesPath),
-                    Is.True);
+                Assert.That(settings.PathMaps.TryGetValue(PrimitiveTypesUri, out var primitiveTypesPath), Is.True);
 
-                Assert.That(
-                    primitiveTypesPath,
-                    Is.EqualTo(Path.Combine(
-                        ResourcesDirectory,
-                        "PrimitiveTypes.xmi")));
+                Assert.That(primitiveTypesPath, Is.EqualTo(Path.Combine(ResourcesDirectory, "PrimitiveTypes.xmi")));
             });
         }
 
@@ -119,13 +109,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
 
             Assert.Multiple(() =>
             {
-                Assert.That(
-                    standardPrimitives,
-                    Is.EquivalentTo(StandardPrimitiveNames));
+                Assert.That(standardPrimitives, Is.EquivalentTo(StandardPrimitiveNames));
 
-                Assert.That(
-                    customPrimitives,
-                    Is.EquivalentTo(CustomPrimitiveNames));
+                Assert.That(customPrimitives, Is.EquivalentTo(CustomPrimitiveNames));
             });
         }
 
@@ -170,10 +156,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
 
                     foreach (var memberEnd in association.MemberEnd)
                     {
-                        Assert.That(
-                            memberEnd.Type,
-                            Is.Not.Null,
-                            "An association end has no resolved type.");
+                        Assert.That(memberEnd.Type, Is.Not.Null, "An association end has no resolved type.");
                     }
                 }
             });
@@ -197,10 +180,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
 
             var settings = CreateReaderSettings();
 
-            using var reader = XmiReaderBuilder.Create()
+            var readerBuilder = XmiReaderBuilder.Create()
                 .UsingSettings(settings)
-                .WithLogger(NullLoggerFactory.Instance)
-                .Build();
+                .WithLogger(NullLoggerFactory.Instance);
+
+            readerBuilder.WithExtender<EnterpriseArchitectExtenderReader>();
+            readerBuilder.WithExtensionContentReaderFacade<ExtensionContentReaderFacade>();
+
+            using var reader = readerBuilder.Build();
 
             return reader.Read(Path.Combine(ResourcesDirectory, fileName));
         }
@@ -212,17 +199,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                 LocalReferenceBasePath = ResourcesDirectory,
                 PathMaps =
                 {
-                    [PrimitiveTypesUri] = Path.Combine(
-                        ResourcesDirectory,
-                        "PrimitiveTypes.xmi")
+                    [PrimitiveTypesUri] = Path.Combine(ResourcesDirectory, "PrimitiveTypes.xmi")
                 },
                 UseStrictReading = false
             };
         }
 
-        private static IPackage QueryPackage(
-            XmiReaderResult result,
-            string packageName)
+        private static IPackage QueryPackage(XmiReaderResult result, string packageName)
         {
             return result.Packages
                 .SelectMany(package => package.QueryPackages())
