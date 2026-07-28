@@ -23,8 +23,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
     /// </summary>
     public abstract class Generator
     {
-        private static readonly Encoding Utf8WithoutBom =
-            new UTF8Encoding(false);
+        private static readonly Encoding Utf8WithoutBom = new UTF8Encoding(false);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Generator"/> class.
@@ -33,20 +32,14 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         {
             var assemblyDirectory =
                 Path.GetDirectoryName(typeof(Generator).Assembly.Location)
-                ?? throw new InvalidOperationException(
-                    "The code-generator assembly directory could not be resolved.");
+                ?? throw new InvalidOperationException("The code-generator assembly directory could not be resolved.");
 
-            this.TemplateFolderPath =
-                Path.Combine(assemblyDirectory, "Templates");
-
-            var templateSubfolder =
-                this.GetOptionalSubfolderTemplateLocation();
+            this.TemplateFolderPath = Path.Combine(assemblyDirectory, "Templates");
+            var templateSubfolder = this.GetOptionalSubfolderTemplateLocation();
 
             if (!string.IsNullOrWhiteSpace(templateSubfolder))
             {
-                this.TemplateFolderPath = Path.Combine(
-                    this.TemplateFolderPath,
-                    templateSubfolder);
+                this.TemplateFolderPath = Path.Combine(this.TemplateFolderPath, templateSubfolder);
             }
         }
 

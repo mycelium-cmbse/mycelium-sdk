@@ -22,6 +22,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     public static class DocumentationHelper
     {
         private const int DocumentationLineLength = 100;
+
         private static readonly Regex SeeCrefOpeningTag = new(@"<see\s+cref=""([^""]+)""\s*>", RegexOptions.Compiled | RegexOptions.CultureInvariant);
         private static readonly Regex DocumentationToken = new(@"<see\s+cref=""[^""]+""\s*/>[.,;:!?]?|\S+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
@@ -41,19 +42,22 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                         throw new HandlebarsException("{{Documentation}} requires an IElement context.");
                     }
 
-                    writer.WriteSafeString($"/// <summary>{Environment.NewLine}");
                     var documentation = element.QueryRawDocumentation();
+
+                    if (string.IsNullOrWhiteSpace(documentation))
+                    {
+                        return;
+                    }
 
                     documentation = SeeCrefOpeningTag
                         .Replace(documentation, "<see cref=\"$1\" />")
                         .Replace("</see>", string.Empty, StringComparison.Ordinal);
 
-                    if (!string.IsNullOrEmpty(documentation))
+                    writer.WriteSafeString($"/// <summary>{Environment.NewLine}");
+
+                    foreach (var line in SplitDocumentation(documentation))
                     {
-                        foreach (var line in SplitDocumentation(documentation))
-                        {
-                            writer.WriteSafeString($"/// {line}{Environment.NewLine}");
-                        }
+                        writer.WriteSafeString($"/// {line}{Environment.NewLine}");
                     }
 
                     writer.WriteSafeString($"/// </summary>{Environment.NewLine}");
@@ -67,13 +71,12 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             foreach (Match match in DocumentationToken.Matches(documentation))
             {
                 var token = match.Value;
-                var candidate = string.IsNullOrEmpty(line)
-                    ? token
-                    : $"{line} {token}";
+                var candidate = string.IsNullOrEmpty(line) ? token : $"{line} {token}";
 
                 if (line.Length > 0 && candidate.Length > DocumentationLineLength)
                 {
                     yield return line;
+
                     line = token;
                     continue;
                 }
