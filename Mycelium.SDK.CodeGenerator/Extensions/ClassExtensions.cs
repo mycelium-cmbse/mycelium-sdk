@@ -55,15 +55,12 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         {
             ArgumentNullException.ThrowIfNull(umlClass);
 
-            var generalClasses = new List<IClass>();
-            foreach (var generalization in umlClass.Generalization)
-            {
-                if (generalization.General is not IClass generalClass)
-                {
-                    throw new InvalidOperationException($"Class '{Describe(umlClass)}' has an unresolved or non-class generalization.");
-                }
+            var generalClasses = umlClass.SuperClass;
 
-                generalClasses.Add(generalClass);
+            if (generalClasses.Count != umlClass.Generalization.Count)
+            {
+                throw new InvalidOperationException(
+                    $"Class '{Describe(umlClass)}' has an unresolved or non-class generalization.");
             }
 
             return generalClasses
@@ -97,20 +94,22 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                     throw new InvalidOperationException($"Association '{association.XmiId}' must have exactly two member ends.");
                 }
 
-                var firstEnd = association.MemberEnd[0];
-                var secondEnd = association.MemberEnd[1];
-
-                ValidateAssociationEnd(association, firstEnd);
-                ValidateAssociationEnd(association, secondEnd);
-
-                if (ReferencesClass(secondEnd, umlClass) && !string.IsNullOrWhiteSpace(firstEnd.Name))
+                foreach (var associationEnd in association.MemberEnd)
                 {
-                    yield return firstEnd;
+                    ValidateAssociationEnd(association, associationEnd);
                 }
 
-                if (ReferencesClass(firstEnd, umlClass) && !string.IsNullOrWhiteSpace(secondEnd.Name))
+                foreach (var associationEnd in association.MemberEnd)
                 {
-                    yield return secondEnd;
+                    var oppositeEnd = associationEnd.Opposite
+                                      ?? throw new InvalidOperationException(
+                                          $"Association end '{associationEnd.XmiId}' in association "
+                                          + $"'{association.XmiId}' has no resolved opposite end.");
+
+                    if (ReferencesClass(oppositeEnd, umlClass) && !string.IsNullOrWhiteSpace(associationEnd.Name))
+                    {
+                        yield return associationEnd;
+                    }
                 }
             }
         }

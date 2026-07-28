@@ -14,6 +14,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     using Mycelium.SDK.CodeGenerator.Extensions;
 
     using uml4net.Classification;
+    using uml4net.Extensions;
 
     /// <summary>
     /// Provides Handlebars support for UML properties used to generate DTOs.
@@ -41,7 +42,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 {
                     var property = QueryProperty(arguments, "{{Property.WriteDtoImplementationDeclaration}}");
 
-                    var collectionInitializer = property.QueryIsDtoCollection()
+                    var collectionInitializer = property.QueryIsEnumerable()
                         ? " = [];"
                         : string.Empty;
 

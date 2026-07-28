@@ -10,9 +10,9 @@
 namespace Mycelium.SDK.CodeGenerator.Extensions
 {
     using System;
-    using System.Globalization;
 
     using uml4net.Classification;
+    using uml4net.Extensions;
     using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
 
@@ -46,53 +46,17 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             var elementTypeName = QueryDtoElementTypeName(property);
 
-            if (property.QueryIsDtoCollection())
+            if (property.QueryIsEnumerable())
             {
                 return $"List<{elementTypeName}>";
             }
 
-            if (property.Lower == 0 && !string.Equals(elementTypeName, "string", StringComparison.Ordinal))
+            if (property.QueryIsNullable() && !string.Equals(elementTypeName, "string", StringComparison.Ordinal))
             {
                 return $"{elementTypeName}?";
             }
 
             return elementTypeName;
-        }
-
-        /// <summary>
-        /// Determines whether the property multiplicity requires a collection.
-        /// </summary>
-        public static bool QueryIsDtoCollection(this IProperty property)
-        {
-            ArgumentNullException.ThrowIfNull(property);
-
-            if (property.Lower < 0)
-            {
-                throw new InvalidOperationException(
-                    $"Property '{Describe(property)}' has invalid lower multiplicity " 
-                    + $"'{property.Lower}'.");
-            }
-
-            if (property.Upper == "*")
-            {
-                return true;
-            }
-
-            if (!int.TryParse(property.Upper, NumberStyles.None, CultureInfo.InvariantCulture, out var upper))
-            {
-                throw new InvalidOperationException(
-                    $"Property '{Describe(property)}' has invalid upper multiplicity "
-                    + $"'{property.Upper}'.");
-            }
-
-            if (upper < property.Lower)
-            {
-                throw new InvalidOperationException(
-                    $"Property '{Describe(property)}' has upper multiplicity "
-                    + $"'{upper}' below lower multiplicity '{property.Lower}'.");
-            }
-
-            return upper > 1;
         }
 
         private static string QueryDtoElementTypeName(IProperty property)
@@ -106,30 +70,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             {
                 IClass => "Guid",
                 IEnumeration enumeration => MapNamedType(enumeration.Name, property),
-                IPrimitiveType primitiveType => MapPrimitiveType(primitiveType, property),
-                _ => throw new InvalidOperationException(
-                    $"Property '{Describe(property)}' has unsupported UML type "
-                    + $"'{property.Type.Name}'.")
-            };
-        }
-
-        private static string MapPrimitiveType(
-            IPrimitiveType primitiveType,
-            IProperty property)
-        {
-            return primitiveType.Name switch
-            {
-                "Boolean" => "bool",
-                "DateTime" => "DateTime",
-                "Guid" => "Guid",
-                "Integer" => "int",
-                "Real" => "double",
-                "String" => "string",
-                "UnlimitedNatural" => "string",
-                "Uri" => "Uri",
-                _ => throw new InvalidOperationException(
-                    $"Property '{Describe(property)}' uses unsupported primitive "
-                    + $"'{primitiveType.Name}'.")
+                IPrimitiveType primitiveType => primitiveType.QueryCSharpTypeName(), 
+                _ => throw new InvalidOperationException($"Property '{Describe(property)}' has unsupported UML type "
+                                                         + $"'{property.Type.Name}'.")
             };
         }
 
