@@ -13,6 +13,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     using System.Linq;
 
     using HandlebarsDotNet;
+    using HandlebarsDotNet.Helpers.Utils;
 
     using uml4net.CommonStructure;
     using uml4net.Extensions;
@@ -58,7 +59,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
         private static bool ContainsDocumentationReference(IElement element)
         {
-            return element.QueryRawDocumentation().Contains("<see cref=", StringComparison.Ordinal);
+            var documentation = HtmlUtils.HtmlDecode(element.QueryRawDocumentation());
+
+            return documentation.Contains("<see cref=", StringComparison.Ordinal);
         }
     }
 }

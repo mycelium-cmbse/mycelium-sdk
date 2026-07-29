@@ -9,8 +9,8 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis" Version="5.3.0"/>
-        <PackageReference Include="uml4net.HandleBars" Version="8.2.1"/>
-        <PackageReference Include="uml4net.xmi" Version="8.2.1"/>
+        <PackageReference Include="uml4net.HandleBars" Version="8.3.0" />
+        <PackageReference Include="uml4net.xmi" Version="8.3.0" />
     </ItemGroup>
 
     <ItemGroup>

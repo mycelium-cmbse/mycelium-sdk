@@ -12,6 +12,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     using System.Text.RegularExpressions;
 
     using HandlebarsDotNet;
+    using HandlebarsDotNet.Helpers.Utils;
 
     using uml4net.CommonStructure;
     using uml4net.Extensions;
@@ -42,7 +43,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                         throw new HandlebarsException("{{Documentation}} requires an IElement context.");
                     }
 
-                    var documentation = element.QueryRawDocumentation();
+                    var documentation = HtmlUtils.HtmlDecode(element.QueryRawDocumentation());
 
                     if (string.IsNullOrWhiteSpace(documentation))
                     {
