@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="ProjectLifecyleKind.cs" company="Starion Group S.A.">
+//  <copyright file="ProjectLifecycleKind.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -22,7 +22,7 @@ namespace Mycelium.SDK
     /// perform editing operations.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public enum ProjectLifecyleKind
+    public enum ProjectLifecycleKind
     {
         /// <summary>
         /// Project is being configured. Only the Project Administrator may edit structure, team, and reference

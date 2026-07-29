@@ -23,9 +23,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         public async Task OneTimeSetUp()
         {
             this.expectedDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "Expected", "UML", "AutoGenEnum"));
-            var directoryInfo = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-            var path = Path.Combine("UML", "_Mycelium.SDK.AutoGenEnum");
-            this.stagingDirectory = directoryInfo.CreateSubdirectory(path);
+            var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_Mycelium.SDK.AutoGenEnum");
+            this.stagingDirectory = new DirectoryInfo(path);
+
+            if (this.stagingDirectory.Exists)
+            {
+                this.stagingDirectory.Delete(recursive: true);
+            }
+
+            this.stagingDirectory.Create();
 
             var generator = new UmlEnumGenerator();
             var xmiReaderResult = XmiLoadingTestFixture.ReadFunctionalData();

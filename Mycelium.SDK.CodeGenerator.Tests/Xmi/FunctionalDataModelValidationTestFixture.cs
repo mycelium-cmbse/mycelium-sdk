@@ -21,12 +21,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
     {
         private const int ExpectedClassCount = 13;
         private const int ExpectedEnumerationCount = 8;
-        private const int ExpectedAssociationCount = 20;
+        private const int ExpectedAssociationCount = 21;
         private const int ExpectedAbstractClassCount = 2;
         private const int ExpectedConcreteClassCount = 11;
 
-        private const string LifecycleEnumerationName =
-            "ProjectLifecycleKind";
+        private const string LifecycleEnumerationName = "ProjectLifecycleKind";
 
         private static readonly string[] ExpectedAbstractClassNames =
         [
@@ -77,21 +76,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
 
             Assert.Multiple(() =>
             {
-                Assert.That(
-                    abstractClassNames,
-                    Has.Length.EqualTo(ExpectedAbstractClassCount));
+                Assert.That(abstractClassNames, Has.Length.EqualTo(ExpectedAbstractClassCount));
 
-                Assert.That(
-                    abstractClassNames,
-                    Is.EquivalentTo(ExpectedAbstractClassNames));
+                Assert.That(abstractClassNames, Is.EquivalentTo(ExpectedAbstractClassNames));
 
-                Assert.That(
-                    concreteClassNames,
-                    Has.Length.EqualTo(ExpectedConcreteClassCount));
+                Assert.That(concreteClassNames, Has.Length.EqualTo(ExpectedConcreteClassCount));
 
-                Assert.That(
-                    concreteClassNames,
-                    Is.EquivalentTo(expectedConcreteClassNames));
+                Assert.That(concreteClassNames, Is.EquivalentTo(expectedConcreteClassNames));
             });
         }
 
@@ -247,9 +238,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                 {
                     foreach (var property in umlClass.OwnedAttribute)
                     {
-                        AssertValidMultiplicity(
-                            property,
-                            $"Property '{umlClass.Name}.{property.Name}'");
+                        AssertValidMultiplicity(property, $"Property '{umlClass.Name}.{property.Name}'");
                     }
                 }
             });

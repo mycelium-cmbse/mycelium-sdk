@@ -29,6 +29,9 @@ namespace Mycelium.SDK.DTO
         /// </summary>
         public Guid id { get; set; }
 
+        /// <summary>
+        /// References the <see cref="Organization" /> to which the <see cref="FunctionalProject"/> belongs to.
+        /// </summary>
         public Guid belongsTo { get; set; }
 
         /// <summary>
@@ -73,9 +76,9 @@ namespace Mycelium.SDK.DTO
         public List<Guid> involves { get; set; } = [];
 
         /// <summary>
-        /// The current <see cref="ProjectLifecyleKind" /> controlling editing permissions across the project.
+        /// The current <see cref="ProjectLifecycleKind" /> controlling editing permissions across the project.
         /// </summary>
-        public ProjectLifecyleKind lifeCycle { get; set; }
+        public ProjectLifecycleKind lifecycle { get; set; }
 
         /// <summary>
         /// The display name of the project.

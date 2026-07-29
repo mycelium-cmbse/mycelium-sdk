@@ -24,6 +24,9 @@ namespace Mycelium.SDK.DTO
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial interface IFunctionalProject : IAuditableThing
     {
+        /// <summary>
+        /// References the <see cref="Organization" /> to which the <see cref="FunctionalProject"/> belongs to.
+        /// </summary>
         Guid belongsTo { get; }
 
         /// <summary>
@@ -58,9 +61,9 @@ namespace Mycelium.SDK.DTO
         List<Guid> involves { get; }
 
         /// <summary>
-        /// The current <see cref="ProjectLifecyleKind" /> controlling editing permissions across the project.
+        /// The current <see cref="ProjectLifecycleKind" /> controlling editing permissions across the project.
         /// </summary>
-        ProjectLifecyleKind lifeCycle { get; }
+        ProjectLifecycleKind lifecycle { get; }
 
         /// <summary>
         /// The display name of the project.

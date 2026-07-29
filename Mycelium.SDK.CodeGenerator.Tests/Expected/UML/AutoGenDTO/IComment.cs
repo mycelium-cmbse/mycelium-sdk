@@ -40,6 +40,11 @@ namespace Mycelium.SDK.DTO
         string content { get; }
 
         /// <summary>
+        /// References a quoted <see cref="Comment" />
+        /// </summary>
+        Guid? quotes { get; }
+        
+        /// <summary>
         /// Contains threaded reply <see cref="Comment" /> instances nested under this comment.
         /// </summary>
         List<Guid> replies { get; }

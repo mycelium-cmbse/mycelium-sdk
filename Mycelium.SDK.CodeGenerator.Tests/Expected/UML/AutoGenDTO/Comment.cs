@@ -55,6 +55,11 @@ namespace Mycelium.SDK.DTO
         public DateTime createdOn { get; set; }
 
         /// <summary>
+        /// References a quoted <see cref="Comment" />
+        /// </summary>
+        public Guid? quotes { get; set; }
+        
+        /// <summary>
         /// Contains threaded reply <see cref="Comment" /> instances nested under this comment.
         /// </summary>
         public List<Guid> replies { get; set; } = [];

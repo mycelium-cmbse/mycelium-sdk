@@ -23,8 +23,14 @@ namespace Mycelium.SDK.DTO
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial interface IFunctionalProjectPolicy : IAuditableThing
     {
+        /// <summary>
+        /// Asserts if automatically importing namespace is allowed or not.
+        /// </summary>
         bool allowAutoNamespaceImport { get; }
 
+        /// <summary>
+        /// Asserts if publish mode can be set on this project or not.
+        /// </summary>
         bool allowAutoPublishMode { get; }
     }
 }

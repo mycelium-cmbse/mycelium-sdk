@@ -28,8 +28,14 @@ namespace Mycelium.SDK.DTO
         /// </summary>
         public Guid id { get; set; }
 
+        /// <summary>
+        /// Asserts if automatically importing namespace is allowed or not.
+        /// </summary>
         public bool allowAutoNamespaceImport { get; set; }
 
+        /// <summary>
+        /// Asserts if publish mode can be set on this project or not.
+        /// </summary>
         public bool allowAutoPublishMode { get; set; }
 
         /// <summary>

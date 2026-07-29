@@ -46,6 +46,10 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
 
             yield return CreateSignature(
                 "Comment", null,
+                "Comment", "quotes");
+            
+            yield return CreateSignature(
+                "Comment", null,
                 "Comment", "replies");
 
             yield return CreateSignature(
