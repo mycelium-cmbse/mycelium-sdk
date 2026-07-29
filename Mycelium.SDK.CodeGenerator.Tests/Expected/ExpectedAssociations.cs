@@ -85,7 +85,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
                 "User", "user");
 
             yield return CreateSignature(
-                "Ownership", "ownes",
+                "Ownership", "owns",
                 "ProjectMember", null);
 
             yield return CreateSignature(

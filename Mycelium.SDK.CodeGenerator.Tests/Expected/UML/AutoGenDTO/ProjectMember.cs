@@ -27,7 +27,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
         /// </summary>
-        public Guid Id { get; set; }
+        public Guid id { get; set; }
 
         /// <summary>
         /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when assigned
@@ -43,13 +43,13 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
-        public DateTime CreatedOn { get; set; }
+        public DateTime createdOn { get; set; }
 
         /// <summary>
         /// Asserts that the current <see cref="ProjectMember" /> is part of an external
         /// <see cref="Organization" /> than the related <see cref="FunctionalProject" /> owner.
         /// </summary>
-        public bool IsOutsideCollaborator { get; set; }
+        public bool isOutsideCollaborator { get; set; }
 
         /// <summary>
         /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
@@ -59,13 +59,13 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// References all <see cref="Ownership" /> domains assigned to this <see cref="ProjectMember" />.
         /// </summary>
-        public List<Guid> ownes { get; set; } = [];
+        public List<Guid> owns { get; set; } = [];
 
         /// <summary>
         /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their editing
         /// and access permissions.
         /// </summary>
-        public ProjectMemberRole Role { get; set; }
+        public ProjectMemberRole role { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
@@ -77,7 +77,7 @@ namespace Mycelium.SDK.DTO
         /// Provides the last modification <see cref="DateTime" /> of the current
         /// <see cref="AuditableThing" />
         /// </summary>
-        public DateTime UpdatedOn { get; set; }
+        public DateTime updatedOn { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> record.

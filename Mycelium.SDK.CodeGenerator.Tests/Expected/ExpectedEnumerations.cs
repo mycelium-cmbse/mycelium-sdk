@@ -28,7 +28,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
             yield return "ActivationStatus";
             yield return "CommentStatus";
             yield return "OrganizationMembershipRole";
-            yield return "ProjectLifecyleKind";
+            yield return "ProjectLifecycleKind";
             yield return "ProjectMemberRole";
             yield return "ProjectMode";
             yield return "ProjectVisibility";

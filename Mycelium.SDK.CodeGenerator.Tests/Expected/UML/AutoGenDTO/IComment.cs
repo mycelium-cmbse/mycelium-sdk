@@ -32,7 +32,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Defines the current status of the current Comment.
         /// </summary>
-        CommentStatus CommentStatus { get; }
+        CommentStatus commentStatus { get; }
 
         /// <summary>
         /// The textual content of the comment.

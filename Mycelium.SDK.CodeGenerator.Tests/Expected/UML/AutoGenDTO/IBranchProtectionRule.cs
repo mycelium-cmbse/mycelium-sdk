@@ -32,27 +32,27 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// The <see cref="Guid" /> referencing the protected branch in the Concurrent Server.
         /// </summary>
-        Guid EngineeringBranchId { get; }
+        Guid engineeringBranchId { get; }
 
         /// <summary>
         /// The set of <see cref="ProjectMemberRole" /> values permitted to merge into this protected branch.
         /// </summary>
-        List<ProjectMemberRole> MergeAllowedFor { get; }
+        List<ProjectMemberRole> mergeAllowedFor { get; }
 
         /// <summary>
         /// Gets or sets the number of approval(s) required before being allowed to merge a Branch.
         /// </summary>
-        int MinimumRequiredApproval { get; }
+        int minimumRequiredApproval { get; }
 
         /// <summary>
         /// Gets or sets the name of the current rule.
         /// </summary>
-        string Name { get; }
+        string name { get; }
 
         /// <summary>
         /// Indicates whether at least one approved <see cref="Review" /> is required before a merge can proceed.
         /// </summary>
-        bool ReviewRequired { get; }
+        bool reviewRequired { get; }
     }
 }
 

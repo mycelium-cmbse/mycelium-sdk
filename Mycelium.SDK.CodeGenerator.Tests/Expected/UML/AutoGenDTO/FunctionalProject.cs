@@ -27,7 +27,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
         /// </summary>
-        public Guid Id { get; set; }
+        public Guid id { get; set; }
 
         public Guid belongsTo { get; set; }
 
@@ -45,12 +45,12 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
-        public DateTime CreatedOn { get; set; }
+        public DateTime createdOn { get; set; }
 
         /// <summary>
         /// The current <see cref="ProjectMode" /> (Regular or Concurrent) governing ownership enforcement for this project.
         /// </summary>
-        public ProjectMode CurrentMode { get; set; }
+        public ProjectMode currentMode { get; set; }
 
         /// <summary>
         /// Contains the <see cref="Ownership" /> domains defined within this <see cref="FunctionalProject" />.
@@ -60,28 +60,31 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// A short human-readable description of the project purpose.
         /// </summary>
-        public string Description { get; set; }
+        public string description { get; set; }
 
         /// <summary>
         /// The <see cref="Guid" /> referencing the corresponding OMG Systems Modelling API Project in the Concurrent Server.
         /// </summary>
-        public Guid EngineeringProjectId { get; set; }
+        public Guid engineeringProjectId { get; set; }
 
         /// <summary>
-        /// References the <see cref="ProjectMembert" /> that are part of the  <see cref="FunctionalProject" /> .
+        /// References the <see cref="ProjectMember" /> that are part of the  <see cref="FunctionalProject" /> .
         /// </summary>
         public List<Guid> involves { get; set; } = [];
 
         /// <summary>
         /// The current <see cref="ProjectLifecyleKind" /> controlling editing permissions across the project.
         /// </summary>
-        public ProjectLifecyleKind LifeCycle { get; set; }
+        public ProjectLifecyleKind lifeCycle { get; set; }
 
         /// <summary>
         /// The display name of the project.
         /// </summary>
-        public string Name { get; set; }
+        public string name { get; set; }
 
+        /// <summary>
+        /// The related <see cref="FunctionalProjectPolicy" />
+        /// </summary>
         public Guid policy { get; set; }
 
         /// <summary>
@@ -99,12 +102,12 @@ namespace Mycelium.SDK.DTO
         /// Provides the last modification <see cref="DateTime" /> of the current
         /// <see cref="AuditableThing" />
         /// </summary>
-        public DateTime UpdatedOn { get; set; }
+        public DateTime updatedOn { get; set; }
 
         /// <summary>
         /// The <see cref="ProjectVisibility" /> controlling who can discover and access this project.
         /// </summary>
-        public ProjectVisibility Visibility { get; set; }
+        public ProjectVisibility visibility { get; set; }
     }
 }
 

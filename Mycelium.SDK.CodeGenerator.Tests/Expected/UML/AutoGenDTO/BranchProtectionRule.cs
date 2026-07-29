@@ -26,7 +26,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
         /// </summary>
-        public Guid Id { get; set; }
+        public Guid id { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
@@ -36,7 +36,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
-        public DateTime CreatedOn { get; set; }
+        public DateTime createdOn { get; set; }
 
         /// <summary>
         /// References the default <see cref="ProjectMember" /> reviewers designated for this
@@ -47,27 +47,27 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// The <see cref="Guid" /> referencing the protected branch in the Concurrent Server.
         /// </summary>
-        public Guid EngineeringBranchId { get; set; }
+        public Guid engineeringBranchId { get; set; }
 
         /// <summary>
         /// The set of <see cref="ProjectMemberRole" /> values permitted to merge into this protected branch.
         /// </summary>
-        public List<ProjectMemberRole> MergeAllowedFor { get; set; } = [];
+        public List<ProjectMemberRole> mergeAllowedFor { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the number of approval(s) required before being allowed to merge a Branch.
         /// </summary>
-        public int MinimumRequiredApproval { get; set; }
+        public int minimumRequiredApproval { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the current rule.
         /// </summary>
-        public string Name { get; set; }
+        public string name { get; set; }
 
         /// <summary>
         /// Indicates whether at least one approved <see cref="Review" /> is required before a merge can proceed.
         /// </summary>
-        public bool ReviewRequired { get; set; }
+        public bool reviewRequired { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
@@ -79,7 +79,7 @@ namespace Mycelium.SDK.DTO
         /// Provides the last modification <see cref="DateTime" /> of the current
         /// <see cref="AuditableThing" />
         /// </summary>
-        public DateTime UpdatedOn { get; set; }
+        public DateTime updatedOn { get; set; }
     }
 }
 

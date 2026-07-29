@@ -26,7 +26,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
         private const int ExpectedConcreteClassCount = 11;
 
         private const string LifecycleEnumerationName =
-            "ProjectLifecyleKind";
+            "ProjectLifecycleKind";
 
         private static readonly string[] ExpectedAbstractClassNames =
         [
@@ -196,10 +196,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                 Assert.That(actualNames, Is.EquivalentTo(expectedNames));
 
                 Assert.That(actualNames, Does.Contain(LifecycleEnumerationName));
-
-                Assert.That(actualNames,
-                    Does.Not.Contain("ProjectLifecycleKind"),
-                    $"The exported model intentionally uses '{LifecycleEnumerationName}'.");
             });
         }
 

@@ -17,17 +17,20 @@ namespace Mycelium.SDK.DTO
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
 
+    /// <summary>
+    /// Defines the policy associated with a specific <see cref="FunctionalProject" />.
+    /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial class FunctionalProjectPolicy : IFunctionalProjectPolicy
     {
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
         /// </summary>
-        public Guid Id { get; set; }
+        public Guid id { get; set; }
 
-        public bool AllowAutoNamespaceImport { get; set; }
+        public bool allowAutoNamespaceImport { get; set; }
 
-        public bool AllowAutoPublishMode { get; set; }
+        public bool allowAutoPublishMode { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
@@ -37,7 +40,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
-        public DateTime CreatedOn { get; set; }
+        public DateTime createdOn { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
@@ -49,7 +52,7 @@ namespace Mycelium.SDK.DTO
         /// Provides the last modification <see cref="DateTime" /> of the current
         /// <see cref="AuditableThing" />
         /// </summary>
-        public DateTime UpdatedOn { get; set; }
+        public DateTime updatedOn { get; set; }
     }
 }
 

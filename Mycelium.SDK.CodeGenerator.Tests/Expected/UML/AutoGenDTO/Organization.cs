@@ -27,7 +27,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
         /// </summary>
-        public Guid Id { get; set; }
+        public Guid id { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
@@ -37,25 +37,25 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
-        public DateTime CreatedOn { get; set; }
+        public DateTime createdOn { get; set; }
 
         /// <summary>
         /// A short human-readable description of the organization.
         /// </summary>
-        public string Description { get; set; }
+        public string description { get; set; }
 
         /// <summary>
-        /// References the <see cref="OrganizationMembe" /> record.
+        /// References the <see cref="OrganizationMember" /> record.
         /// </summary>
         public List<Guid> involvedUser { get; set; } = [];
 
         /// <summary>
         /// The display name of the organization.
         /// </summary>
-        public string Name { get; set; }
+        public string name { get; set; }
 
         /// <summary>
-        /// The <see cref="OrgnaizationPolicy" /> instance owned by this <see cref="Organization" />.
+        /// The <see cref="OrganizationPolicy" /> instance owned by this <see cref="Organization" />.
         /// </summary>
         public Guid policy { get; set; }
 
@@ -67,7 +67,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// The current <see cref="ActivationStatus" /> of the organization, controlling platform access for all its members.
         /// </summary>
-        public ActivationStatus Status { get; set; }
+        public activationStatus status { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
@@ -79,7 +79,7 @@ namespace Mycelium.SDK.DTO
         /// Provides the last modification <see cref="DateTime" /> of the current
         /// <see cref="AuditableThing" />
         /// </summary>
-        public DateTime UpdatedOn { get; set; }
+        public DateTime updatedOn { get; set; }
     }
 }
 

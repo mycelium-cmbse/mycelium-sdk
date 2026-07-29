@@ -31,7 +31,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
-        DateTime CreatedOn { get; }
+        DateTime createdOn { get; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
@@ -43,7 +43,7 @@ namespace Mycelium.SDK.DTO
         /// Provides the last modification <see cref="DateTime" /> of the current
         /// <see cref="AuditableThing" />
         /// </summary>
-        DateTime UpdatedOn { get; }
+        DateTime updatedOn { get; }
     }
 }
 

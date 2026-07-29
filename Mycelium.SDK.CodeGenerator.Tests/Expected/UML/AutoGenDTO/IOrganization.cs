@@ -27,20 +27,20 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// A short human-readable description of the organization.
         /// </summary>
-        string Description { get; }
+        string description { get; }
 
         /// <summary>
-        /// References the <see cref="OrganizationMembe" /> record.
+        /// References the <see cref="OrganizationMember" /> record.
         /// </summary>
         List<Guid> involvedUser { get; }
 
         /// <summary>
         /// The display name of the organization.
         /// </summary>
-        string Name { get; }
+        string name { get; }
 
         /// <summary>
-        /// The <see cref="OrgnaizationPolicy" /> instance owned by this <see cref="Organization" />.
+        /// The <see cref="OrganizationPolicy" /> instance owned by this <see cref="Organization" />.
         /// </summary>
         Guid policy { get; }
 
@@ -52,7 +52,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// The current <see cref="ActivationStatus" /> of the organization, controlling platform access for all its members.
         /// </summary>
-        ActivationStatus Status { get; }
+        ActivationStatus status { get; }
     }
 }
 

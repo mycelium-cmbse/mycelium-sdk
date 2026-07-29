@@ -42,7 +42,7 @@ namespace Mycelium.SDK
         /// At least one reviewer has requested changes. The merge is blocked until the author addresses the
         /// feedback.
         /// </summary>
-        RequestedChanged,
+        ChangesRequested,
 
         /// <summary>
         /// Review has been closed, either by a completed merge or by dismissal without merging.

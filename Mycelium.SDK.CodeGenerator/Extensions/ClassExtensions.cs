@@ -138,7 +138,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             return distinctProperties
-                .OrderBy(property => string.Equals(property.Name, "Id", StringComparison.Ordinal) ? 0 : 1)
+                .OrderBy(property => string.Equals(property.Name, "id", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
                 .ThenBy(property => property.Name, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(property => property.Name, StringComparer.Ordinal)
                 .ThenBy(property => property.XmiId, StringComparer.Ordinal);

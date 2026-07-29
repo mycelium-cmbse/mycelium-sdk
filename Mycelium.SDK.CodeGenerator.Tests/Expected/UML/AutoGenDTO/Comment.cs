@@ -27,7 +27,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
         /// </summary>
-        public Guid Id { get; set; }
+        public Guid id { get; set; }
 
         /// <summary>
         /// References the <see cref="ProjectMember" /> who authored this <see cref="Comment" />.
@@ -37,7 +37,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Defines the current status of the current Comment.
         /// </summary>
-        public CommentStatus CommentStatus { get; set; }
+        public CommentStatus commentStatus { get; set; }
 
         /// <summary>
         /// The textual content of the comment.
@@ -52,7 +52,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
-        public DateTime CreatedOn { get; set; }
+        public DateTime createdOn { get; set; }
 
         /// <summary>
         /// Contains threaded reply <see cref="Comment" /> instances nested under this comment.
@@ -74,7 +74,7 @@ namespace Mycelium.SDK.DTO
         /// Provides the last modification <see cref="DateTime" /> of the current
         /// <see cref="AuditableThing" />
         /// </summary>
-        public DateTime UpdatedOn { get; set; }
+        public DateTime updatedOn { get; set; }
     }
 }
 

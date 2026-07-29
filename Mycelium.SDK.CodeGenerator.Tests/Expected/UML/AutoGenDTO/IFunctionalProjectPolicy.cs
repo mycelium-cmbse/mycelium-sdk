@@ -17,12 +17,15 @@ namespace Mycelium.SDK.DTO
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
 
+    /// <summary>
+    /// Defines the policy associated with a specific <see cref="FunctionalProject" />.
+    /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial interface IFunctionalProjectPolicy : IAuditableThing
     {
-        bool AllowAutoNamespaceImport { get; }
+        bool allowAutoNamespaceImport { get; }
 
-        bool AllowAutoPublishMode { get; }
+        bool allowAutoPublishMode { get; }
     }
 }
 

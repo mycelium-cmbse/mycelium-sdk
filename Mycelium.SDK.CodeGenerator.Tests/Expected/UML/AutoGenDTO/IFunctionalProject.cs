@@ -35,7 +35,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// The current <see cref="ProjectMode" /> (Regular or Concurrent) governing ownership enforcement for this project.
         /// </summary>
-        ProjectMode CurrentMode { get; }
+        ProjectMode currentMode { get; }
 
         /// <summary>
         /// Contains the <see cref="Ownership" /> domains defined within this <see cref="FunctionalProject" />.
@@ -45,28 +45,31 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// A short human-readable description of the project purpose.
         /// </summary>
-        string Description { get; }
+        string description { get; }
 
         /// <summary>
         /// The <see cref="Guid" /> referencing the corresponding OMG Systems Modelling API Project in the Concurrent Server.
         /// </summary>
-        Guid EngineeringProjectId { get; }
+        Guid engineeringProjectId { get; }
 
         /// <summary>
-        /// References the <see cref="ProjectMembert" /> that are part of the  <see cref="FunctionalProject" /> .
+        /// References the <see cref="ProjectMember" /> that are part of the  <see cref="FunctionalProject" /> .
         /// </summary>
         List<Guid> involves { get; }
 
         /// <summary>
         /// The current <see cref="ProjectLifecyleKind" /> controlling editing permissions across the project.
         /// </summary>
-        ProjectLifecyleKind LifeCycle { get; }
+        ProjectLifecyleKind lifeCycle { get; }
 
         /// <summary>
         /// The display name of the project.
         /// </summary>
-        string Name { get; }
+        string name { get; }
 
+        /// <summary>
+        /// The related <see cref="FunctionalProjectPolicy" />
+        /// </summary>
         Guid policy { get; }
 
         /// <summary>
@@ -77,7 +80,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// The <see cref="ProjectVisibility" /> controlling who can discover and access this project.
         /// </summary>
-        ProjectVisibility Visibility { get; }
+        ProjectVisibility visibility { get; }
     }
 }
 

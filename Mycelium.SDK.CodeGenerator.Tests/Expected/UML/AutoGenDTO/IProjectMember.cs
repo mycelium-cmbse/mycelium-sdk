@@ -34,7 +34,7 @@ namespace Mycelium.SDK.DTO
         /// Asserts that the current <see cref="ProjectMember" /> is part of an external
         /// <see cref="Organization" /> than the related <see cref="FunctionalProject" /> owner.
         /// </summary>
-        bool IsOutsideCollaborator { get; }
+        bool isOutsideCollaborator { get; }
 
         /// <summary>
         /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
@@ -44,13 +44,13 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// References all <see cref="Ownership" /> domains assigned to this <see cref="ProjectMember" />.
         /// </summary>
-        List<Guid> ownes { get; }
+        List<Guid> owns { get; }
 
         /// <summary>
         /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their editing
         /// and access permissions.
         /// </summary>
-        ProjectMemberRole Role { get; }
+        ProjectMemberRole role { get; }
 
         /// <summary>
         /// References the <see cref="User" /> record.
