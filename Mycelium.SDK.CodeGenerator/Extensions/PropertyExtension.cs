@@ -51,7 +51,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 return $"List<{elementTypeName}>";
             }
 
-            if (property.QueryIsNullable() && !string.Equals(elementTypeName, "string", StringComparison.Ordinal))
+            if (property.QueryIsNullableAndNotString())
             {
                 return $"{elementTypeName}?";
             }
