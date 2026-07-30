@@ -26,24 +26,24 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
         /// </summary>
-        Guid createdBy { get; }
+        Guid CreatedBy { get; set; }
 
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
-        DateTime createdOn { get; }
+        DateTime CreatedOn { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
         /// <see cref="AuditableThing" />.
         /// </summary>
-        Guid updatedBy { get; }
+        Guid UpdatedBy { get; set; }
 
         /// <summary>
         /// Provides the last modification <see cref="DateTime" /> of the current
         /// <see cref="AuditableThing" />
         /// </summary>
-        DateTime updatedOn { get; }
+        DateTime UpdatedOn { get; set; }
     }
 }
 

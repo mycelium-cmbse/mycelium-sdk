@@ -27,32 +27,32 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// References the <see cref="ProjectMember" /> who authored this <see cref="Comment" />.
         /// </summary>
-        Guid author { get; }
+        Guid Author { get; set; }
 
         /// <summary>
         /// Defines the current status of the current Comment.
         /// </summary>
-        CommentStatus commentStatus { get; }
+        CommentStatus CommentStatus { get; set; }
 
         /// <summary>
         /// The textual content of the comment.
         /// </summary>
-        string content { get; }
+        string Content { get; set; }
 
         /// <summary>
         /// References a quoted <see cref="Comment" />
         /// </summary>
-        Guid? quotes { get; }
+        Guid? Quotes { get; set; }
         
         /// <summary>
         /// Contains threaded reply <see cref="Comment" /> instances nested under this comment.
         /// </summary>
-        List<Guid> replies { get; }
+        List<Guid> Replies { get; set; }
 
         /// <summary>
         /// The <see cref="Guid" /> of the SysML v2 model element this comment is attached to in the Concurrent Server.
         /// </summary>
-        Guid targetElementId { get; }
+        Guid TargetElementId { get; set; }
     }
 }
 

@@ -26,7 +26,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
         /// </summary>
-        Guid id { get; }
+        Guid Id { get; set; }
     }
 }
 

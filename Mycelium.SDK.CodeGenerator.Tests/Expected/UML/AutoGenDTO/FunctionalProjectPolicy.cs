@@ -26,39 +26,39 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
         /// </summary>
-        public Guid id { get; set; }
+        public Guid Id { get; set; }
 
         /// <summary>
         /// Asserts if automatically importing namespace is allowed or not.
         /// </summary>
-        public bool allowAutoNamespaceImport { get; set; }
+        public bool AllowAutoNamespaceImport { get; set; }
 
         /// <summary>
         /// Asserts if publish mode can be set on this project or not.
         /// </summary>
-        public bool allowAutoPublishMode { get; set; }
+        public bool AllowAutoPublishMode { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
         /// </summary>
-        public Guid createdBy { get; set; }
+        public Guid CreatedBy { get; set; }
 
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
-        public DateTime createdOn { get; set; }
+        public DateTime CreatedOn { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
         /// <see cref="AuditableThing" />.
         /// </summary>
-        public Guid updatedBy { get; set; }
+        public Guid UpdatedBy { get; set; }
 
         /// <summary>
         /// Provides the last modification <see cref="DateTime" /> of the current
         /// <see cref="AuditableThing" />
         /// </summary>
-        public DateTime updatedOn { get; set; }
+        public DateTime UpdatedOn { get; set; }
     }
 }
 

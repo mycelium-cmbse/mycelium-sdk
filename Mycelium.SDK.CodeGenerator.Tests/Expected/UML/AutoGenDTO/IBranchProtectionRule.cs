@@ -27,32 +27,32 @@ namespace Mycelium.SDK.DTO
         /// References the default <see cref="ProjectMember" /> reviewers designated for this
         /// <see cref="BranchProtectionRule" />.
         /// </summary>
-        List<Guid> defaultReviewers { get; }
+        List<Guid> DefaultReviewers { get; set; }
 
         /// <summary>
         /// The <see cref="Guid" /> referencing the protected branch in the Concurrent Server.
         /// </summary>
-        Guid engineeringBranchId { get; }
+        Guid EngineeringBranchId { get; set; }
 
         /// <summary>
         /// The set of <see cref="ProjectMemberRole" /> values permitted to merge into this protected branch.
         /// </summary>
-        List<ProjectMemberRole> mergeAllowedFor { get; }
+        List<ProjectMemberRole> MergeAllowedFor { get; set; }
 
         /// <summary>
         /// Gets or sets the number of approval(s) required before being allowed to merge a Branch.
         /// </summary>
-        int minimumRequiredApproval { get; }
+        int MinimumRequiredApproval { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the current rule.
         /// </summary>
-        string name { get; }
+        string Name { get; set; }
 
         /// <summary>
         /// Indicates whether at least one approved <see cref="Review" /> is required before a merge can proceed.
         /// </summary>
-        bool reviewRequired { get; }
+        bool ReviewRequired { get; set; }
     }
 }
 

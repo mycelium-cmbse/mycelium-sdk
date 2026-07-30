@@ -28,7 +28,7 @@ namespace Mycelium.SDK.DTO
         /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when assigned
         /// to multiple ownership domains.
         /// </summary>
-        Guid? activeOwnership { get; }
+        Guid? ActiveOwnership { get; set; }
 
         /// <summary>
         /// Asserts that the current <see cref="ProjectMember" /> is part of an external
@@ -39,23 +39,23 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
         /// </summary>
-        Guid isPartOf { get; }
+        Guid IsPartOf { get; set; }
 
         /// <summary>
         /// References all <see cref="Ownership" /> domains assigned to this <see cref="ProjectMember" />.
         /// </summary>
-        List<Guid> owns { get; }
+        List<Guid> Owns { get; set; }
 
         /// <summary>
         /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their editing
         /// and access permissions.
         /// </summary>
-        ProjectMemberRole role { get; }
+        ProjectMemberRole Role { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> record.
         /// </summary>
-        Guid user { get; }
+        Guid User { get; set; }
     }
 }
 

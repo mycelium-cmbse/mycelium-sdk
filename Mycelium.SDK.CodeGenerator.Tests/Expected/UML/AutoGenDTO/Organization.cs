@@ -27,59 +27,59 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
         /// </summary>
-        public Guid id { get; set; }
+        public Guid Id { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
         /// </summary>
-        public Guid createdBy { get; set; }
+        public Guid CreatedBy { get; set; }
 
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
-        public DateTime createdOn { get; set; }
+        public DateTime CreatedOn { get; set; }
 
         /// <summary>
         /// A short human-readable description of the organization.
         /// </summary>
-        public string description { get; set; }
+        public string Description { get; set; }
 
         /// <summary>
         /// References the <see cref="OrganizationMember" /> record.
         /// </summary>
-        public List<Guid> involvedUser { get; set; } = [];
+        public List<Guid> InvolvedUser { get; set; } = [];
 
         /// <summary>
         /// The display name of the organization.
         /// </summary>
-        public string name { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// The <see cref="OrganizationPolicy" /> instance owned by this <see cref="Organization" />.
         /// </summary>
-        public Guid policy { get; set; }
+        public Guid Policy { get; set; }
 
         /// <summary>
         /// Contains the <see cref="FunctionalProject" /> instances belonging to this <see cref="Organization" />.
         /// </summary>
-        public List<Guid> projects { get; set; } = [];
+        public List<Guid> Projects { get; set; } = [];
 
         /// <summary>
         /// The current <see cref="ActivationStatus" /> of the organization, controlling platform access for all its members.
         /// </summary>
-        public activationStatus status { get; set; }
+        public ActivationStatus Status { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
         /// <see cref="AuditableThing" />.
         /// </summary>
-        public Guid updatedBy { get; set; }
+        public Guid UpdatedBy { get; set; }
 
         /// <summary>
         /// Provides the last modification <see cref="DateTime" /> of the current
         /// <see cref="AuditableThing" />
         /// </summary>
-        public DateTime updatedOn { get; set; }
+        public DateTime UpdatedOn { get; set; }
     }
 }
 

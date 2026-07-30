@@ -27,63 +27,63 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// References the <see cref="Organization" /> to which the <see cref="FunctionalProject"/> belongs to.
         /// </summary>
-        Guid belongsTo { get; }
+        Guid BelongsTo { get; set; }
 
         /// <summary>
         /// Contains the <see cref="BranchProtectionRule" /> instances defined for this
         /// <see cref="FunctionalProject" />.
         /// </summary>
-        List<Guid> branchRules { get; }
+        List<Guid> BranchRules { get; set; }
 
         /// <summary>
         /// The current <see cref="ProjectMode" /> (Regular or Concurrent) governing ownership enforcement for this project.
         /// </summary>
-        ProjectMode currentMode { get; }
+        ProjectMode CurrentMode { get; set; }
 
         /// <summary>
         /// Contains the <see cref="Ownership" /> domains defined within this <see cref="FunctionalProject" />.
         /// </summary>
-        List<Guid> defines { get; }
+        List<Guid> Defines { get; set; }
 
         /// <summary>
         /// A short human-readable description of the project purpose.
         /// </summary>
-        string description { get; }
+        string Description { get; set; }
 
         /// <summary>
         /// The <see cref="Guid" /> referencing the corresponding OMG Systems Modelling API Project in the Concurrent Server.
         /// </summary>
-        Guid engineeringProjectId { get; }
+        Guid EngineeringProjectId { get; set; }
 
         /// <summary>
         /// References the <see cref="ProjectMember" /> that are part of the  <see cref="FunctionalProject" /> .
         /// </summary>
-        List<Guid> involves { get; }
+        List<Guid> Involves { get; set; }
 
         /// <summary>
         /// The current <see cref="ProjectLifecycleKind" /> controlling editing permissions across the project.
         /// </summary>
-        ProjectLifecycleKind lifecycle { get; }
+        ProjectLifecycleKind Lifecycle { get; set; }
 
         /// <summary>
         /// The display name of the project.
         /// </summary>
-        string name { get; }
+        string Name { get; set; }
 
         /// <summary>
         /// The related <see cref="FunctionalProjectPolicy" />
         /// </summary>
-        Guid policy { get; }
+        Guid Policy { get; set; }
 
         /// <summary>
         /// Contains the <see cref="Review" /> instances associated with this <see cref="FunctionalProject" />.
         /// </summary>
-        List<Guid> reviews { get; }
+        List<Guid> Reviews { get; set; }
 
         /// <summary>
         /// The <see cref="ProjectVisibility" /> controlling who can discover and access this project.
         /// </summary>
-        ProjectVisibility visibility { get; }
+        ProjectVisibility Visibility { get; set; }
     }
 }
 

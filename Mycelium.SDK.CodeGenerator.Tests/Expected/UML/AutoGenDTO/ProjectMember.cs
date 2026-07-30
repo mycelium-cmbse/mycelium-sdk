@@ -27,62 +27,62 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
         /// </summary>
-        public Guid id { get; set; }
+        public Guid Id { get; set; }
 
         /// <summary>
         /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when assigned
         /// to multiple ownership domains.
         /// </summary>
-        public Guid? activeOwnership { get; set; }
+        public Guid? ActiveOwnership { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
         /// </summary>
-        public Guid createdBy { get; set; }
+        public Guid CreatedBy { get; set; }
 
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
-        public DateTime createdOn { get; set; }
+        public DateTime CreatedOn { get; set; }
 
         /// <summary>
         /// Asserts that the current <see cref="ProjectMember" /> is part of an external
         /// <see cref="Organization" /> than the related <see cref="FunctionalProject" /> owner.
         /// </summary>
-        public bool isOutsideCollaborator { get; set; }
+        public bool isOutsideCollaborator { get; }
 
         /// <summary>
         /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
         /// </summary>
-        public Guid isPartOf { get; set; }
+        public Guid IsPartOf { get; set; }
 
         /// <summary>
         /// References all <see cref="Ownership" /> domains assigned to this <see cref="ProjectMember" />.
         /// </summary>
-        public List<Guid> owns { get; set; } = [];
+        public List<Guid> Owns { get; set; } = [];
 
         /// <summary>
         /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their editing
         /// and access permissions.
         /// </summary>
-        public ProjectMemberRole role { get; set; }
+        public ProjectMemberRole Role { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
         /// <see cref="AuditableThing" />.
         /// </summary>
-        public Guid updatedBy { get; set; }
+        public Guid UpdatedBy { get; set; }
 
         /// <summary>
         /// Provides the last modification <see cref="DateTime" /> of the current
         /// <see cref="AuditableThing" />
         /// </summary>
-        public DateTime updatedOn { get; set; }
+        public DateTime UpdatedOn { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> record.
         /// </summary>
-        public Guid user { get; set; }
+        public Guid User { get; set; }
     }
 }
 

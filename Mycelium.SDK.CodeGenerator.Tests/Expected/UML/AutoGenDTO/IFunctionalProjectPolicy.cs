@@ -26,12 +26,12 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Asserts if automatically importing namespace is allowed or not.
         /// </summary>
-        bool allowAutoNamespaceImport { get; }
+        bool AllowAutoNamespaceImport { get; set; }
 
         /// <summary>
         /// Asserts if publish mode can be set on this project or not.
         /// </summary>
-        bool allowAutoPublishMode { get; }
+        bool AllowAutoPublishMode { get; set; }
     }
 }
 

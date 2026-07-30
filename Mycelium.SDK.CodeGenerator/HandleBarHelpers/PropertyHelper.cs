@@ -33,7 +33,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 (writer, _, arguments) =>
                 {
                     var property = QueryProperty(arguments, "{{Property.WriteDtoInterfaceDeclaration}}");
-                    writer.WriteSafeString($"{property.QueryDtoTypeName()} " + $"{property.QueryDtoPropertyName()} {{ get; }}");
+                    writer.WriteSafeString($"{property.QueryDtoTypeName()} " + $"{property.QueryDtoPropertyName()} {QueryDtoAccessors(property)}");
                 });
 
             handlebars.RegisterHelper(
@@ -48,9 +48,14 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                     writer.WriteSafeString(
                         $"public {property.QueryDtoTypeName()} " +
-                        $"{property.QueryDtoPropertyName()} {{ get; set; }}" +
+                        $"{property.QueryDtoPropertyName()} {QueryDtoAccessors(property)}" +
                         collectionInitializer);
                 });
+        }
+
+        private static string QueryDtoAccessors(IProperty property)
+        {
+            return property.IsDerived ? "{ get; }" : "{ get; set; }";
         }
 
         private static IProperty QueryProperty(Arguments arguments, string helperName)

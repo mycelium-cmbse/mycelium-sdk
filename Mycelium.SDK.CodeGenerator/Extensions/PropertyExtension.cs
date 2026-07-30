@@ -22,7 +22,8 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     public static class PropertyExtension
     {
         /// <summary>
-        /// Queries the exact, legal C# property identifier.
+        /// Queries the legal C# DTO property identifier, applying PascalCase
+        /// to non-derived properties and preserving derived-property spelling.
         /// </summary>
         public static string QueryDtoPropertyName(this IProperty property)
         {
@@ -33,7 +34,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 throw new InvalidOperationException($"Property '{property.XmiId}' has no name.");
             }
 
-            return ReservedCSharpNameMapper.Map(property.Name);
+            var cSharpPropertyName = property.IsDerived ? property.Name : property.Name.CapitalizeFirstLetter();
+
+            return ReservedCSharpNameMapper.Map(cSharpPropertyName);
         }
 
         /// <summary>

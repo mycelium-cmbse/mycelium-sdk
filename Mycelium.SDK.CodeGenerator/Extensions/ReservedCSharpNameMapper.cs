@@ -23,7 +23,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// </summary>
         public static string Map(string input)
         {
-            ArgumentNullException.ThrowIfNullOrEmpty(input);
+            ArgumentException.ThrowIfNullOrEmpty(input);
 
             if (SyntaxFacts.IsValidIdentifier(input))
             {
@@ -45,7 +45,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// </summary>
         public static bool QueryIsReserved(string input)
         {
-            ArgumentNullException.ThrowIfNullOrEmpty(input);
+            ArgumentException.ThrowIfNullOrEmpty(input);
 
             return SyntaxFacts.GetKeywordKind(input) != SyntaxKind.None;
         }

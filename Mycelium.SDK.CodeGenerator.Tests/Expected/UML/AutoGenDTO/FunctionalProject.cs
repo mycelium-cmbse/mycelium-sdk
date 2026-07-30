@@ -27,90 +27,90 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
         /// </summary>
-        public Guid id { get; set; }
+        public Guid Id { get; set; }
 
         /// <summary>
         /// References the <see cref="Organization" /> to which the <see cref="FunctionalProject"/> belongs to.
         /// </summary>
-        public Guid belongsTo { get; set; }
+        public Guid BelongsTo { get; set; }
 
         /// <summary>
         /// Contains the <see cref="BranchProtectionRule" /> instances defined for this
         /// <see cref="FunctionalProject" />.
         /// </summary>
-        public List<Guid> branchRules { get; set; } = [];
+        public List<Guid> BranchRules { get; set; } = [];
 
         /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
         /// </summary>
-        public Guid createdBy { get; set; }
+        public Guid CreatedBy { get; set; }
 
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
-        public DateTime createdOn { get; set; }
+        public DateTime CreatedOn { get; set; }
 
         /// <summary>
         /// The current <see cref="ProjectMode" /> (Regular or Concurrent) governing ownership enforcement for this project.
         /// </summary>
-        public ProjectMode currentMode { get; set; }
+        public ProjectMode CurrentMode { get; set; }
 
         /// <summary>
         /// Contains the <see cref="Ownership" /> domains defined within this <see cref="FunctionalProject" />.
         /// </summary>
-        public List<Guid> defines { get; set; } = [];
+        public List<Guid> Defines { get; set; } = [];
 
         /// <summary>
         /// A short human-readable description of the project purpose.
         /// </summary>
-        public string description { get; set; }
+        public string Description { get; set; }
 
         /// <summary>
         /// The <see cref="Guid" /> referencing the corresponding OMG Systems Modelling API Project in the Concurrent Server.
         /// </summary>
-        public Guid engineeringProjectId { get; set; }
+        public Guid EngineeringProjectId { get; set; }
 
         /// <summary>
         /// References the <see cref="ProjectMember" /> that are part of the  <see cref="FunctionalProject" /> .
         /// </summary>
-        public List<Guid> involves { get; set; } = [];
+        public List<Guid> Involves { get; set; } = [];
 
         /// <summary>
         /// The current <see cref="ProjectLifecycleKind" /> controlling editing permissions across the project.
         /// </summary>
-        public ProjectLifecycleKind lifecycle { get; set; }
+        public ProjectLifecycleKind Lifecycle { get; set; }
 
         /// <summary>
         /// The display name of the project.
         /// </summary>
-        public string name { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// The related <see cref="FunctionalProjectPolicy" />
         /// </summary>
-        public Guid policy { get; set; }
+        public Guid Policy { get; set; }
 
         /// <summary>
         /// Contains the <see cref="Review" /> instances associated with this <see cref="FunctionalProject" />.
         /// </summary>
-        public List<Guid> reviews { get; set; } = [];
+        public List<Guid> Reviews { get; set; } = [];
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
         /// <see cref="AuditableThing" />.
         /// </summary>
-        public Guid updatedBy { get; set; }
+        public Guid UpdatedBy { get; set; }
 
         /// <summary>
         /// Provides the last modification <see cref="DateTime" /> of the current
         /// <see cref="AuditableThing" />
         /// </summary>
-        public DateTime updatedOn { get; set; }
+        public DateTime UpdatedOn { get; set; }
 
         /// <summary>
         /// The <see cref="ProjectVisibility" /> controlling who can discover and access this project.
         /// </summary>
-        public ProjectVisibility visibility { get; set; }
+        public ProjectVisibility Visibility { get; set; }
     }
 }
 
