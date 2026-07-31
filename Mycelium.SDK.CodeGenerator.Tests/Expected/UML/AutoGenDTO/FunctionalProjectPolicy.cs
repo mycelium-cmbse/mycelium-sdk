@@ -18,7 +18,8 @@ namespace Mycelium.SDK.DTO
     using System.Collections.Generic;
 
     /// <summary>
-    /// Defines the policy associated with a specific <see cref="FunctionalProject" />.
+    /// The FunctionalProjectPolicy defines policy that are tied to a specific
+    /// <see cref="FunctionalProject" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial class FunctionalProjectPolicy : IFunctionalProjectPolicy
@@ -55,8 +56,7 @@ namespace Mycelium.SDK.DTO
         public Guid UpdatedBy { get; set; }
 
         /// <summary>
-        /// Provides the last modification <see cref="DateTime" /> of the current
-        /// <see cref="AuditableThing" />
+        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
         public DateTime UpdatedOn { get; set; }
     }

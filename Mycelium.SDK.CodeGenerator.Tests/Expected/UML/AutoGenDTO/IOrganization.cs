@@ -18,8 +18,8 @@ namespace Mycelium.SDK.DTO
     using System.Collections.Generic;
 
     /// <summary>
-    /// Represents a tenant boundary in the Mycelium platform. On SaaS each customer maps to one Organization;
-    /// on-premise deployments may host multiple.
+    /// Represents a tenant boundary in the Mycelium platform. On SaaS each customer maps to one
+    /// Organization; on-premise deployments may host multiple.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial interface IOrganization : IAuditableThing
@@ -45,12 +45,14 @@ namespace Mycelium.SDK.DTO
         Guid Policy { get; set; }
 
         /// <summary>
-        /// Contains the <see cref="FunctionalProject" /> instances belonging to this <see cref="Organization" />.
+        /// Contains the <see cref="FunctionalProject" /> instances belonging to this
+        /// <see cref="Organization" />.
         /// </summary>
         List<Guid> Projects { get; set; }
 
         /// <summary>
-        /// The current <see cref="ActivationStatus" /> of the organization, controlling platform access for all its members.
+        /// The current <see cref="ActivationStatus" /> of the organization, controlling platform access for all
+        /// its members.
         /// </summary>
         ActivationStatus Status { get; set; }
     }

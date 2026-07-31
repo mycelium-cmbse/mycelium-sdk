@@ -18,7 +18,8 @@ namespace Mycelium.SDK.DTO
     using System.Collections.Generic;
 
     /// <summary>
-    /// Defines protection rules for a specific engineering branch, controlling merge permissions and review requirements.
+    /// Defines protection rules for a specific engineering branch, controlling merge permissions and review
+    /// requirements.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial class BranchProtectionRule : IBranchProtectionRule
@@ -65,7 +66,8 @@ namespace Mycelium.SDK.DTO
         public string Name { get; set; }
 
         /// <summary>
-        /// Indicates whether at least one approved <see cref="Review" /> is required before a merge can proceed.
+        /// Indicates whether at least one approved <see cref="Review" /> is required before a merge can
+        /// proceed.
         /// </summary>
         public bool ReviewRequired { get; set; }
 
@@ -76,8 +78,7 @@ namespace Mycelium.SDK.DTO
         public Guid UpdatedBy { get; set; }
 
         /// <summary>
-        /// Provides the last modification <see cref="DateTime" /> of the current
-        /// <see cref="AuditableThing" />
+        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
         public DateTime UpdatedOn { get; set; }
     }

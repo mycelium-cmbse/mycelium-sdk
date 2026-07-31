@@ -18,8 +18,8 @@ namespace Mycelium.SDK.DTO
     using System.Collections.Generic;
 
     /// <summary>
-    /// Represents the Functional Data Server projection of an engineering project, linking platform metadata to the
-    /// corresponding SysML v2 model in the Concurrent Server.
+    /// Represents the Functional Data Server projection of an engineering project, linking platform
+    /// metadata to the corresponding SysML v2 model in the Concurrent Server.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial class FunctionalProject : IFunctionalProject
@@ -30,7 +30,7 @@ namespace Mycelium.SDK.DTO
         public Guid Id { get; set; }
 
         /// <summary>
-        /// References the <see cref="Organization" /> to which the <see cref="FunctionalProject"/> belongs to.
+        /// References the <see cref="Organization" /> to which the <see cref="FunctionalProject" /> belongs to.
         /// </summary>
         public Guid BelongsTo { get; set; }
 
@@ -51,7 +51,8 @@ namespace Mycelium.SDK.DTO
         public DateTime CreatedOn { get; set; }
 
         /// <summary>
-        /// The current <see cref="ProjectMode" /> (Regular or Concurrent) governing ownership enforcement for this project.
+        /// The current <see cref="ProjectMode" /> (Regular or Concurrent) governing ownership enforcement for
+        /// this project.
         /// </summary>
         public ProjectMode CurrentMode { get; set; }
 
@@ -66,12 +67,13 @@ namespace Mycelium.SDK.DTO
         public string Description { get; set; }
 
         /// <summary>
-        /// The <see cref="Guid" /> referencing the corresponding OMG Systems Modelling API Project in the Concurrent Server.
+        /// The <see cref="Guid" /> referencing the corresponding OMG Systems Modelling API Project in the
+        /// Concurrent Server.
         /// </summary>
         public Guid EngineeringProjectId { get; set; }
 
         /// <summary>
-        /// References the <see cref="ProjectMember" /> that are part of the  <see cref="FunctionalProject" /> .
+        /// References the <see cref="ProjectMember" /> that are part of the <see cref="FunctionalProject" /> .
         /// </summary>
         public List<Guid> Involves { get; set; } = [];
 
@@ -102,8 +104,7 @@ namespace Mycelium.SDK.DTO
         public Guid UpdatedBy { get; set; }
 
         /// <summary>
-        /// Provides the last modification <see cref="DateTime" /> of the current
-        /// <see cref="AuditableThing" />
+        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
         public DateTime UpdatedOn { get; set; }
 

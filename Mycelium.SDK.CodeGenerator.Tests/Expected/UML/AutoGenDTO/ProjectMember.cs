@@ -18,8 +18,8 @@ namespace Mycelium.SDK.DTO
     using System.Collections.Generic;
 
     /// <summary>
-    /// Represents the membership of a <see cref="User" /> within a <see cref="FunctionalProject" />, carrying the
-    /// project-level role and optional ownership assignment.
+    /// Represents the membership of a <see cref="User" /> within a <see cref="FunctionalProject" />,
+    /// carrying the project-level role and optional ownership assignment.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial class ProjectMember : IProjectMember
@@ -30,8 +30,8 @@ namespace Mycelium.SDK.DTO
         public Guid Id { get; set; }
 
         /// <summary>
-        /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when assigned
-        /// to multiple ownership domains.
+        /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when
+        /// assigned to multiple ownership domains.
         /// </summary>
         public Guid? ActiveOwnership { get; set; }
 
@@ -62,8 +62,8 @@ namespace Mycelium.SDK.DTO
         public List<Guid> Owns { get; set; } = [];
 
         /// <summary>
-        /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their editing
-        /// and access permissions.
+        /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their
+        /// editing and access permissions.
         /// </summary>
         public ProjectMemberRole Role { get; set; }
 
@@ -74,8 +74,7 @@ namespace Mycelium.SDK.DTO
         public Guid UpdatedBy { get; set; }
 
         /// <summary>
-        /// Provides the last modification <see cref="DateTime" /> of the current
-        /// <see cref="AuditableThing" />
+        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
         public DateTime UpdatedOn { get; set; }
 

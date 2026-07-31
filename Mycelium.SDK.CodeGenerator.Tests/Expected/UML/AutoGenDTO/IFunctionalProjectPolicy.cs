@@ -18,7 +18,8 @@ namespace Mycelium.SDK.DTO
     using System.Collections.Generic;
 
     /// <summary>
-    /// Defines the policy associated with a specific <see cref="FunctionalProject" />.
+    /// The FunctionalProjectPolicy defines policy that are tied to a specific
+    /// <see cref="FunctionalProject" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial interface IFunctionalProjectPolicy : IAuditableThing

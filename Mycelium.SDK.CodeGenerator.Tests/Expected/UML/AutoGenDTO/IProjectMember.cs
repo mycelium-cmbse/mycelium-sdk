@@ -18,15 +18,15 @@ namespace Mycelium.SDK.DTO
     using System.Collections.Generic;
 
     /// <summary>
-    /// Represents the membership of a <see cref="User" /> within a <see cref="FunctionalProject" />, carrying the
-    /// project-level role and optional ownership assignment.
+    /// Represents the membership of a <see cref="User" /> within a <see cref="FunctionalProject" />,
+    /// carrying the project-level role and optional ownership assignment.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial interface IProjectMember : IAuditableThing
     {
         /// <summary>
-        /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when assigned
-        /// to multiple ownership domains.
+        /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when
+        /// assigned to multiple ownership domains.
         /// </summary>
         Guid? ActiveOwnership { get; set; }
 
@@ -47,8 +47,8 @@ namespace Mycelium.SDK.DTO
         List<Guid> Owns { get; set; }
 
         /// <summary>
-        /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their editing
-        /// and access permissions.
+        /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their
+        /// editing and access permissions.
         /// </summary>
         ProjectMemberRole Role { get; set; }
 

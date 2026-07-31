@@ -40,8 +40,7 @@ namespace Mycelium.SDK.DTO
         Guid UpdatedBy { get; set; }
 
         /// <summary>
-        /// Provides the last modification <see cref="DateTime" /> of the current
-        /// <see cref="AuditableThing" />
+        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
         DateTime UpdatedOn { get; set; }
     }

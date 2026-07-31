@@ -18,8 +18,8 @@ namespace Mycelium.SDK.DTO
     using System.Collections.Generic;
 
     /// <summary>
-    /// Represents a tenant boundary in the Mycelium platform. On SaaS each customer maps to one Organization;
-    /// on-premise deployments may host multiple.
+    /// Represents a tenant boundary in the Mycelium platform. On SaaS each customer maps to one
+    /// Organization; on-premise deployments may host multiple.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial class Organization : IOrganization
@@ -60,12 +60,14 @@ namespace Mycelium.SDK.DTO
         public Guid Policy { get; set; }
 
         /// <summary>
-        /// Contains the <see cref="FunctionalProject" /> instances belonging to this <see cref="Organization" />.
+        /// Contains the <see cref="FunctionalProject" /> instances belonging to this
+        /// <see cref="Organization" />.
         /// </summary>
         public List<Guid> Projects { get; set; } = [];
 
         /// <summary>
-        /// The current <see cref="ActivationStatus" /> of the organization, controlling platform access for all its members.
+        /// The current <see cref="ActivationStatus" /> of the organization, controlling platform access for all
+        /// its members.
         /// </summary>
         public ActivationStatus Status { get; set; }
 
@@ -76,8 +78,7 @@ namespace Mycelium.SDK.DTO
         public Guid UpdatedBy { get; set; }
 
         /// <summary>
-        /// Provides the last modification <see cref="DateTime" /> of the current
-        /// <see cref="AuditableThing" />
+        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
         public DateTime UpdatedOn { get; set; }
     }

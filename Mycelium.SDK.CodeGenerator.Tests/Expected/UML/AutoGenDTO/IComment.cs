@@ -43,14 +43,15 @@ namespace Mycelium.SDK.DTO
         /// References a quoted <see cref="Comment" />
         /// </summary>
         Guid? Quotes { get; set; }
-        
+
         /// <summary>
         /// Contains threaded reply <see cref="Comment" /> instances nested under this comment.
         /// </summary>
         List<Guid> Replies { get; set; }
 
         /// <summary>
-        /// The <see cref="Guid" /> of the SysML v2 model element this comment is attached to in the Concurrent Server.
+        /// The <see cref="Guid" /> of the SysML v2 model element this comment is attached to in the Concurrent
+        /// Server.
         /// </summary>
         Guid TargetElementId { get; set; }
     }

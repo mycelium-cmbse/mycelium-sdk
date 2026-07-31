@@ -18,14 +18,14 @@ namespace Mycelium.SDK.DTO
     using System.Collections.Generic;
 
     /// <summary>
-    /// Represents the Functional Data Server projection of an engineering project, linking platform metadata to the
-    /// corresponding SysML v2 model in the Concurrent Server.
+    /// Represents the Functional Data Server projection of an engineering project, linking platform
+    /// metadata to the corresponding SysML v2 model in the Concurrent Server.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial interface IFunctionalProject : IAuditableThing
     {
         /// <summary>
-        /// References the <see cref="Organization" /> to which the <see cref="FunctionalProject"/> belongs to.
+        /// References the <see cref="Organization" /> to which the <see cref="FunctionalProject" /> belongs to.
         /// </summary>
         Guid BelongsTo { get; set; }
 
@@ -36,7 +36,8 @@ namespace Mycelium.SDK.DTO
         List<Guid> BranchRules { get; set; }
 
         /// <summary>
-        /// The current <see cref="ProjectMode" /> (Regular or Concurrent) governing ownership enforcement for this project.
+        /// The current <see cref="ProjectMode" /> (Regular or Concurrent) governing ownership enforcement for
+        /// this project.
         /// </summary>
         ProjectMode CurrentMode { get; set; }
 
@@ -51,12 +52,13 @@ namespace Mycelium.SDK.DTO
         string Description { get; set; }
 
         /// <summary>
-        /// The <see cref="Guid" /> referencing the corresponding OMG Systems Modelling API Project in the Concurrent Server.
+        /// The <see cref="Guid" /> referencing the corresponding OMG Systems Modelling API Project in the
+        /// Concurrent Server.
         /// </summary>
         Guid EngineeringProjectId { get; set; }
 
         /// <summary>
-        /// References the <see cref="ProjectMember" /> that are part of the  <see cref="FunctionalProject" /> .
+        /// References the <see cref="ProjectMember" /> that are part of the <see cref="FunctionalProject" /> .
         /// </summary>
         List<Guid> Involves { get; set; }
 
