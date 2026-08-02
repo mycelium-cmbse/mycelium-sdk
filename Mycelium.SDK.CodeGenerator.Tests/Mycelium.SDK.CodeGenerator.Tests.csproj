@@ -46,5 +46,12 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\Mycelium.SDK\AutoGenDTO\*.cs"
+              Link="Committed\Mycelium.SDK\AutoGenDTO\%(Filename)%(Extension)">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
     
 </Project>

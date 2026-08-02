@@ -54,6 +54,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         ];
 
         private IReadOnlyDictionary<string, IClass> classes = null!;
+        private DirectoryInfo committedDirectory = null!;
         private DirectoryInfo expectedDirectory = null!;
         private UmlDtoGenerator generator = null!;
         private DirectoryInfo stagingDirectory = null!;
@@ -61,8 +62,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
+            this.committedDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "Committed", "Mycelium.SDK", "AutoGenDTO"));
             this.expectedDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "Expected", "UML", "AutoGenDTO"));
-
             this.stagingDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_Mycelium.SDK.AutoGenDTO"));
 
             if (this.stagingDirectory.Exists)
@@ -79,9 +80,27 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             this.generator = new UmlDtoGenerator();
 
-            await this.generator.GenerateAsync(xmiReaderResult,this.stagingDirectory);
+            await this.generator.GenerateAsync(xmiReaderResult, this.stagingDirectory);
         }
 
+        [Test]
+        public void Verify_that_reviewed_golden_set_contains_exactly_the_representative_DTOs()
+        {
+            var expectedFileNames = RepresentativeInterfaceNames
+                .Select(className => $"I{className}.cs")
+                .Concat(RepresentativeConcreteClassNames.Select(className => $"{className}.cs"))
+                .OrderBy(fileName => fileName, StringComparer.Ordinal)
+                .ToArray();
+
+            var reviewedFileNames = QueryCSharpFileNames(this.expectedDirectory);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(expectedFileNames, Has.Length.EqualTo(14));
+                Assert.That(reviewedFileNames, Is.EqualTo(expectedFileNames), "The reviewed DTO golden-file set must contain exactly the representative files.");
+            });
+        }
+        
         [Test]
         public void Verify_that_batch_generation_produces_exactly_24_DTO_files()
         {
@@ -113,6 +132,25 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
                 Assert.That(generatedFileNames, Is.EqualTo(expectedFileNames), "The generated DTO set contains missing or extra files.");
             });
+        }
+        
+        [Test]
+        public async Task Verify_that_complete_batch_matches_committed_SDK_DTOs()
+        {
+            Assert.That(this.committedDirectory.Exists, Is.True, "The committed SDK DTO directory was not copied to the test output.");
+
+            var generatedFileNames = QueryCSharpFileNames(this.stagingDirectory);
+            var committedFileNames = QueryCSharpFileNames(this.committedDirectory);
+
+            Assert.That(generatedFileNames, Is.EqualTo(committedFileNames), "The generated and committed DTO file sets differ.");
+
+            foreach (var fileName in generatedFileNames)
+            {
+                var generated = await File.ReadAllTextAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
+                var committed = await File.ReadAllTextAsync(Path.Combine(this.committedDirectory.FullName, fileName));
+
+                Assert.That(generated, Is.EqualTo(committed), $"Generated DTO '{fileName}' differs from the committed SDK source.");
+            }
         }
 
         [TestCaseSource(nameof(RepresentativeInterfaceNames))]
