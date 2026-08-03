@@ -22,8 +22,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     public static class PropertyExtension
     {
         /// <summary>
-        /// Queries the legal C# DTO property identifier, applying PascalCase
-        /// to non-derived properties and preserving derived-property spelling.
+        /// Queries the legal PascalCase C# DTO property identifier.
         /// </summary>
         public static string QueryDtoPropertyName(this IProperty property)
         {
@@ -34,7 +33,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 throw new InvalidOperationException($"Property '{property.XmiId}' has no name.");
             }
 
-            var cSharpPropertyName = property.IsDerived ? property.Name : property.Name.CapitalizeFirstLetter();
+            var cSharpPropertyName = property.Name.CapitalizeFirstLetter();
 
             return ReservedCSharpNameMapper.Map(cSharpPropertyName);
         }
@@ -47,7 +46,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         {
             ArgumentNullException.ThrowIfNull(property);
 
-            var elementTypeName = QueryDtoElementTypeName(property);
+            var elementTypeName = property.QueryDtoElementTypeName();
 
             if (property.QueryIsEnumerable())
             {
@@ -62,34 +61,71 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             return elementTypeName;
         }
 
-        private static string QueryDtoElementTypeName(IProperty property)
+        /// <summary>
+        /// Queries the C# DTO element type before multiplicity and nullability
+        /// syntax are applied.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property whose DTO element type is queried.
+        /// </param>
+        /// <returns>
+        /// The corresponding C# DTO element type name.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the property type is unresolved or unsupported.
+        /// </exception>
+        private static string QueryDtoElementTypeName(this IProperty property)
         {
             if (property.Type is null)
             {
-                throw new InvalidOperationException($"Property '{Describe(property)}' has no resolved type.");
+                throw new InvalidOperationException($"Property '{property.Describe()}' has no resolved type.");
             }
 
             return property.Type switch
             {
                 IClass => "Guid",
                 IEnumeration enumeration => MapNamedType(enumeration.Name, property),
-                IPrimitiveType primitiveType => primitiveType.QueryCSharpTypeName(), 
-                _ => throw new InvalidOperationException($"Property '{Describe(property)}' has unsupported UML type "
+                IPrimitiveType primitiveType => primitiveType.QueryCSharpTypeName(),
+                _ => throw new InvalidOperationException($"Property '{property.Describe()}' has unsupported UML type "
                                                          + $"'{property.Type.Name}'.")
             };
         }
 
+        /// <summary>
+        /// Maps a named UML type to a legal C# identifier.
+        /// </summary>
+        /// <param name="typeName">
+        /// The UML type name to map.
+        /// </param>
+        /// <param name="property">
+        /// The property using the named type.
+        /// </param>
+        /// <returns>
+        /// The corresponding legal C# type identifier.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UML type has no name.
+        /// </exception>
         private static string MapNamedType(string typeName, IProperty property)
         {
             if (string.IsNullOrWhiteSpace(typeName))
             {
-                throw new InvalidOperationException($"Property '{Describe(property)}' has an unnamed type.");
+                throw new InvalidOperationException($"Property '{property.Describe()}' has an unnamed type.");
             }
 
             return ReservedCSharpNameMapper.Map(typeName);
         }
 
-        private static string Describe(IProperty property)
+        /// <summary>
+        /// Returns a readable description of a UML property.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property to describe.
+        /// </param>
+        /// <returns>
+        /// The property name when available; otherwise, its XMI identifier.
+        /// </returns>
+        private static string Describe(this IProperty property)
         {
             return string.IsNullOrWhiteSpace(property.Name) ? property.XmiId : property.Name;
         }

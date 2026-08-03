@@ -326,7 +326,7 @@ namespace Mycelium.SDK.Tests.Dto
 
             yield return new TestCaseData(
                 typeof(IProjectMember),
-                nameof(IProjectMember.isOutsideCollaborator),
+                nameof(IProjectMember.IsOutsideCollaborator),
                 typeof(bool));
         }
 
@@ -339,7 +339,7 @@ namespace Mycelium.SDK.Tests.Dto
             Type declaringType,
             PropertyInfo property)
         {
-            return property.Name == nameof(IProjectMember.isOutsideCollaborator)
+            return property.Name == nameof(IProjectMember.IsOutsideCollaborator)
                    && (declaringType == typeof(IProjectMember)
                        || declaringType == typeof(ProjectMember));
         }

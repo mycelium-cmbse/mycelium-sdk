@@ -25,6 +25,27 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <summary>
         /// Initializes a new instance of the <see cref="HandlebarsPayload"/> class.
         /// </summary>
+        /// <param name="rootPackage">
+        /// The root UML package selected for generation.
+        /// </param>
+        /// <param name="packages">
+        /// The UML packages available to the generators.
+        /// </param>
+        /// <param name="enumerations">
+        /// The UML enumerations selected for generation.
+        /// </param>
+        /// <param name="primitiveTypes">
+        /// The UML primitive types available for type mapping.
+        /// </param>
+        /// <param name="dataTypes">
+        /// The UML data types selected for generation.
+        /// </param>
+        /// <param name="classes">
+        /// The UML classes selected for generation.
+        /// </param>
+        /// <param name="interfaces">
+        /// The UML interfaces selected for generation.
+        /// </param>
         public HandlebarsPayload(
             IPackage rootPackage,
             IEnumerable<IPackage> packages,
@@ -51,18 +72,39 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             this.Interfaces = interfaces.ToArray();
         }
 
+        /// <summary>
+        /// Gets the root UML package selected for generation.
+        /// </summary>
         public IPackage RootPackage { get; }
 
+        /// <summary>
+        /// Gets the UML packages available to the generators.
+        /// </summary>
         public IPackage[] Packages { get; }
 
+        /// <summary>
+        /// Gets the UML enumerations selected for generation.
+        /// </summary>
         public IEnumeration[] Enumerations { get; }
 
+        /// <summary>
+        /// Gets the UML primitive types available for type mapping.
+        /// </summary>
         public IPrimitiveType[] PrimitiveTypes { get; }
 
+        /// <summary>
+        /// Gets the UML data types selected for generation.
+        /// </summary>
         public IDataType[] DataTypes { get; }
 
+        /// <summary>
+        /// Gets the UML classes selected for generation.
+        /// </summary>
         public IClass[] Classes { get; }
 
+        /// <summary>
+        /// Gets the UML interfaces selected for generation.
+        /// </summary>
         public IInterface[] Interfaces { get; }
     }
 }

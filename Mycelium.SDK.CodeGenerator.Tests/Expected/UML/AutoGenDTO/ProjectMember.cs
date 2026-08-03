@@ -49,7 +49,7 @@ namespace Mycelium.SDK.DTO
         /// Asserts that the current <see cref="ProjectMember" /> is part of an external
         /// <see cref="Organization" /> than the related <see cref="FunctionalProject" /> owner.
         /// </summary>
-        public bool isOutsideCollaborator { get; }
+        public bool IsOutsideCollaborator { get; }
 
         /// <summary>
         /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.

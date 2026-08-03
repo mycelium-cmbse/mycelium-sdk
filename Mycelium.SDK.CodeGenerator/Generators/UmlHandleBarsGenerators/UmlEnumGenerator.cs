@@ -23,6 +23,9 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
     /// </summary>
     public sealed class UmlEnumGenerator : UmlHandleBarsGenerator
     {
+        /// <summary>
+        /// The registered Handlebars template name used for UML enumerations.
+        /// </summary>
         private const string TemplateName = "enumeration-uml-template";
 
         /// <inheritdoc />

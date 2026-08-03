@@ -24,6 +24,9 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
     /// </summary>
     public abstract class UmlHandleBarsGenerator : HandleBarsGenerator
     {
+        /// <summary>
+        /// The name of the UML package containing the FunctionalData model.
+        /// </summary>
         private const string FunctionalDataPackageName = "FunctionalData";
 
         /// <summary>

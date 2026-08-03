@@ -25,7 +25,14 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
     /// </summary>
     public sealed class UmlDtoGenerator : UmlHandleBarsGenerator
     {
+        /// <summary>
+        /// The registered Handlebars template name used for concrete DTO classes.
+        /// </summary>
         private const string ClassTemplateName = "dto-class-uml-template";
+        
+        /// <summary>
+        /// The registered Handlebars template name used for DTO interfaces.
+        /// </summary>
         private const string InterfaceTemplateName = "dto-interface-uml-template";
 
         /// <inheritdoc />
@@ -83,9 +90,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <returns>
         /// The generated and formatted C# source.
         /// </returns>
-        public async Task<string> GenerateDataTransferObjectClassAsync(
-            DirectoryInfo outputDirectory,
-            IClass umlClass)
+        public async Task<string> GenerateDataTransferObjectClassAsync(DirectoryInfo outputDirectory, IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(outputDirectory);
             ArgumentNullException.ThrowIfNull(umlClass);
@@ -115,6 +120,15 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             this.RegisterTemplate(InterfaceTemplateName);
         }
 
+        /// <summary>
+        /// Renders a DTO interface for the specified UML class.
+        /// </summary>
+        /// <param name="umlClass">
+        /// The UML class for which the DTO interface is rendered.
+        /// </param>
+        /// <returns>
+        /// The generated filename and formatted C# source.
+        /// </returns>
         private GeneratedFile RenderDataTransferObjectInterface(IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);
@@ -127,6 +141,18 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             return new GeneratedFile($"I{className}.cs", generatedCode);
         }
 
+        /// <summary>
+        /// Renders a concrete DTO implementation for the specified UML class.
+        /// </summary>
+        /// <param name="umlClass">
+        /// The UML class for which the concrete DTO is rendered.
+        /// </param>
+        /// <returns>
+        /// The generated filename and formatted C# source.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UML class is abstract.
+        /// </exception>
         private GeneratedFile RenderDataTransferObjectClass(IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);
@@ -146,6 +172,18 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             return new GeneratedFile($"{className}.cs", generatedCode);
         }
 
+        /// <summary>
+        /// Queries the required name of a UML class.
+        /// </summary>
+        /// <param name="umlClass">
+        /// The UML class whose name is queried.
+        /// </param>
+        /// <returns>
+        /// The UML class name.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UML class has no name.
+        /// </exception>
         private static string QueryRequiredClassName(IClass umlClass)
         {
             if (string.IsNullOrWhiteSpace(umlClass.Name))
@@ -156,6 +194,15 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             return umlClass.Name;
         }
 
+        /// <summary>
+        /// Verifies that a generated batch contains no duplicate filenames.
+        /// </summary>
+        /// <param name="generatedFiles">
+        /// The generated files to validate.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when multiple generated files have the same filename.
+        /// </exception>
         private static void ThrowIfDuplicateFileNames(IReadOnlyCollection<GeneratedFile> generatedFiles)
         {
             var duplicateFileName = generatedFiles
@@ -169,6 +216,15 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             }
         }
 
+        /// <summary>
+        /// Represents one generated source file.
+        /// </summary>
+        /// <param name="FileName">
+        /// The generated filename.
+        /// </param>
+        /// <param name="Source">
+        /// The formatted generated C# source.
+        /// </param>
         private sealed record GeneratedFile(string FileName, string Source);
     }
 }
