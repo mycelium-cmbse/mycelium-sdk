@@ -53,11 +53,36 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 });
         }
 
+        /// <summary>
+        /// Queries the DTO accessor declaration for a UML property.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property.
+        /// </param>
+        /// <returns>
+        /// A get-only declaration for a derived property; otherwise,
+        /// a get-and-set declaration.
+        /// </returns>
         private static string QueryDtoAccessors(IProperty property)
         {
             return property.IsDerived ? "{ get; }" : "{ get; set; }";
         }
 
+        /// <summary>
+        /// Queries the single UML property supplied to a Handlebars helper.
+        /// </summary>
+        /// <param name="arguments">
+        /// The Handlebars helper arguments.
+        /// </param>
+        /// <param name="helperName">
+        /// The helper name used in validation messages.
+        /// </param>
+        /// <returns>
+        /// The supplied UML property.
+        /// </returns>
+        /// <exception cref="HandlebarsException">
+        /// Thrown when exactly one <see cref="IProperty"/> argument was not supplied.
+        /// </exception>
         private static IProperty QueryProperty(Arguments arguments, string helperName)
         {
             if (arguments.Length != 1)

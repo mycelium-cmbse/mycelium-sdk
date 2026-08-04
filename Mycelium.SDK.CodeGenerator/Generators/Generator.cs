@@ -23,6 +23,9 @@ namespace Mycelium.SDK.CodeGenerator.Generators
     /// </summary>
     public abstract class Generator
     {
+        /// <summary>
+        /// The UTF-8 encoding without a byte-order mark used for generated files.
+        /// </summary>
         private static readonly Encoding Utf8WithoutBom = new UTF8Encoding(false);
 
         /// <summary>
@@ -58,7 +61,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// <returns>
         /// The subdirectory name, or <see langword="null"/> for the template root.
         /// </returns>
-        protected virtual string? GetOptionalSubfolderTemplateLocation()
+        protected virtual string GetOptionalSubfolderTemplateLocation()
         {
             return null;
         }

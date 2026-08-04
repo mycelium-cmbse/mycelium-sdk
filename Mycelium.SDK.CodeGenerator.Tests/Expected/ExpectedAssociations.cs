@@ -114,9 +114,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
         /// </summary>
         public static string CreateSignature(
             string firstType,
-            string? firstRole,
+            string firstRole,
             string secondType,
-            string? secondRole)
+            string secondRole)
         {
             var firstEnd = $"{firstType}:{firstRole ?? string.Empty}";
             var secondEnd = $"{secondType}:{secondRole ?? string.Empty}";

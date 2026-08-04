@@ -52,11 +52,33 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 });
         }
 
+        /// <summary>
+        /// Determines whether the enumeration or any of its owned literals
+        /// contains a <c>&lt;see cref="..." /&gt;</c> documentation reference.
+        /// </summary>
+        /// <param name="enumeration">
+        /// The UML enumeration to inspect.
+        /// </param>
+        /// <returns>
+        /// <see langword="true"/> when the DTO namespace should be emitted;
+        /// otherwise, <see langword="false"/>.
+        /// </returns>
         private static bool RequiresDtoNamespace(IEnumeration enumeration)
         {
             return ContainsDocumentationReference(enumeration) || enumeration.OwnedLiteral.Any(ContainsDocumentationReference);
         }
 
+        /// <summary>
+        /// Determines whether an element's documentation contains a
+        /// <c>&lt;see cref="..." /&gt;</c> reference after being HTML-decoded once.
+        /// </summary>
+        /// <param name="element">
+        /// The UML element whose documentation is inspected.
+        /// </param>
+        /// <returns>
+        /// <see langword="true"/> when a documentation reference is present;
+        /// otherwise, <see langword="false"/>.
+        /// </returns>
         private static bool ContainsDocumentationReference(IElement element)
         {
             var documentation = HtmlUtils.HtmlDecode(element.QueryRawDocumentation());

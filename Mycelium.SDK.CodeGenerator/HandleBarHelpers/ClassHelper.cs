@@ -64,6 +64,21 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 });
         }
 
+        /// <summary>
+        /// Queries the single UML class supplied to a Handlebars helper.
+        /// </summary>
+        /// <param name="arguments">
+        /// The Handlebars helper arguments.
+        /// </param>
+        /// <param name="helperName">
+        /// The helper name used in validation messages.
+        /// </param>
+        /// <returns>
+        /// The supplied UML class.
+        /// </returns>
+        /// <exception cref="HandlebarsException">
+        /// Thrown when exactly one <see cref="IClass"/> argument was not supplied.
+        /// </exception>
         private static IClass QueryClass(Arguments arguments, string helperName)
         {
             if (arguments.Length != 1)
@@ -78,7 +93,19 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             return umlClass;
         }
-
+        
+        /// <summary>
+        /// Queries the legal C# DTO interface identifier for a UML class.
+        /// </summary>
+        /// <param name="umlClass">
+        /// The UML class whose interface identifier is queried.
+        /// </param>
+        /// <returns>
+        /// The legal C# DTO interface identifier.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UML class has no name.
+        /// </exception>
         private static string QueryDtoInterfaceIdentifier(IClass umlClass)
         {
             if (string.IsNullOrWhiteSpace(umlClass.Name))
