@@ -115,19 +115,5 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             return ReservedCSharpNameMapper.Map(typeName);
         }
-
-        /// <summary>
-        /// Returns a readable description of a UML property.
-        /// </summary>
-        /// <param name="property">
-        /// The UML property to describe.
-        /// </param>
-        /// <returns>
-        /// The property name when available; otherwise, its XMI identifier.
-        /// </returns>
-        private static string Describe(this IProperty property)
-        {
-            return string.IsNullOrWhiteSpace(property.Name) ? property.XmiId : property.Name;
-        }
     }
 }

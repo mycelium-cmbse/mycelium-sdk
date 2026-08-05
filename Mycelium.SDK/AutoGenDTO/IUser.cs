@@ -57,6 +57,11 @@ namespace Mycelium.SDK.DTO
         /// user removal event, preserving referential integrity before cascade cleanup.
         /// </summary>
         ActivationStatus Status { get; set; }
+
+        /// <summary>
+        /// Collects all preferences of the current <see cref="User" /> to create custom views.
+        /// </summary>
+        Dictionary<string, string> UserPreferences { get; set; }
     }
 }
 

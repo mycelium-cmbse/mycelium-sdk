@@ -39,6 +39,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
         private static readonly string[] CustomPrimitiveNames =
         [
             "DateTime",
+            "Dictionary<string,string>",
             "Guid",
             "Uri"
         ];

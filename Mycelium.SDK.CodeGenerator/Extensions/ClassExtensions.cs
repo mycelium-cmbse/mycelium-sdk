@@ -64,7 +64,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             if (generalClasses.Count != umlClass.Generalization.Count)
             {
                 throw new InvalidOperationException(
-                    $"Class '{Describe(umlClass)}' has an unresolved or non-class generalization.");
+                    $"Class '{umlClass.Describe()}' has an unresolved or non-class generalization.");
             }
 
             return generalClasses
@@ -88,7 +88,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         private static IEnumerable<IProperty> QueryAssociationProperties(IClass umlClass)
         {
             var rootPackage = umlClass.QueryRootPackage()
-                ?? throw new InvalidOperationException($"The root package for class '{Describe(umlClass)}' could not be resolved.");
+                ?? throw new InvalidOperationException($"The root package for class '{umlClass.Describe()}' could not be resolved.");
 
             var associations = rootPackage.QueryPackages()
                 .SelectMany(package => package.PackagedElement.OfType<IAssociation>())
@@ -186,7 +186,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             if (!currentPath.Add(xmiId))
             {
-                throw new InvalidOperationException($"A generalization cycle was detected at class '{Describe(umlClass)}'.");
+                throw new InvalidOperationException($"A generalization cycle was detected at class '{umlClass.Describe()}'.");
             }
 
             foreach (var generalClass in umlClass.QueryDtoGeneralizations())
@@ -251,24 +251,10 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         {
             if (string.IsNullOrWhiteSpace(umlClass.XmiId))
             {
-                throw new InvalidOperationException($"Class '{Describe(umlClass)}' has no XMI identifier.");
+                throw new InvalidOperationException($"Class '{umlClass.Describe()}' has no XMI identifier.");
             }
 
             return umlClass.XmiId;
-        }
-
-        /// <summary>
-        /// Returns a readable description of a UML class.
-        /// </summary>
-        /// <param name="umlClass">
-        /// The UML class.
-        /// </param>
-        /// <returns>
-        /// The class name when available; otherwise, its XMI identifier.
-        /// </returns>
-        private static string Describe(IClass umlClass)
-        {
-            return string.IsNullOrWhiteSpace(umlClass.Name) ? umlClass.XmiId : umlClass.Name;
         }
     }
 }

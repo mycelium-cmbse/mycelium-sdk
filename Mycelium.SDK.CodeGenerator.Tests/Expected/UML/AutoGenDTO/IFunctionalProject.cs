@@ -25,7 +25,7 @@ namespace Mycelium.SDK.DTO
     public partial interface IFunctionalProject : IAuditableThing
     {
         /// <summary>
-        /// References the <see cref="Organization" /> to which the <see cref="FunctionalProject" /> belongs to.
+        /// References the <see cref="Organization" /> to which the <see cref="FunctionalProject" /> belongs.
         /// </summary>
         Guid BelongsTo { get; set; }
 
@@ -81,6 +81,11 @@ namespace Mycelium.SDK.DTO
         /// Contains the <see cref="Review" /> instances associated with this <see cref="FunctionalProject" />.
         /// </summary>
         List<Guid> Reviews { get; set; }
+
+        /// <summary>
+        /// Collects all preferences created and shared by users, to create common custom views.
+        /// </summary>
+        Dictionary<string, string> SharedPreferences { get; set; }
 
         /// <summary>
         /// The <see cref="ProjectVisibility" /> controlling who can discover and access this project.

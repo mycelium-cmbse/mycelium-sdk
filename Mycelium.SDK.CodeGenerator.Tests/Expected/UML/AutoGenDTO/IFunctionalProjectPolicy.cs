@@ -18,7 +18,7 @@ namespace Mycelium.SDK.DTO
     using System.Collections.Generic;
 
     /// <summary>
-    /// The FunctionalProjectPolicy defines policy that are tied to a specific
+    /// The FunctionalProjectPolicy defines policies t associated to as specific
     /// <see cref="FunctionalProject" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
@@ -33,6 +33,11 @@ namespace Mycelium.SDK.DTO
         /// Asserts if publish mode can be set on this project or not.
         /// </summary>
         bool AllowAutoPublishMode { get; set; }
+
+        /// <summary>
+        /// Asserts that the branching system for the version control is allowed or not.
+        /// </summary>
+        bool AllowVersionBranching { get; set; }
     }
 }
 

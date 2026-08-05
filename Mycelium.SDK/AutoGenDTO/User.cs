@@ -83,6 +83,11 @@ namespace Mycelium.SDK.DTO
         /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
         public DateTime UpdatedOn { get; set; }
+
+        /// <summary>
+        /// Collects all preferences of the current <see cref="User" /> to create custom views.
+        /// </summary>
+        public Dictionary<string, string> UserPreferences { get; set; }
     }
 }
 

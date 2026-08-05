@@ -30,7 +30,7 @@ namespace Mycelium.SDK.DTO
         public Guid Id { get; set; }
 
         /// <summary>
-        /// References the <see cref="Organization" /> to which the <see cref="FunctionalProject" /> belongs to.
+        /// References the <see cref="Organization" /> to which the <see cref="FunctionalProject" /> belongs.
         /// </summary>
         public Guid BelongsTo { get; set; }
 
@@ -96,6 +96,11 @@ namespace Mycelium.SDK.DTO
         /// Contains the <see cref="Review" /> instances associated with this <see cref="FunctionalProject" />.
         /// </summary>
         public List<Guid> Reviews { get; set; } = [];
+
+        /// <summary>
+        /// Collects all preferences created and shared by users, to create common custom views.
+        /// </summary>
+        public Dictionary<string, string> SharedPreferences { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
