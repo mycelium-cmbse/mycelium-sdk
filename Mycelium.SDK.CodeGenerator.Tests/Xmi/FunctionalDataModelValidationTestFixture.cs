@@ -13,6 +13,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
 
     using uml4net.Classification;
     using uml4net.CommonStructure;
+    using uml4net.Extensions;
     using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
 
@@ -151,6 +152,34 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                     actualSignatures,
                     Is.EquivalentTo(
                         new ExpectedAssociations().ToArray()));
+            });
+        }
+        
+        [Test]
+        public void Verify_that_named_association_ends_are_class_owned_and_queryable()
+        {
+            Assert.Multiple(() =>
+            {
+                foreach (var association in this.associations)
+                {
+                    foreach (var associationEnd in association.MemberEnd
+                                 .Where(end => !string.IsNullOrWhiteSpace(end.Name)))
+                    {
+                        Assert.That(associationEnd.Owner,
+                            Is.InstanceOf<IClass>(),
+                            $"Named association end '{DescribeAssociationEnd(associationEnd)}' "
+                            + "must be owned by a UML class.");
+
+                        if (associationEnd.Owner is not IClass owningClass)
+                        {
+                            continue;
+                        }
+
+                        Assert.That(owningClass.QueryAllProperties().Select(property => property.XmiId),
+                            Does.Contain(associationEnd.XmiId),
+                            $"UML4NET QueryAllProperties() did not return " + $"'{owningClass.Name}.{associationEnd.Name}'.");
+                    }
+                }
             });
         }
 

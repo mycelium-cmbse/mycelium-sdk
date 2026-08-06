@@ -23,17 +23,14 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     public static class ClassExtensions
     {
         /// <summary>
-        /// Queries the properties declared by the class, including navigable
-        /// association ends represented outside the class in the XMI.
+        /// Queries the properties declared directly by the class.
         /// </summary>
         public static IReadOnlyList<IProperty> QueryDtoInterfaceProperties(this IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);
 
-            return OrderDtoProperties(umlClass.OwnedAttribute.Concat(QueryAssociationProperties(umlClass)))
-                .ToArray();
+            return OrderDtoProperties(umlClass.OwnedAttribute).ToArray();
         }
-
 
         /// <summary>
         /// Queries every property that a concrete DTO implementation must
@@ -43,13 +40,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         {
             ArgumentNullException.ThrowIfNull(umlClass);
 
-            var hierarchy = new Dictionary<string, IClass>(StringComparer.Ordinal);
-            VisitGeneralizations(umlClass, new HashSet<string>(StringComparer.Ordinal), hierarchy);
-
-            var properties = umlClass.QueryAllProperties()
-                .Concat(hierarchy.Values.SelectMany(QueryAssociationProperties));
-
-            return OrderDtoProperties(properties).ToArray();
+            return OrderDtoProperties(umlClass.QueryAllProperties()).ToArray();
         }
 
         /// <summary>
@@ -74,52 +65,6 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 .ThenBy(generalClass => generalClass.Name, StringComparer.Ordinal)
                 .ThenBy(generalClass => generalClass.XmiId, StringComparer.Ordinal)
                 .ToArray();
-        }
-
-        /// <summary>
-        /// Queries navigable association properties applicable to the specified UML class.
-        /// </summary>
-        /// <param name="umlClass">
-        /// The UML class whose association properties are queried.
-        /// </param>
-        /// <returns>
-        /// The navigable association properties applicable to the UML class.
-        /// </returns>
-        private static IEnumerable<IProperty> QueryAssociationProperties(IClass umlClass)
-        {
-            var rootPackage = umlClass.QueryRootPackage()
-                ?? throw new InvalidOperationException($"The root package for class '{umlClass.Describe()}' could not be resolved.");
-
-            var associations = rootPackage.QueryPackages()
-                .SelectMany(package => package.PackagedElement.OfType<IAssociation>())
-                .OrderBy(association => association.XmiId, StringComparer.Ordinal);
-
-            foreach (var association in associations)
-            {
-                if (association.MemberEnd.Count != 2)
-                {
-                    throw new InvalidOperationException(
-                        $"Association '{association.XmiId}' must have exactly two member ends.");
-                }
-
-                foreach (var associationEnd in association.MemberEnd)
-                {
-                    ValidateAssociationEnd(association, associationEnd);
-                }
-
-                foreach (var associationEnd in association.MemberEnd)
-                {
-                    var oppositeEnd = associationEnd.Opposite
-                        ?? throw new InvalidOperationException(
-                            $"Association end '{associationEnd.XmiId}' in association "
-                            + $"'{association.XmiId}' has no resolved opposite end.");
-
-                    if (ReferencesClass(oppositeEnd, umlClass) && !string.IsNullOrWhiteSpace(associationEnd.Name))
-                    {
-                        yield return associationEnd;
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -161,81 +106,6 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 .ThenBy(property => property.Name, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(property => property.Name, StringComparer.Ordinal)
                 .ThenBy(property => property.XmiId, StringComparer.Ordinal);
-        }
-
-        /// <summary>
-        /// Visits the class hierarchy while validating generalizations and detecting cycles.
-        /// </summary>
-        /// <param name="umlClass">
-        /// The current UML class.
-        /// </param>
-        /// <param name="currentPath">
-        /// The XMI identifiers on the current traversal path.
-        /// </param>
-        /// <param name="result">
-        /// The validated UML classes indexed by XMI identifier.
-        /// </param>
-        private static void VisitGeneralizations(IClass umlClass, ISet<string> currentPath, IDictionary<string, IClass> result)
-        {
-            var xmiId = QueryRequiredXmiId(umlClass);
-
-            if (result.ContainsKey(xmiId))
-            {
-                return;
-            }
-
-            if (!currentPath.Add(xmiId))
-            {
-                throw new InvalidOperationException($"A generalization cycle was detected at class '{umlClass.Describe()}'.");
-            }
-
-            foreach (var generalClass in umlClass.QueryDtoGeneralizations())
-            {
-                VisitGeneralizations(generalClass, currentPath, result);
-            }
-
-            currentPath.Remove(xmiId);
-            result.Add(xmiId, umlClass);
-        }
-
-        /// <summary>
-        /// Validates that an association end has a resolved type.
-        /// </summary>
-        /// <param name="association">
-        /// The containing UML association.
-        /// </param>
-        /// <param name="associationEnd">
-        /// The association end to validate.
-        /// </param>
-        private static void ValidateAssociationEnd(IAssociation association, IProperty associationEnd)
-        {
-            if (associationEnd.Type is null)
-            {
-                throw new InvalidOperationException(
-                    $"Association end '{associationEnd.XmiId}' in association "
-                    + $"'{association.XmiId}' has no resolved type.");
-            }
-        }
-
-        /// <summary>
-        /// Determines whether an association end references the specified UML class.
-        /// </summary>
-        /// <param name="associationEnd">
-        /// The association end to inspect.
-        /// </param>
-        /// <param name="umlClass">
-        /// The expected referenced UML class.
-        /// </param>
-        /// <returns>
-        /// <see langword="true"/> when the association end references the class;
-        /// otherwise, <see langword="false"/>.
-        /// </returns>
-        private static bool ReferencesClass(
-            IProperty associationEnd,
-            IClass umlClass)
-        {
-            return ReferenceEquals(associationEnd.Type, umlClass)
-                || string.Equals(associationEnd.Type?.XmiId, umlClass.XmiId, StringComparison.Ordinal);
         }
 
         /// <summary>
