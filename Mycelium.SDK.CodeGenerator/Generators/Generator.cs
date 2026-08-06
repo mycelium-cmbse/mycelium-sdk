@@ -31,14 +31,16 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// <summary>
         /// Initializes a new instance of the <see cref="Generator"/> class.
         /// </summary>
-        protected Generator()
+        /// <param name="templateSubfolder">
+        /// The optional template subdirectory.
+        /// </param>
+        protected Generator(string templateSubfolder = null)
         {
             var assemblyDirectory =
                 Path.GetDirectoryName(typeof(Generator).Assembly.Location)
                 ?? throw new InvalidOperationException("The code-generator assembly directory could not be resolved.");
 
             this.TemplateFolderPath = Path.Combine(assemblyDirectory, "Templates");
-            var templateSubfolder = this.GetOptionalSubfolderTemplateLocation();
 
             if (!string.IsNullOrWhiteSpace(templateSubfolder))
             {
@@ -50,21 +52,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// Gets the directory containing this generator's templates.
         /// </summary>
         public string TemplateFolderPath { get; protected set; }
-
-        /// <summary>
-        /// Returns an optional template subdirectory.
-        /// </summary>
-        /// <remarks>
-        /// This method is invoked during base construction. Overrides must not
-        /// depend on fields initialized by a derived constructor.
-        /// </remarks>
-        /// <returns>
-        /// The subdirectory name, or <see langword="null"/> for the template root.
-        /// </returns>
-        protected virtual string GetOptionalSubfolderTemplateLocation()
-        {
-            return null;
-        }
 
         /// <summary>
         /// Formats generated C# and normalizes it for deterministic comparison.

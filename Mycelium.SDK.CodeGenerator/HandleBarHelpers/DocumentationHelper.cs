@@ -9,6 +9,7 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
+    using System.Linq;
     using System.Text.RegularExpressions;
 
     using HandlebarsDotNet;
@@ -20,12 +21,16 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     /// <summary>
     /// Writes canonical C# XML documentation.
     /// </summary>
-    public static class DocumentationHelper
+    public static partial class DocumentationHelper
     {
         private const int DocumentationLineLength = 100;
-
-        private static readonly Regex SeeCrefOpeningTag = new(@"<see\s+cref=""([^""]+)""\s*>", RegexOptions.Compiled | RegexOptions.CultureInvariant);
-        private static readonly Regex DocumentationToken = new(@"<see\s+cref=""[^""]+""\s*/>[.,;:!?]?|\S+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private const int RegexMatchTimeoutMilliseconds = 1000;
+        
+        [GeneratedRegex(@"<see\s+cref=""([^""]+)""\s*>", RegexOptions.CultureInvariant, RegexMatchTimeoutMilliseconds)]
+        private static partial Regex SeeCrefOpeningTag();
+        
+        [GeneratedRegex(@"<see\s+cref=""[^""]+""\s*/>[.,;:!?]?|\S+", RegexOptions.CultureInvariant, RegexMatchTimeoutMilliseconds)]
+        private static partial Regex DocumentationToken();
 
         /// <summary>
         /// Registers the documentation helper.
@@ -50,7 +55,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                         return;
                     }
 
-                    documentation = SeeCrefOpeningTag
+                    documentation = SeeCrefOpeningTag()
                         .Replace(documentation, "<see cref=\"$1\" />")
                         .Replace("</see>", string.Empty, StringComparison.Ordinal);
 
@@ -69,10 +74,16 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             var line = string.Empty;
 
-            foreach (Match match in DocumentationToken.Matches(documentation))
+            foreach (var token in DocumentationToken()
+                         .Matches(documentation)
+                         .Select(match => match.Value))
             {
-                var token = match.Value;
-                var candidate = string.IsNullOrEmpty(line) ? token : $"{line} {token}";
+                if (string.IsNullOrEmpty(token))
+                {
+                    continue;
+                }
+
+                var candidate = line.Length == 0 ? token : $"{line} {token}";
 
                 if (line.Length > 0 && candidate.Length > DocumentationLineLength)
                 {

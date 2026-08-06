@@ -53,7 +53,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             "ProjectMember"
         ];
 
-        private IReadOnlyDictionary<string, IClass> classes = null!;
+        private Dictionary<string, IClass> classes = null!;
         private DirectoryInfo committedDirectory = null!;
         private DirectoryInfo expectedDirectory = null!;
         private UmlDtoGenerator generator = null!;

@@ -26,14 +26,20 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// Initializes a new instance of the
         /// <see cref="HandleBarsGenerator"/> class.
         /// </summary>
-        protected HandleBarsGenerator()
+        /// <param name="templateSubfolder">
+        /// The optional template subdirectory.
+        /// </param>
+        protected HandleBarsGenerator(string templateSubfolder = null) : base(templateSubfolder)
         {
             this.Templates = new Dictionary<string, HandlebarsTemplate<object, object>>(StringComparer.Ordinal);
-
             this.Handlebars = HandlebarsDotNet.Handlebars.CreateSharedEnvironment();
 
             HandlebarsHelpers.Register(this.Handlebars);
+            this.Register();
+        }
 
+        private void Register()
+        {
             this.RegisterHelpers();
             this.RegisterTemplates();
         }

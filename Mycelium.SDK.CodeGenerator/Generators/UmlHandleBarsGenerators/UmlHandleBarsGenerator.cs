@@ -9,11 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 {
-    using System;
-    using System.IO;
-    using System.Linq;
-    using System.Threading.Tasks;
-
     using uml4net.Extensions;
     using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
@@ -28,6 +23,14 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The name of the UML package containing the FunctionalData model.
         /// </summary>
         private const string FunctionalDataPackageName = "FunctionalData";
+
+        /// <summary>
+        /// Initializes a new instance of the
+        /// <see cref="UmlHandleBarsGenerator" /> class.
+        /// </summary>
+        protected UmlHandleBarsGenerator() : base("Uml")
+        {
+        }
 
         /// <summary>
         /// Generates the artifacts supported by the concrete generator.
@@ -82,12 +85,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                 dataTypes,
                 classes,
                 interfaces);
-        }
-
-        /// <inheritdoc />
-        protected override string GetOptionalSubfolderTemplateLocation()
-        {
-            return "Uml";
         }
     }
 }
