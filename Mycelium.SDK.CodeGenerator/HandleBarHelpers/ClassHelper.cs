@@ -23,6 +23,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <summary>
         /// Registers the DTO class helpers.
         /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the DTO class helpers are registered.
+        /// </param>
         public static void RegisterClassHelper(this IHandlebars handlebars)
         {
             ArgumentNullException.ThrowIfNull(handlebars);

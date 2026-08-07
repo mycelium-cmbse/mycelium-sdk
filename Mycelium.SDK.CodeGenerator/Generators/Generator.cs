@@ -49,7 +49,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         }
 
         /// <summary>
-        /// Gets the directory containing this generator's templates.
+        /// Gets or sets the directory containing this generator's templates.
         /// </summary>
         public string TemplateFolderPath { get; protected set; }
 

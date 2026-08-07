@@ -26,6 +26,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <summary>
         /// Registers the named-element helpers.
         /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the named-element helpers are registered.
+        /// </param>
         public static void RegisterNamedElementHelper(this IHandlebars handlebars)
         {
             ArgumentNullException.ThrowIfNull(handlebars);

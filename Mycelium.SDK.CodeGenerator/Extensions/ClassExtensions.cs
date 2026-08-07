@@ -25,6 +25,12 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <summary>
         /// Queries the properties declared directly by the class.
         /// </summary>
+        /// <param name="umlClass">
+        /// The UML class whose directly owned properties are queried.
+        /// </param>
+        /// <returns>
+        /// The directly owned properties, deduplicated and deterministically ordered.
+        /// </returns>
         public static IReadOnlyList<IProperty> QueryDtoInterfaceProperties(this IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);
@@ -36,6 +42,12 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// Queries every property that a concrete DTO implementation must
         /// implement, including inherited properties.
         /// </summary>
+        /// <param name="umlClass">
+        /// The UML class whose implementation properties are queried.
+        /// </param>
+        /// <returns>
+        /// The direct and inherited properties, deduplicated and deterministically ordered.
+        /// </returns>
         public static IReadOnlyList<IProperty> QueryDtoImplementationProperties(this IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);
@@ -46,6 +58,12 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <summary>
         /// Queries the direct UML generalizations in deterministic order.
         /// </summary>
+        /// <param name="umlClass">
+        /// The UML class whose direct generalizations are queried.
+        /// </param>
+        /// <returns>
+        /// The distinct direct generalizations in deterministic order.
+        /// </returns>
         public static IReadOnlyList<IClass> QueryDtoGeneralizations(this IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);

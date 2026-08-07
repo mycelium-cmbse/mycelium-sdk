@@ -35,11 +35,26 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <summary>
         /// Generates the artifacts supported by the concrete generator.
         /// </summary>
+        /// <param name="xmiReaderResult">
+        /// The parsed UML model used for generation.
+        /// </param>
+        /// <param name="outputDirectory">
+        /// The directory to which the generated artifacts are written.
+        /// </param>
+        /// <returns>
+        /// A task representing the asynchronous generation operation.
+        /// </returns>
         public abstract Task GenerateAsync(XmiReaderResult xmiReaderResult, DirectoryInfo outputDirectory);
 
         /// <summary>
         /// Creates a deterministic payload for the FunctionalData package.
         /// </summary>
+        /// <param name="xmiReaderResult">
+        /// The parsed UML model from which the payload is created.
+        /// </param>
+        /// <returns>
+        /// A deterministic Handlebars payload for the FunctionalData package.
+        /// </returns>
         protected static HandlebarsPayload CreateHandlebarsPayload(XmiReaderResult xmiReaderResult)
         {
             ArgumentNullException.ThrowIfNull(xmiReaderResult);

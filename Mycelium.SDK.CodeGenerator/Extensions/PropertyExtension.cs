@@ -17,13 +17,19 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     using uml4net.StructuredClassifiers;
 
     /// <summary>
-    /// Provides DTO-specific type and multiplicity queries for UML properties.
+    /// Provides DTO-specific name, type, and multiplicity queries for UML properties.
     /// </summary>
     public static class PropertyExtension
     {
         /// <summary>
-        /// Queries the legal PascalCase C# DTO property identifier.
+        /// Queries the legal C# DTO property identifier with its first letter capitalized.
         /// </summary>
+        /// <param name="property">
+        /// The UML property whose DTO identifier is queried.
+        /// </param>
+        /// <returns>
+        /// The legal C# DTO property identifier with its first letter capitalized.
+        /// </returns>
         public static string QueryDtoPropertyName(this IProperty property)
         {
             ArgumentNullException.ThrowIfNull(property);
@@ -42,6 +48,12 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// Queries the complete DTO property type, including collection and
         /// scalar-nullability syntax.
         /// </summary>
+        /// <param name="property">
+        /// The UML property whose complete DTO type is queried.
+        /// </param>
+        /// <returns>
+        /// The complete C# DTO type name, including collection and scalar-nullability syntax.
+        /// </returns>
         public static string QueryDtoTypeName(this IProperty property)
         {
             ArgumentNullException.ThrowIfNull(property);

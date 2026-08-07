@@ -14,13 +14,19 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     using Microsoft.CodeAnalysis.CSharp;
 
     /// <summary>
-    /// Makes modeled names legal C# identifiers without changing their spelling.
+    /// Validates modeled names and escapes reserved C# keywords without otherwise changing them.
     /// </summary>
     public static class ReservedCSharpNameMapper
     {
         /// <summary>
         /// Escapes a C# keyword and leaves an already valid identifier unchanged.
         /// </summary>
+        /// <param name="input">
+        /// The modeled name to map to a legal C# identifier.
+        /// </param>
+        /// <returns>
+        /// The escaped keyword, or the unchanged valid identifier.
+        /// </returns>
         public static string Map(string input)
         {
             ArgumentException.ThrowIfNullOrEmpty(input);
@@ -43,6 +49,13 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <summary>
         /// Determines whether the supplied name is a reserved C# keyword.
         /// </summary>
+        /// <param name="input">
+        /// The name to test.
+        /// </param>
+        /// <returns>
+        /// <see langword="true"/> when <paramref name="input"/> is a reserved C# keyword;
+        /// otherwise, <see langword="false"/>.
+        /// </returns>
         public static bool QueryIsReserved(string input)
         {
             ArgumentException.ThrowIfNullOrEmpty(input);

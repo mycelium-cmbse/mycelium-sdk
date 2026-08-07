@@ -47,8 +47,15 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <summary>
         /// Generates one enumeration.
         /// </summary>
+        /// <param name="outputDirectory">
+        /// The directory to which the generated enumeration is written.
+        /// </param>
+        /// <param name="enumeration">
+        /// The UML enumeration to generate.
+        /// </param>
         /// <returns>
-        /// The generated and formatted C# source.
+        /// A task that represents the asynchronous enumeration generation operation. The task result
+        /// contains the generated and formatted C# source.
         /// </returns>
         public async Task<string> GenerateEnumerationAsync(DirectoryInfo outputDirectory, IEnumeration enumeration)
         {

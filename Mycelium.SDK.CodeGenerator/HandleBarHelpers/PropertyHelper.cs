@@ -24,6 +24,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <summary>
         /// Registers the DTO property helpers.
         /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the DTO property helpers are registered.
+        /// </param>
         public static void RegisterPropertyHelper(this IHandlebars handlebars)
         {
             ArgumentNullException.ThrowIfNull(handlebars);

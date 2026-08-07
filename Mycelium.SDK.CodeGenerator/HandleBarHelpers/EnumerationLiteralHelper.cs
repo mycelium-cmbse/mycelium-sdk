@@ -26,6 +26,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <summary>
         /// Registers the enumeration-literal helper.
         /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the enumeration-literal helper is registered.
+        /// </param>
         public static void RegisterEnumerationLiteralHelper(
             this IHandlebars handlebars)
         {

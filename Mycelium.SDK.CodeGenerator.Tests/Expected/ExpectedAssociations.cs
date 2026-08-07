@@ -112,6 +112,21 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
         /// <summary>
         /// Creates an order-independent semantic association signature.
         /// </summary>
+        /// <param name="firstType">
+        /// The type name of the first association end.
+        /// </param>
+        /// <param name="firstRole">
+        /// The role name of the first association end, or <see langword="null" /> if it has no role.
+        /// </param>
+        /// <param name="secondType">
+        /// The type name of the second association end.
+        /// </param>
+        /// <param name="secondRole">
+        /// The role name of the second association end, or <see langword="null" /> if it has no role.
+        /// </param>
+        /// <returns>
+        /// The order-independent semantic association signature.
+        /// </returns>
         public static string CreateSignature(
             string firstType,
             string firstRole,

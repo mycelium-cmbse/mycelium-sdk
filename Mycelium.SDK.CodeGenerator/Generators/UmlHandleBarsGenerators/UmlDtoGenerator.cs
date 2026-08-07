@@ -67,8 +67,15 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <summary>
         /// Generates one DTO interface.
         /// </summary>
+        /// <param name="outputDirectory">
+        /// The directory to which the generated DTO interface is written.
+        /// </param>
+        /// <param name="umlClass">
+        /// The UML class for which the DTO interface is generated.
+        /// </param>
         /// <returns>
-        /// The generated and formatted C# source.
+        /// A task that represents the asynchronous DTO interface generation operation. The task result
+        /// contains the generated and formatted C# source.
         /// </returns>
         public async Task<string> GenerateDataTransferObjectInterfaceAsync(DirectoryInfo outputDirectory, IClass umlClass)
         {
@@ -87,8 +94,15 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <summary>
         /// Generates one concrete DTO implementation.
         /// </summary>
+        /// <param name="outputDirectory">
+        /// The directory to which the generated DTO implementation is written.
+        /// </param>
+        /// <param name="umlClass">
+        /// The UML class for which the DTO implementation is generated.
+        /// </param>
         /// <returns>
-        /// The generated and formatted C# source.
+        /// A task that represents the asynchronous DTO implementation generation operation. The task result
+        /// contains the generated and formatted C# source.
         /// </returns>
         public async Task<string> GenerateDataTransferObjectClassAsync(DirectoryInfo outputDirectory, IClass umlClass)
         {
@@ -151,7 +165,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The generated filename and formatted C# source.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the UML class is abstract.
+        /// Thrown when the UML class is abstract or has no name.
         /// </exception>
         private GeneratedFile RenderDataTransferObjectClass(IClass umlClass)
         {

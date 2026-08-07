@@ -38,6 +38,9 @@ namespace Mycelium.SDK.CodeGenerator.Generators
             this.Register();
         }
 
+        /// <summary>
+        /// Registers the generator-specific helpers and templates.
+        /// </summary>
         private void Register()
         {
             this.RegisterHelpers();
@@ -73,7 +76,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         protected abstract void RegisterTemplates();
 
         /// <summary>
-        /// Loads and compiles a template using its filename without
+        /// Loads, compiles, and registers a template using its filename without
         /// the <c>.hbs</c> extension.
         /// </summary>
         /// <param name="name">
