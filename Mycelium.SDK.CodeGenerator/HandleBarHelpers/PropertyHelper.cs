@@ -27,6 +27,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="handlebars">
         /// The Handlebars environment in which the DTO property helpers are registered.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars"/> is <see langword="null" />.
+        /// </exception>
         public static void RegisterPropertyHelper(this IHandlebars handlebars)
         {
             ArgumentNullException.ThrowIfNull(handlebars);

@@ -55,6 +55,12 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <returns>
         /// A deterministic Handlebars payload for the FunctionalData package.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="xmiReaderResult"/> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the model does not contain exactly one package named <c>FunctionalData</c>.
+        /// </exception>
         protected static HandlebarsPayload CreateHandlebarsPayload(XmiReaderResult xmiReaderResult)
         {
             ArgumentNullException.ThrowIfNull(xmiReaderResult);

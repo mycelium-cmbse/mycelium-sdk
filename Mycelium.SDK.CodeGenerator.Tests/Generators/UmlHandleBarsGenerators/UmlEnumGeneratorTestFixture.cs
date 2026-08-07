@@ -13,12 +13,28 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
     using Mycelium.SDK.CodeGenerator.Tests.Xmi;
 
+    /// <summary>
+    /// Verifies FunctionalData enumeration generation against the reviewed golden files.
+    /// </summary>
     [TestFixture]
     public class UmlEnumGeneratorTestFixture
     {
+        /// <summary>
+        /// The directory containing the reviewed enumeration golden files.
+        /// </summary>
         private DirectoryInfo expectedDirectory = null!;
+        
+        /// <summary>
+        /// The staging directory containing the generated enumeration files.
+        /// </summary>
         private DirectoryInfo stagingDirectory = null!;
 
+        /// <summary>
+        /// Generates the enumeration files used by the fixture's tests.
+        /// </summary>
+        /// <returns>
+        /// A task that represents the asynchronous fixture setup operation.
+        /// </returns>
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
@@ -39,6 +55,10 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             await generator.GenerateAsync(xmiReaderResult, this.stagingDirectory);
         }
 
+        /// <summary>
+        /// Verifies that the generated and reviewed enumeration file sets contain exactly the expected
+        /// files.
+        /// </summary>
         [Test]
         public void Verify_that_no_enumeration_files_are_missing_or_extra()
         {
@@ -67,6 +87,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             });
         }
 
+        /// <summary>
+        /// Verifies that a generated enumeration matches its reviewed golden file.
+        /// </summary>
+        /// <param name="enumerationName">
+        /// The name of the enumeration to verify.
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous test operation.
+        /// </returns>
         [TestCaseSource(typeof(ExpectedEnumerations))]
         [Category("Expected")]
         public async Task Verify_that_generated_enumeration_matches_reviewed_golden_file(string enumerationName)
@@ -86,6 +115,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 $"Generated '{fileName}' differs from its reviewed golden file.");
         }
 
+        /// <summary>
+        /// Queries the C# filenames in the specified directory in deterministic order.
+        /// </summary>
+        /// <param name="directory">
+        /// The directory whose C# filenames are queried.
+        /// </param>
+        /// <returns>
+        /// The deterministically ordered C# filenames.
+        /// </returns>
         private static string[] QueryCSharpFileNames(DirectoryInfo directory)
         {
             return directory

@@ -30,6 +30,15 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <returns>
         /// The legal C# DTO property identifier with its first letter capitalized.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="property"/> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UML property has no name.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the capitalized property name cannot be represented as a legal C# identifier.
+        /// </exception>
         public static string QueryDtoPropertyName(this IProperty property)
         {
             ArgumentNullException.ThrowIfNull(property);
@@ -54,6 +63,15 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <returns>
         /// The complete C# DTO type name, including collection and scalar-nullability syntax.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="property"/> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the property type is unresolved, unsupported, or unnamed.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a named UML type cannot be represented as a legal C# identifier.
+        /// </exception>
         public static string QueryDtoTypeName(this IProperty property)
         {
             ArgumentNullException.ThrowIfNull(property);

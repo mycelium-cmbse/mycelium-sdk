@@ -21,9 +21,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
     using uml4net.StructuredClassifiers;
 
+    /// <summary>
+    /// Verifies FunctionalData DTO generation against reviewed and committed source files.
+    /// </summary>
     [TestFixture]
     public class UmlDtoGeneratorTestFixture
     {
+        /// <summary>
+        /// The UML class names for which only DTO interfaces are generated.
+        /// </summary>
         private static readonly HashSet<string> AbstractClassNames =
             new(StringComparer.Ordinal)
             {
@@ -31,6 +37,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 "Thing"
             };
 
+        /// <summary>
+        /// The UML class names whose generated DTO interfaces have reviewed golden files.
+        /// </summary>
         private static readonly string[] RepresentativeInterfaceNames =
         [
             "AuditableThing",
@@ -43,6 +52,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             "Thing"
         ];
 
+        /// <summary>
+        /// The UML class names whose generated concrete DTOs have reviewed golden files.
+        /// </summary>
         private static readonly string[] RepresentativeConcreteClassNames =
         [
             "BranchProtectionRule",
@@ -53,12 +65,37 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             "ProjectMember"
         ];
 
+        /// <summary>
+        /// The FunctionalData UML classes indexed by name.
+        /// </summary>
         private Dictionary<string, IClass> classes = null!;
+        
+        /// <summary>
+        /// The directory containing the committed SDK DTO source files.
+        /// </summary>
         private DirectoryInfo committedDirectory = null!;
+        
+        /// <summary>
+        /// The directory containing the reviewed DTO golden files.
+        /// </summary>
         private DirectoryInfo expectedDirectory = null!;
+        
+        /// <summary>
+        /// The DTO generator used by the fixture.
+        /// </summary>
         private UmlDtoGenerator generator = null!;
+        
+        /// <summary>
+        /// The staging directory containing the generated DTO files.
+        /// </summary>
         private DirectoryInfo stagingDirectory = null!;
 
+        /// <summary>
+        /// Loads the FunctionalData model and generates the DTO files used by the fixture's tests.
+        /// </summary>
+        /// <returns>
+        /// A task that represents the asynchronous fixture setup operation.
+        /// </returns>
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
@@ -83,6 +120,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             await this.generator.GenerateAsync(xmiReaderResult, this.stagingDirectory);
         }
 
+        /// <summary>
+        /// Verifies that the reviewed golden-file set contains exactly the representative DTOs.
+        /// </summary>
         [Test]
         public void Verify_that_reviewed_golden_set_contains_exactly_the_representative_DTOs()
         {
@@ -101,6 +141,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             });
         }
         
+        /// <summary>
+        /// Verifies that batch generation produces exactly the expected 24 DTO files.
+        /// </summary>
         [Test]
         public void Verify_that_batch_generation_produces_exactly_24_DTO_files()
         {
@@ -129,11 +172,16 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 Assert.That(expectedInterfaceFileNames, Has.Length.EqualTo(13));
                 Assert.That(expectedConcreteFileNames, Has.Length.EqualTo(11));
                 Assert.That(expectedFileNames, Has.Length.EqualTo(24));
-
                 Assert.That(generatedFileNames, Is.EqualTo(expectedFileNames), "The generated DTO set contains missing or extra files.");
             });
         }
-        
+
+        /// <summary>
+        /// Verifies that the complete generated DTO batch matches the committed SDK DTO source files.
+        /// </summary>
+        /// <returns>
+        /// A task that represents the asynchronous test operation.
+        /// </returns>
         [Test]
         public async Task Verify_that_complete_batch_matches_committed_SDK_DTOs()
         {
@@ -153,6 +201,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
         }
 
+        /// <summary>
+        /// Verifies that a representative generated DTO interface matches its reviewed golden file.
+        /// </summary>
+        /// <param name="className">
+        /// The UML class name whose DTO interface is verified.
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous test operation.
+        /// </returns>
         [TestCaseSource(nameof(RepresentativeInterfaceNames))]
         [Category("Expected")]
         public async Task Verify_that_representative_DTO_interface_matches_reviewed_golden_file(string className)
@@ -169,6 +226,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 + "reviewed golden file.");
         }
 
+        /// <summary>
+        /// Verifies that a representative generated DTO class matches its reviewed golden file.
+        /// </summary>
+        /// <param name="className">
+        /// The UML class name whose concrete DTO is verified.
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous test operation.
+        /// </returns>
         [TestCaseSource(nameof(RepresentativeConcreteClassNames))]
         [Category("Expected")]
         public async Task Verify_that_representative_DTO_class_matches_reviewed_golden_file(string className)
@@ -185,6 +251,12 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 + "reviewed golden file.");
         }
 
+        /// <summary>
+        /// Verifies that batch generation writes no files when model validation fails.
+        /// </summary>
+        /// <returns>
+        /// A task that represents the asynchronous test operation.
+        /// </returns>
         [Test]
         public async Task Verify_that_batch_generation_writes_no_files_when_model_validation_fails()
         {
@@ -221,6 +293,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 "The generator created output after model preflight failed.");
         }
 
+        /// <summary>
+        /// Queries the C# filenames in the specified directory in deterministic order.
+        /// </summary>
+        /// <param name="directory">
+        /// The directory whose C# filenames are queried.
+        /// </param>
+        /// <returns>
+        /// The deterministically ordered C# filenames.
+        /// </returns>
         private static string[] QueryCSharpFileNames(DirectoryInfo directory)
         {
             return directory

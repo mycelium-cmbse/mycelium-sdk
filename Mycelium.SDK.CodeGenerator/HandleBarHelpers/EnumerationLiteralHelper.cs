@@ -29,6 +29,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="handlebars">
         /// The Handlebars environment in which the enumeration-literal helper is registered.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars"/> is <see langword="null" />.
+        /// </exception>
         public static void RegisterEnumerationLiteralHelper(
             this IHandlebars handlebars)
         {

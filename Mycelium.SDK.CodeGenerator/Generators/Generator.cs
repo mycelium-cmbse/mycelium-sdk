@@ -62,6 +62,12 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// <returns>
         /// The formatted C# source using CRLF line endings.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="generatedCode"/> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="generatedCode"/> is empty.
+        /// </exception>
         protected virtual string CodeCleanup(string generatedCode)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(generatedCode);
@@ -94,6 +100,13 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// <returns>
         /// An awaitable task.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="generatedCode"/>, <paramref name="outputDirectory"/>, or
+        /// <paramref name="fileName"/> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="generatedCode"/> or <paramref name="fileName"/> is empty.
+        /// </exception>
         protected static async Task WriteAsync(string generatedCode, DirectoryInfo outputDirectory, string fileName)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(generatedCode);

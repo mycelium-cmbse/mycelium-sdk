@@ -22,11 +22,20 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
     using uml4net.xmi.Extensions.EnterpriseArchitect.Structure.Readers;
     using Microsoft.Extensions.Logging.Abstractions;
 
+    /// <summary>
+    /// Verifies that the XMI resources required for FunctionalData generation can be loaded and resolved.
+    /// </summary>
     [TestFixture]
     public class XmiLoadingTestFixture
     {
+        /// <summary>
+        /// The URI of the standard UML primitive-types model.
+        /// </summary>
         private const string PrimitiveTypesUri = "http://www.omg.org/spec/UML/20161101/PrimitiveTypes.xmi";
 
+        /// <summary>
+        /// The expected standard UML primitive-type names.
+        /// </summary>
         private static readonly string[] StandardPrimitiveNames =
         [
             "Boolean",
@@ -36,6 +45,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             "UnlimitedNatural"
         ];
 
+        /// <summary>
+        /// The expected custom primitive-type names.
+        /// </summary>
         private static readonly string[] CustomPrimitiveNames =
         [
             "DateTime",
@@ -44,8 +56,20 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             "Uri"
         ];
 
+        /// <summary>
+        /// Gets the directory containing the XMI test resources.
+        /// </summary>
         private static string ResourcesDirectory => Path.Combine(AppContext.BaseDirectory, "Resources");
 
+        /// <summary>
+        /// Verifies that each XMI resource can be read and contains the expected UML package.
+        /// </summary>
+        /// <param name="fileName">
+        /// The XMI resource filename.
+        /// </param>
+        /// <param name="expectedPackageName">
+        /// The expected UML package name.
+        /// </param>
         [TestCase("FunctionalData.xmi", "FunctionalData")]
         [TestCase("CSharp_Primitives.xmi", "Primitives")]
         [TestCase("PrimitiveTypes.xmi", "PrimitiveTypes")]
@@ -57,6 +81,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             Assert.That(package.Name, Is.EqualTo(expectedPackageName));
         }
 
+        /// <summary>
+        /// Verifies that Windows-1252 encoding is available.
+        /// </summary>
         [Test]
         public void Verify_that_Windows_1252_encoding_is_available()
         {
@@ -65,6 +92,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             Assert.That(Encoding.GetEncoding(1252).CodePage, Is.EqualTo(1252));
         }
 
+        /// <summary>
+        /// Verifies that the XMI reader uses the configured local-reference settings.
+        /// </summary>
         [Test]
         public void Verify_that_reader_uses_local_reference_settings()
         {
@@ -72,16 +102,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
 
             Assert.Multiple(() =>
             {
-                Assert.That(
-                    settings.LocalReferenceBasePath,
-                    Is.EqualTo(ResourcesDirectory));
-
+                Assert.That(settings.LocalReferenceBasePath, Is.EqualTo(ResourcesDirectory));
                 Assert.That(settings.PathMaps.TryGetValue(PrimitiveTypesUri, out var primitiveTypesPath), Is.True);
-
                 Assert.That(primitiveTypesPath, Is.EqualTo(Path.Combine(ResourcesDirectory, "PrimitiveTypes.xmi")));
             });
         }
 
+        /// <summary>
+        /// Verifies that the FunctionalData package is selected by name.
+        /// </summary>
         [Test]
         public void Verify_that_FunctionalData_package_is_selected_by_name()
         {
@@ -91,6 +120,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             Assert.That(package.Name, Is.EqualTo("FunctionalData"));
         }
 
+        /// <summary>
+        /// Verifies that the referenced standard and custom primitive models are loaded.
+        /// </summary>
         [Test]
         public void Verify_that_referenced_primitive_models_are_loaded()
         {
@@ -116,6 +148,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             });
         }
 
+        /// <summary>
+        /// Verifies that referenced property types, generalizations, and association-end types are resolved.
+        /// </summary>
         [Test]
         public void Verify_that_referenced_identifiers_are_resolved()
         {
@@ -163,18 +198,40 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             });
         }
 
+        /// <summary>
+        /// Reads the FunctionalData XMI resource.
+        /// </summary>
+        /// <returns>
+        /// The parsed XMI reader result.
+        /// </returns>
         internal static XmiReaderResult ReadFunctionalData()
         {
             return Read("FunctionalData.xmi");
         }
 
-        internal static IPackage QueryFunctionalDataPackage(
-            XmiReaderResult result)
+        /// <summary>
+        /// Queries the FunctionalData package from a parsed XMI model.
+        /// </summary>
+        /// <param name="result">
+        /// The parsed XMI reader result.
+        /// </param>
+        /// <returns>
+        /// The FunctionalData UML package.
+        /// </returns>
+        internal static IPackage QueryFunctionalDataPackage(XmiReaderResult result)
         {
             return QueryPackage(result, "FunctionalData");
         }
         
-        
+        /// <summary>
+        /// Reads the specified XMI resource using the configured local-reference settings.
+        /// </summary>
+        /// <param name="fileName">
+        /// The XMI resource filename.
+        /// </param>
+        /// <returns>
+        /// The parsed XMI reader result.
+        /// </returns>
         private static XmiReaderResult Read(string fileName)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -193,6 +250,12 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             return reader.Read(Path.Combine(ResourcesDirectory, fileName));
         }
 
+        /// <summary>
+        /// Creates XMI reader settings that resolve referenced models from local test resources.
+        /// </summary>
+        /// <returns>
+        /// The configured XMI reader settings.
+        /// </returns>
         private static DefaultSettings CreateReaderSettings()
         {
             return new DefaultSettings
@@ -206,6 +269,18 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             };
         }
 
+        /// <summary>
+        /// Queries a UML package by name from a parsed XMI model.
+        /// </summary>
+        /// <param name="result">
+        /// The parsed XMI reader result.
+        /// </param>
+        /// <param name="packageName">
+        /// The name of the UML package to query.
+        /// </param>
+        /// <returns>
+        /// The UML package with the specified name.
+        /// </returns>
         private static IPackage QueryPackage(XmiReaderResult result, string packageName)
         {
             return result.Packages

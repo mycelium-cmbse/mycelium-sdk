@@ -57,6 +57,14 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// A task that represents the asynchronous enumeration generation operation. The task result
         /// contains the generated and formatted C# source.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="outputDirectory"/> or <paramref name="enumeration"/> is
+        /// <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the enumeration name or one of its literal names cannot be represented as a legal
+        /// C# identifier.
+        /// </exception>
         public async Task<string> GenerateEnumerationAsync(DirectoryInfo outputDirectory, IEnumeration enumeration)
         {
             ArgumentNullException.ThrowIfNull(outputDirectory);

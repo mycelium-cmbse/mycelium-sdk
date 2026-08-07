@@ -31,6 +31,12 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <returns>
         /// The directly owned properties, deduplicated and deterministically ordered.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="umlClass"/> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when a directly owned property has no XMI identifier or name.
+        /// </exception>
         public static IReadOnlyList<IProperty> QueryDtoInterfaceProperties(this IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);
@@ -48,6 +54,12 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <returns>
         /// The direct and inherited properties, deduplicated and deterministically ordered.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="umlClass"/> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when a direct or inherited property has no XMI identifier or name.
+        /// </exception>
         public static IReadOnlyList<IProperty> QueryDtoImplementationProperties(this IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);
@@ -64,6 +76,13 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <returns>
         /// The distinct direct generalizations in deterministic order.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="umlClass"/> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when a generalization is unresolved or is not a UML class, or when a generalized class
+        /// has no XMI identifier.
+        /// </exception>
         public static IReadOnlyList<IClass> QueryDtoGeneralizations(this IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);

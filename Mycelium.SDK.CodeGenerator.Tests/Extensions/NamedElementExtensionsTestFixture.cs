@@ -15,9 +15,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
     using uml4net.CommonStructure;
     using uml4net.StructuredClassifiers;
 
+    /// <summary>
+    /// Verifies the behavior of the named-element extension methods.
+    /// </summary>
     [TestFixture]
     public class NamedElementExtensionsTestFixture
     {
+        /// <summary>
+        /// Verifies that <c>Describe</c> returns the UML class name when one is available.
+        /// </summary>
         [Test]
         public void Verify_that_Describe_returns_the_class_name()
         {
@@ -30,6 +36,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             Assert.That(umlClass.Describe(), Is.EqualTo("FunctionalProject"));
         }
 
+        /// <summary>
+        /// Verifies that <c>Describe</c> falls back to the property XMI identifier when its name is blank.
+        /// </summary>
         [Test]
         public void Verify_that_Describe_falls_back_to_the_property_Xmi_identifier()
         {
@@ -42,6 +51,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             Assert.That(property.Describe(), Is.EqualTo("property-id"));
         }
 
+        /// <summary>
+        /// Verifies that <c>Describe</c> rejects a <see langword="null" /> named element.
+        /// </summary>
         [Test]
         public void Verify_that_Describe_rejects_a_null_named_element()
         {

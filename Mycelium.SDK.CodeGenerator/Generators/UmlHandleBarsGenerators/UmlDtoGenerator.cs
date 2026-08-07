@@ -77,6 +77,17 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// A task that represents the asynchronous DTO interface generation operation. The task result
         /// contains the generated and formatted C# source.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="outputDirectory"/> or <paramref name="umlClass"/> is
+        /// <see langword="null" />.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UML class lacks information required to generate its DTO interface or contains
+        /// an unsupported property type.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a modeled name cannot be represented as a legal C# identifier.
+        /// </exception>
         public async Task<string> GenerateDataTransferObjectInterfaceAsync(DirectoryInfo outputDirectory, IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(outputDirectory);
@@ -104,6 +115,17 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// A task that represents the asynchronous DTO implementation generation operation. The task result
         /// contains the generated and formatted C# source.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="outputDirectory"/> or <paramref name="umlClass"/> is
+        /// <see langword="null" />.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UML class is abstract, lacks information required to generate its concrete DTO,
+        /// or contains an unsupported property type.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a modeled name cannot be represented as a legal C# identifier.
+        /// </exception>
         public async Task<string> GenerateDataTransferObjectClassAsync(DirectoryInfo outputDirectory, IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(outputDirectory);

@@ -27,6 +27,13 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <returns>
         /// The escaped keyword, or the unchanged valid identifier.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="input"/> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="input"/> is empty or cannot be represented as a legal C# identifier
+        /// without changing the modeled value.
+        /// </exception>
         public static string Map(string input)
         {
             ArgumentException.ThrowIfNullOrEmpty(input);
@@ -56,6 +63,12 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <see langword="true"/> when <paramref name="input"/> is a reserved C# keyword;
         /// otherwise, <see langword="false"/>.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="input"/> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="input"/> is empty.
+        /// </exception>
         public static bool QueryIsReserved(string input)
         {
             ArgumentException.ThrowIfNullOrEmpty(input);

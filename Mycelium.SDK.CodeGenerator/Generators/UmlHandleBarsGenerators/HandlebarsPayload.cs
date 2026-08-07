@@ -46,6 +46,9 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <param name="interfaces">
         /// The UML interfaces selected for generation.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when any constructor argument is <see langword="null" />.
+        /// </exception>
         public HandlebarsPayload(
             IPackage rootPackage,
             IEnumerable<IPackage> packages,
