@@ -4,6 +4,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mycelium.SDK", "Mycelium.SD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mycelium.SDK.Tests", "Mycelium.SDK.Tests\Mycelium.SDK.Tests.csproj", "{D2959663-AC52-4BB4-9461-773B81AC5E79}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mycelium.SDK.CodeGenerator", "Mycelium.SDK.CodeGenerator\Mycelium.SDK.CodeGenerator.csproj", "{BFF7E4B3-8850-4828-A666-EFADC1041512}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mycelium.SDK.CodeGenerator.Tests", "Mycelium.SDK.CodeGenerator.Tests\Mycelium.SDK.CodeGenerator.Tests.csproj", "{EBB7C512-BBDB-4A78-A3C8-3288E6BD4535}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +22,13 @@ Global
 		{D2959663-AC52-4BB4-9461-773B81AC5E79}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D2959663-AC52-4BB4-9461-773B81AC5E79}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D2959663-AC52-4BB4-9461-773B81AC5E79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFF7E4B3-8850-4828-A666-EFADC1041512}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFF7E4B3-8850-4828-A666-EFADC1041512}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFF7E4B3-8850-4828-A666-EFADC1041512}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFF7E4B3-8850-4828-A666-EFADC1041512}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBB7C512-BBDB-4A78-A3C8-3288E6BD4535}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBB7C512-BBDB-4A78-A3C8-3288E6BD4535}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBB7C512-BBDB-4A78-A3C8-3288E6BD4535}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBB7C512-BBDB-4A78-A3C8-3288E6BD4535}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
