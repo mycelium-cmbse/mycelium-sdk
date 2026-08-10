@@ -49,7 +49,7 @@ namespace Mycelium.SDK.POCO
         /// Asserts that the current <see cref="ProjectMember" /> is part of an external
         /// <see cref="Organization" /> than the related <see cref="FunctionalProject" /> owner.
         /// </summary>
-        public bool IsOutsideCollaborator { get; }
+        public bool IsOutsideCollaborator => this.ComputeIsOutsideCollaborator();
 
         /// <summary>
         /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.

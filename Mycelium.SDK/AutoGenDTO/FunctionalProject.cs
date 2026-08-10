@@ -100,7 +100,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Collects all preferences created and shared by users, to create common custom views.
         /// </summary>
-        public Dictionary<string, string> SharedPreferences { get; set; }
+        public Dictionary<string, string> SharedPreferences { get; set; } = [];
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current

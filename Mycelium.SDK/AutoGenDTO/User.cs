@@ -87,7 +87,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Collects all preferences of the current <see cref="User" /> to create custom views.
         /// </summary>
-        public Dictionary<string, string> UserPreferences { get; set; }
+        public Dictionary<string, string> UserPreferences { get; set; } = [];
     }
 }
 

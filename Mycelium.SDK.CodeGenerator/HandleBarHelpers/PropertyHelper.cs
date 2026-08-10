@@ -47,13 +47,15 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 (writer, _, arguments) =>
                 {
                     var property = QueryProperty(arguments, "{{Property.WriteDtoImplementationDeclaration}}");
+                    var propertyTypeName = property.QueryDtoTypeName();
+                    var requiresCollectionInitializer = property.QueryIsEnumerable() || propertyTypeName.StartsWith("Dictionary<", StringComparison.Ordinal);
 
-                    var collectionInitializer = property.QueryIsEnumerable()
+                    var collectionInitializer = requiresCollectionInitializer
                         ? " = [];"
                         : string.Empty;
 
                     writer.WriteSafeString(
-                        $"public {property.QueryDtoTypeName()} " +
+                        $"public {propertyTypeName} " +
                         $"{property.QueryDtoPropertyName()} {QueryDtoAccessors(property)}" +
                         collectionInitializer);
                 });
