@@ -10,6 +10,7 @@
 namespace Mycelium.SDK.Tests.Dto
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -90,6 +91,7 @@ namespace Mycelium.SDK.Tests.Dto
             Assert.Multiple(() =>
             {
                 Assert.That(expectedInterfaceTypes, Has.Length.EqualTo(13));
+
                 Assert.That(
                     actualInterfaceTypes,
                     Is.EqualTo(expectedInterfaceTypes),
@@ -97,80 +99,19 @@ namespace Mycelium.SDK.Tests.Dto
             });
         }
 
-        [TestCaseSource(nameof(RepresentativeInterfacePropertyContracts))]
-        public void Verify_that_representative_interface_property_shape_matches_the_contract(
-            Type interfaceType,
-            string propertyName,
-            Type expectedPropertyType)
-        {
-            var property = interfaceType.GetProperty(
-                propertyName,
-                BindingFlags.Public
-                | BindingFlags.Instance
-                | BindingFlags.DeclaredOnly);
-
-            Assert.That(
-                property,
-                Is.Not.Null,
-                $"Interface '{interfaceType.Name}' does not declare property '{propertyName}'.");
-
-            Assert.That(
-                property!.PropertyType,
-                Is.EqualTo(expectedPropertyType),
-                $"Property '{interfaceType.Name}.{propertyName}' has an unexpected type.");
-        }
-
         [Test]
-        public void Verify_that_concrete_DTO_coverage_matches_the_reviewed_contract()
-        {
-            var expectedConcreteTypes = ConcreteDtoTypes
-                .OrderBy(type => type.Name, StringComparer.Ordinal)
-                .ToArray();
-
-            var actualConcreteTypes = typeof(IThing).Assembly
-                .GetExportedTypes()
-                .Where(type => type.Namespace == DtoNamespace && type.IsClass && !type.IsAbstract)
-                .OrderBy(type => type.Name, StringComparer.Ordinal)
-                .ToArray();
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(expectedConcreteTypes, Has.Length.EqualTo(11));
-
-                Assert.That(
-                    actualConcreteTypes,
-                    Is.EqualTo(expectedConcreteTypes),
-                    "The public concrete DTO set contains missing or extra classes.");
-
-                foreach (var concreteType in ConcreteDtoTypes)
-                {
-                    Assert.That(
-                        concreteType.GetConstructor(Type.EmptyTypes),
-                        Is.Not.Null,
-                        $"'{concreteType.Name}' must provide a public parameterless constructor.");
-                }
-            });
-        }
-
-        [Test]
-        public void Verify_that_only_derived_properties_are_getter_only()
+        public void Verify_that_all_DTO_properties_have_public_getters_and_setters()
         {
             var interfaceProperties = DtoInterfaceTypes
                 .SelectMany(interfaceType =>
                     interfaceType
-                        .GetProperties(
-                            BindingFlags.Public
-                            | BindingFlags.Instance
-                            | BindingFlags.DeclaredOnly)
+                        .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                         .Select(property => (DeclaringType: interfaceType, Property: property)));
 
             var concreteProperties = ConcreteDtoTypes
                 .SelectMany(concreteType =>
                     concreteType
-                        .GetProperties(
-                            BindingFlags.Public
-                            | BindingFlags.Instance
-                            | BindingFlags.DeclaredOnly)
+                        .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                         .Select(property => (DeclaringType: concreteType, Property: property)));
 
             Assert.Multiple(() =>
@@ -180,26 +121,14 @@ namespace Mycelium.SDK.Tests.Dto
                     var displayName = $"{contractProperty.DeclaringType.Name}.{contractProperty.Property.Name}";
 
                     Assert.That(
-                        contractProperty.Property.GetGetMethod(nonPublic: true)?.IsPublic,
+                        contractProperty.Property.GetGetMethod(true)?.IsPublic,
                         Is.True,
                         $"'{displayName}' must have a public getter.");
 
-                    var setter = contractProperty.Property.GetSetMethod(nonPublic: true);
-
-                    if (IsDerivedProperty(contractProperty.DeclaringType, contractProperty.Property))
-                    {
-                        Assert.That(
-                            setter,
-                            Is.Null,
-                            $"Derived property '{displayName}' must be getter-only.");
-                    }
-                    else
-                    {
-                        Assert.That(
-                            setter?.IsPublic,
-                            Is.True,
-                            $"Writable property '{displayName}' must have a public setter.");
-                    }
+                    Assert.That(
+                        contractProperty.Property.GetSetMethod(true)?.IsPublic,
+                        Is.True,
+                        $"'{displayName}' must have a public setter.");
                 }
             });
         }
@@ -258,10 +187,10 @@ namespace Mycelium.SDK.Tests.Dto
 
                     Assert.That(
                         value,
-                        Is.InstanceOf<System.Collections.ICollection>(),
+                        Is.InstanceOf<ICollection>(),
                         $"Collection property '{displayName}' does not expose a supported collection.");
 
-                    if (value is System.Collections.ICollection collection)
+                    if (value is ICollection collection)
                     {
                         Assert.That(
                             collection.Count,
@@ -270,6 +199,58 @@ namespace Mycelium.SDK.Tests.Dto
                     }
                 }
             });
+        }
+
+        [Test]
+        public void Verify_that_concrete_DTO_coverage_matches_the_reviewed_contract()
+        {
+            var expectedConcreteTypes = ConcreteDtoTypes
+                .OrderBy(type => type.Name, StringComparer.Ordinal)
+                .ToArray();
+
+            var actualConcreteTypes = typeof(IThing).Assembly
+                .GetExportedTypes()
+                .Where(type => type.Namespace == DtoNamespace && type.IsClass && !type.IsAbstract)
+                .OrderBy(type => type.Name, StringComparer.Ordinal)
+                .ToArray();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(expectedConcreteTypes, Has.Length.EqualTo(11));
+
+                Assert.That(
+                    actualConcreteTypes,
+                    Is.EqualTo(expectedConcreteTypes),
+                    "The public concrete DTO set contains missing or extra classes.");
+
+                foreach (var concreteType in ConcreteDtoTypes)
+                {
+                    Assert.That(
+                        concreteType.GetConstructor(Type.EmptyTypes),
+                        Is.Not.Null,
+                        $"'{concreteType.Name}' must provide a public parameterless constructor.");
+                }
+            });
+        }
+
+        [TestCaseSource(nameof(RepresentativeInterfacePropertyContracts))]
+        public void Verify_that_representative_interface_property_shape_matches_the_contract(Type interfaceType, string propertyName, Type expectedPropertyType)
+        {
+            var property = interfaceType.GetProperty(
+                propertyName,
+                BindingFlags.Public
+                | BindingFlags.Instance
+                | BindingFlags.DeclaredOnly);
+
+            Assert.That(
+                property,
+                Is.Not.Null,
+                $"Interface '{interfaceType.Name}' does not declare property '{propertyName}'.");
+
+            Assert.That(
+                property!.PropertyType,
+                Is.EqualTo(expectedPropertyType),
+                $"Property '{interfaceType.Name}.{propertyName}' has an unexpected type.");
         }
 
         private static IEnumerable<TestCaseData> RepresentativeInterfacePropertyContracts()
@@ -323,25 +304,11 @@ namespace Mycelium.SDK.Tests.Dto
                 typeof(IBranchProtectionRule),
                 nameof(IBranchProtectionRule.MergeAllowedFor),
                 typeof(List<ProjectMemberRole>));
-
-            yield return new TestCaseData(
-                typeof(IProjectMember),
-                nameof(IProjectMember.IsOutsideCollaborator),
-                typeof(bool));
         }
 
         private static bool IsList(Type type)
         {
             return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
-        }
-
-        private static bool IsDerivedProperty(
-            Type declaringType,
-            PropertyInfo property)
-        {
-            return property.Name == nameof(IProjectMember.IsOutsideCollaborator)
-                   && (declaringType == typeof(IProjectMember)
-                       || declaringType == typeof(ProjectMember));
         }
     }
 }

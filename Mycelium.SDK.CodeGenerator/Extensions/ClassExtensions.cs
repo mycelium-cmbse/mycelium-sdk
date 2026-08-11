@@ -37,7 +37,10 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         {
             ArgumentNullException.ThrowIfNull(umlClass);
 
-            return OrderProperties(umlClass.OwnedAttribute, "DTO").ToArray();
+            return OrderProperties(
+                    umlClass.OwnedAttribute
+                        .Where(property => !property.IsDerived && !property.IsDerivedUnion), "DTO")
+                .ToArray();
         }
 
         /// <summary>
@@ -85,7 +88,10 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             ValidateGeneralizationHierarchy(umlClass);
 
-            return OrderProperties(umlClass.QueryAllProperties(), "DTO").ToArray();
+            return OrderProperties(
+                    umlClass.QueryAllProperties()
+                        .Where(property => !property.IsDerived && !property.IsDerivedUnion), "DTO")
+                .ToArray();
         }
 
         /// <summary>

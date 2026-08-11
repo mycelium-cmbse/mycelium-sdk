@@ -46,12 +46,6 @@ namespace Mycelium.SDK.DTO
         public DateTime CreatedOn { get; set; }
 
         /// <summary>
-        /// Asserts that the current <see cref="ProjectMember" /> is part of an external
-        /// <see cref="Organization" /> than the related <see cref="FunctionalProject" /> owner.
-        /// </summary>
-        public bool IsOutsideCollaborator { get; }
-
-        /// <summary>
         /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
         /// </summary>
         public Guid IsPartOf { get; set; }

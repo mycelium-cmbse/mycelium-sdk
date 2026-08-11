@@ -31,12 +31,6 @@ namespace Mycelium.SDK.DTO
         Guid? ActiveOwnership { get; set; }
 
         /// <summary>
-        /// Asserts that the current <see cref="ProjectMember" /> is part of an external
-        /// <see cref="Organization" /> than the related <see cref="FunctionalProject" /> owner.
-        /// </summary>
-        bool IsOutsideCollaborator { get; }
-
-        /// <summary>
         /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
         /// </summary>
         Guid IsPartOf { get; set; }
