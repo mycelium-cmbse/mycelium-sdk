@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="User.cs" company="Starion Group S.A.">
+//  <copyright file="BranchProtectionRule.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -11,18 +11,18 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.DTO
+namespace Mycelium.SDK.POCO
 {
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
 
     /// <summary>
-    /// A lightweight mirror of an identity managed by Keycloak. Holds only the data required by the
-    /// Functional Server for permission resolution and UI display.
+    /// Defines protection rules for a specific engineering branch, controlling merge permissions and review
+    /// requirements.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial class User : IUser
+    public partial class BranchProtectionRule : IBranchProtectionRule
     {
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
@@ -32,7 +32,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
         /// </summary>
-        public Guid CreatedBy { get; set; }
+        public IUser CreatedBy { get; set; }
 
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
@@ -40,54 +40,47 @@ namespace Mycelium.SDK.DTO
         public DateTime CreatedOn { get; set; }
 
         /// <summary>
-        /// The Keycloak user identifier used as the permanent join key between the Functional Server and the
-        /// identity provider.
+        /// References the default <see cref="ProjectMember" /> reviewers designated for this
+        /// <see cref="BranchProtectionRule" />.
         /// </summary>
-        public string ExternalIdentifier { get; set; }
+        public List<IUser> DefaultReviewers { get; set; } = [];
 
         /// <summary>
-        /// References the <see cref="OrganizationMember" /> records linking this <see cref="User" /> to their
-        /// organizations.
+        /// The <see cref="Guid" /> referencing the protected branch in the Concurrent Server.
         /// </summary>
-        public List<Guid> IsPartOfOrganizations { get; set; } = [];
+        public Guid EngineeringBranchId { get; set; }
 
         /// <summary>
-        /// References the <see cref="ProjectMember" /> records linking this <see cref="User" /> to their
-        /// projects.
+        /// The set of <see cref="ProjectMemberRole" /> values permitted to merge into this protected branch.
         /// </summary>
-        public List<Guid> IsPartOfProjects { get; set; } = [];
+        public List<ProjectMemberRole> MergeAllowedFor { get; set; } = [];
 
         /// <summary>
-        /// The email address of the user, cached from Keycloak for display purposes.
+        /// Gets or sets the number of approval(s) required before being allowed to merge a Branch.
         /// </summary>
-        public string Mail { get; set; }
+        public int MinimumRequiredApproval { get; set; }
 
         /// <summary>
-        /// The display name of the user, cached from Keycloak for UI rendering.
+        /// Gets or sets the name of the current rule.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// The current <see cref="ActivationStatus" /> of the user. Set to Deleted when Keycloak publishes a
-        /// user removal event, preserving referential integrity before cascade cleanup.
+        /// Indicates whether at least one approved <see cref="Review" /> is required before a merge can
+        /// proceed.
         /// </summary>
-        public ActivationStatus Status { get; set; }
+        public bool ReviewRequired { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
         /// <see cref="AuditableThing" />.
         /// </summary>
-        public Guid UpdatedBy { get; set; }
+        public IUser UpdatedBy { get; set; }
 
         /// <summary>
         /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
         public DateTime UpdatedOn { get; set; }
-
-        /// <summary>
-        /// Collects all preferences of the current <see cref="User" /> to create custom views.
-        /// </summary>
-        public Dictionary<string, string> UserPreferences { get; set; } = [];
     }
 }
 

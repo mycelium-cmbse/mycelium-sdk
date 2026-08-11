@@ -11,7 +11,7 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.DTO
+namespace Mycelium.SDK.POCO
 {
     using System;
     using System.CodeDom.Compiler;
@@ -32,18 +32,18 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// References the <see cref="Organization" /> to which the <see cref="FunctionalProject" /> belongs.
         /// </summary>
-        public Guid BelongsTo { get; set; }
+        public IOrganization BelongsTo { get; set; }
 
         /// <summary>
         /// Contains the <see cref="BranchProtectionRule" /> instances defined for this
         /// <see cref="FunctionalProject" />.
         /// </summary>
-        public List<Guid> BranchRules { get; set; } = [];
+        public List<IBranchProtectionRule> BranchRules { get; set; } = [];
 
         /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
         /// </summary>
-        public Guid CreatedBy { get; set; }
+        public IUser CreatedBy { get; set; }
 
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
@@ -59,7 +59,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// Contains the <see cref="Ownership" /> domains defined within this <see cref="FunctionalProject" />.
         /// </summary>
-        public List<Guid> Defines { get; set; } = [];
+        public List<IOwnership> Defines { get; set; } = [];
 
         /// <summary>
         /// A short human-readable description of the project purpose.
@@ -75,7 +75,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// References the <see cref="ProjectMember" /> that are part of the <see cref="FunctionalProject" /> .
         /// </summary>
-        public List<Guid> Involves { get; set; } = [];
+        public List<IProjectMember> Involves { get; set; } = [];
 
         /// <summary>
         /// The current <see cref="ProjectLifecycleKind" /> controlling editing permissions across the project.
@@ -90,12 +90,12 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// The related <see cref="FunctionalProjectPolicy" />
         /// </summary>
-        public Guid Policy { get; set; }
+        public IFunctionalProjectPolicy Policy { get; set; }
 
         /// <summary>
         /// Contains the <see cref="Review" /> instances associated with this <see cref="FunctionalProject" />.
         /// </summary>
-        public List<Guid> Reviews { get; set; } = [];
+        public List<IReview> Reviews { get; set; } = [];
 
         /// <summary>
         /// Collects all preferences created and shared by users, to create common custom views.
@@ -106,7 +106,7 @@ namespace Mycelium.SDK.DTO
         /// References the <see cref="User" /> that provide the last update on the current
         /// <see cref="AuditableThing" />.
         /// </summary>
-        public Guid UpdatedBy { get; set; }
+        public IUser UpdatedBy { get; set; }
 
         /// <summary>
         /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />

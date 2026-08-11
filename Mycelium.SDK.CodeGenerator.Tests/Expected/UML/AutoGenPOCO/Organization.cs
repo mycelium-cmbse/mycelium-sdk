@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="User.cs" company="Starion Group S.A.">
+//  <copyright file="Organization.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -11,18 +11,18 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.DTO
+namespace Mycelium.SDK.POCO
 {
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
 
     /// <summary>
-    /// A lightweight mirror of an identity managed by Keycloak. Holds only the data required by the
-    /// Functional Server for permission resolution and UI display.
+    /// Represents a tenant boundary in the Mycelium platform. On SaaS each customer maps to one
+    /// Organization; on-premise deployments may host multiple.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial class User : IUser
+    public partial class Organization : IOrganization
     {
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
@@ -32,7 +32,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
         /// </summary>
-        public Guid CreatedBy { get; set; }
+        public IUser CreatedBy { get; set; }
 
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
@@ -40,36 +40,34 @@ namespace Mycelium.SDK.DTO
         public DateTime CreatedOn { get; set; }
 
         /// <summary>
-        /// The Keycloak user identifier used as the permanent join key between the Functional Server and the
-        /// identity provider.
+        /// A short human-readable description of the organization.
         /// </summary>
-        public string ExternalIdentifier { get; set; }
+        public string Description { get; set; }
 
         /// <summary>
-        /// References the <see cref="OrganizationMember" /> records linking this <see cref="User" /> to their
-        /// organizations.
+        /// References the <see cref="OrganizationMember" /> record.
         /// </summary>
-        public List<Guid> IsPartOfOrganizations { get; set; } = [];
+        public List<IOrganizationMember> InvolvedUser { get; set; } = [];
 
         /// <summary>
-        /// References the <see cref="ProjectMember" /> records linking this <see cref="User" /> to their
-        /// projects.
-        /// </summary>
-        public List<Guid> IsPartOfProjects { get; set; } = [];
-
-        /// <summary>
-        /// The email address of the user, cached from Keycloak for display purposes.
-        /// </summary>
-        public string Mail { get; set; }
-
-        /// <summary>
-        /// The display name of the user, cached from Keycloak for UI rendering.
+        /// The display name of the organization.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// The current <see cref="ActivationStatus" /> of the user. Set to Deleted when Keycloak publishes a
-        /// user removal event, preserving referential integrity before cascade cleanup.
+        /// The <see cref="OrganizationPolicy" /> instance owned by this <see cref="Organization" />.
+        /// </summary>
+        public IOrganizationPolicy Policy { get; set; }
+
+        /// <summary>
+        /// Contains the <see cref="FunctionalProject" /> instances belonging to this
+        /// <see cref="Organization" />.
+        /// </summary>
+        public List<IFunctionalProject> Projects { get; set; } = [];
+
+        /// <summary>
+        /// The current <see cref="ActivationStatus" /> of the organization, controlling platform access for all
+        /// its members.
         /// </summary>
         public ActivationStatus Status { get; set; }
 
@@ -77,17 +75,12 @@ namespace Mycelium.SDK.DTO
         /// References the <see cref="User" /> that provide the last update on the current
         /// <see cref="AuditableThing" />.
         /// </summary>
-        public Guid UpdatedBy { get; set; }
+        public IUser UpdatedBy { get; set; }
 
         /// <summary>
         /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
         public DateTime UpdatedOn { get; set; }
-
-        /// <summary>
-        /// Collects all preferences of the current <see cref="User" /> to create custom views.
-        /// </summary>
-        public Dictionary<string, string> UserPreferences { get; set; } = [];
     }
 }
 
