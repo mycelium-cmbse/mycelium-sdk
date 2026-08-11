@@ -144,8 +144,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         protected override void RegisterHelpers()
         {
             DocumentationHelper.RegisterDocumentationHelper(this.Handlebars);
-            ClassHelper.RegisterClassHelper(this.Handlebars);
-            PropertyHelper.RegisterPropertyHelper(this.Handlebars);
+            ClassHelper.RegisterDtoClassHelper(this.Handlebars);
+            PropertyHelper.RegisterDtoPropertyHelper(this.Handlebars);
             NamedElementHelper.RegisterNamedElementHelper(this.Handlebars);
         }
 
