@@ -104,8 +104,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
 
                 Assert.That(
                     implementationProperties.Select(property => property.Name),
-                    Is.EqualTo(new[]
-                    {
+                    Is.EqualTo([
                         "id",
                         "activeOwnership",
                         "createdBy",
@@ -116,7 +115,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                         "updatedBy",
                         "updatedOn",
                         "user"
-                    }));
+                    ]));
 
                 Assert.That(
                     projectMember.QueryPocoInterfaceProperties().Select(property => property.Name),
@@ -129,7 +128,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         }
 
         [Test]
-        public void Verify_that_QueryPocoGeneralizations_deduplicates_and_orders_generalizations()
+        public void Verify_that_QueryGeneralizations_deduplicates_and_orders_generalizations()
         {
             var specificClass = new Class
             {
@@ -158,20 +157,19 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                 });
             }
 
-            var generalizations = specificClass.QueryPocoGeneralizations();
+            var generalizations = specificClass.QueryGeneralizations();
 
             Assert.That(generalizations.Select(generalization => generalization.XmiId),
-                Is.EqualTo(new[]
-                {
+                Is.EqualTo([
                     "general-alpha-1",
                     "general-alpha-2",
                     "general-alpha-lower",
                     "general-zeta"
-                }));
+                ]));
         }
 
         [Test]
-        public void Verify_that_QueryPocoGeneralizations_rejects_a_general_class_without_an_identifier()
+        public void Verify_that_QueryGeneralizations_rejects_a_general_class_without_an_identifier()
         {
             var specificClass = new Class
             {
@@ -190,13 +188,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                 }
             });
 
-            var exception = Assert.Throws<InvalidOperationException>(() => specificClass.QueryPocoGeneralizations());
+            var exception = Assert.Throws<InvalidOperationException>(() => specificClass.QueryGeneralizations());
 
             Assert.That(exception.Message, Is.EqualTo("Class 'GeneralClass' has no XMI identifier."));
         }
 
         [Test]
-        public void Verify_that_QueryPocoGeneralizations_rejects_a_non_class_generalization()
+        public void Verify_that_QueryGeneralizations_rejects_a_non_class_generalization()
         {
             var specificClass = new Class
             {
@@ -215,21 +213,21 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                 }
             });
 
-            var exception = Assert.Throws<InvalidOperationException>(() => specificClass.QueryPocoGeneralizations());
+            var exception = Assert.Throws<InvalidOperationException>(() => specificClass.QueryGeneralizations());
 
             Assert.That(exception.Message, Is.EqualTo("Class 'SpecificClass' has an unresolved or non-class generalization."));
         }
 
         [Test]
-        public void Verify_that_QueryPocoGeneralizations_rejects_a_null_class()
+        public void Verify_that_QueryGeneralizations_rejects_a_null_class()
         {
             IClass umlClass = null;
 
-            Assert.That(() => umlClass.QueryPocoGeneralizations(), Throws.ArgumentNullException);
+            Assert.That(() => umlClass.QueryGeneralizations(), Throws.ArgumentNullException);
         }
 
         [Test]
-        public void Verify_that_QueryPocoGeneralizations_rejects_an_unresolved_generalization()
+        public void Verify_that_QueryGeneralizations_rejects_an_unresolved_generalization()
         {
             var specificClass = new Class
             {
@@ -243,20 +241,20 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                 Specific = specificClass
             });
 
-            var exception = Assert.Throws<InvalidOperationException>(() => specificClass.QueryPocoGeneralizations());
+            var exception = Assert.Throws<InvalidOperationException>(() => specificClass.QueryGeneralizations());
 
             Assert.That(exception.Message, Is.EqualTo("Class 'SpecificClass' has an unresolved or non-class generalization."));
         }
 
         [Test]
-        public void Verify_that_QueryPocoGeneralizations_returns_only_direct_FunctionalData_generalizations()
+        public void Verify_that_QueryGeneralizations_returns_only_direct_FunctionalData_generalizations()
         {
             var projectMember = this.classes.Single(umlClass => umlClass.Name == "ProjectMember");
 
-            var generalizations = projectMember.QueryPocoGeneralizations();
+            var generalizations = projectMember.QueryGeneralizations();
 
             Assert.That(generalizations.Select(generalization => generalization.Name),
-                Is.EqualTo(new[] { "AuditableThing" }));
+                Is.EqualTo([ "AuditableThing" ]));
         }
 
         [Test]
@@ -347,8 +345,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             var properties = projectMember.QueryPocoImplementationProperties();
 
             Assert.That(properties.Select(property => property.Name),
-                Is.EqualTo(new[]
-                {
+                Is.EqualTo([
                     "id",
                     "activeOwnership",
                     "createdBy",
@@ -360,7 +357,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                     "updatedBy",
                     "updatedOn",
                     "user"
-                }));
+                ]));
         }
 
         [Test]
@@ -450,14 +447,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             var properties = umlClass.QueryPocoInterfaceProperties();
 
             Assert.That(properties.Select(property => property.XmiId),
-                Is.EqualTo(new[]
-                {
+                Is.EqualTo([
                     "property-id",
                     "property-alpha-1",
                     "property-alpha-2",
                     "property-alpha-lower",
                     "property-zeta"
-                }));
+                ]));
         }
 
         [Test]
@@ -517,28 +513,26 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             Assert.Multiple(() =>
             {
                 Assert.That(properties.Select(property => property.Name),
-                    Is.EqualTo(new[]
-                    {
+                    Is.EqualTo([
                         "activeOwnership",
                         "isOutsideCollaborator",
                         "isPartOf",
                         "owns",
                         "role",
                         "user"
-                    }));
+                    ]));
 
                 Assert.That(properties.All(property => projectMember.OwnedAttribute.Contains(property)), Is.True);
 
                 Assert.That(properties
                         .Where(property => property.Association is not null)
                         .Select(property => property.Name),
-                    Is.EquivalentTo(new[]
-                    {
+                    Is.EquivalentTo([
                         "activeOwnership",
                         "isPartOf",
                         "owns",
                         "user"
-                    }));
+                    ]));
             });
         }
     }

@@ -9,8 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Extensions
 {
-    using System;
-
     using uml4net.Classification;
     using uml4net.Extensions;
     using uml4net.SimpleClassifiers;
@@ -22,66 +20,27 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     public static class PropertyExtension
     {
         /// <summary>
-        /// Queries the legal C# DTO property identifier with its first letter capitalized.
+        /// Queries the legal C# property identifier with its first letter capitalized.
         /// </summary>
         /// <param name="property">
-        /// The UML property whose DTO identifier is queried.
-        /// </param>
-        /// <returns>
-        /// The legal C# DTO property identifier with its first letter capitalized.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="property"/> is <see langword="null" />.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the UML property has no name.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// Thrown when the capitalized property name cannot be represented as a legal C# identifier.
-        /// </exception>
-        public static string QueryDtoPropertyName(this IProperty property)
-        {
-            ArgumentNullException.ThrowIfNull(property);
-
-            return QueryPropertyName(property);
-        }
-
-        /// <summary>
-        /// Queries the legal C# POCO property identifier with its first letter capitalized.
-        /// </summary>
-        /// <param name="property">
-        /// The UML property whose POCO identifier is queried.
-        /// </param>
-        /// <returns>
-        /// The legal C# POCO property identifier with its first letter capitalized.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="property"/> is <see langword="null" />.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the UML property has no name.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// Thrown when the capitalized property name cannot be represented as a legal C# identifier.
-        /// </exception>
-        public static string QueryPocoPropertyName(this IProperty property)
-        {
-            ArgumentNullException.ThrowIfNull(property);
-
-            return QueryPropertyName(property);
-        }
-        
-        /// <summary>
-        /// Validates and maps a UML property name to its legal C# identifier.
-        /// </summary>
-        /// <param name="property">
-        /// The UML property whose identifier is mapped.
+        /// The UML property whose generated identifier is queried.
         /// </param>
         /// <returns>
         /// The legal PascalCase C# property identifier.
         /// </returns>
-        private static string QueryPropertyName(IProperty property)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="property" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UML property has no name.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the capitalized property name cannot be represented as a legal C# identifier.
+        /// </exception>
+        public static string QueryPropertyName(this IProperty property)
         {
+            ArgumentNullException.ThrowIfNull(property);
+
             if (string.IsNullOrWhiteSpace(property.Name))
             {
                 throw new InvalidOperationException($"Property '{property.XmiId}' has no name.");
@@ -91,7 +50,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             return ReservedCSharpNameMapper.Map(cSharpPropertyName);
         }
-        
+
         /// <summary>
         /// Queries the complete DTO property type, including collection and
         /// scalar-nullability syntax.
@@ -103,7 +62,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// The complete C# DTO type name, including collection and scalar-nullability syntax.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="property"/> is <see langword="null" />.
+        /// Thrown when <paramref name="property" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown when the property type is unresolved, unsupported, or unnamed.
@@ -141,7 +100,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// The complete C# POCO type name.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="property"/> is <see langword="null" />.
+        /// Thrown when <paramref name="property" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown when the property type is unresolved, unsupported, or unnamed.
@@ -167,7 +126,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             return elementTypeName;
         }
-        
+
         /// <summary>
         /// Queries the C# DTO element type before multiplicity and nullability
         /// syntax are applied.
@@ -193,8 +152,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 IClass => "Guid",
                 IEnumeration enumeration => MapNamedType(enumeration.Name, property),
                 IPrimitiveType primitiveType => primitiveType.QueryCSharpTypeName(),
-                _ => throw new InvalidOperationException($"Property '{property.Describe()}' has unsupported UML type "
-                                                         + $"'{property.Type.Name}'.")
+                _ => throw new InvalidOperationException($"Property '{property.Describe()}' has unsupported UML type " + $"'{property.Type.Name}'.")
             };
         }
 
@@ -222,7 +180,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 _ => throw new InvalidOperationException($"Property '{property.Describe()}' has unsupported UML type " + $"'{property.Type.Name}'.")
             };
         }
-        
+
         /// <summary>
         /// Maps a referenced UML class to its generated POCO interface identifier.
         /// </summary>
@@ -244,7 +202,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             return ReservedCSharpNameMapper.Map($"I{umlClass.Name}");
         }
-        
+
         /// <summary>
         /// Preserves the uml4net C# representation of a modeled primitive type.
         /// </summary>
@@ -268,7 +226,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             return typeName;
         }
-        
+
         /// <summary>
         /// Determines whether an optional POCO element type requires nullable value-type syntax.
         /// </summary>
@@ -310,7 +268,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                        "Guid" or
                        "TimeSpan";
         }
-        
+
         /// <summary>
         /// Maps a named UML type to a legal C# identifier.
         /// </summary>

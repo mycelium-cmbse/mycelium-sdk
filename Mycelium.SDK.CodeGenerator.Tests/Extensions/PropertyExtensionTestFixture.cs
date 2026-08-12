@@ -37,17 +37,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         }
 
         [Test]
-        public void Verify_that_Poco_and_Dto_property_names_preserve_the_FunctionalData_contract()
+        public void Verify_that_QueryPropertyName_preserves_the_FunctionalData_contract()
         {
-            Assert.Multiple(() =>
-            {
-                Assert.That(this.roleProperty.QueryPocoPropertyName(), Is.EqualTo("Role"));
-                Assert.That(this.roleProperty.QueryDtoPropertyName(), Is.EqualTo("Role"));
-            });
+            Assert.That(this.roleProperty.QueryPropertyName(), Is.EqualTo("Role"));
         }
 
         [Test]
-        public void Verify_that_QueryPocoPropertyName_rejects_a_missing_name()
+        public void Verify_that_QueryPropertyName_rejects_a_missing_name()
         {
             var property = new Property
             {
@@ -55,21 +51,21 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                 Name = " "
             };
 
-            var exception = Assert.Throws<InvalidOperationException>(() => property.QueryPocoPropertyName());
+            var exception = Assert.Throws<InvalidOperationException>(() => property.QueryPropertyName());
 
             Assert.That(exception.Message, Is.EqualTo("Property 'property-id' has no name."));
         }
 
         [Test]
-        public void Verify_that_QueryPocoPropertyName_rejects_a_null_property()
+        public void Verify_that_QueryPropertyName_rejects_a_null_property()
         {
             IProperty property = null;
 
-            Assert.That(() => property.QueryPocoPropertyName(), Throws.ArgumentNullException);
+            Assert.That(() => property.QueryPropertyName(), Throws.ArgumentNullException);
         }
 
         [Test]
-        public void Verify_that_QueryPocoPropertyName_rejects_an_illegal_identifier()
+        public void Verify_that_QueryPropertyName_rejects_an_illegal_identifier()
         {
             var property = new Property
             {
@@ -77,7 +73,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                 Name = "invalid-name"
             };
 
-            var exception = Assert.Throws<ArgumentException>(() => property.QueryPocoPropertyName());
+            var exception = Assert.Throws<ArgumentException>(() => property.QueryPropertyName());
 
             Assert.That(exception.Message, Does.Contain("'Invalid-name' is not a valid C# identifier"));
         }

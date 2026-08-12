@@ -40,7 +40,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 {
                     var property = QueryProperty(arguments, "{{Property.WriteDtoInterfaceDeclaration}}");
 
-                    writer.WriteSafeString($"{property.QueryDtoTypeName()} " + $"{property.QueryDtoPropertyName()} {QueryAccessors(property)}");
+                    writer.WriteSafeString($"{property.QueryDtoTypeName()} " + $"{property.QueryPropertyName()} {QueryAccessors(property)}");
                 });
 
             handlebars.RegisterHelper(
@@ -53,7 +53,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                     writer.WriteSafeString(
                         $"public {propertyTypeName} " +
-                        $"{property.QueryDtoPropertyName()} {QueryAccessors(property)}" +
+                        $"{property.QueryPropertyName()} {QueryAccessors(property)}" +
                         collectionInitializer);
                 });
         }
@@ -77,7 +77,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 {
                     var property = QueryProperty(arguments, "{{Property.WritePocoInterfaceDeclaration}}");
 
-                    writer.WriteSafeString($"{property.QueryPocoTypeName()} " + $"{property.QueryPocoPropertyName()} {QueryAccessors(property)}");
+                    writer.WriteSafeString($"{property.QueryPocoTypeName()} " + $"{property.QueryPropertyName()} {QueryAccessors(property)}");
                 });
 
             handlebars.RegisterHelper(
@@ -93,7 +93,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                     writer.WriteSafeString(
                         $"public {propertyTypeName} " +
-                        $"{property.QueryPocoPropertyName()} {QueryAccessors(property)}" +
+                        $"{property.QueryPropertyName()} {QueryAccessors(property)}" +
                         collectionInitializer);
                 });
         }

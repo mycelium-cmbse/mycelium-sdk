@@ -122,7 +122,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         }
 
         /// <summary>
-        /// Queries the direct UML generalizations in deterministic order.
+        /// Queries the direct UML generalizations used for generated interface inheritance.
         /// </summary>
         /// <param name="umlClass">
         /// The UML class whose direct generalizations are queried.
@@ -137,30 +137,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// Thrown when a generalization is unresolved or is not a UML class, or when a generalized class
         /// has no XMI identifier.
         /// </exception>
-        public static IReadOnlyList<IClass> QueryDtoGeneralizations(this IClass umlClass)
-        {
-            ArgumentNullException.ThrowIfNull(umlClass);
-
-            return QueryDirectGeneralizations(umlClass);
-        }
-
-        /// <summary>
-        /// Queries the direct UML generalizations for the POCO interface contract.
-        /// </summary>
-        /// <param name="umlClass">
-        /// The UML class whose direct POCO generalizations are queried.
-        /// </param>
-        /// <returns>
-        /// The distinct direct generalizations in deterministic order.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="umlClass" /> is <see langword="null" />.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when a generalization is unresolved or is not a UML class, or when a generalized class
-        /// has no XMI identifier.
-        /// </exception>
-        public static IReadOnlyList<IClass> QueryPocoGeneralizations(this IClass umlClass)
+        public static IReadOnlyList<IClass> QueryGeneralizations(this IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);
 
@@ -237,7 +214,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <returns>
         /// The distinct direct UML classes in deterministic order.
         /// </returns>
-        private static IReadOnlyList<IClass> QueryDirectGeneralizations(IClass umlClass)
+        private static IClass[] QueryDirectGeneralizations(IClass umlClass)
         {
             var generalClasses = umlClass.SuperClass;
 

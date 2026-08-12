@@ -61,7 +61,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 (writer, _, arguments) =>
                 {
                     var umlClass = QueryClass(arguments, "{{Class.WriteDtoInterfaceGeneralizations}}");
-                    var inheritance = string.Join(", ", umlClass.QueryDtoGeneralizations().Select(QueryGeneratedInterfaceIdentifier));
+                    var inheritance = string.Join(", ", umlClass.QueryGeneralizations().Select(QueryGeneratedInterfaceIdentifier));
 
                     if (inheritance.Length > 0)
                     {
@@ -105,7 +105,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 {
                     var umlClass = QueryClass(arguments, "{{Class.WritePocoInterfaceGeneralizations}}");
 
-                    var inheritance = string.Join(", ", umlClass.QueryPocoGeneralizations().Select(QueryGeneratedInterfaceIdentifier));
+                    var inheritance = string.Join(", ", umlClass.QueryGeneralizations().Select(QueryGeneratedInterfaceIdentifier));
 
                     if (inheritance.Length > 0)
                     {
