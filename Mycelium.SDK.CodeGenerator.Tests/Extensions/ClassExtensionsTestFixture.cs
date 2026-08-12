@@ -19,6 +19,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
     [TestFixture]
     public class ClassExtensionsTestFixture
     {
+        private static readonly string[] ExpectedRegularPropertyNames = ["regular"];
+        private static readonly string[] ExpectedAllPocoPropertyNames = ["regular", "derived", "derivedUnion"];
         private IClass[] classes = [];
 
         [OneTimeSetUp]
@@ -65,19 +67,19 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             {
                 Assert.That(
                     umlClass.QueryDtoInterfaceProperties().Select(property => property.Name),
-                    Is.EqualTo(new[] { "regular" }));
+                    Is.EqualTo(ExpectedRegularPropertyNames));
 
                 Assert.That(
                     umlClass.QueryDtoImplementationProperties().Select(property => property.Name),
-                    Is.EqualTo(new[] { "regular" }));
+                    Is.EqualTo(ExpectedRegularPropertyNames));
 
                 Assert.That(
                     umlClass.QueryPocoInterfaceProperties().Select(property => property.Name),
-                    Is.EquivalentTo(new[] { "regular", "derived", "derivedUnion" }));
+                    Is.EquivalentTo(ExpectedAllPocoPropertyNames));
 
                 Assert.That(
                     umlClass.QueryPocoImplementationProperties().Select(property => property.Name),
-                    Is.EquivalentTo(new[] { "regular", "derived", "derivedUnion" }));
+                    Is.EquivalentTo(ExpectedAllPocoPropertyNames));
             });
         }
 
@@ -92,14 +94,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             {
                 Assert.That(
                     interfaceProperties.Select(property => property.Name),
-                    Is.EqualTo(new[]
-                    {
+                    Is.EqualTo([
                         "activeOwnership",
                         "isPartOf",
                         "owns",
                         "role",
                         "user"
-                    }));
+                    ]));
 
                 Assert.That(
                     implementationProperties.Select(property => property.Name),
