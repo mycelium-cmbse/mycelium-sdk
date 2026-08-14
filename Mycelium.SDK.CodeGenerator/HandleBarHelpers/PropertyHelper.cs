@@ -146,7 +146,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             return $"{QueryAccessors(property)}" + QueryCollectionInitializer(property, propertyTypeName);
         }
-        
+
         /// <summary>
         /// Queries the initializer for a generated concrete collection property.
         /// </summary>

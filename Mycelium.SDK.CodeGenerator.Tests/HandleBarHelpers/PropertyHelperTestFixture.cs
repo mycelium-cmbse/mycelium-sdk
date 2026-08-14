@@ -119,7 +119,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
                 Assert.That(this.RenderPocoImplementation(property), Is.EqualTo("public bool DerivedUnion => this.ComputeDerivedUnion();"));
             });
         }
-        
+
         [Test]
         public void Verify_that_Poco_declarations_preserve_nullable_value_types()
         {

@@ -45,7 +45,7 @@ namespace Mycelium.SDK.POCO
 
             return organizationMemberships.All(
                 membership =>
-                    membership?.Organization?.Id == owningOrganization.Id);
+                    membership?.Organization?.Id != owningOrganization.Id);
         }
     }
 }
