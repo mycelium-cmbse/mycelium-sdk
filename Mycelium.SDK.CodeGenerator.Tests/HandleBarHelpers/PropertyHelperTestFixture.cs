@@ -83,7 +83,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
 
                 Assert.That(
                     this.RenderPocoImplementation(this.QueryProperty("ProjectMember", "isOutsideCollaborator")),
-                    Is.EqualTo("public bool IsOutsideCollaborator { get; }"));
+                    Is.EqualTo("public bool IsOutsideCollaborator => this.ComputeIsOutsideCollaborator();"));
 
                 Assert.That(
                     this.RenderPocoImplementation(this.QueryProperty("FunctionalProject", "sharedPreferences")),
@@ -96,6 +96,30 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             });
         }
 
+        [Test]
+        public void Verify_that_Poco_derived_union_declarations_delegate_to_computation()
+        {
+            var property = new Property
+            {
+                XmiId = "derived-union",
+                Name = "derivedUnion",
+                IsDerivedUnion = true,
+                Type = new PrimitiveType
+                {
+                    XmiId = "boolean-type",
+                    Name = "Boolean"
+                }
+            };
+
+            property.LowerValue.Add(new LiteralInteger { Value = 1 });
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(this.RenderPocoInterface(property), Is.EqualTo("bool DerivedUnion { get; }"));
+                Assert.That(this.RenderPocoImplementation(property), Is.EqualTo("public bool DerivedUnion => this.ComputeDerivedUnion();"));
+            });
+        }
+        
         [Test]
         public void Verify_that_Poco_declarations_preserve_nullable_value_types()
         {

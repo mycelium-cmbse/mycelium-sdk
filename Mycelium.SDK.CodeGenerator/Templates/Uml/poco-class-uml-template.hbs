@@ -1,0 +1,34 @@
+// ------------------------------------------------------------------------------------------------
+//  <copyright file="{{this.Name}}.cs" company="Starion Group S.A.">
+//
+//    Copyright 2026 Starion Group S.A.
+//    SPDX-License-Identifier: Apache-2.0
+//
+//  </copyright>
+//  ------------------------------------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
+namespace Mycelium.SDK.POCO
+{
+using System;
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+
+{{ #Documentation this }}[GeneratedCode("Mycelium.SDK", "latest")]
+public partial class {{ #NamedElement.WriteIdentifier this }} : {{ #Class.WritePocoInterfaceIdentifier this }}
+{
+{{ #each (Class.QueryPocoImplementationProperties this) as | property | }}
+{{ #Documentation property }}{{ #Property.WritePocoImplementationDeclaration property }}
+{{#unless @last}}
+
+{{/unless}}
+{{/each}}
+}
+}
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

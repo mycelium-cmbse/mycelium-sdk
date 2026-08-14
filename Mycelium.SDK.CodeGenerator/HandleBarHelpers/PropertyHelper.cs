@@ -84,17 +84,11 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 "Property.WritePocoImplementationDeclaration",
                 (writer, _, arguments) =>
                 {
-                    var property = QueryProperty(
-                        arguments,
-                        "{{Property.WritePocoImplementationDeclaration}}");
-
+                    var property = QueryProperty(arguments, "{{Property.WritePocoImplementationDeclaration}}");
                     var propertyTypeName = property.QueryPocoTypeName();
-                    var collectionInitializer = QueryCollectionInitializer(property, propertyTypeName);
+                    var propertyName = property.QueryPropertyName();
 
-                    writer.WriteSafeString(
-                        $"public {propertyTypeName} " +
-                        $"{property.QueryPropertyName()} {QueryAccessors(property)}" +
-                        collectionInitializer);
+                    writer.WriteSafeString($"public {propertyTypeName} {propertyName} " + QueryPocoImplementationSuffix(property, propertyName, propertyTypeName));
                 });
         }
 
@@ -105,14 +99,54 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// The UML property.
         /// </param>
         /// <returns>
-        /// A getter-only declaration for a derived property; otherwise,
+        /// A getter-only declaration for a derived or derived-union property; otherwise,
         /// a get-and-set declaration.
         /// </returns>
         private static string QueryAccessors(IProperty property)
         {
-            return property.IsDerived ? "{ get; }" : "{ get; set; }";
+            return QueryIsDerived(property) ? "{ get; }" : "{ get; set; }";
         }
 
+        /// <summary>
+        /// Determines whether the UML property represents derived state.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property.
+        /// </param>
+        /// <returns>
+        /// <see langword="true" /> for a derived or derived-union property.
+        /// </returns>
+        private static bool QueryIsDerived(IProperty property)
+        {
+            return property.IsDerived || property.IsDerivedUnion;
+        }
+
+        /// <summary>
+        /// Queries the implementation suffix for a concrete POCO property.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property.
+        /// </param>
+        /// <param name="propertyName">
+        /// The generated C# property name.
+        /// </param>
+        /// <param name="propertyTypeName">
+        /// The generated C# property type.
+        /// </param>
+        /// <returns>
+        /// Computation delegation for derived state; otherwise, mutable accessors
+        /// and any required collection initializer.
+        /// </returns>
+        private static string QueryPocoImplementationSuffix(IProperty property, string propertyName, string propertyTypeName)
+        {
+            if (QueryIsDerived(property))
+            {
+                return $"=> this.Compute{propertyName}();";
+            }
+
+            return $"{QueryAccessors(property)}" + QueryCollectionInitializer(property, propertyTypeName);
+        }
+        
         /// <summary>
         /// Queries the initializer for a generated concrete collection property.
         /// </summary>
