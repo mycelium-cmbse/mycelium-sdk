@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="IProjectMember.cs" company="Starion Group S.A.">
+//  <copyright file="IComment.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -11,45 +11,49 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.DTO
+namespace Mycelium.SDK.POCO
 {
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
 
     /// <summary>
-    /// Represents the membership of a <see cref="User" /> within a <see cref="FunctionalProject" />,
-    /// carrying the project-level role and optional ownership assignment.
+    /// Represents a user comment attached to a <see cref="Review" />, targeting a specific model element.
+    /// Supports threaded replies.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial interface IProjectMember : IAuditableThing
+    public partial interface IComment : IAuditableThing
     {
         /// <summary>
-        /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when
-        /// assigned to multiple ownership domains.
+        /// References the <see cref="ProjectMember" /> who authored this <see cref="Comment" />.
         /// </summary>
-        Guid? ActiveOwnership { get; set; }
+        IUser Author { get; set; }
 
         /// <summary>
-        /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
+        /// Defines the current status of the current Comment.
         /// </summary>
-        Guid IsPartOf { get; set; }
+        CommentStatus CommentStatus { get; set; }
 
         /// <summary>
-        /// References all <see cref="Ownership" /> domains assigned to this <see cref="ProjectMember" />.
+        /// The textual content of the comment.
         /// </summary>
-        List<Guid> Owns { get; set; }
+        string Content { get; set; }
 
         /// <summary>
-        /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their
-        /// editing and access permissions.
+        /// References a quoted <see cref="Comment" />
         /// </summary>
-        ProjectMemberRole Role { get; set; }
+        IComment Quotes { get; set; }
 
         /// <summary>
-        /// References the <see cref="User" /> record.
+        /// Contains threaded reply <see cref="Comment" /> instances nested under this comment.
         /// </summary>
-        Guid User { get; set; }
+        List<IComment> Replies { get; set; }
+
+        /// <summary>
+        /// The <see cref="Guid" /> of the SysML v2 model element this comment is attached to in the Concurrent
+        /// Server.
+        /// </summary>
+        Guid TargetElementId { get; set; }
     }
 }
 

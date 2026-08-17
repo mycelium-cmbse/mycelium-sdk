@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="IProjectMember.cs" company="Starion Group S.A.">
+//  <copyright file="IOrganizationMember.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -11,45 +11,33 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.DTO
+namespace Mycelium.SDK.POCO
 {
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
 
     /// <summary>
-    /// Represents the membership of a <see cref="User" /> within a <see cref="FunctionalProject" />,
-    /// carrying the project-level role and optional ownership assignment.
+    /// Represents the membership of a <see cref="User" /> within an <see cref="Organization" />, carrying
+    /// the organization-level role.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial interface IProjectMember : IAuditableThing
+    public partial interface IOrganizationMember : IAuditableThing
     {
         /// <summary>
-        /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when
-        /// assigned to multiple ownership domains.
+        /// References the <see cref="Organization" /> this <see cref="OrganizationMember" /> belongs to.
         /// </summary>
-        Guid? ActiveOwnership { get; set; }
+        IOrganization Organization { get; set; }
 
         /// <summary>
-        /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
+        /// The <see cref="OrganizationMembershipRole" /> assigned to the user within the organization.
         /// </summary>
-        Guid IsPartOf { get; set; }
-
-        /// <summary>
-        /// References all <see cref="Ownership" /> domains assigned to this <see cref="ProjectMember" />.
-        /// </summary>
-        List<Guid> Owns { get; set; }
-
-        /// <summary>
-        /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their
-        /// editing and access permissions.
-        /// </summary>
-        ProjectMemberRole Role { get; set; }
+        OrganizationMembershipRole Role { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> record.
         /// </summary>
-        Guid User { get; set; }
+        IUser User { get; set; }
     }
 }
 

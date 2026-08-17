@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="UmlDtoGenerator.cs" company="Starion Group S.A.">
+//  <copyright file="UmlPocoGenerator.cs" company="Starion Group S.A.">
 // 
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -18,22 +18,22 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
     using uml4net.StructuredClassifiers;
 
     /// <summary>
-    /// Generates the FunctionalData DTO interfaces and concrete implementations.
+    /// Generates the FunctionalData POCO interfaces and concrete implementations.
     /// </summary>
-    public sealed class UmlDtoGenerator : UmlClassHandleBarsGenerator
+    public sealed class UmlPocoGenerator : UmlClassHandleBarsGenerator
     {
         /// <summary>
-        /// The registered Handlebars template name used for concrete DTO classes.
+        /// The registered Handlebars template name used for concrete POCO classes.
         /// </summary>
-        private const string ClassTemplateName = "dto-class-uml-template";
+        private const string ClassTemplateName = "poco-class-uml-template";
         
         /// <summary>
-        /// The registered Handlebars template name used for DTO interfaces.
+        /// The registered Handlebars template name used for POCO interfaces.
         /// </summary>
-        private const string InterfaceTemplateName = "dto-interface-uml-template";
+        private const string InterfaceTemplateName = "poco-interface-uml-template";
 
         /// <inheritdoc />
-        protected override string ArtifactName => "DTO";
+        protected override string ArtifactName => "POCO";
 
         /// <inheritdoc />
         protected override string ClassTemplate => ClassTemplateName;
@@ -42,16 +42,16 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         protected override string InterfaceTemplate => InterfaceTemplateName;
 
         /// <summary>
-        /// Generates one DTO interface.
+        /// Generates one POCO interface.
         /// </summary>
         /// <param name="outputDirectory">
-        /// The directory to which the generated DTO interface is written.
+        /// The directory to which the generated POCO interface is written.
         /// </param>
         /// <param name="umlClass">
-        /// The UML class for which the DTO interface is generated.
+        /// The UML class for which the POCO interface is generated.
         /// </param>
         /// <returns>
-        /// A task that represents the asynchronous DTO interface generation operation. The task result
+        /// A task that represents the asynchronous POCO interface generation operation. The task result
         /// contains the generated and formatted C# source.
         /// </returns>
         /// <exception cref="ArgumentNullException">
@@ -59,30 +59,28 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <see langword="null" />.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the UML class lacks information required to generate its DTO interface or contains
+        /// Thrown when the UML class lacks information required to generate its POCO interface or contains
         /// an unsupported property type.
         /// </exception>
         /// <exception cref="ArgumentException">
         /// Thrown when a modeled name cannot be represented as a legal C# identifier.
         /// </exception>
-        public Task<string> GenerateDataTransferObjectInterfaceAsync(
-            DirectoryInfo outputDirectory,
-            IClass umlClass)
+        public Task<string> GeneratePocoInterfaceAsync(DirectoryInfo outputDirectory, IClass umlClass)
         {
             return this.GenerateInterfaceAsync(outputDirectory, umlClass);
         }
 
         /// <summary>
-        /// Generates one concrete DTO implementation.
+        /// Generates one concrete POCO implementation.
         /// </summary>
         /// <param name="outputDirectory">
-        /// The directory to which the generated DTO implementation is written.
+        /// The directory to which the generated POCO implementation is written.
         /// </param>
         /// <param name="umlClass">
-        /// The UML class for which the DTO implementation is generated.
+        /// The UML class for which the POCO implementation is generated.
         /// </param>
         /// <returns>
-        /// A task that represents the asynchronous DTO implementation generation operation. The task result
+        /// A task that represents the asynchronous POCO implementation generation operation. The task result
         /// contains the generated and formatted C# source.
         /// </returns>
         /// <exception cref="ArgumentNullException">
@@ -90,13 +88,13 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <see langword="null" />.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the UML class is abstract, lacks information required to generate its concrete DTO,
+        /// Thrown when the UML class is abstract, lacks information required to generate its concrete POCO,
         /// or contains an unsupported property type.
         /// </exception>
         /// <exception cref="ArgumentException">
         /// Thrown when a modeled name cannot be represented as a legal C# identifier.
         /// </exception>
-        public Task<string> GenerateDataTransferObjectClassAsync(DirectoryInfo outputDirectory, IClass umlClass)
+        public Task<string> GeneratePocoClassAsync(DirectoryInfo outputDirectory, IClass umlClass)
         {
             return this.GenerateClassAsync(outputDirectory, umlClass);
         }
@@ -104,8 +102,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <inheritdoc />
         protected override void RegisterArtifactHelpers()
         {
-            ClassHelper.RegisterDtoClassHelper(this.Handlebars);
-            PropertyHelper.RegisterDtoPropertyHelper(this.Handlebars);
+            ClassHelper.RegisterPocoClassHelper(this.Handlebars);
+            PropertyHelper.RegisterPocoPropertyHelper(this.Handlebars);
         }
     }
 }

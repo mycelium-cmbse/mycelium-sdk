@@ -11,7 +11,7 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.DTO
+namespace Mycelium.SDK.POCO
 {
     using System;
     using System.CodeDom.Compiler;
@@ -33,12 +33,12 @@ namespace Mycelium.SDK.DTO
         /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when
         /// assigned to multiple ownership domains.
         /// </summary>
-        public Guid? ActiveOwnership { get; set; }
+        public IOwnership ActiveOwnership { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
         /// </summary>
-        public Guid CreatedBy { get; set; }
+        public IUser CreatedBy { get; set; }
 
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
@@ -46,14 +46,20 @@ namespace Mycelium.SDK.DTO
         public DateTime CreatedOn { get; set; }
 
         /// <summary>
+        /// Asserts that the current <see cref="ProjectMember" /> is part of an external
+        /// <see cref="Organization" /> than the related <see cref="FunctionalProject" /> owner.
+        /// </summary>
+        public bool IsOutsideCollaborator => this.ComputeIsOutsideCollaborator();
+
+        /// <summary>
         /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
         /// </summary>
-        public Guid IsPartOf { get; set; }
+        public IFunctionalProject IsPartOf { get; set; }
 
         /// <summary>
         /// References all <see cref="Ownership" /> domains assigned to this <see cref="ProjectMember" />.
         /// </summary>
-        public List<Guid> Owns { get; set; } = [];
+        public List<IOwnership> Owns { get; set; } = [];
 
         /// <summary>
         /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their
@@ -65,7 +71,7 @@ namespace Mycelium.SDK.DTO
         /// References the <see cref="User" /> that provide the last update on the current
         /// <see cref="AuditableThing" />.
         /// </summary>
-        public Guid UpdatedBy { get; set; }
+        public IUser UpdatedBy { get; set; }
 
         /// <summary>
         /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
@@ -75,7 +81,7 @@ namespace Mycelium.SDK.DTO
         /// <summary>
         /// References the <see cref="User" /> record.
         /// </summary>
-        public Guid User { get; set; }
+        public IUser User { get; set; }
     }
 }
 

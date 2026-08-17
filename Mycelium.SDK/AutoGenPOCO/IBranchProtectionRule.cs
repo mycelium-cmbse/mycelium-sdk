@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="IProjectMember.cs" company="Starion Group S.A.">
+//  <copyright file="IBranchProtectionRule.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -11,45 +11,50 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.DTO
+namespace Mycelium.SDK.POCO
 {
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
 
     /// <summary>
-    /// Represents the membership of a <see cref="User" /> within a <see cref="FunctionalProject" />,
-    /// carrying the project-level role and optional ownership assignment.
+    /// Defines protection rules for a specific engineering branch, controlling merge permissions and review
+    /// requirements.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial interface IProjectMember : IAuditableThing
+    public partial interface IBranchProtectionRule : IAuditableThing
     {
         /// <summary>
-        /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when
-        /// assigned to multiple ownership domains.
+        /// References the default <see cref="ProjectMember" /> reviewers designated for this
+        /// <see cref="BranchProtectionRule" />.
         /// </summary>
-        Guid? ActiveOwnership { get; set; }
+        List<IUser> DefaultReviewers { get; set; }
 
         /// <summary>
-        /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
+        /// The <see cref="Guid" /> referencing the protected branch in the Concurrent Server.
         /// </summary>
-        Guid IsPartOf { get; set; }
+        Guid EngineeringBranchId { get; set; }
 
         /// <summary>
-        /// References all <see cref="Ownership" /> domains assigned to this <see cref="ProjectMember" />.
+        /// The set of <see cref="ProjectMemberRole" /> values permitted to merge into this protected branch.
         /// </summary>
-        List<Guid> Owns { get; set; }
+        List<ProjectMemberRole> MergeAllowedFor { get; set; }
 
         /// <summary>
-        /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their
-        /// editing and access permissions.
+        /// Gets or sets the number of approval(s) required before being allowed to merge a Branch.
         /// </summary>
-        ProjectMemberRole Role { get; set; }
+        int MinimumRequiredApproval { get; set; }
 
         /// <summary>
-        /// References the <see cref="User" /> record.
+        /// Gets or sets the name of the current rule.
         /// </summary>
-        Guid User { get; set; }
+        string Name { get; set; }
+
+        /// <summary>
+        /// Indicates whether at least one approved <see cref="Review" /> is required before a merge can
+        /// proceed.
+        /// </summary>
+        bool ReviewRequired { get; set; }
     }
 }
 

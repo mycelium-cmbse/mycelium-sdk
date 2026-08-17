@@ -74,13 +74,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                 .Except(ExpectedAbstractClassNames, StringComparer.Ordinal)
                 .ToArray();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(abstractClassNames, Has.Length.EqualTo(ExpectedAbstractClassCount));
                 Assert.That(abstractClassNames, Is.EquivalentTo(ExpectedAbstractClassNames));
                 Assert.That(concreteClassNames, Has.Length.EqualTo(ExpectedConcreteClassCount));
                 Assert.That(concreteClassNames, Is.EquivalentTo(expectedConcreteClassNames));
-            });
+            }
         }
 
         [Test]
@@ -88,7 +88,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
         {
             var actualSignatures = new List<string>();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 foreach (var association in this.associations)
                 {
@@ -132,27 +132,16 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                             secondEnd.Name));
                 }
 
-                Assert.That(
-                    actualSignatures,
-                    Has.Count.EqualTo(ExpectedAssociationCount),
-                    "Every association must produce a semantic signature.");
-
-                Assert.That(
-                    actualSignatures,
-                    Is.Unique,
-                    "Association signatures must be unique.");
-
-                Assert.That(
-                    actualSignatures,
-                    Is.EquivalentTo(
-                        new ExpectedAssociations().ToArray()));
-            });
+                Assert.That(actualSignatures, Has.Count.EqualTo(ExpectedAssociationCount), "Every association must produce a semantic signature.");
+                Assert.That(actualSignatures, Is.Unique, "Association signatures must be unique.");
+                Assert.That(actualSignatures, Is.EquivalentTo(new ExpectedAssociations().ToArray()));
+            }
         }
 
         [Test]
         public void Verify_that_named_association_ends_are_class_owned_and_queryable()
         {
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 foreach (var association in this.associations)
                 {
@@ -174,7 +163,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                             $"UML4NET QueryAllProperties() did not return " + $"'{owningClass.Name}.{associationEnd.Name}'.");
                     }
                 }
-            });
+            }
         }
 
         [Test]
@@ -186,11 +175,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
 
             var expectedNames = new ExpectedClasses().ToArray();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(actualNames, Is.Unique, "UML class names must be unique.");
                 Assert.That(actualNames, Is.EquivalentTo(expectedNames));
-            });
+            }
         }
 
         [Test]
@@ -202,20 +191,18 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
 
             var expectedNames = new ExpectedEnumerations().ToArray();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(actualNames, Is.Unique, "UML enumeration names must be unique.");
-
                 Assert.That(actualNames, Is.EquivalentTo(expectedNames));
-
                 Assert.That(actualNames, Does.Contain(LifecycleEnumerationName));
-            });
+            }
         }
 
         [Test]
         public void Verify_that_generalizations_and_property_types_are_resolved()
         {
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 foreach (var umlClass in this.classes)
                 {
@@ -235,26 +222,24 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                             $"Property '{umlClass.Name}.{property.Name}' has no resolved type.");
                     }
                 }
-            });
+            }
         }
         
         [Test]
         public void Verify_that_model_element_counts_are_exact()
         {
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(this.classes, Has.Length.EqualTo(ExpectedClassCount));
-
                 Assert.That(this.enumerations, Has.Length.EqualTo(ExpectedEnumerationCount));
-
                 Assert.That(this.associations, Has.Length.EqualTo(ExpectedAssociationCount));
-            });
+            }
         }
         
         [Test]
         public void Verify_that_property_multiplicities_are_valid()
         {
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 foreach (var umlClass in this.classes)
                 {
@@ -263,7 +248,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                         AssertValidMultiplicity(property, $"Property '{umlClass.Name}.{property.Name}'");
                     }
                 }
-            });
+            }
         }
 
         private static void AssertValidMultiplicity(IMultiplicityElement multiplicity, string description)

@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="ProjectMember.cs" company="Starion Group S.A.">
+//  <copyright file="Review.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -11,18 +11,18 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.DTO
+namespace Mycelium.SDK.POCO
 {
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
 
     /// <summary>
-    /// Represents the membership of a <see cref="User" /> within a <see cref="FunctionalProject" />,
-    /// carrying the project-level role and optional ownership assignment.
+    /// Represents a merge proposal from a source branch into a protected target branch, tracking review
+    /// status, designated reviewers, and associated comments.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial class ProjectMember : IProjectMember
+    public partial class Review : IReview
     {
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
@@ -30,15 +30,19 @@ namespace Mycelium.SDK.DTO
         public Guid Id { get; set; }
 
         /// <summary>
-        /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when
-        /// assigned to multiple ownership domains.
+        /// References the <see cref="ProjectMember" /> who created this <see cref="Review" />.
         /// </summary>
-        public Guid? ActiveOwnership { get; set; }
+        public IUser Author { get; set; }
+
+        /// <summary>
+        /// Contains the <see cref="Comment" /> instances posted on this <see cref="Review" />.
+        /// </summary>
+        public List<IComment> Comments { get; set; } = [];
 
         /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
         /// </summary>
-        public Guid CreatedBy { get; set; }
+        public IUser CreatedBy { get; set; }
 
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
@@ -46,36 +50,49 @@ namespace Mycelium.SDK.DTO
         public DateTime CreatedOn { get; set; }
 
         /// <summary>
-        /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
+        /// Gets or sets the description of the current Review.
         /// </summary>
-        public Guid IsPartOf { get; set; }
+        public string Description { get; set; }
 
         /// <summary>
-        /// References all <see cref="Ownership" /> domains assigned to this <see cref="ProjectMember" />.
+        /// References the <see cref="ProjectMember" /> instances designated as reviewers for this
+        /// <see cref="Review" />.
         /// </summary>
-        public List<Guid> Owns { get; set; } = [];
+        public List<IUser> Reviewers { get; set; } = [];
 
         /// <summary>
-        /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their
-        /// editing and access permissions.
+        /// The <see cref="Guid" /> referencing the source branch in the Concurrent Server whose changes are
+        /// proposed for merge.
         /// </summary>
-        public ProjectMemberRole Role { get; set; }
+        public Guid SourceBranchId { get; set; }
+
+        /// <summary>
+        /// The current <see cref="ReviewStatus" /> of this review, tracking its progression from Draft to
+        /// Closed.
+        /// </summary>
+        public ReviewStatus Status { get; set; }
+
+        /// <summary>
+        /// The <see cref="Guid" /> referencing the protected target branch in the Concurrent Server into which
+        /// the merge is proposed.
+        /// </summary>
+        public Guid TargetBranchId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the given title of the current review.
+        /// </summary>
+        public string Title { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
         /// <see cref="AuditableThing" />.
         /// </summary>
-        public Guid UpdatedBy { get; set; }
+        public IUser UpdatedBy { get; set; }
 
         /// <summary>
         /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
         public DateTime UpdatedOn { get; set; }
-
-        /// <summary>
-        /// References the <see cref="User" /> record.
-        /// </summary>
-        public Guid User { get; set; }
     }
 }
 

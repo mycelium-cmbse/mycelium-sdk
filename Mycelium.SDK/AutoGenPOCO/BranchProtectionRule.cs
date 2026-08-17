@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="ProjectMember.cs" company="Starion Group S.A.">
+//  <copyright file="BranchProtectionRule.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -11,18 +11,18 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.DTO
+namespace Mycelium.SDK.POCO
 {
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
 
     /// <summary>
-    /// Represents the membership of a <see cref="User" /> within a <see cref="FunctionalProject" />,
-    /// carrying the project-level role and optional ownership assignment.
+    /// Defines protection rules for a specific engineering branch, controlling merge permissions and review
+    /// requirements.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial class ProjectMember : IProjectMember
+    public partial class BranchProtectionRule : IBranchProtectionRule
     {
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
@@ -30,15 +30,9 @@ namespace Mycelium.SDK.DTO
         public Guid Id { get; set; }
 
         /// <summary>
-        /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when
-        /// assigned to multiple ownership domains.
-        /// </summary>
-        public Guid? ActiveOwnership { get; set; }
-
-        /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
         /// </summary>
-        public Guid CreatedBy { get; set; }
+        public IUser CreatedBy { get; set; }
 
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
@@ -46,36 +40,47 @@ namespace Mycelium.SDK.DTO
         public DateTime CreatedOn { get; set; }
 
         /// <summary>
-        /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
+        /// References the default <see cref="ProjectMember" /> reviewers designated for this
+        /// <see cref="BranchProtectionRule" />.
         /// </summary>
-        public Guid IsPartOf { get; set; }
+        public List<IUser> DefaultReviewers { get; set; } = [];
 
         /// <summary>
-        /// References all <see cref="Ownership" /> domains assigned to this <see cref="ProjectMember" />.
+        /// The <see cref="Guid" /> referencing the protected branch in the Concurrent Server.
         /// </summary>
-        public List<Guid> Owns { get; set; } = [];
+        public Guid EngineeringBranchId { get; set; }
 
         /// <summary>
-        /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their
-        /// editing and access permissions.
+        /// The set of <see cref="ProjectMemberRole" /> values permitted to merge into this protected branch.
         /// </summary>
-        public ProjectMemberRole Role { get; set; }
+        public List<ProjectMemberRole> MergeAllowedFor { get; set; } = [];
+
+        /// <summary>
+        /// Gets or sets the number of approval(s) required before being allowed to merge a Branch.
+        /// </summary>
+        public int MinimumRequiredApproval { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the current rule.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Indicates whether at least one approved <see cref="Review" /> is required before a merge can
+        /// proceed.
+        /// </summary>
+        public bool ReviewRequired { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
         /// <see cref="AuditableThing" />.
         /// </summary>
-        public Guid UpdatedBy { get; set; }
+        public IUser UpdatedBy { get; set; }
 
         /// <summary>
         /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
         public DateTime UpdatedOn { get; set; }
-
-        /// <summary>
-        /// References the <see cref="User" /> record.
-        /// </summary>
-        public Guid User { get; set; }
     }
 }
 

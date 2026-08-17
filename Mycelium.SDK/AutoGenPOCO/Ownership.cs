@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="ProjectMember.cs" company="Starion Group S.A.">
+//  <copyright file="Ownership.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -11,18 +11,19 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.DTO
+namespace Mycelium.SDK.POCO
 {
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
 
     /// <summary>
-    /// Represents the membership of a <see cref="User" /> within a <see cref="FunctionalProject" />,
-    /// carrying the project-level role and optional ownership assignment.
+    /// Defines a named domain of responsibility within a <see cref="FunctionalProject" />. Used in
+    /// Concurrent Design mode to enforce element-level access control via Owner metadata on SysML v2
+    /// elements.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial class ProjectMember : IProjectMember
+    public partial class Ownership : IOwnership
     {
         /// <summary>
         /// Represents the unique identifier that allow entity identification.
@@ -30,15 +31,9 @@ namespace Mycelium.SDK.DTO
         public Guid Id { get; set; }
 
         /// <summary>
-        /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when
-        /// assigned to multiple ownership domains.
-        /// </summary>
-        public Guid? ActiveOwnership { get; set; }
-
-        /// <summary>
         /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
         /// </summary>
-        public Guid CreatedBy { get; set; }
+        public IUser CreatedBy { get; set; }
 
         /// <summary>
         /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
@@ -46,36 +41,36 @@ namespace Mycelium.SDK.DTO
         public DateTime CreatedOn { get; set; }
 
         /// <summary>
-        /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
+        /// Gets or sets the description of the current ownership.
         /// </summary>
-        public Guid IsPartOf { get; set; }
+        public string Description { get; set; }
 
         /// <summary>
-        /// References all <see cref="Ownership" /> domains assigned to this <see cref="ProjectMember" />.
+        /// Gets the engineering metadata definition that has to be mapped to replicate the Ownership on the
+        /// concurrent server.
         /// </summary>
-        public List<Guid> Owns { get; set; } = [];
+        public Guid EngineeringMetadataId { get; set; }
 
         /// <summary>
-        /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their
-        /// editing and access permissions.
+        /// The full display name of the ownership domain (e.g. "Thermal", "Power").
         /// </summary>
-        public ProjectMemberRole Role { get; set; }
+        public string Name { get; set; }
+
+        /// <summary>
+        /// An abbreviated label used for ownership indicators in diagrams and UI elements (e.g. "THM", "PWR").
+        /// </summary>
+        public string ShortName { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
         /// <see cref="AuditableThing" />.
         /// </summary>
-        public Guid UpdatedBy { get; set; }
+        public IUser UpdatedBy { get; set; }
 
         /// <summary>
         /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
         /// </summary>
         public DateTime UpdatedOn { get; set; }
-
-        /// <summary>
-        /// References the <see cref="User" /> record.
-        /// </summary>
-        public Guid User { get; set; }
     }
 }
 

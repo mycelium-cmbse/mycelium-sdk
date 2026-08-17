@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="IProjectMember.cs" company="Starion Group S.A.">
+//  <copyright file="IFunctionalProjectPolicy.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -11,45 +11,33 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.DTO
+namespace Mycelium.SDK.POCO
 {
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
 
     /// <summary>
-    /// Represents the membership of a <see cref="User" /> within a <see cref="FunctionalProject" />,
-    /// carrying the project-level role and optional ownership assignment.
+    /// The FunctionalProjectPolicy defines policies t associated to as specific
+    /// <see cref="FunctionalProject" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial interface IProjectMember : IAuditableThing
+    public partial interface IFunctionalProjectPolicy : IAuditableThing
     {
         /// <summary>
-        /// References the currently active <see cref="Ownership" /> for this <see cref="ProjectMember" /> when
-        /// assigned to multiple ownership domains.
+        /// Asserts if automatically importing namespace is allowed or not.
         /// </summary>
-        Guid? ActiveOwnership { get; set; }
+        bool AllowAutoNamespaceImport { get; set; }
 
         /// <summary>
-        /// References the <see cref="FunctionalProject" /> this <see cref="ProjectMember" /> belongs to.
+        /// Asserts if publish mode can be set on this project or not.
         /// </summary>
-        Guid IsPartOf { get; set; }
+        bool AllowAutoPublishMode { get; set; }
 
         /// <summary>
-        /// References all <see cref="Ownership" /> domains assigned to this <see cref="ProjectMember" />.
+        /// Asserts that the branching system for the version control is allowed or not.
         /// </summary>
-        List<Guid> Owns { get; set; }
-
-        /// <summary>
-        /// The <see cref="ProjectMemberRole" /> assigned to the user within the project, determining their
-        /// editing and access permissions.
-        /// </summary>
-        ProjectMemberRole Role { get; set; }
-
-        /// <summary>
-        /// References the <see cref="User" /> record.
-        /// </summary>
-        Guid User { get; set; }
+        bool AllowVersionBranching { get; set; }
     }
 }
 

@@ -70,12 +70,12 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
         {
             var settings = CreateReaderSettings();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(settings.LocalReferenceBasePath, Is.EqualTo(ResourcesDirectory));
                 Assert.That(settings.PathMaps.TryGetValue(PrimitiveTypesUri, out var primitiveTypesPath), Is.True);
                 Assert.That(primitiveTypesPath, Is.EqualTo(Path.Combine(ResourcesDirectory, "PrimitiveTypes.xmi")));
-            });
+            }
         }
 
         [Test]
@@ -104,12 +104,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                 .Select(primitive => primitive.Name)
                 .ToArray();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(standardPrimitives, Is.EquivalentTo(StandardPrimitiveNames));
-
                 Assert.That(customPrimitives, Is.EquivalentTo(CustomPrimitiveNames));
-            });
+            }
         }
 
         [Test]
@@ -126,7 +125,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                 .OfType<IAssociation>()
                 .ToArray();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 foreach (var umlClass in classes)
                 {
@@ -156,7 +155,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                         Assert.That(memberEnd.Type, Is.Not.Null, "An association end has no resolved type.");
                     }
                 }
-            });
+            }
         }
 
         internal static XmiReaderResult ReadFunctionalData()

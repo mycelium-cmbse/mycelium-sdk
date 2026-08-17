@@ -17,7 +17,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     using uml4net.Extensions;
 
     /// <summary>
-    /// Provides Handlebars support for UML properties used to generate DTOs.
+    /// Provides Handlebars support for UML properties used to generate DTOs and POCOs.
     /// </summary>
     public static class PropertyHelper
     {
@@ -28,9 +28,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// The Handlebars environment in which the DTO property helpers are registered.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="handlebars"/> is <see langword="null" />.
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
         /// </exception>
-        public static void RegisterPropertyHelper(this IHandlebars handlebars)
+        public static void RegisterDtoPropertyHelper(this IHandlebars handlebars)
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
@@ -39,7 +39,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 (writer, _, arguments) =>
                 {
                     var property = QueryProperty(arguments, "{{Property.WriteDtoInterfaceDeclaration}}");
-                    writer.WriteSafeString($"{property.QueryDtoTypeName()} " + $"{property.QueryDtoPropertyName()} {QueryDtoAccessors(property)}");
+
+                    writer.WriteSafeString($"{property.QueryDtoTypeName()} " + $"{property.QueryPropertyName()} {QueryAccessors(property)}");
                 });
 
             handlebars.RegisterHelper(
@@ -48,32 +49,121 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 {
                     var property = QueryProperty(arguments, "{{Property.WriteDtoImplementationDeclaration}}");
                     var propertyTypeName = property.QueryDtoTypeName();
-                    var requiresCollectionInitializer = property.QueryIsEnumerable() || propertyTypeName.StartsWith("Dictionary<", StringComparison.Ordinal);
-
-                    var collectionInitializer = requiresCollectionInitializer
-                        ? " = [];"
-                        : string.Empty;
+                    var collectionInitializer = QueryCollectionInitializer(property, propertyTypeName);
 
                     writer.WriteSafeString(
                         $"public {propertyTypeName} " +
-                        $"{property.QueryDtoPropertyName()} {QueryDtoAccessors(property)}" +
+                        $"{property.QueryPropertyName()} {QueryAccessors(property)}" +
                         collectionInitializer);
                 });
         }
 
         /// <summary>
-        /// Queries the DTO accessor declaration for a UML property.
+        /// Registers the POCO property helpers independently of the DTO property helpers.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the POCO property helpers are registered.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
+        /// </exception>
+        public static void RegisterPocoPropertyHelper(this IHandlebars handlebars)
+        {
+            ArgumentNullException.ThrowIfNull(handlebars);
+
+            handlebars.RegisterHelper(
+                "Property.WritePocoInterfaceDeclaration",
+                (writer, _, arguments) =>
+                {
+                    var property = QueryProperty(arguments, "{{Property.WritePocoInterfaceDeclaration}}");
+
+                    writer.WriteSafeString($"{property.QueryPocoTypeName()} " + $"{property.QueryPropertyName()} {QueryAccessors(property)}");
+                });
+
+            handlebars.RegisterHelper(
+                "Property.WritePocoImplementationDeclaration",
+                (writer, _, arguments) =>
+                {
+                    var property = QueryProperty(arguments, "{{Property.WritePocoImplementationDeclaration}}");
+                    var propertyTypeName = property.QueryPocoTypeName();
+                    var propertyName = property.QueryPropertyName();
+
+                    writer.WriteSafeString($"public {propertyTypeName} {propertyName} " + QueryPocoImplementationSuffix(property, propertyName, propertyTypeName));
+                });
+        }
+
+        /// <summary>
+        /// Queries the accessor declaration shared by generated DTO and POCO properties.
         /// </summary>
         /// <param name="property">
         /// The UML property.
         /// </param>
         /// <returns>
-        /// A get-only declaration for a derived property; otherwise,
+        /// A getter-only declaration for a derived or derived-union property; otherwise,
         /// a get-and-set declaration.
         /// </returns>
-        private static string QueryDtoAccessors(IProperty property)
+        private static string QueryAccessors(IProperty property)
         {
-            return property.IsDerived ? "{ get; }" : "{ get; set; }";
+            return QueryIsDerived(property) ? "{ get; }" : "{ get; set; }";
+        }
+
+        /// <summary>
+        /// Determines whether the UML property represents derived state.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property.
+        /// </param>
+        /// <returns>
+        /// <see langword="true" /> for a derived or derived-union property.
+        /// </returns>
+        private static bool QueryIsDerived(IProperty property)
+        {
+            return property.IsDerived || property.IsDerivedUnion;
+        }
+
+        /// <summary>
+        /// Queries the implementation suffix for a concrete POCO property.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property.
+        /// </param>
+        /// <param name="propertyName">
+        /// The generated C# property name.
+        /// </param>
+        /// <param name="propertyTypeName">
+        /// The generated C# property type.
+        /// </param>
+        /// <returns>
+        /// Computation delegation for derived state; otherwise, mutable accessors
+        /// and any required collection initializer.
+        /// </returns>
+        private static string QueryPocoImplementationSuffix(IProperty property, string propertyName, string propertyTypeName)
+        {
+            if (QueryIsDerived(property))
+            {
+                return $"=> this.Compute{propertyName}();";
+            }
+
+            return $"{QueryAccessors(property)}" + QueryCollectionInitializer(property, propertyTypeName);
+        }
+
+        /// <summary>
+        /// Queries the initializer for a generated concrete collection property.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property.
+        /// </param>
+        /// <param name="propertyTypeName">
+        /// The mapped artifact-specific C# property type.
+        /// </param>
+        /// <returns>
+        /// An empty collection initializer when required; otherwise, an empty string.
+        /// </returns>
+        private static string QueryCollectionInitializer(IProperty property, string propertyTypeName)
+        {
+            return property.QueryIsEnumerable() || propertyTypeName.StartsWith("Dictionary<", StringComparison.Ordinal)
+                ? " = [];"
+                : string.Empty;
         }
 
         /// <summary>
@@ -89,7 +179,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// The supplied UML property.
         /// </returns>
         /// <exception cref="HandlebarsException">
-        /// Thrown when exactly one <see cref="IProperty"/> argument was not supplied.
+        /// Thrown when exactly one <see cref="IProperty" /> argument was not supplied.
         /// </exception>
         private static IProperty QueryProperty(Arguments arguments, string helperName)
         {

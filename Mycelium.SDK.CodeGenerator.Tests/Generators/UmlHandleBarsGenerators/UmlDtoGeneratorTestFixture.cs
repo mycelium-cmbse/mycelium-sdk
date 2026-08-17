@@ -94,11 +94,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var reviewedFileNames = QueryCSharpFileNames(this.expectedDirectory);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(expectedFileNames, Has.Length.EqualTo(14));
                 Assert.That(reviewedFileNames, Is.EqualTo(expectedFileNames), "The reviewed DTO golden-file set must contain exactly the representative files.");
-            });
+            }
         }
 
         [Test]
@@ -124,13 +124,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var generatedFileNames = QueryCSharpFileNames(this.stagingDirectory);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(expectedInterfaceFileNames, Has.Length.EqualTo(13));
                 Assert.That(expectedConcreteFileNames, Has.Length.EqualTo(11));
                 Assert.That(expectedFileNames, Has.Length.EqualTo(24));
                 Assert.That(generatedFileNames, Is.EqualTo(expectedFileNames), "The generated DTO set contains missing or extra files.");
-            });
+            }
         }
 
         [Test]
