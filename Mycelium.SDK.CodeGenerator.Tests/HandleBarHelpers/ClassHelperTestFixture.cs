@@ -50,11 +50,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
 
             var projectMember = this.QueryClass("ProjectMember");
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(dtoTemplate(projectMember), Is.EqualTo("IProjectMember"));
                 Assert.That(pocoTemplate(projectMember), Is.EqualTo("IProjectMember"));
-            });
+            }
         }
 
         [Test]
@@ -82,11 +82,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             var template = this.pocoHandlebars.Compile("{{ #Class.WritePocoInterfaceIdentifier this }}" +
                                                        "{{ #Class.WritePocoInterfaceGeneralizations this }}");
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(template(this.QueryClass("ProjectMember")), Is.EqualTo("IProjectMember : IAuditableThing"));
                 Assert.That(template(this.QueryClass("Thing")), Is.EqualTo("IThing"));
-            });
+            }
         }
 
         [Test]

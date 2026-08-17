@@ -145,20 +145,20 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                 }
             };
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(optionalInteger.QueryPocoTypeName(), Is.EqualTo("int?"));
                 Assert.That(optionalEnumeration.QueryPocoTypeName(), Is.EqualTo("OptionalKind?"));
                 Assert.That(optionalReference.QueryPocoTypeName(), Is.EqualTo("IReferencedClass"));
                 Assert.That(manyStrings.QueryPocoTypeName(), Is.EqualTo("List<string>"));
                 Assert.That(guidClassReference.QueryPocoTypeName(), Is.EqualTo("IGuid"));
-            });
+            }
         }
 
         [Test]
         public void Verify_that_QueryPocoTypeName_maps_the_FunctionalData_contract()
         {
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(
                     this.QueryProperty("ProjectMember", "activeOwnership").QueryPocoTypeName(),
@@ -195,7 +195,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                 Assert.That(
                     this.QueryProperty("FunctionalProject", "sharedPreferences").QueryPocoTypeName(),
                     Is.EqualTo("Dictionary<string,string>"));
-            });
+            }
         }
 
         [Test]

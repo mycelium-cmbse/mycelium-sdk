@@ -44,7 +44,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         [Test]
         public void Verify_that_Poco_interface_declarations_match_the_FunctionalData_contract()
         {
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(
                     this.RenderPocoInterface(this.QueryProperty("ProjectMember", "activeOwnership")),
@@ -65,13 +65,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
                 Assert.That(
                     this.RenderPocoInterface(this.QueryProperty("Thing", "id")),
                     Is.EqualTo("Guid Id { get; set; }"));
-            });
+            }
         }
 
         [Test]
         public void Verify_that_Poco_implementation_declarations_match_the_FunctionalData_contract()
         {
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(
                     this.RenderPocoImplementation(this.QueryProperty("ProjectMember", "activeOwnership")),
@@ -93,7 +93,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
                 Assert.That(
                     this.RenderPocoImplementation(this.QueryProperty("Thing", "id")),
                     Is.EqualTo("public Guid Id { get; set; }"));
-            });
+            }
         }
 
         [Test]
@@ -113,11 +113,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
 
             property.LowerValue.Add(new LiteralInteger { Value = 1 });
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(this.RenderPocoInterface(property), Is.EqualTo("bool DerivedUnion { get; }"));
                 Assert.That(this.RenderPocoImplementation(property), Is.EqualTo("public bool DerivedUnion => this.ComputeDerivedUnion();"));
-            });
+            }
         }
 
         [Test]
@@ -136,7 +136,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
 
             property.LowerValue.Add(new LiteralInteger { Value = 0 });
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(
                     this.RenderPocoInterface(property),
@@ -145,7 +145,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
                 Assert.That(
                     this.RenderPocoImplementation(property),
                     Is.EqualTo("public int? OptionalCount { get; set; }"));
-            });
+            }
         }
 
         [Test]
@@ -156,10 +156,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             dtoHandlebars.RegisterDtoPropertyHelper();
 
             var property = this.QueryProperty("ProjectMember", "activeOwnership");
-
             var dtoTemplate = dtoHandlebars.Compile("{{ #Property.WriteDtoInterfaceDeclaration this }}");
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(
                     dtoTemplate(property),
@@ -168,7 +167,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
                 Assert.That(
                     this.RenderPocoInterface(property),
                     Is.EqualTo("IOwnership ActiveOwnership { get; set; }"));
-            });
+            }
         }
 
         [Test]

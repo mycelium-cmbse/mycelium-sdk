@@ -52,7 +52,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var generatedFileNames = QueryCSharpFileNames(this.stagingDirectory);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(expectedFileNames, Has.Length.EqualTo(8));
 
@@ -65,7 +65,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                     generatedFileNames,
                     Is.EqualTo(expectedFileNames),
                     "The generated file set contains missing or extra files.");
-            });
+            }
         }
 
         [TestCaseSource(typeof(ExpectedEnumerations))]
@@ -73,9 +73,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         public async Task Verify_that_generated_enumeration_matches_reviewed_golden_file(string enumerationName)
         {
             var fileName = $"{enumerationName}.cs";
-
             var expectedPath = Path.Combine(this.expectedDirectory.FullName, fileName);
-
             var generatedPath = Path.Combine(this.stagingDirectory.FullName, fileName);
 
             var expected = await File.ReadAllTextAsync(expectedPath);

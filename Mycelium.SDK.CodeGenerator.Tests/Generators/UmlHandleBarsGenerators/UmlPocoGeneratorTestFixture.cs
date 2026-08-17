@@ -72,7 +72,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var generatedFileNames = QueryCSharpFileNames(this.stagingDirectory);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(expectedInterfaceFileNames, Has.Length.EqualTo(13));
                 Assert.That(expectedConcreteFileNames, Has.Length.EqualTo(11));
@@ -81,7 +81,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                     generatedFileNames,
                     Is.EqualTo(expectedFileNames),
                     "The generated POCO set contains missing or extra files.");
-            });
+            }
         }
 
         private static string[] QueryCSharpFileNames(DirectoryInfo directory)

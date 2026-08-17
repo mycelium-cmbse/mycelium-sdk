@@ -60,7 +60,7 @@ namespace Mycelium.SDK.Tests.Dto
         [Test]
         public void Verify_that_DTO_interface_inheritance_matches_UML_generalization()
         {
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 foreach (var expectedGeneralization in DirectGeneralizations)
                 {
@@ -74,13 +74,13 @@ namespace Mycelium.SDK.Tests.Dto
                         Is.EqualTo(expectedGeneralizations),
                         $"Interface '{expectedGeneralization.Key.Name}' has an unexpected direct base interface.");
                 }
-            });
+            }
         }
 
         [Test]
         public void Verify_that_each_concrete_DTO_implements_its_complete_inherited_contract()
         {
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 foreach (var implementation in ConcreteImplementations)
                 {
@@ -98,10 +98,7 @@ namespace Mycelium.SDK.Tests.Dto
                         .ToArray();
 
                     var actualProperties = concreteType
-                        .GetProperties(
-                            BindingFlags.Public
-                            | BindingFlags.Instance
-                            | BindingFlags.DeclaredOnly)
+                        .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                         .Select(QueryPropertySignature)
                         .OrderBy(signature => signature, StringComparer.Ordinal)
                         .ToArray();
@@ -111,20 +108,16 @@ namespace Mycelium.SDK.Tests.Dto
                         Is.EqualTo(expectedProperties),
                         $"'{concreteType.Name}' does not implement the complete inherited interface contract.");
                 }
-            });
+            }
         }
 
-        private static IEnumerable<PropertyInfo> QueryCompleteInterfaceProperties(
-            Type interfaceType)
+        private static IEnumerable<PropertyInfo> QueryCompleteInterfaceProperties(Type interfaceType)
         {
             return interfaceType
                 .GetInterfaces()
                 .Append(interfaceType)
                 .SelectMany(type =>
-                    type.GetProperties(
-                        BindingFlags.Public
-                        | BindingFlags.Instance
-                        | BindingFlags.DeclaredOnly));
+                    type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly));
         }
 
         private static Type[] QueryDirectInterfaces(Type interfaceType)

@@ -38,8 +38,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             ArgumentNullException.ThrowIfNull(umlClass);
 
             return OrderProperties(
-                    umlClass.OwnedAttribute
-                        .Where(property => !property.IsDerived && !property.IsDerivedUnion), "DTO")
+                    umlClass.OwnedAttribute.Where(IsDtoProperty))
                 .ToArray();
         }
 
@@ -62,7 +61,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         {
             ArgumentNullException.ThrowIfNull(umlClass);
 
-            return OrderProperties(umlClass.OwnedAttribute, "POCO").ToArray();
+            return OrderProperties(umlClass.OwnedAttribute).ToArray();
         }
 
         /// <summary>
@@ -82,6 +81,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// Thrown when the generalization hierarchy is invalid or cyclic, or when a direct or inherited
         /// property has no XMI identifier or name.
         /// </exception>
+
         public static IReadOnlyList<IProperty> QueryDtoImplementationProperties(this IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);
@@ -89,8 +89,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             ValidateGeneralizationHierarchy(umlClass);
 
             return OrderProperties(
-                    umlClass.QueryAllProperties()
-                        .Where(property => !property.IsDerived && !property.IsDerivedUnion), "DTO")
+                    umlClass.QueryAllProperties().Where(IsDtoProperty))
                 .ToArray();
         }
 
@@ -118,7 +117,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             ValidateGeneralizationHierarchy(umlClass);
 
-            return OrderProperties(umlClass.QueryAllProperties(), "POCO").ToArray();
+            return OrderProperties(umlClass.QueryAllProperties()).ToArray();
         }
 
         /// <summary>
@@ -233,18 +232,30 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         }
 
         /// <summary>
+        /// Determines whether a property belongs to the generated DTO contract.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property to evaluate.
+        /// </param>
+        /// <returns>
+        /// <see langword="true" /> when the property is neither derived nor a
+        /// derived union; otherwise, <see langword="false" />.
+        /// </returns>
+        private static bool IsDtoProperty(IProperty property)
+        {
+            return !property.IsDerived && !property.IsDerivedUnion;
+        }
+        
+        /// <summary>
         /// Removes duplicate properties and orders them deterministically for generation.
         /// </summary>
         /// <param name="properties">
         /// The properties to validate, deduplicate, and order.
         /// </param>
-        /// <param name="artifactName">
-        /// The artifact name used in validation messages.
-        /// </param>
         /// <returns>
         /// The deterministically ordered properties.
         /// </returns>
-        private static IEnumerable<IProperty> OrderProperties(IEnumerable<IProperty> properties, string artifactName)
+        private static IEnumerable<IProperty> OrderProperties(IEnumerable<IProperty> properties)
         {
             var distinctProperties = new List<IProperty>();
             var propertyIds = new HashSet<string>(StringComparer.Ordinal);
@@ -253,7 +264,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             {
                 if (string.IsNullOrWhiteSpace(property.XmiId))
                 {
-                    throw new InvalidOperationException($"A {artifactName} property has no XMI identifier.");
+                    throw new InvalidOperationException($"Property '{property.Name}' has no XMI identifier.");
                 }
 
                 if (string.IsNullOrWhiteSpace(property.Name))

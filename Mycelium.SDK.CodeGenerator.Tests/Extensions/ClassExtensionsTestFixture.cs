@@ -63,7 +63,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                 IsDerivedUnion = true
             });
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(
                     umlClass.QueryDtoInterfaceProperties().Select(property => property.Name),
@@ -80,7 +80,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                 Assert.That(
                     umlClass.QueryPocoImplementationProperties().Select(property => property.Name),
                     Is.EquivalentTo(ExpectedAllPocoPropertyNames));
-            });
+            }
         }
 
         [Test]
@@ -90,7 +90,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             var interfaceProperties = projectMember.QueryDtoInterfaceProperties();
             var implementationProperties = projectMember.QueryDtoImplementationProperties();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(
                     interfaceProperties.Select(property => property.Name),
@@ -124,7 +124,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                 Assert.That(
                     projectMember.QueryPocoImplementationProperties().Select(property => property.Name),
                     Does.Contain("isOutsideCollaborator"));
-            });
+            }
         }
 
         [Test]
@@ -473,7 +473,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
 
             var exception = Assert.Throws<InvalidOperationException>(() => umlClass.QueryPocoInterfaceProperties());
 
-            Assert.That(exception.Message, Is.EqualTo("A POCO property has no XMI identifier."));
+            Assert.That(exception.Message, Is.EqualTo("Property 'propertyName' has no XMI identifier."));
         }
 
         [Test]
@@ -510,7 +510,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             var projectMember = this.classes.Single(umlClass => umlClass.Name == "ProjectMember");
             var properties = projectMember.QueryPocoInterfaceProperties();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(properties.Select(property => property.Name),
                     Is.EqualTo([
@@ -533,7 +533,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                         "owns",
                         "user"
                     ]));
-            });
+            }
         }
     }
 }

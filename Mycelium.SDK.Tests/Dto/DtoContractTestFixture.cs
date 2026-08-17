@@ -88,15 +88,14 @@ namespace Mycelium.SDK.Tests.Dto
                 .OrderBy(type => type.Name, StringComparer.Ordinal)
                 .ToArray();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(expectedInterfaceTypes, Has.Length.EqualTo(13));
-
                 Assert.That(
                     actualInterfaceTypes,
                     Is.EqualTo(expectedInterfaceTypes),
                     "The public DTO interface set contains missing or extra interfaces.");
-            });
+            }
         }
 
         [Test]
@@ -114,7 +113,7 @@ namespace Mycelium.SDK.Tests.Dto
                         .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                         .Select(property => (DeclaringType: concreteType, Property: property)));
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 foreach (var contractProperty in interfaceProperties.Concat(concreteProperties))
                 {
@@ -130,7 +129,7 @@ namespace Mycelium.SDK.Tests.Dto
                         Is.True,
                         $"'{displayName}' must have a public setter.");
                 }
-            });
+            }
         }
 
         [Test]
@@ -159,19 +158,14 @@ namespace Mycelium.SDK.Tests.Dto
                 Is.EqualTo(InitializedCollectionProperties),
                 "The DTO collection-property set is incomplete or contains unexpected properties.");
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 foreach (var collectionProperty in collectionProperties)
                 {
-                    var displayName =
-                        $"{collectionProperty.DeclaringType.Name}.{collectionProperty.Property.Name}";
-
+                    var displayName = $"{collectionProperty.DeclaringType.Name}.{collectionProperty.Property.Name}";
                     var instance = Activator.CreateInstance(collectionProperty.DeclaringType);
 
-                    Assert.That(
-                        instance,
-                        Is.Not.Null,
-                        $"'{collectionProperty.DeclaringType.Name}' could not be constructed.");
+                    Assert.That(instance, Is.Not.Null, $"'{collectionProperty.DeclaringType.Name}' could not be constructed.");
 
                     if (instance is null)
                     {
@@ -180,11 +174,7 @@ namespace Mycelium.SDK.Tests.Dto
 
                     var value = collectionProperty.Property.GetValue(instance);
 
-                    Assert.That(
-                        value,
-                        Is.Not.Null,
-                        $"Collection property '{displayName}' was not initialized.");
-
+                    Assert.That(value, Is.Not.Null, $"Collection property '{displayName}' was not initialized.");
                     Assert.That(
                         value,
                         Is.InstanceOf<ICollection>(),
@@ -192,13 +182,10 @@ namespace Mycelium.SDK.Tests.Dto
 
                     if (value is ICollection collection)
                     {
-                        Assert.That(
-                            collection.Count,
-                            Is.Zero,
-                            $"Collection property '{displayName}' must initially be empty.");
+                        Assert.That(collection.Count, Is.Zero, $"Collection property '{displayName}' must initially be empty.");
                     }
                 }
-            });
+            }
         }
 
         [Test]
@@ -214,7 +201,7 @@ namespace Mycelium.SDK.Tests.Dto
                 .OrderBy(type => type.Name, StringComparer.Ordinal)
                 .ToArray();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(expectedConcreteTypes, Has.Length.EqualTo(11));
 
@@ -230,7 +217,7 @@ namespace Mycelium.SDK.Tests.Dto
                         Is.Not.Null,
                         $"'{concreteType.Name}' must provide a public parameterless constructor.");
                 }
-            });
+            }
         }
 
         [TestCaseSource(nameof(RepresentativeInterfacePropertyContracts))]
