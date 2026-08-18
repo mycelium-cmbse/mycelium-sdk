@@ -80,14 +80,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(this.committedDirectory.Exists, Is.True, 
+                Assert.That(this.committedDirectory.Exists, Is.True,
                     "The committed SDK enum directory was not copied to the test output.");
-                
+
                 Assert.That(expectedFileNames, Has.Length.EqualTo(8));
-                
+
                 Assert.That(reviewedFileNames, Is.EqualTo(expectedFileNames),
                     "The reviewed golden manifest contains missing or extra files.");
-                
+
                 Assert.That(stagedFileNames, Is.EqualTo(expectedFileNames),
                     "The staged enum manifest contains missing or extra files.");
 
@@ -250,7 +250,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             switch (failure)
             {
                 case BatchPreflightFailure.InvalidEnumerationIdentifier:
-                    QueryEnumeration(xmiReaderResult, "ReviewStatus") 
+                    QueryEnumeration(xmiReaderResult, "ReviewStatus")
                         .Name = "Review-Status";
                     break;
 
@@ -262,7 +262,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
                 case BatchPreflightFailure.DuplicateLiteralIdentifier:
                     var reviewStatus = QueryEnumeration(xmiReaderResult, "ReviewStatus");
-                    
+
                     reviewStatus.OwnedLiteral[1].Name = reviewStatus.OwnedLiteral[0].Name;
                     break;
 
