@@ -1,5 +1,6 @@
 Mycelium.SDK/AutoGenDTO/*.cs text eol=crlf
 Mycelium.SDK/AutoGenEnum/*.cs text eol=crlf
+Mycelium.SDK/AutoGenPOCO/*.cs text eol=crlf
 Mycelium.SDK.CodeGenerator.Tests/Expected/UML/AutoGenDTO/*.cs text eol=crlf
 Mycelium.SDK.CodeGenerator.Tests/Expected/UML/AutoGenEnum/*.cs text eol=crlf
 Mycelium.SDK.CodeGenerator.Tests/Expected/UML/AutoGenPOCO/*.cs text eol=crlf
