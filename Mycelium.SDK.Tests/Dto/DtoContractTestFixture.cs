@@ -66,13 +66,15 @@ namespace Mycelium.SDK.Tests.Dto
             "FunctionalProject.Defines",
             "FunctionalProject.Involves",
             "FunctionalProject.Reviews",
+            "FunctionalProject.SharedPreferences",
             "Organization.InvolvedUser",
             "Organization.Projects",
             "ProjectMember.Owns",
             "Review.Comments",
             "Review.Reviewers",
             "User.IsPartOfOrganizations",
-            "User.IsPartOfProjects"
+            "User.IsPartOfProjects",
+            "User.UserPreferences"
         ];
 
         [Test]
@@ -142,7 +144,7 @@ namespace Mycelium.SDK.Tests.Dto
                             BindingFlags.Public
                             | BindingFlags.Instance
                             | BindingFlags.DeclaredOnly)
-                        .Where(property => IsList(property.PropertyType))
+                        .Where(property => IsSupportedCollection(property.PropertyType))
                         .Select(property => (DeclaringType: concreteType, Property: property)))
                 .OrderBy(
                     item => $"{item.DeclaringType.Name}.{item.Property.Name}",
@@ -293,9 +295,16 @@ namespace Mycelium.SDK.Tests.Dto
                 typeof(List<ProjectMemberRole>));
         }
 
-        private static bool IsList(Type type)
+        private static bool IsSupportedCollection(Type type)
         {
-            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
+            if (!type.IsGenericType)
+            {
+                return false;
+            }
+
+            var genericType = type.GetGenericTypeDefinition();
+
+            return genericType == typeof(List<>) || genericType == typeof(Dictionary<,>);
         }
     }
 }
