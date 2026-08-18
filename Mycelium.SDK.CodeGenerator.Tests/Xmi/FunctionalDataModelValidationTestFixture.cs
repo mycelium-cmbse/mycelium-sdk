@@ -25,8 +25,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
         private const int ExpectedAssociationCount = 21;
         private const int ExpectedAbstractClassCount = 2;
         private const int ExpectedConcreteClassCount = 11;
-        private const string LifecycleEnumerationName = "ProjectLifecycleKind";
-        
+
         private static readonly string[] ExpectedAbstractClassNames =
         [
             "Thing",
@@ -183,7 +182,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
         }
 
         [Test]
-        public void Verify_that_enumeration_names_are_expected_unique_and_exactly_spelled()
+        public void Verify_that_enumeration_names_and_literals_match_the_reviewed_inventory()
         {
             var actualNames = this.enumerations
                 .Select(enumeration => enumeration.Name)
@@ -195,7 +194,36 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             {
                 Assert.That(actualNames, Is.Unique, "UML enumeration names must be unique.");
                 Assert.That(actualNames, Is.EquivalentTo(expectedNames));
-                Assert.That(actualNames, Does.Contain(LifecycleEnumerationName));
+
+                foreach (var expectedName in expectedNames)
+                {
+                    var enumeration = this.enumerations
+                        .FirstOrDefault(candidate => candidate.Name == expectedName);
+
+                    Assert.That(
+                        enumeration,
+                        Is.Not.Null,
+                        $"Reviewed enumeration '{expectedName}' is missing from the model.");
+
+                    if (enumeration is null)
+                    {
+                        continue;
+                    }
+
+                    var actualLiteralNames = enumeration.OwnedLiteral
+                        .Select(literal => literal.Name)
+                        .ToArray();
+
+                    Assert.That(
+                        actualLiteralNames,
+                        Is.Unique,
+                        $"Enumeration '{expectedName}' contains duplicate literal names.");
+
+                    Assert.That(
+                        actualLiteralNames,
+                        Is.EqualTo(ExpectedEnumerations.QueryLiteralNames(expectedName)),
+                        $"Enumeration '{expectedName}' does not match its reviewed literal order and spelling.");
+                }
             }
         }
 
