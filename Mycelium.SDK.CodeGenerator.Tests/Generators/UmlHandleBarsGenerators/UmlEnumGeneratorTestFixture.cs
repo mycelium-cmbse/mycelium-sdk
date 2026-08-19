@@ -27,7 +27,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     public class UmlEnumGeneratorTestFixture
     {
         private const string TemplateName = "enumeration-uml-template";
-
+        private static readonly string[] ExpectedKeywordFileNames = ["class.cs"];
         private static readonly UTF8Encoding StrictUtf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         private DirectoryInfo committedDirectory = null!;
@@ -202,7 +202,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(QueryRelativeFileNames(outputDirectory), Is.EqualTo(new[] { "class.cs" }));
+                Assert.That(QueryRelativeFileNames(outputDirectory), Is.EqualTo(ExpectedKeywordFileNames));
                 Assert.That(source, Does.Contain("enum @class"));
                 Assert.That(source, Does.Contain("@event,"));
                 Assert.That(source, Does.Contain("Value,"));
@@ -241,8 +241,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         [TestCase(BatchPreflightFailure.UnexpectedManifest)]
         public async Task Verify_that_batch_preflight_failure_leaves_no_new_or_modified_output(BatchPreflightFailure failure)
         {
-            await this.AssertBatchPreflightFailureLeavesDestinationUntouched(failure, destinationExists: false);
-            await this.AssertBatchPreflightFailureLeavesDestinationUntouched(failure, destinationExists: true);
+            await AssertBatchPreflightFailureLeavesDestinationUntouched(failure, destinationExists: false);
+            await AssertBatchPreflightFailureLeavesDestinationUntouched(failure, destinationExists: true);
         }
 
         private static void ApplyBatchPreflightFailure(BatchPreflightFailure failure, XmiReaderResult xmiReaderResult, UmlEnumGenerator generator)
@@ -405,7 +405,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
         }
 
-        private async Task AssertBatchPreflightFailureLeavesDestinationUntouched(
+        private static async Task AssertBatchPreflightFailureLeavesDestinationUntouched(
             BatchPreflightFailure failure,
             bool destinationExists)
         {
