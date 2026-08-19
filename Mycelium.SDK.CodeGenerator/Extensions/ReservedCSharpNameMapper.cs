@@ -38,14 +38,16 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         {
             ArgumentException.ThrowIfNullOrEmpty(input);
 
-            if (SyntaxFacts.IsValidIdentifier(input))
-            {
-                return input;
-            }
-
             if (QueryIsReserved(input))
             {
                 return $"@{input}";
+            }
+
+            var parsedIdentifier = SyntaxFactory.ParseToken(input);
+
+            if (SyntaxFacts.IsValidIdentifier(input) && string.Equals(parsedIdentifier.ValueText, input, StringComparison.Ordinal))
+            {
+                return input;
             }
 
             throw new ArgumentException(
