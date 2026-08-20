@@ -41,8 +41,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         [TestCase("two words")]
         [TestCase("@class")]
         [TestCase(@"\u0063lass")]
-        public void Verify_that_Map_rejects_identifiers_that_would_change_the_modeled_name(
-            string identifier)
+        public void Verify_that_Map_rejects_identifiers_that_would_change_the_modeled_name(string identifier)
         {
             var exception = Assert.Throws<ArgumentException>(() => ReservedCSharpNameMapper.Map(identifier));
 

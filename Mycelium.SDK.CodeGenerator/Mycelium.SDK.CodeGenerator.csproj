@@ -20,6 +20,7 @@
         <PackageReference Include="Microsoft.OpenApi" Version="3.10.2" />
         <PackageReference Include="uml4net.HandleBars" Version="8.3.0" />
         <PackageReference Include="uml4net.xmi" Version="8.3.0" />
+        <PackageReference Include="uml4net.xmi.Extensions.EnterpriseArchitect" Version="8.3.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -30,6 +31,9 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
         <None Update="Templates\Uml\enumeration-uml-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Templates\Uml\enumprovider-uml-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
         <None Update="Templates\Uml\poco-interface-uml-template.hbs">
