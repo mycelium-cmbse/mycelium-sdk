@@ -39,7 +39,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
         /// <summary>
         /// The canonical URI used by the FunctionalData model to reference the standard UML primitive types.
-        /// </summary
+        /// </summary>
         private const string PrimitiveTypesUri = "http://www.omg.org/spec/UML/20161101/PrimitiveTypes.xmi";
 
         /// <summary>

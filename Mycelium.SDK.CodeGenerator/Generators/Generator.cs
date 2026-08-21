@@ -141,6 +141,16 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// <returns>
         /// The filename-sorted validated batch.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="generatedFiles" /> or <paramref name="expectedFileNames" /> is
+        /// <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="artifactName" /> is empty.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the batch contains duplicate filenames or does not match the reviewed manifest.
+        /// </exception>
         protected static GeneratedFile[] PrepareBatch(
             IEnumerable<GeneratedFile> generatedFiles,
             IReadOnlyList<string> expectedFileNames,
@@ -283,7 +293,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
 
             var filePath = Path.Combine(outputDirectory.FullName, fileName);
 
-            await File.WriteAllTextAsync(filePath,generatedCode,Utf8WithoutBom);
+            await File.WriteAllTextAsync(filePath, generatedCode, Utf8WithoutBom);
         }
         
         /// <summary>

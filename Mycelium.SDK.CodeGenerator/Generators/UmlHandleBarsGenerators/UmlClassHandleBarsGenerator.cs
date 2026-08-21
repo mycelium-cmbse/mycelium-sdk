@@ -10,14 +10,13 @@
 namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 {
     using System;
-    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
 
-    using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
     using Mycelium.SDK.CodeGenerator.Extensions;
-S
+    using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
+
     using uml4net.StructuredClassifiers;
     using uml4net.xmi.Readers;
 
@@ -114,6 +113,18 @@ S
         /// <returns>
         /// A task whose result contains the generated and formatted C# source.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="outputDirectory" /> or <paramref name="umlClass" /> is
+        /// <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a modeled name cannot be represented as a legal C# identifier or the template
+        /// renders empty source.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UML class lacks required information, contains an unsupported property type,
+        /// or the rendered or formatted source contains invalid C# syntax.
+        /// </exception>
         protected async Task<string> GenerateInterfaceAsync(DirectoryInfo outputDirectory, IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(outputDirectory);
@@ -138,6 +149,18 @@ S
         /// <returns>
         /// A task whose result contains the generated and formatted C# source.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="outputDirectory" /> or <paramref name="umlClass" /> is
+        /// <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a modeled name cannot be represented as a legal C# identifier or the template
+        /// renders empty source.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UML class is abstract, lacks required information, contains an unsupported
+        /// property type, or the rendered or formatted source contains invalid C# syntax.
+        /// </exception>
         protected async Task<string> GenerateClassAsync(DirectoryInfo outputDirectory, IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(outputDirectory);
@@ -183,6 +206,17 @@ S
         /// <returns>
         /// The generated filename and source.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="umlClass" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a modeled name cannot be represented as a legal C# identifier or the template
+        /// renders empty source.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UML class lacks required information, contains an unsupported property type,
+        /// or the rendered or formatted source contains invalid C# syntax.
+        /// </exception>
         private GeneratedFile RenderInterface(IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);
@@ -231,11 +265,20 @@ S
         /// <returns>
         /// The UML class name.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="umlClass" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the class or generated interface name cannot be represented as a legal C#
+        /// identifier.
+        /// </exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown when the UML class has no name.
         /// </exception>
         private static string QueryRequiredClassName(IClass umlClass)
         {
+            ArgumentNullException.ThrowIfNull(umlClass);
+            
             if (string.IsNullOrWhiteSpace(umlClass.Name))
             {
                 throw new InvalidOperationException($"Class '{umlClass.XmiId}' has no name.");

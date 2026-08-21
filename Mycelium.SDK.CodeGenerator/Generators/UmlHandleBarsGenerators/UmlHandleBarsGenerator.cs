@@ -41,6 +41,23 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <returns>
         /// An awaitable task.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="resourcesDirectory" /> or <paramref name="outputDirectory" /> is
+        /// <see langword="null" />.
+        /// </exception>
+        /// <exception cref="DirectoryNotFoundException">
+        /// Thrown when <paramref name="resourcesDirectory" /> does not exist.
+        /// </exception>
+        /// <exception cref="FileNotFoundException">
+        /// Thrown when a required FunctionalData XMI resource is missing.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a modeled name cannot be represented as a legal C# identifier.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when loading, semantic validation, rendering, syntax validation, or manifest validation
+        /// fails.
+        /// </exception>
         public Task GenerateAsync(DirectoryInfo resourcesDirectory, DirectoryInfo outputDirectory)
         {
             ArgumentNullException.ThrowIfNull(resourcesDirectory);
@@ -63,6 +80,16 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <returns>
         /// A task representing the asynchronous generation operation.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="xmiReaderResult" /> or <paramref name="outputDirectory" /> is
+        /// <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a modeled name cannot be represented as a legal C# identifier.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when semantic validation, rendering, syntax validation, or manifest validation fails.
+        /// </exception>
         public abstract Task GenerateAsync(XmiReaderResult xmiReaderResult, DirectoryInfo outputDirectory);
 
         /// <summary>
@@ -77,8 +104,12 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="xmiReaderResult"/> is <see langword="null" />.
         /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a modeled name cannot be represented as a legal C# identifier.
+        /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the model does not contain exactly one package named <c>FunctionalData</c>.
+        /// Thrown when the model does not contain exactly one package named <c>FunctionalData</c> or
+        /// does not satisfy the reviewed FunctionalData semantic contract.
         /// </exception>
         protected static HandlebarsPayload CreateHandlebarsPayload(XmiReaderResult xmiReaderResult)
         {
@@ -153,6 +184,16 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <returns>
         /// Its validated modeled name.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="enumeration" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the enumeration name or a literal name cannot be represented as a legal C#
+        /// identifier.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the enumeration or a literal is unnamed, or mapped literal identifiers collide.
+        /// </exception>
         protected static string ValidateEnumeration(IEnumeration enumeration)
         {
             ArgumentNullException.ThrowIfNull(enumeration);

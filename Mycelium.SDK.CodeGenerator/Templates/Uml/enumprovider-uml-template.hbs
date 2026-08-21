@@ -1,0 +1,111 @@
+// ------------------------------------------------------------------------------------------------
+//  <copyright file="{{this.Name}}Provider.cs" company="Starion Group S.A.">
+    //
+    //    Copyright 2026 Starion Group S.A.
+    //    SPDX-License-Identifier: Apache-2.0
+    //
+    //  </copyright>
+//  ------------------------------------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
+namespace Mycelium.SDK.Extensions
+{
+using System;
+using System.CodeDom.Compiler;
+
+using Mycelium.SDK;
+
+/// <summary>
+    /// Provides exact XMI-literal conversions for <see cref="{{ #NamedElement.WriteIdentifier this }}" />.
+    /// </summary>
+[GeneratedCode("Mycelium.SDK", "latest")]
+public static partial class {{ this.Name }}Provider
+{
+/// <summary>
+    /// Parses an exact XMI literal as a <see cref="{{ #NamedElement.WriteIdentifier this }}" /> value.
+    /// </summary>
+/// <param name="value">
+/// The case-sensitive XMI literal to parse.
+/// </param>
+/// <returns>
+    /// The corresponding <see cref="{{ #NamedElement.WriteIdentifier this }}" /> value.
+    /// </returns>
+/// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="value" /> is not an exact XMI literal.
+    /// </exception>
+public static {{ #NamedElement.WriteIdentifier this }} Parse(ReadOnlySpan<char> value)
+    {
+{{ #each this.OwnedLiteral as | enumerationLiteral | }}
+    if (value.Equals("{{ enumerationLiteral.Name }}".AsSpan(), StringComparison.Ordinal))
+    {
+    return {{ #NamedElement.WriteIdentifier ../this }}.{{ #EnumerationLiteral.Write enumerationLiteral }};
+    }
+
+{{/each}}
+    throw new ArgumentException(
+    $"'{new string(value)}' is not a valid {{ this.Name }} literal.",
+    nameof(value));
+    }
+
+    /// <summary>
+    /// Tries to parse an exact XMI literal as a <see cref="{{ #NamedElement.WriteIdentifier this }}" /> value.
+    /// </summary>
+    /// <param name="value">
+    /// The case-sensitive XMI literal to parse.
+    /// </param>
+    /// <param name="result">
+    /// The parsed value, or the default enumeration value when parsing fails.
+    /// </param>
+    /// <returns>
+    /// <see langword="true" /> when parsing succeeds; otherwise, <see langword="false" />.
+    /// </returns>
+    public static bool TryParse(
+    ReadOnlySpan<char> value,
+    out {{ #NamedElement.WriteIdentifier this }} result)
+    {
+{{ #each this.OwnedLiteral as | enumerationLiteral | }}
+    if (value.Equals("{{ enumerationLiteral.Name }}".AsSpan(), StringComparison.Ordinal))
+    {
+    result = {{ #NamedElement.WriteIdentifier ../this }}.{{ #EnumerationLiteral.Write enumerationLiteral }};
+    return true;
+    }
+
+{{/each}}
+    result = default;
+    return false;
+    }
+
+    /// <summary>
+    /// Formats a <see cref="{{ #NamedElement.WriteIdentifier this }}" /> value as its exact XMI literal.
+    /// </summary>
+    /// <param name="value">
+    /// The enumeration value to format.
+    /// </param>
+    /// <returns>
+    /// The exact case-sensitive XMI literal.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="value" /> is not a defined enumeration value.
+    /// </exception>
+    public static string Format({{ #NamedElement.WriteIdentifier this }} value)
+    {
+    return value switch
+    {
+{{ #each this.OwnedLiteral as | enumerationLiteral | }}
+{{ #NamedElement.WriteIdentifier ../this }}.{{ #EnumerationLiteral.Write enumerationLiteral }} => "{{ enumerationLiteral.Name }}",
+{{/each}}
+    _ => throw new ArgumentOutOfRangeException(
+    nameof(value),
+    value,
+    $"'{value}' is not a defined {{ this.Name }} value.")
+    };
+    }
+    }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+    // ------------------------------------------------------------------------------------------------
