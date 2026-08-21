@@ -99,6 +99,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             "User"
         ];
 
+        /// <summary>
+        /// The reviewed names of all UML enumerations expected in the FunctionalData model.
+        /// </summary>
         private static readonly string[] ExpectedEnumerationNames =
         [
             "ActivationStatus",
@@ -111,6 +114,10 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             "ReviewStatus"
         ];
 
+        /// <summary>
+        /// The reviewed enumeration literal names keyed by enumeration name, preserving modeled order,
+        /// spelling, and casing.
+        /// </summary>
         private static readonly IReadOnlyDictionary<string, string[]> ExpectedLiteralNames =
             new Dictionary<string, string[]>(StringComparer.Ordinal)
             {
@@ -167,6 +174,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 ]
             };
 
+        /// <summary>
+        /// The reviewed C# type mappings keyed by standard or custom UML primitive type name.
+        /// </summary>
         private static readonly IReadOnlyDictionary<string, string> ExpectedPrimitiveMappings =
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -181,6 +191,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 ["Uri"] = "Uri"
             };
 
+        /// <summary>
+        /// The reviewed names of the standard UML primitive types required by the FunctionalData model.
+        /// </summary>
         private static readonly string[] ExpectedStandardPrimitiveNames =
         [
             "Boolean",
@@ -190,6 +203,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             "UnlimitedNatural"
         ];
 
+        /// <summary>
+        /// The reviewed names of the custom C# primitive types required by the FunctionalData model.
+        /// </summary
         private static readonly string[] ExpectedCustomPrimitiveNames =
         [
             "DateTime",
@@ -198,6 +214,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             "Uri"
         ];
 
+        /// <summary>
+        /// The reviewed order-independent semantic signatures of all FunctionalData associations.
+        /// </summary>
         private static readonly string[] ExpectedAssociationSignatures =
         [
             CreateAssociationSignature("AuditableThing", null, "User", "updatedBy"),
@@ -224,16 +243,18 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         ];
 
         /// <summary>
-        /// Creates the canonical offline reader settings for FunctionalData.
+        /// Creates the canonical offline XMI reader settings for the FunctionalData model.
         /// </summary>
         /// <param name="resourcesDirectory">
-        /// The directory containing the three reviewed XMI resources.
+        /// The directory containing the reviewed FunctionalData XMI resources.
         /// </param>
         /// <returns>
-        /// Reader settings that resolve every FunctionalData dependency locally.
+        /// Reader settings that resolve every FunctionalData XMI dependency locally.
         /// </returns>
-        public static DefaultSettings CreateFunctionalDataReaderSettings(
-            DirectoryInfo resourcesDirectory)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="resourcesDirectory" /> is <see langword="null" />.
+        /// </exception>
+        public static DefaultSettings CreateFunctionalDataReaderSettings(DirectoryInfo resourcesDirectory)
         {
             ArgumentNullException.ThrowIfNull(resourcesDirectory);
 
@@ -242,8 +263,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 LocalReferenceBasePath = resourcesDirectory.FullName,
                 PathMaps =
                 {
-                    [PrimitiveTypesUri] =
-                        Path.Combine(resourcesDirectory.FullName, "PrimitiveTypes.xmi")
+                    [PrimitiveTypesUri] = Path.Combine(resourcesDirectory.FullName, "PrimitiveTypes.xmi")
                 },
                 UseStrictReading = false
             };
@@ -253,13 +273,27 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// Loads and validates the reviewed FunctionalData model through the canonical production path.
         /// </summary>
         /// <param name="resourcesDirectory">
-        /// The directory containing the reviewed XMI resources.
+        /// The directory containing the reviewed FunctionalData XMI resources.
         /// </param>
         /// <returns>
-        /// The validated XMI reader result.
+        /// The loaded and semantically validated XMI reader result.
         /// </returns>
-        public static XmiReaderResult ReadFunctionalData(
-            DirectoryInfo resourcesDirectory)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="resourcesDirectory" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="DirectoryNotFoundException">
+        /// Thrown when <paramref name="resourcesDirectory" /> does not exist.
+        /// </exception>
+        /// <exception cref="FileNotFoundException">
+        /// Thrown when a required FunctionalData XMI resource does not exist.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the loaded model does not satisfy the reviewed FunctionalData semantic contract.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a modeled name cannot be represented as a legal C# identifier.
+        /// </exception>
+        public static XmiReaderResult ReadFunctionalData(DirectoryInfo resourcesDirectory)
         {
             ArgumentNullException.ThrowIfNull(resourcesDirectory);
 
@@ -271,8 +305,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             foreach (var resourceFileName in RequiredResourceFileNames)
             {
-                var resourcePath =
-                    Path.Combine(resourcesDirectory.FullName, resourceFileName);
+                var resourcePath = Path.Combine(resourcesDirectory.FullName, resourceFileName);
 
                 if (!File.Exists(resourcePath))
                 {
@@ -284,8 +317,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var settings =
-                CreateFunctionalDataReaderSettings(resourcesDirectory);
+            var settings = CreateFunctionalDataReaderSettings(resourcesDirectory);
 
             var readerBuilder = XmiReaderBuilder.Create()
                 .UsingSettings(settings)
@@ -295,8 +327,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             using var reader = readerBuilder.Build();
 
-            var result = reader.Read(
-                Path.Combine(resourcesDirectory.FullName, "FunctionalData.xmi"));
+            var result = reader.Read(Path.Combine(resourcesDirectory.FullName, "FunctionalData.xmi"));
 
             result.ValidateFunctionalData();
 
@@ -304,16 +335,21 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         }
 
         /// <summary>
-        /// Selects exactly one package named <c>FunctionalData</c>.
+        /// Queries the unique package named <c>FunctionalData</c> from a loaded UML model.
         /// </summary>
         /// <param name="xmiReaderResult">
-        /// The loaded UML model.
+        /// The loaded UML model from which the FunctionalData package is queried.
         /// </param>
         /// <returns>
         /// The unique FunctionalData package.
         /// </returns>
-        public static IPackage QueryFunctionalDataPackage(
-            this XmiReaderResult xmiReaderResult)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="xmiReaderResult" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the model does not contain exactly one package named <c>FunctionalData</c>.
+        /// </exception>
+        public static IPackage QueryFunctionalDataPackage(this XmiReaderResult xmiReaderResult)
         {
             ArgumentNullException.ThrowIfNull(xmiReaderResult);
 
@@ -326,18 +362,23 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         }
 
         /// <summary>
-        /// Validates the complete reviewed FunctionalData semantic contract.
+        /// Validates the loaded UML model against the complete reviewed FunctionalData semantic contract.
         /// </summary>
         /// <param name="xmiReaderResult">
-        /// The loaded UML model.
+        /// The loaded UML model to validate.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="xmiReaderResult" /> is <see langword="null" />.
+        /// </exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown when a required package is missing or non-unique, or when a primitive type, class,
         /// generalization, property, enumeration, association, multiplicity, XMI identifier, or reviewed
         /// inventory is invalid.
         /// </exception>
-        public static void ValidateFunctionalData(
-            this XmiReaderResult xmiReaderResult)
+        /// <exception cref="ArgumentException">
+        /// Thrown when a modeled name cannot be represented as a legal C# identifier.
+        /// </exception>
+        public static void ValidateFunctionalData(this XmiReaderResult xmiReaderResult)
         {
             ArgumentNullException.ThrowIfNull(xmiReaderResult);
 
@@ -368,10 +409,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 .SelectMany(package => package.PackagedElement.OfType<IAssociation>())
                 .ToArray();
 
-            var validClasses =
-                new HashSet<IClass>(
-                    classes,
-                    ReferenceEqualityComparer.Instance);
+            var validClasses = new HashSet<IClass>(classes, ReferenceEqualityComparer.Instance);
 
             var validTypes =
                 new HashSet<IType>(
@@ -401,10 +439,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                             validTypes))
                 .ToArray();
 
-            ThrowIfUnexpectedNames(
-                "class",
-                classes.Select(umlClass => umlClass.Name),
-                ExpectedClassNames);
+            ThrowIfUnexpectedNames("class", classes.Select(umlClass => umlClass.Name), ExpectedClassNames);
 
             ThrowIfUnexpectedNames(
                 "abstract class",
@@ -429,15 +464,42 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 actualAssociationSignatures);
         }
 
-        private static IPackage[] QueryAllPackages(
-            XmiReaderResult xmiReaderResult)
+        /// <summary>
+        /// Queries all distinct packages reachable from the loaded UML model.
+        /// </summary>
+        /// <param name="xmiReaderResult">
+        /// The loaded UML model whose packages are queried.
+        /// </param>
+        /// <returns>
+        /// The distinct reachable UML packages.
+        /// </returns>
+        private static IPackage[] QueryAllPackages(XmiReaderResult xmiReaderResult)
         {
             return xmiReaderResult.Packages
                 .SelectMany(package => package.QueryPackages())
-                .Distinct(ReferenceEqualityComparer.Instance)
+                .Distinct<IPackage>(ReferenceEqualityComparer.Instance)
                 .ToArray();
         }
 
+        /// <summary>
+        /// Validates a primitive-type package against its reviewed name and C# mapping inventory.
+        /// </summary>
+        /// <param name="allPackages">
+        /// All packages reachable from the loaded UML model.
+        /// </param>
+        /// <param name="packageName">
+        /// The exact name of the primitive-type package to validate.
+        /// </param>
+        /// <param name="expectedNames">
+        /// The reviewed primitive-type names expected in the package.
+        /// </param>
+        /// <returns>
+        /// The validated primitive types from the selected package.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the package is not unique or its primitive names, XMI identifiers, or C# mappings
+        /// do not match the reviewed contract.
+        /// </exception>
         private static IPrimitiveType[] ValidatePrimitivePackage(
             IEnumerable<IPackage> allPackages,
             string packageName,
@@ -460,19 +522,12 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             foreach (var primitiveType in primitiveTypes)
             {
-                ValidateRequiredXmiIdentifier(
-                    primitiveType,
-                    $"Primitive type '{primitiveType.Name}'");
+                ValidateRequiredXmiIdentifier(primitiveType, $"Primitive type '{primitiveType.Name}'");
 
                 var actualMapping = primitiveType.QueryCSharpTypeName();
 
-                if (!ExpectedPrimitiveMappings.TryGetValue(
-                        primitiveType.Name,
-                        out var expectedMapping)
-                    || !string.Equals(
-                        actualMapping,
-                        expectedMapping,
-                        StringComparison.Ordinal))
+                if (!ExpectedPrimitiveMappings.TryGetValue(primitiveType.Name, out var expectedMapping)
+                    || !string.Equals(actualMapping, expectedMapping, StringComparison.Ordinal))
                 {
                     throw new InvalidOperationException(
                         $"Primitive type '{primitiveType.Name}' maps to "
@@ -483,23 +538,33 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             return primitiveTypes;
         }
 
+        /// <summary>
+        /// Validates a UML class and its generalizations and effective generated property contract.
+        /// </summary>
+        /// <param name="umlClass">
+        /// The UML class to validate.
+        /// </param>
+        /// <param name="validClasses">
+        /// The classes belonging to the validated FunctionalData model.
+        /// </param>
+        /// <param name="validTypes">
+        /// The types permitted in the validated FunctionalData model.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the class has an invalid XMI identifier, name, generalization, property, type,
+        /// multiplicity, inheritance hierarchy, or duplicate generated property identifier.
+        /// </exception>
         /// <exception cref="ArgumentException">
         /// Thrown when the class name, its generated interface identifier, or a property name cannot be
         /// represented as a legal C# identifier.
         /// </exception>
-        private static void ValidateClass(
-            IClass umlClass,
-            ISet<IClass> validClasses,
-            ISet<IType> validTypes)
+        private static void ValidateClass(IClass umlClass, ISet<IClass> validClasses, ISet<IType> validTypes)
         {
-            ValidateRequiredXmiIdentifier(
-                umlClass,
-                $"Class '{umlClass.Name}'");
+            ValidateRequiredXmiIdentifier(umlClass, $"Class '{umlClass.Name}'");
 
             if (string.IsNullOrWhiteSpace(umlClass.Name))
             {
-                throw new InvalidOperationException(
-                    $"Class '{umlClass.XmiId}' has no name.");
+                throw new InvalidOperationException($"Class '{umlClass.XmiId}' has no name.");
             }
 
             _ = ReservedCSharpNameMapper.Map(umlClass.Name);
@@ -522,8 +587,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 ValidateProperty(property, validTypes);
             }
 
-            var effectiveProperties =
-                umlClass.QueryPocoImplementationProperties();
+            var effectiveProperties = umlClass.QueryPocoImplementationProperties();
 
             var duplicateGeneratedPropertyName = effectiveProperties
                 .Select(property => property.QueryPropertyName())
@@ -539,38 +603,57 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
         }
 
-        private static void ValidateProperty(
-            IProperty property,
-            ISet<IType> validTypes)
+        /// <summary>
+        /// Validates a UML property and its generated DTO and POCO representations.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property to validate.
+        /// </param>
+        /// <param name="validTypes">
+        /// The types permitted in the validated FunctionalData model.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the property has an invalid XMI identifier, name, type, multiplicity, or generated
+        /// type representation.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the property name or its named type cannot be represented as a legal C# identifier.
+        /// </exception>
+        private static void ValidateProperty(IProperty property, ISet<IType> validTypes)
         {
-            ValidateRequiredXmiIdentifier(
-                property,
-                $"Property '{property.Name}'");
+            ValidateRequiredXmiIdentifier(property, $"Property '{property.Name}'");
 
             if (string.IsNullOrWhiteSpace(property.Name))
             {
-                throw new InvalidOperationException(
-                    $"Property '{property.XmiId}' has no name.");
+                throw new InvalidOperationException($"Property '{property.XmiId}' has no name.");
             }
 
             ValidatePropertyType(property, validTypes);
-            ValidateMultiplicity(
-                property,
-                $"Property '{property.Describe()}'");
+            ValidateMultiplicity(property, $"Property '{property.Describe()}'");
 
             _ = property.QueryPropertyName();
             _ = property.QueryDtoTypeName();
             _ = property.QueryPocoTypeName();
         }
 
-        private static void ValidatePropertyType(
-            IProperty property,
-            ISet<IType> validTypes)
+        /// <summary>
+        /// Validates that a UML property resolves to a supported type in the FunctionalData model.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property whose type is validated.
+        /// </param>
+        /// <param name="validTypes">
+        /// The types permitted in the validated FunctionalData model.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the property type is unresolved, external to the validated model, unsupported,
+        /// or unnamed.
+        /// </exception>
+        private static void ValidatePropertyType(IProperty property, ISet<IType> validTypes)
         {
             if (property.Type is null)
             {
-                throw new InvalidOperationException(
-                    $"Property '{property.Describe()}' has no resolved type.");
+                throw new InvalidOperationException($"Property '{property.Describe()}' has no resolved type.");
             }
 
             if (!validTypes.Contains(property.Type))
@@ -591,17 +674,27 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             if (string.IsNullOrWhiteSpace(property.Type.Name))
             {
-                throw new InvalidOperationException(
-                    $"Property '{property.Describe()}' has an unnamed type.");
+                throw new InvalidOperationException($"Property '{property.Describe()}' has an unnamed type.");
             }
         }
 
-        private static void ValidateEnumeration(
-            IEnumeration enumeration)
+        /// <summary>
+        /// Validates a UML enumeration against its reviewed name and literal contract.
+        /// </summary>
+        /// <param name="enumeration">
+        /// The UML enumeration to validate.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the enumeration or one of its literals has no required XMI identifier or name,
+        /// contains a duplicate generated literal identifier, or does not match the reviewed literal
+        /// spelling, casing, order, or inventory.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the enumeration name or a literal name cannot be represented as a legal C# identifier.
+        /// </exception>
+        private static void ValidateEnumeration(IEnumeration enumeration)
         {
-            ValidateRequiredXmiIdentifier(
-                enumeration,
-                $"Enumeration '{enumeration.Name}'");
+            ValidateRequiredXmiIdentifier(enumeration, $"Enumeration '{enumeration.Name}'");
 
             if (string.IsNullOrWhiteSpace(enumeration.Name))
             {
@@ -616,9 +709,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             foreach (var literal in enumeration.OwnedLiteral)
             {
-                ValidateRequiredXmiIdentifier(
-                    literal,
-                    $"Enumeration literal '{literal.Name}'");
+                ValidateRequiredXmiIdentifier(literal, $"Enumeration literal '{literal.Name}'");
 
                 if (string.IsNullOrWhiteSpace(literal.Name))
                 {
@@ -626,8 +717,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                         $"Enumeration '{enumeration.Name}' contains an unnamed literal.");
                 }
 
-                var mappedIdentifier =
-                    ReservedCSharpNameMapper.Map(literal.Name);
+                var mappedIdentifier = ReservedCSharpNameMapper.Map(literal.Name);
 
                 if (!mappedIdentifiers.Add(mappedIdentifier))
                 {
@@ -639,17 +729,13 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 actualLiteralNames.Add(literal.Name);
             }
 
-            if (!ExpectedLiteralNames.TryGetValue(
-                    enumeration.Name,
-                    out var expectedNames))
+            if (!ExpectedLiteralNames.TryGetValue(enumeration.Name, out var expectedNames))
             {
                 throw new InvalidOperationException(
                     $"Enumeration '{enumeration.Name}' is not present in the reviewed inventory.");
             }
 
-            if (!actualLiteralNames.SequenceEqual(
-                    expectedNames,
-                    StringComparer.Ordinal))
+            if (!actualLiteralNames.SequenceEqual(expectedNames, StringComparer.Ordinal))
             {
                 throw new InvalidOperationException(
                     $"Enumeration '{enumeration.Name}' does not match its reviewed "
@@ -657,14 +743,32 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
         }
 
+        /// <summary>
+        /// Validates a UML association and creates its order-independent semantic signature.
+        /// </summary>
+        /// <param name="association">
+        /// The UML association to validate.
+        /// </param>
+        /// <param name="validClasses">
+        /// The classes belonging to the validated FunctionalData model.
+        /// </param>
+        /// <param name="validTypes">
+        /// The types permitted in the validated FunctionalData model.
+        /// </param>
+        /// <returns>
+        /// The validated order-independent association signature.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the association has an invalid XMI identifier or member-end count, or when a member
+        /// end is unresolved, has an invalid type or multiplicity, is not owned by a validated class, or is
+        /// not queryable through its owning class.
+        /// </exception>
         private static string ValidateAssociation(
             IAssociation association,
             ISet<IClass> validClasses,
             ISet<IType> validTypes)
         {
-            ValidateRequiredXmiIdentifier(
-                association,
-                $"Association '{association.Name}'");
+            ValidateRequiredXmiIdentifier(association, $"Association '{association.Name}'");
 
             if (association.MemberEnd.Count != 2)
             {
@@ -680,14 +784,10 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                         $"Association '{association.XmiId}' contains an unresolved member end.");
                 }
 
-                ValidateRequiredXmiIdentifier(
-                    associationEnd,
-                    $"Association end '{associationEnd.Name}'");
+                ValidateRequiredXmiIdentifier(associationEnd, $"Association end '{associationEnd.Name}'");
 
                 ValidatePropertyType(associationEnd, validTypes);
-                ValidateMultiplicity(
-                    associationEnd,
-                    $"Association end '{DescribeAssociationEnd(associationEnd)}'");
+                ValidateMultiplicity(associationEnd, $"Association end '{DescribeAssociationEnd(associationEnd)}'");
 
                 if (string.IsNullOrWhiteSpace(associationEnd.Name))
                 {
@@ -730,9 +830,20 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 secondEnd.Name);
         }
 
-        private static void ValidateMultiplicity(
-            IMultiplicityElement multiplicity,
-            string description)
+        /// <summary>
+        /// Validates the lower and upper bounds of a UML multiplicity element.
+        /// </summary>
+        /// <param name="multiplicity">
+        /// The UML multiplicity element to validate.
+        /// </param>
+        /// <param name="description">
+        /// The description used to identify the element in validation failures.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the lower bound is negative, the upper bound is neither an unsigned integer nor
+        /// unlimited, or the upper bound is below the lower bound.
+        /// </exception>
+        private static void ValidateMultiplicity(IMultiplicityElement multiplicity, string description)
         {
             if (multiplicity.Lower < 0)
             {
@@ -741,10 +852,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                     + $"'{multiplicity.Lower}'.");
             }
 
-            if (string.Equals(
-                    multiplicity.Upper,
-                    "*",
-                    StringComparison.Ordinal))
+            if (string.Equals(multiplicity.Upper, "*", StringComparison.Ordinal))
             {
                 return;
             }
@@ -768,9 +876,19 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
         }
 
-        private static void ValidateRequiredXmiIdentifier(
-            IXmiElement element,
-            string description)
+        /// <summary>
+        /// Validates that a UML element has a non-empty XMI identifier.
+        /// </summary>
+        /// <param name="element">
+        /// The UML element whose XMI identifier is validated.
+        /// </param>
+        /// <param name="description">
+        /// The description used to identify the element in validation failures.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UML element has no XMI identifier.
+        /// </exception>
+        private static void ValidateRequiredXmiIdentifier(IXmiElement element, string description)
         {
             if (string.IsNullOrWhiteSpace(element.XmiId))
             {
@@ -779,6 +897,22 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
         }
 
+        /// <summary>
+        /// Validates an actual named-element inventory against its reviewed inventory.
+        /// </summary>
+        /// <param name="inventoryName">
+        /// The descriptive name of the inventory being validated.
+        /// </param>
+        /// <param name="actualNames">
+        /// The names found in the loaded UML model.
+        /// </param>
+        /// <param name="expectedNames">
+        /// The names required by the reviewed contract.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the actual inventory contains an unnamed or duplicate element, or does not match
+        /// the reviewed inventory.
+        /// </exception>
         private static void ThrowIfUnexpectedNames(
             string inventoryName,
             IEnumerable<string> actualNames,
@@ -788,8 +922,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             if (actual.Any(string.IsNullOrWhiteSpace))
             {
-                throw new InvalidOperationException(
-                    $"The {inventoryName} inventory contains an unnamed element.");
+                throw new InvalidOperationException($"The {inventoryName} inventory contains an unnamed element.");
             }
 
             var duplicateName = actual
@@ -812,9 +945,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 .OrderBy(name => name, StringComparer.Ordinal)
                 .ToArray();
 
-            if (!orderedActual.SequenceEqual(
-                    orderedExpected,
-                    StringComparer.Ordinal))
+            if (!orderedActual.SequenceEqual(orderedExpected, StringComparer.Ordinal))
             {
                 throw new InvalidOperationException(
                     $"The {inventoryName} inventory does not match the reviewed contract."
@@ -823,8 +954,17 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
         }
 
-        private static void ThrowIfUnexpectedAssociationSignatures(
-            IReadOnlyCollection<string> actualSignatures)
+        /// <summary>
+        /// Validates the actual association signatures against the reviewed association inventory.
+        /// </summary>
+        /// <param name="actualSignatures">
+        /// The association signatures produced from the loaded UML model.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when an association signature is duplicated or the actual signatures do not match the
+        /// reviewed inventory.
+        /// </exception>
+        private static void ThrowIfUnexpectedAssociationSignatures(IReadOnlyCollection<string> actualSignatures)
         {
             var duplicateSignature = actualSignatures
                 .GroupBy(signature => signature, StringComparer.Ordinal)
@@ -846,9 +986,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 .OrderBy(signature => signature, StringComparer.Ordinal)
                 .ToArray();
 
-            if (!orderedActual.SequenceEqual(
-                    orderedExpected,
-                    StringComparer.Ordinal))
+            if (!orderedActual.SequenceEqual(orderedExpected, StringComparer.Ordinal))
             {
                 throw new InvalidOperationException(
                     "The association-signature inventory does not match the reviewed contract."
@@ -857,6 +995,24 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
         }
 
+        /// <summary>
+        /// Creates a deterministic, order-independent semantic signature for two association ends.
+        /// </summary>
+        /// <param name="firstType">
+        /// The UML type name of the first association end.
+        /// </param>
+        /// <param name="firstRole">
+        /// The optional role name of the first association end.
+        /// </param>
+        /// <param name="secondType">
+        /// The UML type name of the second association end.
+        /// </param>
+        /// <param name="secondRole">
+        /// The optional role name of the second association end.
+        /// </param>
+        /// <returns>
+        /// The ordinally ordered association signature, with missing role names represented by empty values.
+        /// </returns>
         private static string CreateAssociationSignature(
             string firstType,
             string firstRole,
@@ -871,14 +1027,20 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 : $"{secondEnd}|{firstEnd}";
         }
 
-        private static string DescribeAssociationEnd(
-            IProperty associationEnd)
+        /// <summary>
+        /// Creates a diagnostic description of a UML association end.
+        /// </summary>
+        /// <param name="associationEnd">
+        /// The UML association end to describe.
+        /// </param>
+        /// <returns>
+        /// The association-end type and role names, using diagnostic placeholders for unresolved or
+        /// unnamed values.
+        /// </returns>
+        private static string DescribeAssociationEnd(IProperty associationEnd)
         {
-            var typeName =
-                associationEnd.Type?.Name ?? "<unresolved>";
-
-            var roleName =
-                associationEnd.Name ?? "<unnamed>";
+            var typeName = associationEnd.Type?.Name ?? "<unresolved>";
+            var roleName = associationEnd.Name ?? "<unnamed>";
 
             return $"{typeName}:{roleName}";
         }

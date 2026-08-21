@@ -120,22 +120,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         {
             ArgumentNullException.ThrowIfNull(enumeration);
 
-            _ = ReservedCSharpNameMapper.Map(enumeration.Name);
-
-            var duplicateLiteralIdentifier = enumeration.OwnedLiteral
-                .Select(literal => ReservedCSharpNameMapper.Map(literal.Name))
-                .GroupBy(identifier => identifier, StringComparer.Ordinal)
-                .FirstOrDefault(group => group.Count() > 1)
-                ?.Key;
-
-            if (duplicateLiteralIdentifier is not null)
-            {
-                throw new InvalidOperationException(
-                    $"Enumeration '{enumeration.Name}' contains duplicate C# literal identifier "
-                    + $"'{duplicateLiteralIdentifier}'.");
-            }
-
-            var fileName = $"{enumeration.Name}.cs";
+            var enumerationName = ValidateEnumeration(enumeration);
+            var fileName = $"{enumerationName}.cs";
             var template = this.Templates[TemplateName];
             var generatedCode = template(enumeration);
 
