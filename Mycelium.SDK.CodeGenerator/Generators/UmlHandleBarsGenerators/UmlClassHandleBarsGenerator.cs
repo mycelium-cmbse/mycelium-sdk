@@ -16,7 +16,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
     using System.Threading.Tasks;
 
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
-
+    using Mycelium.SDK.CodeGenerator.Extensions;
+S
     using uml4net.StructuredClassifiers;
     using uml4net.xmi.Readers;
 
@@ -26,6 +27,37 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
     /// </summary>
     public abstract class UmlClassHandleBarsGenerator : UmlHandleBarsGenerator
     {
+        /// <summary>
+        /// The complete reviewed DTO and POCO output manifest.
+        /// </summary>
+        private static readonly string[] ExpectedFileNames =
+        [
+            "BranchProtectionRule.cs",
+            "Comment.cs",
+            "FunctionalProject.cs",
+            "FunctionalProjectPolicy.cs",
+            "IAuditableThing.cs",
+            "IBranchProtectionRule.cs",
+            "IComment.cs",
+            "IFunctionalProject.cs",
+            "IFunctionalProjectPolicy.cs",
+            "IOrganization.cs",
+            "IOrganizationMember.cs",
+            "IOrganizationPolicy.cs",
+            "IOwnership.cs",
+            "IProjectMember.cs",
+            "IReview.cs",
+            "IThing.cs",
+            "IUser.cs",
+            "Organization.cs",
+            "OrganizationMember.cs",
+            "OrganizationPolicy.cs",
+            "Ownership.cs",
+            "ProjectMember.cs",
+            "Review.cs",
+            "User.cs"
+        ];
+        
         /// <summary>
         /// Gets the artifact name used in validation messages.
         /// </summary>
@@ -57,20 +89,17 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var payload = CreateHandlebarsPayload(xmiReaderResult);
 
-            // Render and validate the complete batch before creating or writing
-            // the output directory. This prevents partial output when any model
-            // element cannot be generated.
-            var generatedFiles = payload.Classes
-                .Select(this.RenderInterface)
-                .Concat(payload.Classes
-                    .Where(umlClass => !umlClass.IsAbstract)
-                    .Select(this.RenderClass))
-                .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
-                .ToArray();
+            var generatedFiles = PrepareBatch(
+                payload.Classes
+                    .Select(this.RenderInterface)
+                    .Concat(
+                        payload.Classes
+                            .Where(umlClass => !umlClass.IsAbstract)
+                            .Select(this.RenderClass)),
+                ExpectedFileNames,
+                this.ArtifactName);
 
-            ThrowIfDuplicateFileNames(generatedFiles, this.ArtifactName);
-
-            await WriteAsync(generatedFiles, outputDirectory);
+            await WriteBatchAsync(generatedFiles, outputDirectory);
         }
 
         /// <summary>
@@ -92,7 +121,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var generatedFile = this.RenderInterface(umlClass);
 
-            await WriteAsync([generatedFile], outputDirectory);
+            await WriteBatchAsync([generatedFile], outputDirectory);
 
             return generatedFile.Source;
         }
@@ -116,7 +145,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var generatedFile = this.RenderClass(umlClass);
 
-            await WriteAsync([generatedFile], outputDirectory);
+            await WriteBatchAsync([generatedFile], outputDirectory);
 
             return generatedFile.Source;
         }
@@ -161,9 +190,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             var className = QueryRequiredClassName(umlClass);
             var generatedCode = this.Templates[this.InterfaceTemplate](umlClass);
 
-            generatedCode = this.CodeCleanup(generatedCode);
-
-            return new GeneratedFile($"I{className}.cs", generatedCode);
+            return this.CreateGeneratedFile($"I{className}.cs", generatedCode);
         }
 
         /// <summary>
@@ -192,9 +219,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             var className = QueryRequiredClassName(umlClass);
             var generatedCode = this.Templates[this.ClassTemplate](umlClass);
 
-            generatedCode = this.CodeCleanup(generatedCode);
-
-            return new GeneratedFile($"{className}.cs", generatedCode);
+            return this.CreateGeneratedFile($"{className}.cs", generatedCode);
         }
 
         /// <summary>
@@ -216,8 +241,10 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                 throw new InvalidOperationException($"Class '{umlClass.XmiId}' has no name.");
             }
 
+            _ = ReservedCSharpNameMapper.Map(umlClass.Name);
+            _ = ReservedCSharpNameMapper.Map($"I{umlClass.Name}");
+
             return umlClass.Name;
         }
-
     }
 }
