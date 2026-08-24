@@ -31,6 +31,11 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The registered Handlebars template name used for UML enumerations.
         /// </summary>
         private const string TemplateName = "enumeration-uml-template";
+
+        /// <summary>
+        /// The artifact name used in validation messages.
+        /// </summary>
+        private const string ArtifactName = "Enumeration";
         
         /// <summary>
         /// The complete reviewed enumeration output manifest.
@@ -60,15 +65,10 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                 .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
                 .ToArray();
 
-            ThrowIfDuplicateFileNames(generatedFiles);
+            ThrowIfDuplicateFileNames(generatedFiles, ArtifactName);
             ThrowIfUnexpectedManifest(generatedFiles);
 
-            outputDirectory.Create();
-
-            foreach (var generatedFile in generatedFiles)
-            {
-                await WriteAsync(generatedFile.Source, outputDirectory, generatedFile.FileName);
-            }
+            await WriteAsync(generatedFiles, outputDirectory);
         }
 
         /// <summary>
@@ -102,9 +102,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var generatedFile = this.RenderEnumeration(enumeration);
 
-            outputDirectory.Create();
-
-            await WriteAsync(generatedFile.Source, outputDirectory, generatedFile.FileName);
+            await WriteAsync([generatedFile], outputDirectory);
 
             return generatedFile.Source;
         }
@@ -148,25 +146,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             ThrowIfInvalidSyntax(fileName, generatedCode);
 
             return new GeneratedFile(fileName, generatedCode);
-        }
-
-        /// <summary>
-        /// Rejects duplicate output filenames.
-        /// </summary>
-        /// <param name="generatedFiles">
-        /// The complete rendered batch.
-        /// </param>
-        private static void ThrowIfDuplicateFileNames(IReadOnlyCollection<GeneratedFile> generatedFiles)
-        {
-            var duplicateFileName = generatedFiles
-                .GroupBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
-                .FirstOrDefault(group => group.Count() > 1)
-                ?.Key;
-
-            if (duplicateFileName is not null)
-            {
-                throw new InvalidOperationException($"Enumeration generation produced duplicate filename '{duplicateFileName}'.");
-            }
         }
 
         /// <summary>
@@ -218,17 +197,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                 $"Enumeration generation produced invalid C# for '{fileName}'."
                 + $"{Environment.NewLine}{string.Join(Environment.NewLine, syntaxErrors)}");
         }
-
-        /// <summary>
-        /// Represents one validated generated enumeration file.
-        /// </summary>
-        /// <param name="FileName">
-        /// The output filename.
-        /// </param>
-        /// <param name="Source">
-        /// The formatted C# source.
-        /// </param>
-        private sealed record GeneratedFile(string FileName, string Source);
 
         /// <inheritdoc />
         protected override void RegisterHelpers()

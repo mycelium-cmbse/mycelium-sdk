@@ -35,7 +35,12 @@
     <ItemGroup>
         <None Include="..\Resources\*.xmi"
               Link="Resources\%(Filename)%(Extension)">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+
+        <None Include="..\Resources\*.json"
+              Link="Resources\%(Filename)%(Extension)">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
@@ -43,6 +48,12 @@
         <Compile Remove="Expected\UML\**\*.cs"/>
 
         <None Include="Expected\UML\**\*.cs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+
+        <Compile Remove="Expected\OpenApi\**\*.cs"/>
+
+        <None Include="Expected\OpenApi\**\*.cs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
