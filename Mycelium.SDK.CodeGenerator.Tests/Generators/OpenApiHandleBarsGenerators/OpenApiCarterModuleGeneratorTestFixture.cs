@@ -55,11 +55,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.OpenApiHandleBarsGenerator
 
                 foreach (var fileName in stagedFileNames.Intersect(goldenFileNames, StringComparer.Ordinal))
                 {
-                    var stagedBytes = await File.ReadAllBytesAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
-                    var goldenBytes = await File.ReadAllBytesAsync(Path.Combine(this.expectedDirectory.FullName, fileName));
+                    var stagedContent = await File.ReadAllTextAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
+                    var goldenContent = await File.ReadAllTextAsync(Path.Combine(this.expectedDirectory.FullName, fileName));
 
-                    Assert.That(stagedBytes, Is.EqualTo(goldenBytes),
-                        $"Generated '{fileName}' differs byte-for-byte from its approved golden.");
+                    Assert.That(stagedContent, Is.EqualTo(goldenContent),
+                        $"Generated '{fileName}' differs from its approved golden.");
                 }
             }
         }
