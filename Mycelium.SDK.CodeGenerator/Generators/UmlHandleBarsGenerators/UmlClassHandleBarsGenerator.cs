@@ -68,14 +68,9 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                 .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
                 .ToArray();
 
-            this.ThrowIfDuplicateFileNames(generatedFiles);
+            ThrowIfDuplicateFileNames(generatedFiles, this.ArtifactName);
 
-            outputDirectory.Create();
-
-            foreach (var generatedFile in generatedFiles)
-            {
-                await WriteAsync(generatedFile.Source, outputDirectory, generatedFile.FileName);
-            }
+            await WriteAsync(generatedFiles, outputDirectory);
         }
 
         /// <summary>
@@ -97,9 +92,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var generatedFile = this.RenderInterface(umlClass);
 
-            outputDirectory.Create();
-
-            await WriteAsync(generatedFile.Source, outputDirectory, generatedFile.FileName);
+            await WriteAsync([generatedFile], outputDirectory);
 
             return generatedFile.Source;
         }
@@ -123,9 +116,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var generatedFile = this.RenderClass(umlClass);
 
-            outputDirectory.Create();
-
-            await WriteAsync(generatedFile.Source, outputDirectory, generatedFile.FileName);
+            await WriteAsync([generatedFile], outputDirectory);
 
             return generatedFile.Source;
         }
@@ -228,39 +219,5 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             return umlClass.Name;
         }
 
-        /// <summary>
-        /// Verifies that a generated batch contains no duplicate filenames.
-        /// </summary>
-        /// <param name="generatedFiles">
-        /// The generated files to validate.
-        /// </param>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when multiple generated files have the same filename.
-        /// </exception>
-        private void ThrowIfDuplicateFileNames(IReadOnlyCollection<GeneratedFile> generatedFiles)
-        {
-            var duplicateFileName = generatedFiles
-                .GroupBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
-                .FirstOrDefault(group => group.Count() > 1)
-                ?.Key;
-
-            if (duplicateFileName is not null)
-            {
-                throw new InvalidOperationException(
-                    $"{this.ArtifactName} generation produced duplicate filename "
-                    + $"'{duplicateFileName}'.");
-            }
-        }
-
-        /// <summary>
-        /// Represents one generated source file.
-        /// </summary>
-        /// <param name="FileName">
-        /// The generated filename.
-        /// </param>
-        /// <param name="Source">
-        /// The formatted generated C# source.
-        /// </param>
-        private sealed record GeneratedFile(string FileName, string Source);
     }
 }

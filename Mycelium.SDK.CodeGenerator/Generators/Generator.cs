@@ -10,7 +10,9 @@
 namespace Mycelium.SDK.CodeGenerator.Generators
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
 
@@ -117,5 +119,85 @@ namespace Mycelium.SDK.CodeGenerator.Generators
 
             await File.WriteAllTextAsync(filePath,generatedCode,Utf8WithoutBom);
         }
+
+        /// <summary>
+        /// Creates the output directory and writes a complete rendered batch to it.
+        /// </summary>
+        /// <param name="generatedFiles">
+        /// The complete rendered batch.
+        /// </param>
+        /// <param name="outputDirectory">
+        /// The output directory, created if it does not exist.
+        /// </param>
+        /// <returns>
+        /// An awaitable task.
+        /// </returns>
+        /// <remarks>
+        /// Callers must render and validate the whole batch before calling this method: it is the point
+        /// at which the output directory comes into existence, so anything that can reject the batch has
+        /// to have run already. That ordering is what keeps generation all-or-nothing.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="generatedFiles"/> or <paramref name="outputDirectory"/> is
+        /// <see langword="null" />.
+        /// </exception>
+        protected static async Task WriteAsync(IReadOnlyCollection<GeneratedFile> generatedFiles, DirectoryInfo outputDirectory)
+        {
+            ArgumentNullException.ThrowIfNull(generatedFiles);
+            ArgumentNullException.ThrowIfNull(outputDirectory);
+
+            outputDirectory.Create();
+
+            foreach (var generatedFile in generatedFiles)
+            {
+                await WriteAsync(generatedFile.Source, outputDirectory, generatedFile.FileName);
+            }
+        }
+
+        /// <summary>
+        /// Verifies that a generated batch contains no duplicate filenames.
+        /// </summary>
+        /// <param name="generatedFiles">
+        /// The generated files to validate.
+        /// </param>
+        /// <param name="artifactName">
+        /// The artifact name used in the validation message.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="generatedFiles"/> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="artifactName"/> is <see langword="null" /> or empty.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when multiple generated files have the same filename.
+        /// </exception>
+        protected static void ThrowIfDuplicateFileNames(IReadOnlyCollection<GeneratedFile> generatedFiles, string artifactName)
+        {
+            ArgumentNullException.ThrowIfNull(generatedFiles);
+            ArgumentException.ThrowIfNullOrEmpty(artifactName);
+
+            var duplicateFileName = generatedFiles
+                .GroupBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
+                .FirstOrDefault(group => group.Count() > 1)
+                ?.Key;
+
+            if (duplicateFileName is not null)
+            {
+                throw new InvalidOperationException(
+                    $"{artifactName} generation produced duplicate filename '{duplicateFileName}'.");
+            }
+        }
+
+        /// <summary>
+        /// Represents one generated source file.
+        /// </summary>
+        /// <param name="FileName">
+        /// The generated filename.
+        /// </param>
+        /// <param name="Source">
+        /// The formatted generated C# source.
+        /// </param>
+        protected sealed record GeneratedFile(string FileName, string Source);
     }
 }
