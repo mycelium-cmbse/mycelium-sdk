@@ -78,12 +78,12 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentException">
-        /// Thrown when a modeled name cannot be represented as a legal C# identifier or the template
-        /// renders empty source.
+        /// Thrown when the enumeration name or one of its literal names cannot be represented as a legal
+        /// C# identifier, or the template renders empty source.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when literal identifiers collide or the rendered or formatted source contains invalid
-        /// C# syntax.
+        /// Thrown when the enumeration or a literal is unnamed, mapped literal identifiers collide, or the
+        /// rendered or formatted source contains invalid C# syntax.
         /// </exception>
         public async Task<string> GenerateEnumerationProviderAsync(
             DirectoryInfo outputDirectory,

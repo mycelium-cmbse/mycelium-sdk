@@ -9,12 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Threading.Tasks;
-
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
     using Mycelium.SDK.CodeGenerator.Tests.Xmi;
@@ -68,7 +62,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             if (this.stagingDirectory.Exists)
             {
-                this.stagingDirectory.Delete(recursive: true);
+                this.stagingDirectory.Delete(true);
             }
 
             var xmiReaderResult = XmiLoadingTestFixture.ReadFunctionalData();
@@ -80,25 +74,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             this.generator = new UmlDtoGenerator();
 
-            await this.generator.GenerateAsync(xmiReaderResult, this.stagingDirectory);
-        }
-
-        [Test]
-        public void Verify_that_reviewed_golden_set_contains_exactly_the_representative_DTOs()
-        {
-            var expectedFileNames = RepresentativeInterfaceNames
-                .Select(className => $"I{className}.cs")
-                .Concat(RepresentativeConcreteClassNames.Select(className => $"{className}.cs"))
-                .OrderBy(fileName => fileName, StringComparer.Ordinal)
-                .ToArray();
-
-            var reviewedFileNames = QueryCSharpFileNames(this.expectedDirectory);
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(expectedFileNames, Has.Length.EqualTo(14));
-                Assert.That(reviewedFileNames, Is.EqualTo(expectedFileNames), "The reviewed DTO golden-file set must contain exactly the representative files.");
-            }
+            await this.generator.GenerateAsync(GeneratorSetupFixture.ResourcesDirectory, this.stagingDirectory);
         }
 
         [Test]
@@ -152,6 +128,24 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
         }
 
+        [Test]
+        public void Verify_that_reviewed_golden_set_contains_exactly_the_representative_DTOs()
+        {
+            var expectedFileNames = RepresentativeInterfaceNames
+                .Select(className => $"I{className}.cs")
+                .Concat(RepresentativeConcreteClassNames.Select(className => $"{className}.cs"))
+                .OrderBy(fileName => fileName, StringComparer.Ordinal)
+                .ToArray();
+
+            var reviewedFileNames = QueryCSharpFileNames(this.expectedDirectory);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(expectedFileNames, Has.Length.EqualTo(14));
+                Assert.That(reviewedFileNames, Is.EqualTo(expectedFileNames), "The reviewed DTO golden-file set must contain exactly the representative files.");
+            }
+        }
+
         [TestCaseSource(nameof(RepresentativeInterfaceNames))]
         [Category("Expected")]
         public async Task Verify_that_representative_DTO_interface_matches_reviewed_golden_file(string className)
@@ -184,11 +178,33 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 + "reviewed golden file.");
         }
 
-        [Test]
-        public async Task Verify_that_batch_generation_writes_no_files_when_model_validation_fails()
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task Verify_that_batch_generation_leaves_destination_unchanged_when_model_validation_fails(bool destinationExists)
         {
-            var invalidReaderResult = XmiLoadingTestFixture.ReadFunctionalData();
+            var state = destinationExists ? "Existing" : "Absent";
 
+            var invalidOutputDirectory =
+                GeneratorSetupFixture.QueryFreshOutputDirectory($"_Mycelium.SDK.InvalidAutoGenDTO.{state}");
+
+            IReadOnlyDictionary<string, byte[]> expectedSnapshot = null;
+
+            if (destinationExists)
+            {
+                invalidOutputDirectory.Create();
+
+                await File.WriteAllBytesAsync(
+                    Path.Combine(invalidOutputDirectory.FullName, "IThing.cs"), new byte[] { 0x01, 0x02, 0x03 });
+
+                var nestedDirectory = invalidOutputDirectory.CreateSubdirectory("preserve");
+
+                await File.WriteAllBytesAsync(
+                    Path.Combine(nestedDirectory.FullName, "keep.bin"), new byte[] { 0x04, 0x05, 0x06 });
+
+                expectedSnapshot = await GeneratorSetupFixture.QueryDirectorySnapshotAsync(invalidOutputDirectory);
+            }
+
+            var invalidReaderResult = XmiLoadingTestFixture.ReadFunctionalData();
             var functionalData = XmiLoadingTestFixture.QueryFunctionalDataPackage(invalidReaderResult);
 
             var thing = functionalData.PackagedElement
@@ -200,24 +216,30 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             idProperty.Type = null!;
 
-            var invalidOutputDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_Mycelium.SDK.InvalidAutoGenDTO"));
-
-            if (invalidOutputDirectory.Exists)
-            {
-                invalidOutputDirectory.Delete(recursive: true);
-            }
-
             var invalidGenerator = new UmlDtoGenerator();
 
             await Assert.ThatAsync(
-                () => invalidGenerator.GenerateAsync(invalidReaderResult, invalidOutputDirectory), Throws.TypeOf<InvalidOperationException>());
+                () => invalidGenerator.GenerateAsync(invalidReaderResult, invalidOutputDirectory),
+                Throws.TypeOf<InvalidOperationException>());
 
             invalidOutputDirectory.Refresh();
 
+            if (!destinationExists)
+            {
+                Assert.That(
+                    invalidOutputDirectory.Exists,
+                    Is.False,
+                    "Model validation failure created the absent DTO destination.");
+
+                return;
+            }
+
             Assert.That(
                 invalidOutputDirectory.Exists,
-                Is.False,
-                "The generator created output after model preflight failed.");
+                Is.True,
+                "Model validation failure removed the existing DTO destination.");
+
+            await GeneratorSetupFixture.AssertDirectoryMatchesSnapshotAsync(invalidOutputDirectory, expectedSnapshot);
         }
 
         private static string[] QueryCSharpFileNames(DirectoryInfo directory)

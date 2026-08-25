@@ -9,12 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Threading.Tasks;
-
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
     using Mycelium.SDK.CodeGenerator.Tests.Xmi;
@@ -72,7 +66,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             if (this.stagingDirectory.Exists)
             {
-                this.stagingDirectory.Delete(recursive: true);
+                this.stagingDirectory.Delete(true);
             }
 
             var xmiReaderResult = XmiLoadingTestFixture.ReadFunctionalData();
@@ -84,7 +78,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             this.generator = new UmlPocoGenerator();
 
-            await this.generator.GenerateAsync(xmiReaderResult, this.stagingDirectory);
+            await this.generator.GenerateAsync(GeneratorSetupFixture.ResourcesDirectory, this.stagingDirectory);
         }
 
         [Test]
@@ -115,46 +109,12 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 Assert.That(expectedInterfaceFileNames, Has.Length.EqualTo(13));
                 Assert.That(expectedConcreteFileNames, Has.Length.EqualTo(11));
                 Assert.That(expectedFileNames, Has.Length.EqualTo(24));
+
                 Assert.That(
                     generatedFileNames,
                     Is.EqualTo(expectedFileNames),
                     "The generated POCO set contains missing or extra files.");
             }
-        }
-
-        [Test]
-        public async Task Verify_that_batch_generation_writes_no_files_when_model_validation_fails()
-        {
-            var invalidReaderResult = XmiLoadingTestFixture.ReadFunctionalData();
-            var functionalData = XmiLoadingTestFixture.QueryFunctionalDataPackage(invalidReaderResult);
-
-            var thing = functionalData.PackagedElement
-                .OfType<IClass>()
-                .Single(umlClass => umlClass.Name == "Thing");
-
-            var idProperty = thing.OwnedAttribute.Single(property => property.Name == "id");
-
-            idProperty.Type = null!;
-
-            var invalidOutputDirectory = new DirectoryInfo(
-                Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_Mycelium.SDK.InvalidAutoGenPOCO"));
-
-            if (invalidOutputDirectory.Exists)
-            {
-                invalidOutputDirectory.Delete(recursive: true);
-            }
-
-            var invalidGenerator = new UmlPocoGenerator();
-
-            await Assert.ThatAsync(() => invalidGenerator.GenerateAsync(invalidReaderResult, invalidOutputDirectory),
-                Throws.TypeOf<InvalidOperationException>());
-
-            invalidOutputDirectory.Refresh();
-
-            Assert.That(
-                invalidOutputDirectory.Exists,
-                Is.False,
-                "The generator created output after model preflight failed.");
         }
 
         [Test]
@@ -205,6 +165,72 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                     Is.EqualTo(expectedFileNames),
                     "The reviewed POCO golden-file set must contain exactly the representative files.");
             }
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task Verify_that_batch_generation_leaves_destination_unchanged_when_model_validation_fails(bool destinationExists)
+        {
+            var state = destinationExists ? "Existing" : "Absent";
+
+            var invalidOutputDirectory =
+                GeneratorSetupFixture.QueryFreshOutputDirectory($"_Mycelium.SDK.InvalidAutoGenPOCO.{state}");
+
+            IReadOnlyDictionary<string, byte[]> expectedSnapshot = null;
+
+            if (destinationExists)
+            {
+                invalidOutputDirectory.Create();
+
+                await File.WriteAllBytesAsync(
+                    Path.Combine(invalidOutputDirectory.FullName, "IThing.cs"), new byte[] { 0x01, 0x02, 0x03 });
+
+                var nestedDirectory = invalidOutputDirectory.CreateSubdirectory("preserve");
+
+                await File.WriteAllBytesAsync(
+                    Path.Combine(nestedDirectory.FullName, "keep.bin"), new byte[] { 0x04, 0x05, 0x06 });
+
+                expectedSnapshot =
+                    await GeneratorSetupFixture.QueryDirectorySnapshotAsync(
+                        invalidOutputDirectory);
+            }
+
+            var invalidReaderResult = XmiLoadingTestFixture.ReadFunctionalData();
+            var functionalData = XmiLoadingTestFixture.QueryFunctionalDataPackage(invalidReaderResult);
+
+            var thing = functionalData.PackagedElement
+                .OfType<IClass>()
+                .Single(umlClass => umlClass.Name == "Thing");
+
+            var idProperty = thing.OwnedAttribute
+                .Single(property => property.Name == "id");
+
+            idProperty.Type = null!;
+
+            var invalidGenerator = new UmlPocoGenerator();
+
+            await Assert.ThatAsync(
+                () => invalidGenerator.GenerateAsync(invalidReaderResult, invalidOutputDirectory),
+                Throws.TypeOf<InvalidOperationException>());
+
+            invalidOutputDirectory.Refresh();
+
+            if (!destinationExists)
+            {
+                Assert.That(
+                    invalidOutputDirectory.Exists,
+                    Is.False,
+                    "Model validation failure created the absent POCO destination.");
+
+                return;
+            }
+
+            Assert.That(
+                invalidOutputDirectory.Exists,
+                Is.True,
+                "Model validation failure removed the existing POCO destination.");
+
+            await GeneratorSetupFixture.AssertDirectoryMatchesSnapshotAsync(invalidOutputDirectory, expectedSnapshot);
         }
 
         [TestCaseSource(nameof(RepresentativeInterfaceNames))]

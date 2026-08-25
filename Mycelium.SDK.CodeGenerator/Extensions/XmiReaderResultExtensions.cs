@@ -205,7 +205,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
         /// <summary>
         /// The reviewed names of the custom C# primitive types required by the FunctionalData model.
-        /// </summary
+        /// </summary>
         private static readonly string[] ExpectedCustomPrimitiveNames =
         [
             "DateTime",

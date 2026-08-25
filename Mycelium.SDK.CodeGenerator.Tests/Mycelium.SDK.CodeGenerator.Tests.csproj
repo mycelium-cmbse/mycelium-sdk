@@ -86,4 +86,8 @@
         </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Committed\Mycelium.SDK.Extensions\AutoGenEnumProvider\" />
+    </ItemGroup>
+
 </Project>

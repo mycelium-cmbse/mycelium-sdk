@@ -15,7 +15,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators
     using System.Text;
 
     using HandlebarsDotNet;
-    using HandlebarsDotNet.Helpers;
 
     /// <summary>
     /// Base class for Handlebars-backed generators.
@@ -34,7 +33,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators
             this.Templates = new Dictionary<string, HandlebarsTemplate<object, object>>(StringComparer.Ordinal);
             this.Handlebars = HandlebarsDotNet.Handlebars.CreateSharedEnvironment();
 
-            HandlebarsHelpers.Register(this.Handlebars);
             this.Register();
         }
 
@@ -82,9 +80,21 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// <param name="name">
         /// The case-sensitive template name.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="name" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="name" /> is empty or a template with the same name is already registered.
+        /// </exception>
+        /// <exception cref="IOException">
+        /// Thrown when the template file cannot be read.
+        /// </exception>
+        /// <exception cref="HandlebarsException">
+        /// Thrown when the template cannot be compiled.
+        /// </exception>
         protected void RegisterTemplate(string name)
         {
-            ArgumentNullException.ThrowIfNullOrEmpty(name);
+            ArgumentException.ThrowIfNullOrEmpty(name);
 
             var templatePath = Path.Combine(this.TemplateFolderPath, $"{name}.hbs");
 

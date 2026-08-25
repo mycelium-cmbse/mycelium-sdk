@@ -62,9 +62,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
 
             var generator = new UmlEnumGenerator();
-            var xmiReaderResult = XmiLoadingTestFixture.ReadFunctionalData();
-
-            await generator.GenerateAsync(xmiReaderResult, this.stagingDirectory);
+            
+            await generator.GenerateAsync(GeneratorSetupFixture.ResourcesDirectory, this.stagingDirectory);
         }
 
         [Test]
@@ -194,7 +193,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         [Test]
         public async Task Verify_that_enum_and_literal_keywords_are_escaped()
         {
-            var outputDirectory = QueryFreshOutputDirectory("_Mycelium.SDK.KeywordAutoGenEnum");
+            var outputDirectory = GeneratorSetupFixture.QueryFreshOutputDirectory("_Mycelium.SDK.KeywordAutoGenEnum");
             var enumeration = CreateEnumeration("class", "event", "Value");
             var generator = new UmlEnumGenerator();
 
@@ -216,7 +215,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             string literalName,
             string testSuffix)
         {
-            var outputDirectory = QueryFreshOutputDirectory($"_Mycelium.SDK.{testSuffix}.AutoGenEnum");
+            var outputDirectory = GeneratorSetupFixture.QueryFreshOutputDirectory($"_Mycelium.SDK.{testSuffix}.AutoGenEnum");
             var enumeration = CreateEnumeration(enumerationName, literalName);
 
             var generator = new UmlEnumGenerator();
@@ -339,78 +338,12 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 .ToArray();
         }
 
-        private static async Task<IReadOnlyDictionary<string, byte[]>> QueryDirectorySnapshotAsync(DirectoryInfo directory)
-        {
-            var snapshot = new SortedDictionary<string, byte[]>(StringComparer.Ordinal);
-
-            foreach (var file in directory.GetFiles("*", SearchOption.AllDirectories))
-            {
-                var relativePath = Path.GetRelativePath(directory.FullName, file.FullName);
-
-                snapshot.Add(relativePath, await File.ReadAllBytesAsync(file.FullName));
-            }
-
-            return snapshot;
-        }
-
-        private static DirectoryInfo QueryFreshOutputDirectory(string directoryName)
-        {
-            var directory = new DirectoryInfo(
-                Path.Combine(
-                    TestContext.CurrentContext.TestDirectory,
-                    "UML",
-                    directoryName));
-
-            if (directory.Exists)
-            {
-                directory.Delete(recursive: true);
-            }
-
-            return directory;
-        }
-
-        private static async Task AssertDirectoryMatchesSnapshotAsync(
-            DirectoryInfo directory,
-            IReadOnlyDictionary<string, byte[]> expectedSnapshot)
-        {
-            var actualSnapshot =
-                await QueryDirectorySnapshotAsync(directory);
-
-            var expectedFileNames = expectedSnapshot.Keys.ToArray();
-            var actualFileNames = actualSnapshot.Keys.ToArray();
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(
-                    actualFileNames,
-                    Is.EqualTo(expectedFileNames),
-                    "Preflight failure changed the existing destination manifest.");
-
-                foreach (var expectedFile in expectedSnapshot)
-                {
-                    var exists = actualSnapshot.TryGetValue(expectedFile.Key, out var actualBytes);
-
-                    Assert.That(exists, Is.True, $"Existing destination file '{expectedFile.Key}' was removed.");
-
-                    if (!exists)
-                    {
-                        continue;
-                    }
-
-                    Assert.That(
-                        actualBytes,
-                        Is.EqualTo(expectedFile.Value),
-                        $"Existing destination file '{expectedFile.Key}' was modified.");
-                }
-            }
-        }
-
         private static async Task AssertBatchPreflightFailureLeavesDestinationUntouched(
             BatchPreflightFailure failure,
             bool destinationExists)
         {
             var state = destinationExists ? "Existing" : "Absent";
-            var outputDirectory = QueryFreshOutputDirectory($"_Mycelium.SDK.InvalidAutoGenEnum.{failure}.{state}");
+            var outputDirectory = GeneratorSetupFixture.QueryFreshOutputDirectory($"_Mycelium.SDK.InvalidAutoGenEnum.{failure}.{state}");
 
             IReadOnlyDictionary<string, byte[]> expectedSnapshot = null;
 
@@ -429,7 +362,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                     "existing content",
                     StrictUtf8WithoutBom);
 
-                expectedSnapshot = await QueryDirectorySnapshotAsync(outputDirectory);
+                expectedSnapshot = await GeneratorSetupFixture.QueryDirectorySnapshotAsync(outputDirectory);
             }
 
             var xmiReaderResult = XmiLoadingTestFixture.ReadFunctionalData();
@@ -464,7 +397,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             Assert.That(outputDirectory.Exists, Is.True, $"Preflight failure '{failure}' removed the existing destination.");
 
-            await AssertDirectoryMatchesSnapshotAsync(outputDirectory, expectedSnapshot);
+            await GeneratorSetupFixture.AssertDirectoryMatchesSnapshotAsync(outputDirectory, expectedSnapshot);
         }
 
         public enum BatchPreflightFailure

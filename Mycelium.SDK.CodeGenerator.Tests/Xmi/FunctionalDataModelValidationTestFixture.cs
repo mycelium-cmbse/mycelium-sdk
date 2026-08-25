@@ -9,6 +9,7 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
 {
+    using Mycelium.SDK.CodeGenerator.Extensions;
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
 
     using uml4net.Classification;
@@ -16,6 +17,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
     using uml4net.Extensions;
     using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
+    using uml4net.Values;
+    using uml4net.xmi.Readers;
 
     [TestFixture]
     public class FunctionalDataModelValidationTestFixture
@@ -31,6 +34,18 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             "Thing",
             "AuditableThing"
         ];
+        
+        public enum FunctionalDataValidationFailure
+        {
+            InvalidPrimitive,
+            InvalidIdentifier,
+            InvalidGeneralization,
+            InvalidPropertyType,
+            InvalidAssociationEnd,
+            InvalidMultiplicity,
+            InvalidAssociationSignature,
+            InvalidEnumerationLiteral
+        }
 
         private IClass[] classes = [];
         private IEnumeration[] enumerations = [];
@@ -279,6 +294,119 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             }
         }
 
+        [TestCase(FunctionalDataValidationFailure.InvalidPrimitive)]
+        [TestCase(FunctionalDataValidationFailure.InvalidIdentifier)]
+        [TestCase(FunctionalDataValidationFailure.InvalidGeneralization)]
+        [TestCase(FunctionalDataValidationFailure.InvalidPropertyType)]
+        [TestCase(FunctionalDataValidationFailure.InvalidAssociationEnd)]
+        [TestCase(FunctionalDataValidationFailure.InvalidMultiplicity)]
+        [TestCase(FunctionalDataValidationFailure.InvalidAssociationSignature)]
+        [TestCase(FunctionalDataValidationFailure.InvalidEnumerationLiteral)]
+        public void Verify_that_production_validation_rejects_invalid_models(FunctionalDataValidationFailure failure)
+        {
+            var result = XmiLoadingTestFixture.ReadFunctionalData();
+
+            ApplyValidationFailure(result, failure);
+
+            if (failure == FunctionalDataValidationFailure.InvalidIdentifier)
+            {
+                Assert.That(
+                    () => result.ValidateFunctionalData(),
+                    Throws.TypeOf<ArgumentException>());
+
+                return;
+            }
+
+            Assert.That(
+                () => result.ValidateFunctionalData(),
+                Throws.TypeOf<InvalidOperationException>());
+        }
+
+        private static void ApplyValidationFailure(XmiReaderResult result, FunctionalDataValidationFailure failure)
+        {
+            var functionalData = XmiLoadingTestFixture.QueryFunctionalDataPackage(result);
+
+            var classes = functionalData.PackagedElement
+                .OfType<IClass>()
+                .ToArray();
+
+            var associations = functionalData.PackagedElement
+                .OfType<IAssociation>()
+                .ToArray();
+
+            switch (failure)
+            {
+                case FunctionalDataValidationFailure.InvalidPrimitive:
+                    var primitivesPackage = result.Packages
+                        .SelectMany(package => package.QueryPackages())
+                        .Single(package => package.Name == "Primitives");
+
+                    primitivesPackage.PackagedElement
+                        .OfType<IPrimitiveType>()
+                        .Single(primitive => primitive.Name == "Guid")
+                        .Name = "GuidValue";
+                    break;
+
+                case FunctionalDataValidationFailure.InvalidIdentifier:
+                    classes
+                        .Single(umlClass => umlClass.Name == "Thing")
+                        .Name = "Invalid-Thing";
+                    break;
+
+                case FunctionalDataValidationFailure.InvalidGeneralization:
+                    classes
+                        .Single(umlClass => umlClass.Name == "AuditableThing")
+                        .Generalization
+                        .Single()
+                        .General = null!;
+                    break;
+
+                case FunctionalDataValidationFailure.InvalidPropertyType:
+                    classes
+                        .Single(umlClass => umlClass.Name == "Thing")
+                        .OwnedAttribute
+                        .Single(property => property.Name == "id")
+                        .Type = null!;
+                    break;
+
+                case FunctionalDataValidationFailure.InvalidAssociationEnd:
+                    associations[0].MemberEnd.RemoveAt(0);
+                    break;
+
+                case FunctionalDataValidationFailure.InvalidMultiplicity:
+                    var idProperty = classes
+                        .Single(umlClass => umlClass.Name == "Thing")
+                        .OwnedAttribute
+                        .Single(property => property.Name == "id");
+
+                    var upperValue = (ILiteralUnlimitedNatural)idProperty.UpperValue.Single();
+
+                    upperValue.Value = "invalid";
+                    break;
+
+                case FunctionalDataValidationFailure.InvalidAssociationSignature:
+                    associations
+                        .SelectMany(association => association.MemberEnd)
+                        .First(end => end.Name == "author")
+                        .Name = "writer";
+                    break;
+
+                case FunctionalDataValidationFailure.InvalidEnumerationLiteral:
+                    functionalData.PackagedElement
+                        .OfType<IEnumeration>()
+                        .Single(enumeration => enumeration.Name == "ReviewStatus")
+                        .OwnedLiteral[0]
+                        .Name = "draft";
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(
+                        nameof(failure),
+                        failure,
+                        "Unsupported FunctionalData validation failure.");
+            }
+        }
+        
         private static void AssertValidMultiplicity(IMultiplicityElement multiplicity, string description)
         {
             Assert.That(

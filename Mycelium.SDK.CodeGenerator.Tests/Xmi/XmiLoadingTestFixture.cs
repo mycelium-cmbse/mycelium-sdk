@@ -11,17 +11,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
 {
     using System.Text;
 
+    using Mycelium.SDK.CodeGenerator.Extensions;
+    using Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators;
+
     using uml4net.Extensions;
     using uml4net.Packages;
     using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
-    using uml4net.xmi;
     using uml4net.xmi.Readers;
-    using uml4net.xmi.Settings;
-    using uml4net.xmi.Extensions.EnterpriseArchitect.Extender;
-    using uml4net.xmi.Extensions.EnterpriseArchitect.Structure.Readers;
-    using Microsoft.Extensions.Logging.Abstractions;
-
+    
     [TestFixture]
     public class XmiLoadingTestFixture
     {
@@ -44,14 +42,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             "Uri"
         ];
 
-        private static string ResourcesDirectory => Path.Combine(AppContext.BaseDirectory, "Resources");
+        private static string ResourcesDirectory => GeneratorSetupFixture.ResourcesDirectory.FullName;
 
-        [TestCase("FunctionalData.xmi", "FunctionalData")]
-        [TestCase("CSharp_Primitives.xmi", "Primitives")]
-        [TestCase("PrimitiveTypes.xmi", "PrimitiveTypes")]
-        public void Verify_that_Xmi_resources_can_be_read(string fileName, string expectedPackageName)
+        [TestCase("FunctionalData")]
+        [TestCase("Primitives")]
+        [TestCase("PrimitiveTypes")]
+        public void Verify_that_Xmi_resources_can_be_read(string expectedPackageName)
         {
-            var result = Read(fileName);
+            var result = ReadFunctionalData();
             var package = QueryPackage(result, expectedPackageName);
 
             Assert.That(package.Name, Is.EqualTo(expectedPackageName));
@@ -60,21 +58,23 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
         [Test]
         public void Verify_that_Windows_1252_encoding_is_available()
         {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
+            _ = ReadFunctionalData();
+            
             Assert.That(Encoding.GetEncoding(1252).CodePage, Is.EqualTo(1252));
         }
 
         [Test]
         public void Verify_that_reader_uses_local_reference_settings()
         {
-            var settings = CreateReaderSettings();
+            var settings =
+                XmiReaderResultExtensions.CreateFunctionalDataReaderSettings(GeneratorSetupFixture.ResourcesDirectory);
 
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(settings.LocalReferenceBasePath, Is.EqualTo(ResourcesDirectory));
                 Assert.That(settings.PathMaps.TryGetValue(PrimitiveTypesUri, out var primitiveTypesPath), Is.True);
                 Assert.That(primitiveTypesPath, Is.EqualTo(Path.Combine(ResourcesDirectory, "PrimitiveTypes.xmi")));
+                Assert.That(settings.UseStrictReading, Is.False);
             }
         }
 
@@ -87,6 +87,21 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             Assert.That(package.Name, Is.EqualTo("FunctionalData"));
         }
 
+        [Test]
+        public void Verify_that_FunctionalData_package_selection_rejects_duplicate_name()
+        {
+            var result = ReadFunctionalData();
+
+            result.Packages.Add(
+                new Package
+                {
+                    XmiId = "duplicate-functional-data",
+                    Name = "FunctionalData"
+                });
+
+            Assert.That(() => QueryFunctionalDataPackage(result), Throws.TypeOf<InvalidOperationException>());
+        }
+        
         [Test]
         public void Verify_that_referenced_primitive_models_are_loaded()
         {
@@ -158,45 +173,30 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             }
         }
 
+        [Test]
+        public void Verify_that_Enterprise_Architect_documentation_is_loaded()
+        {
+            var result = ReadFunctionalData();
+            var functionalData = QueryFunctionalDataPackage(result);
+
+            var thing = functionalData.PackagedElement
+                .OfType<IClass>()
+                .Single(umlClass => umlClass.Name == "Thing");
+
+            Assert.That(
+                thing.QueryRawDocumentation(),
+                Is.EqualTo(
+                    "Base class of any entities defined in the Functional Data model."));
+        }
+
         internal static XmiReaderResult ReadFunctionalData()
         {
-            return Read("FunctionalData.xmi");
+            return GeneratorSetupFixture.ReadFunctionalData();
         }
 
         internal static IPackage QueryFunctionalDataPackage(XmiReaderResult result)
         {
-            return QueryPackage(result, "FunctionalData");
-        }
-
-        private static XmiReaderResult Read(string fileName)
-        {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-            var settings = CreateReaderSettings();
-
-            var readerBuilder = XmiReaderBuilder.Create()
-                .UsingSettings(settings)
-                .WithLogger(NullLoggerFactory.Instance);
-
-            readerBuilder.WithExtender<EnterpriseArchitectExtenderReader>();
-            readerBuilder.WithExtensionContentReaderFacade<ExtensionContentReaderFacade>();
-
-            using var reader = readerBuilder.Build();
-
-            return reader.Read(Path.Combine(ResourcesDirectory, fileName));
-        }
-
-        private static DefaultSettings CreateReaderSettings()
-        {
-            return new DefaultSettings
-            {
-                LocalReferenceBasePath = ResourcesDirectory,
-                PathMaps =
-                {
-                    [PrimitiveTypesUri] = Path.Combine(ResourcesDirectory, "PrimitiveTypes.xmi")
-                },
-                UseStrictReading = false
-            };
+            return GeneratorSetupFixture.QueryFunctionalDataPackage(result);
         }
 
         private static IPackage QueryPackage(XmiReaderResult result, string packageName)

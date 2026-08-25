@@ -58,16 +58,15 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// Thrown when <paramref name="outputDirectory"/> or <paramref name="umlClass"/> is
         /// <see langword="null" />.
         /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the UML class lacks information required to generate its DTO interface or contains
-        /// an unsupported property type.
-        /// </exception>
         /// <exception cref="ArgumentException">
-        /// Thrown when a modeled name cannot be represented as a legal C# identifier.
+        /// Thrown when a modeled name cannot be represented as a legal C# identifier or the template
+        /// renders empty source.
         /// </exception>
-        public Task<string> GenerateDataTransferObjectInterfaceAsync(
-            DirectoryInfo outputDirectory,
-            IClass umlClass)
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UML class lacks information required to generate its DTO interface, contains an
+        /// unsupported property type, or the rendered or formatted source contains invalid C# syntax.
+        /// </exception>
+        public Task<string> GenerateDataTransferObjectInterfaceAsync(DirectoryInfo outputDirectory, IClass umlClass)
         {
             return this.GenerateInterfaceAsync(outputDirectory, umlClass);
         }
@@ -89,12 +88,14 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// Thrown when <paramref name="outputDirectory"/> or <paramref name="umlClass"/> is
         /// <see langword="null" />.
         /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a modeled name cannot be represented as a legal C# identifier or the template
+        /// renders empty source.
+        /// </exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown when the UML class is abstract, lacks information required to generate its concrete DTO,
-        /// or contains an unsupported property type.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// Thrown when a modeled name cannot be represented as a legal C# identifier.
+        /// contains an unsupported property type, or the rendered or formatted source contains invalid C#
+        /// syntax.
         /// </exception>
         public Task<string> GenerateDataTransferObjectClassAsync(DirectoryInfo outputDirectory, IClass umlClass)
         {

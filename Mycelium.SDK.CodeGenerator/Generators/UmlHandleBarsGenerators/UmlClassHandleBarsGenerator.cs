@@ -236,8 +236,16 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <returns>
         /// The generated filename and source.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="umlClass" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a modeled name cannot be represented as a legal C# identifier or the template
+        /// renders empty source.
+        /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the UML class is abstract or has no name.
+        /// Thrown when the UML class is abstract, lacks required information, contains an unsupported
+        /// property type, or the rendered or formatted source contains invalid C# syntax.
         /// </exception>
         private GeneratedFile RenderClass(IClass umlClass)
         {
