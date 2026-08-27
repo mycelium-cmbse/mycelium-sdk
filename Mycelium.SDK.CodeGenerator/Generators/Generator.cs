@@ -193,20 +193,24 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         }
 
         /// <summary>
-        /// Writes a fully preflighted batch.
+        /// Creates the output directory and writes a complete, previously validated batch.
         /// </summary>
         /// <param name="generatedFiles">
-        /// The validated generated batch.
+        /// The complete rendered and validated batch to write.
         /// </param>
         /// <param name="outputDirectory">
-        /// The destination directory.
+        /// The destination directory, created if it does not exist.
         /// </param>
         /// <returns>
         /// An awaitable task.
         /// </returns>
+        /// <remarks>
+        /// This method performs no batch validation. Callers must render and validate the entire
+        /// batch before calling it so that a rejected batch produces no partial output.
+        /// </remarks>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="generatedFiles" /> or <paramref name="outputDirectory" /> is
-        /// <see langword="null" />.
+        /// Thrown when <paramref name="generatedFiles" /> or
+        /// <paramref name="outputDirectory" /> is <see langword="null" />.
         /// </exception>
         protected static async Task WriteBatchAsync(
             IReadOnlyCollection<GeneratedFile> generatedFiles,
@@ -223,6 +227,47 @@ namespace Mycelium.SDK.CodeGenerator.Generators
                     generatedFile.Source,
                     outputDirectory,
                     generatedFile.FileName);
+            }
+        }
+
+        /// <summary>
+        /// Throws when a generated batch contains duplicate filenames.
+        /// </summary>
+        /// <param name="generatedFiles">
+        /// The generated files whose filenames are validated.
+        /// </param>
+        /// <param name="artifactName">
+        /// The artifact name included in the validation error message.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="generatedFiles" /> or
+        /// <paramref name="artifactName" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="artifactName" /> is empty.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when multiple generated files have the same filename.
+        /// </exception>
+        protected static void ThrowIfDuplicateFileNames(
+            IReadOnlyCollection<GeneratedFile> generatedFiles,
+            string artifactName)
+        {
+            ArgumentNullException.ThrowIfNull(generatedFiles);
+            ArgumentException.ThrowIfNullOrEmpty(artifactName);
+
+            var duplicateFileName = generatedFiles
+                .GroupBy(
+                    generatedFile => generatedFile.FileName,
+                    StringComparer.Ordinal)
+                .FirstOrDefault(group => group.Count() > 1)
+                ?.Key;
+
+            if (duplicateFileName is not null)
+            {
+                throw new InvalidOperationException(
+                    $"{artifactName} generation produced duplicate filename "
+                    + $"'{duplicateFileName}'.");
             }
         }
 

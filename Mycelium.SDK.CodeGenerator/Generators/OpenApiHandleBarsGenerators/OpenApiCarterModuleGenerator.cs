@@ -86,7 +86,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.OpenApiHandleBarsGenerators
 
             ThrowIfDuplicateFileNames(generatedFiles, ArtifactName);
 
-            await WriteAsync(generatedFiles, outputDirectory);
+            await WriteBatchAsync(generatedFiles, outputDirectory);
         }
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.OpenApiHandleBarsGenerators
 
             var generatedFile = this.RenderModule(operations);
 
-            await WriteAsync([generatedFile], outputDirectory);
+            await WriteBatchAsync([generatedFile], outputDirectory);
 
             return generatedFile.Source;
         }
