@@ -9,8 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Extensions
 {
-    using System;
-
     using uml4net.CommonStructure;
 
     /// <summary>
@@ -28,7 +26,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// The element name when available; otherwise, its XMI identifier.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="namedElement"/> is <see langword="null"/>.
+        /// Thrown when <paramref name="namedElement" /> is <see langword="null" />.
         /// </exception>
         public static string Describe(this INamedElement namedElement)
         {

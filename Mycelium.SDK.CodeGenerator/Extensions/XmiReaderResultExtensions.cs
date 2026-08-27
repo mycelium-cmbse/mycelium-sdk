@@ -1,9 +1,9 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="XmiReaderResultExtensions.cs" company="Starion Group S.A.">
-//
+// 
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-//
+// 
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
@@ -354,11 +354,10 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             ArgumentNullException.ThrowIfNull(xmiReaderResult);
 
             return QueryAllPackages(xmiReaderResult)
-                .Single(
-                    package => string.Equals(
-                        package.Name,
-                        FunctionalDataPackageName,
-                        StringComparison.Ordinal));
+                .Single(package => string.Equals(
+                    package.Name,
+                    FunctionalDataPackageName,
+                    StringComparison.Ordinal));
         }
 
         /// <summary>
@@ -414,10 +413,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             var validTypes =
                 new HashSet<IType>(
                     classes
-                        .Cast<IType>()
                         .Concat(enumerations.Cast<IType>())
-                        .Concat(standardPrimitiveTypes.Cast<IType>())
-                        .Concat(customPrimitiveTypes.Cast<IType>()),
+                        .Concat(standardPrimitiveTypes)
+                        .Concat(customPrimitiveTypes),
                     ReferenceEqualityComparer.Instance);
 
             foreach (var umlClass in classes)
@@ -431,12 +429,11 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             var actualAssociationSignatures = associations
-                .Select(
-                    association =>
-                        ValidateAssociation(
-                            association,
-                            validClasses,
-                            validTypes))
+                .Select(association =>
+                    ValidateAssociation(
+                        association,
+                        validClasses,
+                        validTypes))
                 .ToArray();
 
             ThrowIfUnexpectedNames("class", classes.Select(umlClass => umlClass.Name), ExpectedClassNames);
@@ -505,11 +502,10 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             string packageName,
             IReadOnlyCollection<string> expectedNames)
         {
-            var package = allPackages.Single(
-                candidate => string.Equals(
-                    candidate.Name,
-                    packageName,
-                    StringComparison.Ordinal));
+            var package = allPackages.Single(candidate => string.Equals(
+                candidate.Name,
+                packageName,
+                StringComparison.Ordinal));
 
             var primitiveTypes = package.PackagedElement
                 .OfType<IPrimitiveType>()
@@ -804,13 +800,12 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
                 var isQueryable = owningClass
                     .QueryAllProperties()
-                    .Any(
-                        property =>
-                            ReferenceEquals(property, associationEnd)
-                            || string.Equals(
-                                property.XmiId,
-                                associationEnd.XmiId,
-                                StringComparison.Ordinal));
+                    .Any(property =>
+                        ReferenceEquals(property, associationEnd)
+                        || string.Equals(
+                            property.XmiId,
+                            associationEnd.XmiId,
+                            StringComparison.Ordinal));
 
                 if (!isQueryable)
                 {

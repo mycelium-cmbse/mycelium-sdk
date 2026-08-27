@@ -1,19 +1,14 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="UmlClassHandleBarsGenerator.cs" company="Starion Group S.A.">
-//
+// 
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-//
+// 
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
 namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 {
-    using System;
-    using System.IO;
-    using System.Linq;
-    using System.Threading.Tasks;
-
     using Mycelium.SDK.CodeGenerator.Extensions;
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
 
@@ -56,7 +51,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             "Review.cs",
             "User.cs"
         ];
-        
+
         /// <summary>
         /// Gets the artifact name used in validation messages.
         /// </summary>
@@ -185,9 +180,9 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <inheritdoc />
         protected sealed override void RegisterHelpers()
         {
-            DocumentationHelper.RegisterDocumentationHelper(this.Handlebars);
+            this.Handlebars.RegisterDocumentationHelper();
             this.RegisterArtifactHelpers();
-            NamedElementHelper.RegisterNamedElementHelper(this.Handlebars);
+            this.Handlebars.RegisterNamedElementHelper();
         }
 
         /// <inheritdoc />
@@ -286,7 +281,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         private static string QueryRequiredClassName(IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);
-            
+
             if (string.IsNullOrWhiteSpace(umlClass.Name))
             {
                 throw new InvalidOperationException($"Class '{umlClass.XmiId}' has no name.");

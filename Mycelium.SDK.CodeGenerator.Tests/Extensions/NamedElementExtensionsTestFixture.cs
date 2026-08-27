@@ -19,18 +19,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
     public class NamedElementExtensionsTestFixture
     {
         [Test]
-        public void Verify_that_Describe_returns_the_class_name()
-        {
-            var umlClass = new Class
-            {
-                XmiId = "class-id",
-                Name = "FunctionalProject"
-            };
-
-            Assert.That(umlClass.Describe(), Is.EqualTo("FunctionalProject"));
-        }
-
-        [Test]
         public void Verify_that_Describe_falls_back_to_the_property_Xmi_identifier()
         {
             var property = new Property
@@ -48,6 +36,18 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             INamedElement namedElement = null;
 
             Assert.That(() => namedElement.Describe(), Throws.ArgumentNullException);
+        }
+
+        [Test]
+        public void Verify_that_Describe_returns_the_class_name()
+        {
+            var umlClass = new Class
+            {
+                XmiId = "class-id",
+                Name = "FunctionalProject"
+            };
+
+            Assert.That(umlClass.Describe(), Is.EqualTo("FunctionalProject"));
         }
     }
 }

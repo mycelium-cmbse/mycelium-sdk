@@ -65,6 +65,7 @@ namespace Mycelium.SDK.Tests.Dto
                 foreach (var expectedGeneralization in DirectGeneralizations)
                 {
                     var actualGeneralizations = QueryDirectInterfaces(expectedGeneralization.Key);
+
                     var expectedGeneralizations = expectedGeneralization.Value
                         .OrderBy(type => type.Name, StringComparer.Ordinal)
                         .ToArray();

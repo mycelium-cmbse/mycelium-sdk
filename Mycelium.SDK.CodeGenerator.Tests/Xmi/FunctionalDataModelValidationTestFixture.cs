@@ -34,18 +34,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             "Thing",
             "AuditableThing"
         ];
-        
-        public enum FunctionalDataValidationFailure
-        {
-            InvalidPrimitive,
-            InvalidIdentifier,
-            InvalidGeneralization,
-            InvalidPropertyType,
-            InvalidAssociationEnd,
-            InvalidMultiplicity,
-            InvalidAssociationSignature,
-            InvalidEnumerationLiteral
-        }
 
         private IClass[] classes = [];
         private IEnumeration[] enumerations = [];
@@ -153,34 +141,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
         }
 
         [Test]
-        public void Verify_that_named_association_ends_are_class_owned_and_queryable()
-        {
-            using (Assert.EnterMultipleScope())
-            {
-                foreach (var association in this.associations)
-                {
-                    foreach (var associationEnd in association.MemberEnd
-                                 .Where(end => !string.IsNullOrWhiteSpace(end.Name)))
-                    {
-                        Assert.That(associationEnd.Owner,
-                            Is.InstanceOf<IClass>(),
-                            $"Named association end '{DescribeAssociationEnd(associationEnd)}' "
-                            + "must be owned by a UML class.");
-
-                        if (associationEnd.Owner is not IClass owningClass)
-                        {
-                            continue;
-                        }
-
-                        Assert.That(owningClass.QueryAllProperties().Select(property => property.XmiId),
-                            Does.Contain(associationEnd.XmiId),
-                            $"UML4NET QueryAllProperties() did not return " + $"'{owningClass.Name}.{associationEnd.Name}'.");
-                    }
-                }
-            }
-        }
-
-        [Test]
         public void Verify_that_class_names_are_expected_and_unique()
         {
             var actualNames = this.classes
@@ -267,7 +227,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                 }
             }
         }
-        
+
         [Test]
         public void Verify_that_model_element_counts_are_exact()
         {
@@ -278,7 +238,35 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                 Assert.That(this.associations, Has.Length.EqualTo(ExpectedAssociationCount));
             }
         }
-        
+
+        [Test]
+        public void Verify_that_named_association_ends_are_class_owned_and_queryable()
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var association in this.associations)
+                {
+                    foreach (var associationEnd in association.MemberEnd
+                                 .Where(end => !string.IsNullOrWhiteSpace(end.Name)))
+                    {
+                        Assert.That(associationEnd.Owner,
+                            Is.InstanceOf<IClass>(),
+                            $"Named association end '{DescribeAssociationEnd(associationEnd)}' "
+                            + "must be owned by a UML class.");
+
+                        if (associationEnd.Owner is not IClass owningClass)
+                        {
+                            continue;
+                        }
+
+                        Assert.That(owningClass.QueryAllProperties().Select(property => property.XmiId),
+                            Does.Contain(associationEnd.XmiId),
+                            $"UML4NET QueryAllProperties() did not return " + $"'{owningClass.Name}.{associationEnd.Name}'.");
+                    }
+                }
+            }
+        }
+
         [Test]
         public void Verify_that_property_multiplicities_are_valid()
         {
@@ -292,6 +280,18 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                     }
                 }
             }
+        }
+
+        public enum FunctionalDataValidationFailure
+        {
+            InvalidPrimitive,
+            InvalidIdentifier,
+            InvalidGeneralization,
+            InvalidPropertyType,
+            InvalidAssociationEnd,
+            InvalidMultiplicity,
+            InvalidAssociationSignature,
+            InvalidEnumerationLiteral
         }
 
         [TestCase(FunctionalDataValidationFailure.InvalidPrimitive)]
@@ -345,12 +345,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                         .OfType<IPrimitiveType>()
                         .Single(primitive => primitive.Name == "Guid")
                         .Name = "GuidValue";
+
                     break;
 
                 case FunctionalDataValidationFailure.InvalidIdentifier:
                     classes
                         .Single(umlClass => umlClass.Name == "Thing")
                         .Name = "Invalid-Thing";
+
                     break;
 
                 case FunctionalDataValidationFailure.InvalidGeneralization:
@@ -359,6 +361,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                         .Generalization
                         .Single()
                         .General = null!;
+
                     break;
 
                 case FunctionalDataValidationFailure.InvalidPropertyType:
@@ -367,6 +370,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                         .OwnedAttribute
                         .Single(property => property.Name == "id")
                         .Type = null!;
+
                     break;
 
                 case FunctionalDataValidationFailure.InvalidAssociationEnd:
@@ -389,6 +393,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                         .SelectMany(association => association.MemberEnd)
                         .First(end => end.Name == "author")
                         .Name = "writer";
+
                     break;
 
                 case FunctionalDataValidationFailure.InvalidEnumerationLiteral:
@@ -397,6 +402,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                         .Single(enumeration => enumeration.Name == "ReviewStatus")
                         .OwnedLiteral[0]
                         .Name = "draft";
+
                     break;
 
                 default:
@@ -406,7 +412,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                         "Unsupported FunctionalData validation failure.");
             }
         }
-        
+
         private static void AssertValidMultiplicity(IMultiplicityElement multiplicity, string description)
         {
             Assert.That(
@@ -443,7 +449,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
 
             return string.IsNullOrEmpty(description) ? "<unnamed association>" : description;
         }
-        
+
         private static string DescribeAssociationEnd(IProperty associationEnd)
         {
             var typeName = associationEnd.Type?.Name ?? "<unresolved>";

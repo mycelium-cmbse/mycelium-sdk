@@ -17,7 +17,7 @@ namespace Mycelium.SDK
 
     {{ #Documentation this }}
     [GeneratedCode("Mycelium.SDK", "latest")]
-    {{ Enum.ToString this.Visibility }} enum {{ #NamedElement.WriteIdentifier this }}
+    public enum {{ #NamedElement.WriteIdentifier this }}
     {
         {{ #each this.OwnedLiteral as | enumerationLiteral | }}
         {{ #Documentation enumerationLiteral }}

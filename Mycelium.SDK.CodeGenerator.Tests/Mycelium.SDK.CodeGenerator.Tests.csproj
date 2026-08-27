@@ -59,35 +59,31 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\Mycelium.SDK\AutoGenDTO\*.cs"
-              Link="Committed\Mycelium.SDK\AutoGenDTO\%(Filename)%(Extension)">
+        <None Include="..\Mycelium.SDK\AutoGenDTO\*.cs" Link="Committed\Mycelium.SDK\AutoGenDTO\%(Filename)%(Extension)">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\Mycelium.SDK\AutoGenEnum\**\*"
-              Link="Committed\Mycelium.SDK\AutoGenEnum\%(RecursiveDir)%(Filename)%(Extension)">
+        <None Include="..\Mycelium.SDK\AutoGenEnum\**\*" Link="Committed\Mycelium.SDK\AutoGenEnum\%(RecursiveDir)%(Filename)%(Extension)">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\Mycelium.SDK.Extensions\AutoGenEnumProvider\**\*"
-              Link="Committed\Mycelium.SDK.Extensions\AutoGenEnumProvider\%(RecursiveDir)%(Filename)%(Extension)">
+        <None Include="..\Mycelium.SDK.Extensions\AutoGenEnumProvider\**\*" Link="Committed\Mycelium.SDK.Extensions\AutoGenEnumProvider\%(RecursiveDir)%(Filename)%(Extension)">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\Mycelium.SDK\AutoGenPOCO\*.cs"
-              Link="Committed\Mycelium.SDK\AutoGenPOCO\%(Filename)%(Extension)">
+        <None Include="..\Mycelium.SDK\AutoGenPOCO\*.cs" Link="Committed\Mycelium.SDK\AutoGenPOCO\%(Filename)%(Extension)">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Committed\Mycelium.SDK.Extensions\AutoGenEnumProvider\" />
+        <Folder Include="Committed\Mycelium.SDK.Extensions\AutoGenEnumProvider\"/>
     </ItemGroup>
 
 </Project>

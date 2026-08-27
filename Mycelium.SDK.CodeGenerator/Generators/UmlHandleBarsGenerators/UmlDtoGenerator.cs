@@ -9,10 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 {
-    using System;
-    using System.IO;
-    using System.Threading.Tasks;
-
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
 
     using uml4net.StructuredClassifiers;
@@ -26,7 +22,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The registered Handlebars template name used for concrete DTO classes.
         /// </summary>
         private const string ClassTemplateName = "dto-class-uml-template";
-        
+
         /// <summary>
         /// The registered Handlebars template name used for DTO interfaces.
         /// </summary>
@@ -55,7 +51,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// contains the generated and formatted C# source.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="outputDirectory"/> or <paramref name="umlClass"/> is
+        /// Thrown when <paramref name="outputDirectory" /> or <paramref name="umlClass" /> is
         /// <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentException">
@@ -85,7 +81,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// contains the generated and formatted C# source.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="outputDirectory"/> or <paramref name="umlClass"/> is
+        /// Thrown when <paramref name="outputDirectory" /> or <paramref name="umlClass" /> is
         /// <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentException">
@@ -105,8 +101,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <inheritdoc />
         protected override void RegisterArtifactHelpers()
         {
-            ClassHelper.RegisterDtoClassHelper(this.Handlebars);
-            PropertyHelper.RegisterDtoPropertyHelper(this.Handlebars);
+            this.Handlebars.RegisterDtoClassHelper();
+            this.Handlebars.RegisterDtoPropertyHelper();
         }
     }
 }

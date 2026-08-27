@@ -9,7 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
-    using System.Linq;
     using System.Text.RegularExpressions;
 
     using HandlebarsDotNet;
@@ -27,39 +26,21 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// The line-wrapping threshold number of characters in a generated documentation content line.
         /// </summary>
         private const int DocumentationLineLength = 100;
-        
+
         /// <summary>
         /// The regular-expression matching timeout, in milliseconds.
         /// </summary>
         private const int RegexMatchTimeoutMilliseconds = 1000;
-        
-        /// <summary>
-        /// Gets the regular expression used to match opening XML documentation see tags.
-        /// </summary>
-        /// <returns>
-        /// The generated regular expression.
-        /// </returns>
-        [GeneratedRegex(@"<see\s+cref=""([^""]+)""\s*>", RegexOptions.CultureInvariant, RegexMatchTimeoutMilliseconds)]
-        private static partial Regex SeeCrefOpeningTag();
-        
-        /// <summary>
-        /// Gets the regular expression used to tokenize documentation for line wrapping.
-        /// </summary>
-        /// <returns>
-        /// The generated regular expression.
-        /// </returns>
-        [GeneratedRegex(@"<see\s+cref=""[^""]+""\s*/>[.,;:!?]?|\S+", RegexOptions.CultureInvariant, RegexMatchTimeoutMilliseconds)]
-        private static partial Regex DocumentationToken();
 
         /// <summary>
         /// Registers the Documentation Handlebars helper that writes canonical C# XML documentation
-        /// for an <see cref="IElement"/> context.
+        /// for an <see cref="IElement" /> context.
         /// </summary>
         /// <param name="handlebars">
         /// The Handlebars environment in which to register the helper.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="handlebars"/> is <see langword="null"/>.
+        /// <paramref name="handlebars" /> is <see langword="null" />.
         /// </exception>
         public static void RegisterDocumentationHelper(this IHandlebars handlebars)
         {
@@ -95,6 +76,24 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     writer.WriteSafeString($"/// </summary>{Environment.NewLine}");
                 });
         }
+
+        /// <summary>
+        /// Gets the regular expression used to match opening XML documentation see tags.
+        /// </summary>
+        /// <returns>
+        /// The generated regular expression.
+        /// </returns>
+        [GeneratedRegex(@"<see\s+cref=""([^""]+)""\s*>", RegexOptions.CultureInvariant, RegexMatchTimeoutMilliseconds)]
+        private static partial Regex SeeCrefOpeningTag();
+
+        /// <summary>
+        /// Gets the regular expression used to tokenize documentation for line wrapping.
+        /// </summary>
+        /// <returns>
+        /// The generated regular expression.
+        /// </returns>
+        [GeneratedRegex(@"<see\s+cref=""[^""]+""\s*/>[.,;:!?]?|\S+", RegexOptions.CultureInvariant, RegexMatchTimeoutMilliseconds)]
+        private static partial Regex DocumentationToken();
 
         /// <summary>
         /// Splits documentation into lines using the configured maximum length.

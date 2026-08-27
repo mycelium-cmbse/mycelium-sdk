@@ -9,12 +9,7 @@
 
 namespace Mycelium.SDK.CodeGenerator.Generators
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
     using System.Text;
-    using System.Threading.Tasks;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -31,7 +26,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         private static readonly Encoding Utf8WithoutBom = new UTF8Encoding(false);
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Generator"/> class.
+        /// Initializes a new instance of the <see cref="Generator" /> class.
         /// </summary>
         /// <param name="templateSubfolder">
         /// The optional template subdirectory.
@@ -68,10 +63,10 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// The formatted C# source using CRLF line endings.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="generatedCode"/> is <see langword="null" />.
+        /// Thrown when <paramref name="generatedCode" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="generatedCode"/> is empty.
+        /// Thrown when <paramref name="generatedCode" /> is empty.
         /// </exception>
         protected virtual string CodeCleanup(string generatedCode)
         {
@@ -89,7 +84,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
                 .ToString()
                 .ReplaceLineEndings("\r\n");
         }
-        
+
         /// <summary>
         /// Validates, formats, and revalidates one generated C# file without writing it.
         /// </summary>
@@ -232,6 +227,39 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         }
 
         /// <summary>
+        /// Writes generated source as UTF-8 without a byte-order mark.
+        /// </summary>
+        /// <param name="generatedCode">
+        /// The generated source.
+        /// </param>
+        /// <param name="outputDirectory">
+        /// The existing staging output directory.
+        /// </param>
+        /// <param name="fileName">
+        /// The deterministic output filename.
+        /// </param>
+        /// <returns>
+        /// An awaitable task.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="generatedCode" />, <paramref name="outputDirectory" />, or
+        /// <paramref name="fileName" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="generatedCode" /> or <paramref name="fileName" /> is empty.
+        /// </exception>
+        protected static async Task WriteAsync(string generatedCode, DirectoryInfo outputDirectory, string fileName)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(generatedCode);
+            ArgumentNullException.ThrowIfNull(outputDirectory);
+            ArgumentException.ThrowIfNullOrEmpty(fileName);
+
+            var filePath = Path.Combine(outputDirectory.FullName, fileName);
+
+            await File.WriteAllTextAsync(filePath, generatedCode, Utf8WithoutBom);
+        }
+
+        /// <summary>
         /// Validates that generated source contains no C# syntax errors.
         /// </summary>
         /// <param name="fileName">
@@ -263,39 +291,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators
                 + $"{Environment.NewLine}{string.Join(Environment.NewLine, syntaxErrors)}");
         }
 
-        /// <summary>
-        /// Writes generated source as UTF-8 without a byte-order mark.
-        /// </summary>
-        /// <param name="generatedCode">
-        /// The generated source.
-        /// </param>
-        /// <param name="outputDirectory">
-        /// The existing staging output directory.
-        /// </param>
-        /// <param name="fileName">
-        /// The deterministic output filename.
-        /// </param>
-        /// <returns>
-        /// An awaitable task.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="generatedCode"/>, <paramref name="outputDirectory"/>, or
-        /// <paramref name="fileName"/> is <see langword="null" />.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="generatedCode"/> or <paramref name="fileName"/> is empty.
-        /// </exception>
-        protected static async Task WriteAsync(string generatedCode, DirectoryInfo outputDirectory, string fileName)
-        {
-            ArgumentException.ThrowIfNullOrEmpty(generatedCode);
-            ArgumentNullException.ThrowIfNull(outputDirectory);
-            ArgumentException.ThrowIfNullOrEmpty(fileName);
-
-            var filePath = Path.Combine(outputDirectory.FullName, fileName);
-
-            await File.WriteAllTextAsync(filePath, generatedCode, Utf8WithoutBom);
-        }
-        
         /// <summary>
         /// Represents one validated generated C# source file.
         /// </summary>

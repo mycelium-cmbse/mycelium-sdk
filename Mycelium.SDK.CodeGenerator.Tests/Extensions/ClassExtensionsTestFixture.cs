@@ -1,9 +1,9 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="ClassExtensionsTestFixture.cs" company="Starion Group S.A.">
-//
+// 
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-//
+// 
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
@@ -254,7 +254,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             var generalizations = projectMember.QueryGeneralizations();
 
             Assert.That(generalizations.Select(generalization => generalization.Name),
-                Is.EqualTo([ "AuditableThing" ]));
+                Is.EqualTo(["AuditableThing"]));
         }
 
         [Test]

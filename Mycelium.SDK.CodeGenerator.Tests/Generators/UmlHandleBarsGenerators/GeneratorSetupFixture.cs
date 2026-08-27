@@ -1,21 +1,16 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="GeneratorSetupFixture.cs" company="Starion Group S.A.">
-//
+// 
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-//
+// 
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Threading.Tasks;
-
     using Mycelium.SDK.CodeGenerator.Extensions;
+    using Mycelium.SDK.CodeGenerator.Generators;
 
     using uml4net.Packages;
     using uml4net.xmi.Readers;
@@ -26,6 +21,37 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     [SetUpFixture]
     public sealed class GeneratorSetupFixture
     {
+        /// <summary>
+        /// Identifies the required class-generator preflight failure categories.
+        /// </summary>
+        public enum ClassPreflightFailure
+        {
+            /// <summary>
+            /// A modeled identifier is invalid.
+            /// </summary>
+            InvalidIdentifier,
+
+            /// <summary>
+            /// A template produces invalid C# syntax.
+            /// </summary>
+            InvalidRenderedSyntax,
+
+            /// <summary>
+            /// The rendered batch contains duplicate output filenames.
+            /// </summary>
+            DuplicateFileName,
+
+            /// <summary>
+            /// The model contains an invalid reference.
+            /// </summary>
+            InvalidModelReference,
+
+            /// <summary>
+            /// The rendered batch does not match its reviewed manifest.
+            /// </summary>
+            UnexpectedManifest
+        }
+
         /// <summary>
         /// Gets the directory containing the copied FunctionalData XMI resources.
         /// </summary>
@@ -78,6 +104,58 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
+        /// Registers a mutation that runs once after the first successful template rendering.
+        /// </summary>
+        /// <param name="generator">
+        /// The generator whose compiled template is wrapped.
+        /// </param>
+        /// <param name="templateName">
+        /// The exact registered template name.
+        /// </param>
+        /// <param name="mutation">
+        /// The mutation to execute after the first rendering.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="generator" />, <paramref name="templateName" />, or
+        /// <paramref name="mutation" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="templateName" /> is empty or does not identify a registered
+        /// template.
+        /// </exception>
+        public static void RegisterPostFirstRenderMutation(
+            HandleBarsGenerator generator,
+            string templateName,
+            Action mutation)
+        {
+            ArgumentNullException.ThrowIfNull(generator);
+            ArgumentException.ThrowIfNullOrEmpty(templateName);
+            ArgumentNullException.ThrowIfNull(mutation);
+
+            if (!generator.Templates.TryGetValue(templateName, out var originalTemplate))
+            {
+                throw new ArgumentException(
+                    $"Template '{templateName}' is not registered.",
+                    nameof(templateName));
+            }
+
+            var mutationPending = true;
+
+            generator.Templates[templateName] = (context, data) =>
+            {
+                var generatedCode = originalTemplate(context, data);
+
+                if (mutationPending)
+                {
+                    mutationPending = false;
+                    mutation();
+                }
+
+                return generatedCode;
+            };
+        }
+
+        /// <summary>
         /// Creates a clean test-output directory descriptor without creating the directory.
         /// </summary>
         /// <param name="directoryName">
@@ -98,7 +176,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             if (directory.Exists)
             {
-                directory.Delete(recursive: true);
+                directory.Delete(true);
             }
 
             return directory;

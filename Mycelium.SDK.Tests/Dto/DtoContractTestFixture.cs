@@ -93,6 +93,7 @@ namespace Mycelium.SDK.Tests.Dto
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(expectedInterfaceTypes, Has.Length.EqualTo(13));
+
                 Assert.That(
                     actualInterfaceTypes,
                     Is.EqualTo(expectedInterfaceTypes),
@@ -177,6 +178,7 @@ namespace Mycelium.SDK.Tests.Dto
                     var value = collectionProperty.Property.GetValue(instance);
 
                     Assert.That(value, Is.Not.Null, $"Collection property '{displayName}' was not initialized.");
+
                     Assert.That(
                         value,
                         Is.InstanceOf<ICollection>(),

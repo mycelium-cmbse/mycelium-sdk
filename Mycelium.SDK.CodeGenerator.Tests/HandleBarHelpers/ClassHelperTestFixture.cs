@@ -1,16 +1,15 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="ClassHelperTestFixture.cs" company="Starion Group S.A.">
-//
+// 
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-//
+// 
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
 namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
 {
     using HandlebarsDotNet;
-    using HandlebarsDotNet.Helpers;
 
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
     using Mycelium.SDK.CodeGenerator.Tests.Xmi;
@@ -34,7 +33,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
                 .ToArray();
 
             this.pocoHandlebars = Handlebars.CreateSharedEnvironment();
-            HandlebarsHelpers.Register(this.pocoHandlebars);
             this.pocoHandlebars.RegisterPocoClassHelper();
         }
 
@@ -42,7 +40,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         public void Verify_that_Dto_and_Poco_class_helpers_can_be_registered_independently()
         {
             var dtoHandlebars = Handlebars.CreateSharedEnvironment();
-            HandlebarsHelpers.Register(dtoHandlebars);
             dtoHandlebars.RegisterDtoClassHelper();
 
             var dtoTemplate = dtoHandlebars.Compile("{{ #Class.WriteDtoInterfaceIdentifier this }}");
@@ -58,6 +55,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         }
 
         [Test]
+        public void Verify_that_Poco_class_helpers_reject_multiple_arguments()
+        {
+            var template = this.pocoHandlebars.Compile("{{ #Class.WritePocoInterfaceIdentifier this this }}");
+            var exception = Assert.Throws<HandlebarsException>(() => template(new object()));
+
+            Assert.That(exception.Message, Is.EqualTo("{{Class.WritePocoInterfaceIdentifier}} requires exactly one argument."));
+        }
+
+        [Test]
         public void Verify_that_Poco_class_helpers_require_an_IClass_argument()
         {
             var template = this.pocoHandlebars.Compile("{{ #Class.WritePocoInterfaceIdentifier this }}");
@@ -65,15 +71,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             var exception = Assert.Throws<HandlebarsException>(() => template(new object()));
 
             Assert.That(exception.Message, Is.EqualTo("{{Class.WritePocoInterfaceIdentifier}} requires an IClass argument."));
-        }
-
-        [Test]
-        public void Verify_that_Poco_class_helpers_reject_multiple_arguments()
-        {
-            var template = this.pocoHandlebars.Compile("{{ #Class.WritePocoInterfaceIdentifier this this }}");
-            var exception = Assert.Throws<HandlebarsException>(() => template(new object()));
-
-            Assert.That(exception.Message, Is.EqualTo("{{Class.WritePocoInterfaceIdentifier}} requires exactly one argument."));
         }
 
         [Test]
@@ -95,10 +92,10 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             var projectMember = this.QueryClass("ProjectMember");
 
             var template = this.pocoHandlebars.Compile(
-                "{{ #each (Class.QueryPocoInterfaceProperties this) as | property | }}" +
+                "{{ #each (#Class.QueryPocoInterfaceProperties this) as | property | }}" +
                 "{{ property.Name }};" +
                 "{{ /each }}|" +
-                "{{ #each (Class.QueryPocoImplementationProperties this) as | property | }}" +
+                "{{ #each (#Class.QueryPocoImplementationProperties this) as | property | }}" +
                 "{{ property.Name }};" +
                 "{{ /each }}");
 

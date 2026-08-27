@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="ActivationStatusProvider.cs" company="Starion Group S.A.">
+//  <copyright file="ProjectLifecycleKindProvider.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -19,57 +19,52 @@ namespace Mycelium.SDK.Extensions
     using Mycelium.SDK;
 
     /// <summary>
-    /// Provides exact XMI-literal conversions for <see cref="ActivationStatus" />.
+    /// Provides exact XMI-literal conversions for <see cref="ProjectLifecycleKind" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public static partial class ActivationStatusProvider
+    public static partial class ProjectLifecycleKindProvider
     {
         /// <summary>
-        /// Parses an exact XMI literal as a <see cref="ActivationStatus" /> value.
+        /// Parses an exact XMI literal as a <see cref="ProjectLifecycleKind" /> value.
         /// </summary>
         /// <param name="value">
         /// The case-sensitive XMI literal to parse.
         /// </param>
         /// <returns>
-        /// The corresponding <see cref="ActivationStatus" /> value.
+        /// The corresponding <see cref="ProjectLifecycleKind" /> value.
         /// </returns>
         /// <exception cref="ArgumentException">
         /// Thrown when <paramref name="value" /> is not an exact XMI literal.
         /// </exception>
-        public static ActivationStatus Parse(ReadOnlySpan<char> value)
+        public static ProjectLifecycleKind Parse(ReadOnlySpan<char> value)
         {
-            if (value.Equals("Active".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Preparation".AsSpan(), StringComparison.Ordinal))
             {
-                return ActivationStatus.Active;
+                return ProjectLifecycleKind.Preparation;
             }
 
-            if (value.Equals("Pending".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Open".AsSpan(), StringComparison.Ordinal))
             {
-                return ActivationStatus.Pending;
+                return ProjectLifecycleKind.Open;
             }
 
-            if (value.Equals("Suspended".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Review".AsSpan(), StringComparison.Ordinal))
             {
-                return ActivationStatus.Suspended;
+                return ProjectLifecycleKind.Review;
             }
 
             if (value.Equals("Archived".AsSpan(), StringComparison.Ordinal))
             {
-                return ActivationStatus.Archived;
-            }
-
-            if (value.Equals("Deleted".AsSpan(), StringComparison.Ordinal))
-            {
-                return ActivationStatus.Deleted;
+                return ProjectLifecycleKind.Archived;
             }
 
             throw new ArgumentException(
-            $"'{new string(value)}' is not a valid ActivationStatus literal.",
+            $"'{new string(value)}' is not a valid ProjectLifecycleKind literal.",
             nameof(value));
         }
 
         /// <summary>
-        /// Tries to parse an exact XMI literal as a <see cref="ActivationStatus" /> value.
+        /// Tries to parse an exact XMI literal as a <see cref="ProjectLifecycleKind" /> value.
         /// </summary>
         /// <param name="value">
         /// The case-sensitive XMI literal to parse.
@@ -80,35 +75,29 @@ namespace Mycelium.SDK.Extensions
         /// <returns>
         /// <see langword="true" /> when parsing succeeds; otherwise, <see langword="false" />.
         /// </returns>
-        public static bool TryParse(ReadOnlySpan<char> value, out ActivationStatus result)
+        public static bool TryParse(ReadOnlySpan<char> value, out ProjectLifecycleKind result)
         {
-            if (value.Equals("Active".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Preparation".AsSpan(), StringComparison.Ordinal))
             {
-                result = ActivationStatus.Active;
+                result = ProjectLifecycleKind.Preparation;
                 return true;
             }
 
-            if (value.Equals("Pending".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Open".AsSpan(), StringComparison.Ordinal))
             {
-                result = ActivationStatus.Pending;
+                result = ProjectLifecycleKind.Open;
                 return true;
             }
 
-            if (value.Equals("Suspended".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Review".AsSpan(), StringComparison.Ordinal))
             {
-                result = ActivationStatus.Suspended;
+                result = ProjectLifecycleKind.Review;
                 return true;
             }
 
             if (value.Equals("Archived".AsSpan(), StringComparison.Ordinal))
             {
-                result = ActivationStatus.Archived;
-                return true;
-            }
-
-            if (value.Equals("Deleted".AsSpan(), StringComparison.Ordinal))
-            {
-                result = ActivationStatus.Deleted;
+                result = ProjectLifecycleKind.Archived;
                 return true;
             }
 
@@ -117,7 +106,7 @@ namespace Mycelium.SDK.Extensions
         }
 
         /// <summary>
-        /// Formats a <see cref="ActivationStatus" /> value as its exact XMI literal.
+        /// Formats a <see cref="ProjectLifecycleKind" /> value as its exact XMI literal.
         /// </summary>
         /// <param name="value">
         /// The enumeration value to format.
@@ -128,19 +117,18 @@ namespace Mycelium.SDK.Extensions
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when <paramref name="value" /> is not a defined enumeration value.
         /// </exception>
-        public static string Format(ActivationStatus value)
+        public static string Format(ProjectLifecycleKind value)
         {
             return value switch
             {
-                ActivationStatus.Active => "Active",
-                ActivationStatus.Pending => "Pending",
-                ActivationStatus.Suspended => "Suspended",
-                ActivationStatus.Archived => "Archived",
-                ActivationStatus.Deleted => "Deleted",
+                ProjectLifecycleKind.Preparation => "Preparation",
+                ProjectLifecycleKind.Open => "Open",
+                ProjectLifecycleKind.Review => "Review",
+                ProjectLifecycleKind.Archived => "Archived",
                 _ => throw new ArgumentOutOfRangeException(
                 nameof(value),
                 value,
-                $"'{value}' is not a defined ActivationStatus value.")
+                $"'{value}' is not a defined ProjectLifecycleKind value.")
             };
         }
     }

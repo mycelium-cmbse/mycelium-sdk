@@ -1,9 +1,9 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="PropertyHelperTestFixture.cs" company="Starion Group S.A.">
-//
+// 
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-//
+// 
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
@@ -42,81 +42,24 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         }
 
         [Test]
-        public void Verify_that_Poco_interface_declarations_match_the_FunctionalData_contract()
+        public void Verify_that_Dto_and_Poco_property_helpers_can_be_registered_independently()
         {
+            var dtoHandlebars = Handlebars.CreateSharedEnvironment();
+            HandlebarsHelpers.Register(dtoHandlebars);
+            dtoHandlebars.RegisterDtoPropertyHelper();
+
+            var property = this.QueryProperty("ProjectMember", "activeOwnership");
+            var dtoTemplate = dtoHandlebars.Compile("{{ #Property.WriteDtoInterfaceDeclaration this }}");
+
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(
-                    this.RenderPocoInterface(this.QueryProperty("ProjectMember", "activeOwnership")),
+                    dtoTemplate(property),
+                    Is.EqualTo("Guid? ActiveOwnership { get; set; }"));
+
+                Assert.That(
+                    this.RenderPocoInterface(property),
                     Is.EqualTo("IOwnership ActiveOwnership { get; set; }"));
-
-                Assert.That(
-                    this.RenderPocoInterface(this.QueryProperty("ProjectMember", "owns")),
-                    Is.EqualTo("List<IOwnership> Owns { get; set; }"));
-
-                Assert.That(
-                    this.RenderPocoInterface(this.QueryProperty("ProjectMember", "role")),
-                    Is.EqualTo("ProjectMemberRole Role { get; set; }"));
-
-                Assert.That(
-                    this.RenderPocoInterface(this.QueryProperty("ProjectMember", "isOutsideCollaborator")),
-                    Is.EqualTo("bool IsOutsideCollaborator { get; }"));
-
-                Assert.That(
-                    this.RenderPocoInterface(this.QueryProperty("Thing", "id")),
-                    Is.EqualTo("Guid Id { get; set; }"));
-            }
-        }
-
-        [Test]
-        public void Verify_that_Poco_implementation_declarations_match_the_FunctionalData_contract()
-        {
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(
-                    this.RenderPocoImplementation(this.QueryProperty("ProjectMember", "activeOwnership")),
-                    Is.EqualTo("public IOwnership ActiveOwnership { get; set; }"));
-
-                Assert.That(
-                    this.RenderPocoImplementation(this.QueryProperty("ProjectMember", "owns")),
-                    Is.EqualTo("public List<IOwnership> Owns { get; set; } = [];"));
-
-                Assert.That(
-                    this.RenderPocoImplementation(this.QueryProperty("ProjectMember", "isOutsideCollaborator")),
-                    Is.EqualTo("public bool IsOutsideCollaborator => this.ComputeIsOutsideCollaborator();"));
-
-                Assert.That(
-                    this.RenderPocoImplementation(this.QueryProperty("FunctionalProject", "sharedPreferences")),
-                    Is.EqualTo(
-                        "public Dictionary<string,string> SharedPreferences { get; set; } = [];"));
-
-                Assert.That(
-                    this.RenderPocoImplementation(this.QueryProperty("Thing", "id")),
-                    Is.EqualTo("public Guid Id { get; set; }"));
-            }
-        }
-
-        [Test]
-        public void Verify_that_Poco_derived_union_declarations_delegate_to_computation()
-        {
-            var property = new Property
-            {
-                XmiId = "derived-union",
-                Name = "derivedUnion",
-                IsDerivedUnion = true,
-                Type = new PrimitiveType
-                {
-                    XmiId = "boolean-type",
-                    Name = "Boolean"
-                }
-            };
-
-            property.LowerValue.Add(new LiteralInteger { Value = 1 });
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(this.RenderPocoInterface(property), Is.EqualTo("bool DerivedUnion { get; }"));
-                Assert.That(this.RenderPocoImplementation(property), Is.EqualTo("public bool DerivedUnion => this.ComputeDerivedUnion();"));
             }
         }
 
@@ -149,33 +92,94 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         }
 
         [Test]
-        public void Verify_that_Dto_and_Poco_property_helpers_can_be_registered_independently()
+        public void Verify_that_Poco_derived_union_declarations_delegate_to_computation()
         {
-            var dtoHandlebars = Handlebars.CreateSharedEnvironment();
-            HandlebarsHelpers.Register(dtoHandlebars);
-            dtoHandlebars.RegisterDtoPropertyHelper();
+            var property = new Property
+            {
+                XmiId = "derived-union",
+                Name = "derivedUnion",
+                IsDerivedUnion = true,
+                Type = new PrimitiveType
+                {
+                    XmiId = "boolean-type",
+                    Name = "Boolean"
+                }
+            };
 
-            var property = this.QueryProperty("ProjectMember", "activeOwnership");
-            var dtoTemplate = dtoHandlebars.Compile("{{ #Property.WriteDtoInterfaceDeclaration this }}");
+            property.LowerValue.Add(new LiteralInteger { Value = 1 });
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(
-                    dtoTemplate(property),
-                    Is.EqualTo("Guid? ActiveOwnership { get; set; }"));
-
-                Assert.That(
-                    this.RenderPocoInterface(property),
-                    Is.EqualTo("IOwnership ActiveOwnership { get; set; }"));
+                Assert.That(this.RenderPocoInterface(property), Is.EqualTo("bool DerivedUnion { get; }"));
+                Assert.That(this.RenderPocoImplementation(property), Is.EqualTo("public bool DerivedUnion => this.ComputeDerivedUnion();"));
             }
         }
 
         [Test]
-        public void Verify_that_RegisterPocoPropertyHelper_rejects_a_null_environment()
+        public void Verify_that_Poco_implementation_declarations_match_the_FunctionalData_contract()
         {
-            IHandlebars handlebars = null;
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(
+                    this.RenderPocoImplementation(this.QueryProperty("ProjectMember", "activeOwnership")),
+                    Is.EqualTo("public IOwnership ActiveOwnership { get; set; }"));
 
-            Assert.That(() => handlebars.RegisterPocoPropertyHelper(), Throws.ArgumentNullException);
+                Assert.That(
+                    this.RenderPocoImplementation(this.QueryProperty("ProjectMember", "owns")),
+                    Is.EqualTo("public List<IOwnership> Owns { get; set; } = [];"));
+
+                Assert.That(
+                    this.RenderPocoImplementation(this.QueryProperty("ProjectMember", "isOutsideCollaborator")),
+                    Is.EqualTo("public bool IsOutsideCollaborator => this.ComputeIsOutsideCollaborator();"));
+
+                Assert.That(
+                    this.RenderPocoImplementation(this.QueryProperty("FunctionalProject", "sharedPreferences")),
+                    Is.EqualTo(
+                        "public Dictionary<string,string> SharedPreferences { get; set; } = [];"));
+
+                Assert.That(
+                    this.RenderPocoImplementation(this.QueryProperty("Thing", "id")),
+                    Is.EqualTo("public Guid Id { get; set; }"));
+            }
+        }
+
+        [Test]
+        public void Verify_that_Poco_interface_declarations_match_the_FunctionalData_contract()
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(
+                    this.RenderPocoInterface(this.QueryProperty("ProjectMember", "activeOwnership")),
+                    Is.EqualTo("IOwnership ActiveOwnership { get; set; }"));
+
+                Assert.That(
+                    this.RenderPocoInterface(this.QueryProperty("ProjectMember", "owns")),
+                    Is.EqualTo("List<IOwnership> Owns { get; set; }"));
+
+                Assert.That(
+                    this.RenderPocoInterface(this.QueryProperty("ProjectMember", "role")),
+                    Is.EqualTo("ProjectMemberRole Role { get; set; }"));
+
+                Assert.That(
+                    this.RenderPocoInterface(this.QueryProperty("ProjectMember", "isOutsideCollaborator")),
+                    Is.EqualTo("bool IsOutsideCollaborator { get; }"));
+
+                Assert.That(
+                    this.RenderPocoInterface(this.QueryProperty("Thing", "id")),
+                    Is.EqualTo("Guid Id { get; set; }"));
+            }
+        }
+
+        [Test]
+        public void Verify_that_Poco_property_helpers_reject_multiple_arguments()
+        {
+            var template = this.pocoHandlebars.Compile("{{ #Property.WritePocoInterfaceDeclaration this this }}");
+            var exception = Assert.Throws<HandlebarsException>(() => template(new object()));
+
+            Assert.That(
+                exception.Message,
+                Is.EqualTo(
+                    "{{Property.WritePocoInterfaceDeclaration}} requires exactly one argument."));
         }
 
         [Test]
@@ -191,15 +195,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         }
 
         [Test]
-        public void Verify_that_Poco_property_helpers_reject_multiple_arguments()
+        public void Verify_that_RegisterPocoPropertyHelper_rejects_a_null_environment()
         {
-            var template = this.pocoHandlebars.Compile("{{ #Property.WritePocoInterfaceDeclaration this this }}");
-            var exception = Assert.Throws<HandlebarsException>(() => template(new object()));
+            IHandlebars handlebars = null;
 
-            Assert.That(
-                exception.Message,
-                Is.EqualTo(
-                    "{{Property.WritePocoInterfaceDeclaration}} requires exactly one argument."));
+            Assert.That(() => handlebars.RegisterPocoPropertyHelper(), Throws.ArgumentNullException);
         }
 
         private string RenderPocoInterface(IProperty property)

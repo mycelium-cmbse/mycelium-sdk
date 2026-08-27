@@ -20,7 +20,7 @@ using System.Collections.Generic;
 {{ #Documentation this }}[GeneratedCode("Mycelium.SDK", "latest")]
 public partial interface {{ #Class.WritePocoInterfaceIdentifier this }}{{ #Class.WritePocoInterfaceGeneralizations this }}
 {
-{{ #each (Class.QueryPocoInterfaceProperties this) as | property | }}
+{{ #each (#Class.QueryPocoInterfaceProperties this) as | property | }}
 {{ #Documentation property }}{{ #Property.WritePocoInterfaceDeclaration property }}
 {{#unless @last}}
 

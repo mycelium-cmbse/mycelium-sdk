@@ -136,6 +136,7 @@ namespace Mycelium.SDK.Tests.Poco
         private static Type[] QueryDirectInterfaces(Type interfaceType)
         {
             var allInterfaces = interfaceType.GetInterfaces();
+
             var indirectInterfaces = allInterfaces
                 .SelectMany(candidate => candidate.GetInterfaces())
                 .ToHashSet();

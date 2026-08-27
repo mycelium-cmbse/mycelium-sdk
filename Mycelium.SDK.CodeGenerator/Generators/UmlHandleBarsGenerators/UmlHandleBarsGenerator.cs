@@ -10,6 +10,7 @@
 namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 {
     using Mycelium.SDK.CodeGenerator.Extensions;
+
     using uml4net.Extensions;
     using uml4net.Packages;
     using uml4net.SimpleClassifiers;
@@ -67,7 +68,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             return this.GenerateAsync(xmiReaderResult, outputDirectory);
         }
-        
+
         /// <summary>
         /// Generates the artifacts supported by the concrete generator.
         /// </summary>
@@ -102,7 +103,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// A deterministic Handlebars payload for the FunctionalData package.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="xmiReaderResult"/> is <see langword="null" />.
+        /// Thrown when <paramref name="xmiReaderResult" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentException">
         /// Thrown when a modeled name cannot be represented as a legal C# identifier.
@@ -131,38 +132,32 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                 .ToArray();
 
             var enumerations = generationPackages
-                .SelectMany(
-                    package => package.PackagedElement.OfType<IEnumeration>())
+                .SelectMany(package => package.PackagedElement.OfType<IEnumeration>())
                 .OrderBy(
                     enumeration => enumeration.Name,
                     StringComparer.Ordinal);
 
             var primitiveTypes = allPackages
-                .SelectMany(
-                    package => package.PackagedElement.OfType<IPrimitiveType>())
+                .SelectMany(package => package.PackagedElement.OfType<IPrimitiveType>())
                 .OrderBy(
                     primitiveType => primitiveType.Name,
                     StringComparer.Ordinal);
 
             var dataTypes = generationPackages
-                .SelectMany(
-                    package => package.PackagedElement.OfType<IDataType>())
-                .Where(
-                    dataType =>
-                        dataType is not IEnumeration
-                        && dataType is not IPrimitiveType)
+                .SelectMany(package => package.PackagedElement.OfType<IDataType>())
+                .Where(dataType =>
+                    dataType is not IEnumeration
+                    && dataType is not IPrimitiveType)
                 .OrderBy(
                     dataType => dataType.Name,
                     StringComparer.Ordinal);
 
             var classes = generationPackages
-                .SelectMany(
-                    package => package.PackagedElement.OfType<IClass>())
+                .SelectMany(package => package.PackagedElement.OfType<IClass>())
                 .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal);
 
             var interfaces = generationPackages
-                .SelectMany(
-                    package => package.PackagedElement.OfType<IInterface>())
+                .SelectMany(package => package.PackagedElement.OfType<IInterface>())
                 .OrderBy(umlInterface => umlInterface.Name, StringComparer.Ordinal);
 
             return new HandlebarsPayload(
@@ -174,7 +169,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                 classes,
                 interfaces);
         }
-        
+
         /// <summary>
         /// Validates one enumeration for single-artifact rendering.
         /// </summary>
@@ -207,17 +202,16 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             _ = ReservedCSharpNameMapper.Map(enumeration.Name);
 
             var duplicateLiteralIdentifier = enumeration.OwnedLiteral
-                .Select(
-                    literal =>
+                .Select(literal =>
+                {
+                    if (string.IsNullOrWhiteSpace(literal.Name))
                     {
-                        if (string.IsNullOrWhiteSpace(literal.Name))
-                        {
-                            throw new InvalidOperationException(
-                                $"Enumeration '{enumeration.Name}' contains an unnamed literal.");
-                        }
+                        throw new InvalidOperationException(
+                            $"Enumeration '{enumeration.Name}' contains an unnamed literal.");
+                    }
 
-                        return ReservedCSharpNameMapper.Map(literal.Name);
-                    })
+                    return ReservedCSharpNameMapper.Map(literal.Name);
+                })
                 .GroupBy(
                     identifier => identifier,
                     StringComparer.Ordinal)

@@ -6,18 +6,18 @@ The mycelium software development toolkit
 
 The packages are available on Nuget at:
 
-project                                                     | Nuget
------------------------------------------------------------- | ------------
-[Mycelium.SDK](https://www.nuget.org/packages/Mycelium.SDK) | ![NuGet Version](https://img.shields.io/nuget/v/Mycelium.SDK)
+ project                                                     | Nuget                                                         
+-------------------------------------------------------------|---------------------------------------------------------------
+ [Mycelium.SDK](https://www.nuget.org/packages/Mycelium.SDK) | ![NuGet Version](https://img.shields.io/nuget/v/Mycelium.SDK) 
 
 ## Build Status
 
 GitHub actions are used to build and test the library
 
-Branch | Build Status
-------- | :------------
-Main | ![Build Status](https://github.com/mycelium-cmbse/mycelium-sdk/actions/workflows/CodeQuality.yml/badge.svg?branch=main)
-Development | ![Build Status](https://github.com/mycelium-cmbse/mycelium-sdk/actions/workflows/CodeQuality.yml/badge.svg?branch=development)
+ Branch      | Build Status                                                                                                                   
+-------------|:-------------------------------------------------------------------------------------------------------------------------------
+ Main        | ![Build Status](https://github.com/mycelium-cmbse/mycelium-sdk/actions/workflows/CodeQuality.yml/badge.svg?branch=main)        
+ Development | ![Build Status](https://github.com/mycelium-cmbse/mycelium-sdk/actions/workflows/CodeQuality.yml/badge.svg?branch=development) 
 
 # Code Quality
 
@@ -34,11 +34,14 @@ Development | ![Build Status](https://github.com/mycelium-cmbse/mycelium-sdk/act
 
 # Software Bill of Materials (SBOM)
 
-As part of our commitment to security, transparency and traceability, the nuget packages contain a Software Bill of Materials (SBOM). It is generated automatically during the build, providing detailed insight into the components, their licenses and versions. What is included:
+As part of our commitment to security, transparency and traceability, the nuget packages contain a Software Bill of
+Materials (SBOM). It is generated automatically during the build, providing detailed insight into the components, their
+licenses and versions. What is included:
 
-  - A comprehensive list of all open-source and third-party components included in the nuget packages.
-  - Tracking of software dependencies, licenses and versions.
-  - Support for vulnerability management by allowing users to quickly identify potential risks tied to specific components.
+- A comprehensive list of all open-source and third-party components included in the nuget packages.
+- Tracking of software dependencies, licenses and versions.
+- Support for vulnerability management by allowing users to quickly identify potential risks tied to specific
+  components.
 
 # License
 
@@ -46,4 +49,5 @@ The mycelium-sdk libraries are provided to the community under the Apache Licens
 
 # Contributions
 
-Contributions to the code-base are welcome. Please read [CONTRIBUTING](.github/CONTRIBUTING.md) before submitting a pull request.
+Contributions to the code-base are welcome. Please read [CONTRIBUTING](.github/CONTRIBUTING.md) before submitting a pull
+request.

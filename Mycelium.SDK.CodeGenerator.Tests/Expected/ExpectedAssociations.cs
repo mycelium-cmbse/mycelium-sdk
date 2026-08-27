@@ -47,7 +47,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
             yield return CreateSignature(
                 "Comment", null,
                 "Comment", "quotes");
-            
+
             yield return CreateSignature(
                 "Comment", null,
                 "Comment", "replies");
@@ -109,6 +109,12 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
                 "User", "author");
         }
 
+        /// <inheritdoc />
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+
         /// <summary>
         /// Creates an order-independent semantic association signature.
         /// </summary>
@@ -139,11 +145,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
             return string.CompareOrdinal(firstEnd, secondEnd) <= 0
                 ? $"{firstEnd}|{secondEnd}"
                 : $"{secondEnd}|{firstEnd}";
-        }
-        /// <inheritdoc />
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
         }
     }
 }

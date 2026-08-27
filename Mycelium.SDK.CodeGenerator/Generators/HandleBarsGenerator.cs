@@ -9,9 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Generators
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
     using System.Text;
 
     using HandlebarsDotNet;
@@ -23,7 +20,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
     {
         /// <summary>
         /// Initializes a new instance of the
-        /// <see cref="HandleBarsGenerator"/> class.
+        /// <see cref="HandleBarsGenerator" /> class.
         /// </summary>
         /// <param name="templateSubfolder">
         /// The optional template subdirectory.
@@ -34,15 +31,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators
             this.Handlebars = HandlebarsDotNet.Handlebars.CreateSharedEnvironment();
 
             this.Register();
-        }
-
-        /// <summary>
-        /// Registers the generator-specific helpers and templates.
-        /// </summary>
-        private void Register()
-        {
-            this.RegisterHelpers();
-            this.RegisterTemplates();
         }
 
         /// <summary>
@@ -101,6 +89,15 @@ namespace Mycelium.SDK.CodeGenerator.Generators
             var template = File.ReadAllText(templatePath, Encoding.UTF8);
 
             this.Templates.Add(name, this.Handlebars.Compile(template));
+        }
+
+        /// <summary>
+        /// Registers the generator-specific helpers and templates.
+        /// </summary>
+        private void Register()
+        {
+            this.RegisterHelpers();
+            this.RegisterTemplates();
         }
     }
 }

@@ -27,7 +27,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The registered Handlebars template name used for UML enumerations.
         /// </summary>
         private const string TemplateName = "enumeration-uml-template";
-        
+
         /// <summary>
         /// The complete reviewed enumeration output manifest.
         /// </summary>
@@ -73,7 +73,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// contains the generated and formatted C# source.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="outputDirectory"/> or <paramref name="enumeration"/> is
+        /// Thrown when <paramref name="outputDirectory" /> or <paramref name="enumeration" /> is
         /// <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentException">
@@ -94,6 +94,24 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             await WriteBatchAsync([generatedFile], outputDirectory);
 
             return generatedFile.Source;
+        }
+
+        /// <inheritdoc />
+        protected override void RegisterHelpers()
+        {
+            DocumentationHelper.RegisterDocumentationHelper(this.Handlebars);
+            this.Handlebars.RegisterEnumHelper();
+
+            this.Handlebars.RegisterEnumerationHelper();
+            this.Handlebars.RegisterEnumerationLiteralHelper();
+
+            NamedElementHelper.RegisterNamedElementHelper(this.Handlebars);
+        }
+
+        /// <inheritdoc />
+        protected override void RegisterTemplates()
+        {
+            this.RegisterTemplate(TemplateName);
         }
 
         /// <summary>
@@ -126,24 +144,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             var generatedCode = template(enumeration);
 
             return this.CreateGeneratedFile(fileName, generatedCode);
-        }
-
-        /// <inheritdoc />
-        protected override void RegisterHelpers()
-        {
-            DocumentationHelper.RegisterDocumentationHelper(this.Handlebars);
-            EnumHelper.RegisterEnumHelper(this.Handlebars);
-
-            this.Handlebars.RegisterEnumerationHelper();
-            this.Handlebars.RegisterEnumerationLiteralHelper();
-
-            NamedElementHelper.RegisterNamedElementHelper(this.Handlebars);
-        }
-
-        /// <inheritdoc />
-        protected override void RegisterTemplates()
-        {
-            this.RegisterTemplate(TemplateName);
         }
     }
 }

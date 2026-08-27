@@ -9,6 +9,8 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
+    using System.Text;
+
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
     using Mycelium.SDK.CodeGenerator.Tests.Xmi;
@@ -18,6 +20,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     [TestFixture]
     public class UmlPocoGeneratorTestFixture
     {
+        private static readonly UTF8Encoding StrictUtf8WithoutBom = new(false, true);
+
         private static readonly HashSet<string> AbstractClassNames =
             new(StringComparer.Ordinal)
             {
@@ -135,13 +139,16 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             foreach (var fileName in generatedFileNames)
             {
-                var generated = await File.ReadAllTextAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
-                var committed = await File.ReadAllTextAsync(Path.Combine(this.committedDirectory.FullName, fileName));
+                var generatedBytes = await File.ReadAllBytesAsync(
+                    Path.Combine(this.stagingDirectory.FullName, fileName));
+
+                var committedBytes = await File.ReadAllBytesAsync(
+                    Path.Combine(this.committedDirectory.FullName, fileName));
 
                 Assert.That(
-                    generated,
-                    Is.EqualTo(committed),
-                    $"Generated POCO '{fileName}' differs from the committed SDK source.");
+                    generatedBytes,
+                    Is.EqualTo(committedBytes),
+                    $"Generated POCO '{fileName}' differs byte-for-byte from the committed SDK source.");
             }
         }
 
@@ -167,96 +174,236 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
         }
 
-        [TestCase(false)]
-        [TestCase(true)]
-        public async Task Verify_that_batch_generation_leaves_destination_unchanged_when_model_validation_fails(bool destinationExists)
+        [TestCase(GeneratorSetupFixture.ClassPreflightFailure.InvalidIdentifier)]
+        [TestCase(GeneratorSetupFixture.ClassPreflightFailure.InvalidRenderedSyntax)]
+        [TestCase(GeneratorSetupFixture.ClassPreflightFailure.DuplicateFileName)]
+        [TestCase(GeneratorSetupFixture.ClassPreflightFailure.InvalidModelReference)]
+        [TestCase(GeneratorSetupFixture.ClassPreflightFailure.UnexpectedManifest)]
+        public async Task Verify_that_batch_preflight_failure_leaves_destination_unchanged(
+            GeneratorSetupFixture.ClassPreflightFailure failure)
+        {
+            await AssertBatchPreflightFailureLeavesDestinationUntouched(failure, false);
+            await AssertBatchPreflightFailureLeavesDestinationUntouched(failure, true);
+        }
+
+        private static async Task AssertBatchPreflightFailureLeavesDestinationUntouched(
+            GeneratorSetupFixture.ClassPreflightFailure failure,
+            bool destinationExists)
         {
             var state = destinationExists ? "Existing" : "Absent";
 
-            var invalidOutputDirectory =
-                GeneratorSetupFixture.QueryFreshOutputDirectory($"_Mycelium.SDK.InvalidAutoGenPOCO.{state}");
+            var outputDirectory =
+                GeneratorSetupFixture.QueryFreshOutputDirectory(
+                    $"_Mycelium.SDK.InvalidAutoGenPOCO.{failure}.{state}");
 
             IReadOnlyDictionary<string, byte[]> expectedSnapshot = null;
 
             if (destinationExists)
             {
-                invalidOutputDirectory.Create();
+                outputDirectory.Create();
 
                 await File.WriteAllBytesAsync(
-                    Path.Combine(invalidOutputDirectory.FullName, "IThing.cs"), new byte[] { 0x01, 0x02, 0x03 });
+                    Path.Combine(outputDirectory.FullName, "IThing.cs"),
+                    new byte[] { 0x01, 0x02, 0x03 });
 
-                var nestedDirectory = invalidOutputDirectory.CreateSubdirectory("preserve");
+                var nestedDirectory = outputDirectory.CreateSubdirectory("preserve");
 
                 await File.WriteAllBytesAsync(
-                    Path.Combine(nestedDirectory.FullName, "keep.bin"), new byte[] { 0x04, 0x05, 0x06 });
+                    Path.Combine(nestedDirectory.FullName, "keep.bin"),
+                    new byte[] { 0x04, 0x05, 0x06 });
 
-                expectedSnapshot =
-                    await GeneratorSetupFixture.QueryDirectorySnapshotAsync(
-                        invalidOutputDirectory);
+                expectedSnapshot = await GeneratorSetupFixture.QueryDirectorySnapshotAsync(outputDirectory);
             }
 
-            var invalidReaderResult = XmiLoadingTestFixture.ReadFunctionalData();
-            var functionalData = XmiLoadingTestFixture.QueryFunctionalDataPackage(invalidReaderResult);
+            var xmiReaderResult = XmiLoadingTestFixture.ReadFunctionalData();
+            var functionalData = XmiLoadingTestFixture.QueryFunctionalDataPackage(xmiReaderResult);
 
-            var thing = functionalData.PackagedElement
+            var classes = functionalData.PackagedElement
                 .OfType<IClass>()
-                .Single(umlClass => umlClass.Name == "Thing");
+                .ToDictionary(umlClass => umlClass.Name, StringComparer.Ordinal);
 
-            var idProperty = thing.OwnedAttribute
-                .Single(property => property.Name == "id");
+            var generator = new UmlPocoGenerator();
 
-            idProperty.Type = null!;
+            switch (failure)
+            {
+                case GeneratorSetupFixture.ClassPreflightFailure.InvalidIdentifier:
+                    classes["Thing"].Name = "Invalid-Thing";
+                    break;
 
-            var invalidGenerator = new UmlPocoGenerator();
+                case GeneratorSetupFixture.ClassPreflightFailure.InvalidRenderedSyntax:
+                    generator.Templates["poco-class-uml-template"] =
+                        (_, _) => "namespace Mycelium.SDK\r\n{";
 
-            await Assert.ThatAsync(
-                () => invalidGenerator.GenerateAsync(invalidReaderResult, invalidOutputDirectory),
-                Throws.TypeOf<InvalidOperationException>());
+                    break;
 
-            invalidOutputDirectory.Refresh();
+                case GeneratorSetupFixture.ClassPreflightFailure.DuplicateFileName:
+                    GeneratorSetupFixture.RegisterPostFirstRenderMutation(
+                        generator,
+                        "poco-interface-uml-template",
+                        () => classes["Review"].Name = "User");
+
+                    break;
+
+                case GeneratorSetupFixture.ClassPreflightFailure.InvalidModelReference:
+                    classes["Thing"].OwnedAttribute
+                        .Single(property => property.Name == "id")
+                        .Type = null!;
+
+                    break;
+
+                case GeneratorSetupFixture.ClassPreflightFailure.UnexpectedManifest:
+                    GeneratorSetupFixture.RegisterPostFirstRenderMutation(
+                        generator,
+                        "poco-interface-uml-template",
+                        () => classes["Review"].Name = "UnexpectedReview");
+
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(
+                        nameof(failure),
+                        failure,
+                        "Unsupported POCO preflight failure.");
+            }
+
+            if (failure == GeneratorSetupFixture.ClassPreflightFailure.InvalidIdentifier)
+            {
+                await Assert.ThatAsync(
+                    () => generator.GenerateAsync(xmiReaderResult, outputDirectory),
+                    Throws.TypeOf<ArgumentException>());
+            }
+            else
+            {
+                var expectedMessage = failure switch
+                {
+                    GeneratorSetupFixture.ClassPreflightFailure.InvalidRenderedSyntax =>
+                        "invalid C#",
+
+                    GeneratorSetupFixture.ClassPreflightFailure.DuplicateFileName =>
+                        "POCO generation produced duplicate filename",
+
+                    GeneratorSetupFixture.ClassPreflightFailure.InvalidModelReference =>
+                        "no resolved type",
+
+                    GeneratorSetupFixture.ClassPreflightFailure.UnexpectedManifest =>
+                        "POCO generation produced an unexpected manifest",
+
+                    _ => throw new ArgumentOutOfRangeException(
+                        nameof(failure),
+                        failure,
+                        "Unsupported POCO preflight failure.")
+                };
+
+                await Assert.ThatAsync(
+                    () => generator.GenerateAsync(xmiReaderResult, outputDirectory),
+                    Throws.TypeOf<InvalidOperationException>()
+                        .With.Message.Contains(expectedMessage));
+            }
+
+            outputDirectory.Refresh();
 
             if (!destinationExists)
             {
                 Assert.That(
-                    invalidOutputDirectory.Exists,
+                    outputDirectory.Exists,
                     Is.False,
-                    "Model validation failure created the absent POCO destination.");
+                    $"Preflight failure '{failure}' created the absent POCO destination.");
 
                 return;
             }
 
             Assert.That(
-                invalidOutputDirectory.Exists,
+                outputDirectory.Exists,
                 Is.True,
-                "Model validation failure removed the existing POCO destination.");
+                $"Preflight failure '{failure}' removed the existing POCO destination.");
 
-            await GeneratorSetupFixture.AssertDirectoryMatchesSnapshotAsync(invalidOutputDirectory, expectedSnapshot);
+            await GeneratorSetupFixture.AssertDirectoryMatchesSnapshotAsync(outputDirectory, expectedSnapshot);
+        }
+
+        [Test]
+        public async Task Verify_that_generated_POCOs_use_the_required_file_format()
+        {
+            foreach (var fileName in QueryCSharpFileNames(this.stagingDirectory))
+            {
+                var bytes = await File.ReadAllBytesAsync(
+                    Path.Combine(this.stagingDirectory.FullName, fileName));
+
+                var hasUtf8Bom =
+                    bytes.Length >= 3
+                    && bytes[0] == 0xEF
+                    && bytes[1] == 0xBB
+                    && bytes[2] == 0xBF;
+
+                var source = StrictUtf8WithoutBom.GetString(bytes);
+
+                var sourceWithoutCrLf = source.Replace(
+                    "\r\n",
+                    string.Empty,
+                    StringComparison.Ordinal);
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(
+                        hasUtf8Bom,
+                        Is.False,
+                        $"Generated POCO '{fileName}' contains a UTF-8 byte-order mark.");
+
+                    Assert.That(
+                        source,
+                        Does.Contain("\r\n"),
+                        $"Generated POCO '{fileName}' contains no CRLF line endings.");
+
+                    Assert.That(
+                        sourceWithoutCrLf,
+                        Does.Not.Contain("\r"),
+                        $"Generated POCO '{fileName}' contains a standalone carriage return.");
+
+                    Assert.That(
+                        sourceWithoutCrLf,
+                        Does.Not.Contain("\n"),
+                        $"Generated POCO '{fileName}' contains a standalone line feed.");
+                }
+            }
         }
 
         [TestCaseSource(nameof(RepresentativeInterfaceNames))]
         [Category("Expected")]
         public async Task Verify_that_representative_POCO_interface_matches_reviewed_golden_file(string className)
         {
-            var generated = await this.generator.GeneratePocoInterfaceAsync(this.stagingDirectory, this.classes[className]);
-            var expected = await File.ReadAllTextAsync(Path.Combine(this.expectedDirectory.FullName, $"I{className}.cs"));
+            var fileName = $"I{className}.cs";
+
+            await this.generator.GeneratePocoInterfaceAsync(this.stagingDirectory, this.classes[className]);
+
+            var expectedBytes = await File.ReadAllBytesAsync(
+                Path.Combine(this.expectedDirectory.FullName, fileName));
+
+            var generatedBytes = await File.ReadAllBytesAsync(
+                Path.Combine(this.stagingDirectory.FullName, fileName));
 
             Assert.That(
-                generated,
-                Is.EqualTo(expected),
-                $"Generated interface 'I{className}.cs' differs from its reviewed golden file.");
+                generatedBytes,
+                Is.EqualTo(expectedBytes),
+                $"Generated interface '{fileName}' differs byte-for-byte from its reviewed golden file.");
         }
 
         [TestCaseSource(nameof(RepresentativeConcreteClassNames))]
         [Category("Expected")]
         public async Task Verify_that_representative_POCO_class_matches_reviewed_golden_file(string className)
         {
-            var generated = await this.generator.GeneratePocoClassAsync(this.stagingDirectory, this.classes[className]);
-            var expected = await File.ReadAllTextAsync(Path.Combine(this.expectedDirectory.FullName, $"{className}.cs"));
+            var fileName = $"{className}.cs";
+
+            await this.generator.GeneratePocoClassAsync(this.stagingDirectory, this.classes[className]);
+
+            var expectedBytes = await File.ReadAllBytesAsync(
+                Path.Combine(this.expectedDirectory.FullName, fileName));
+
+            var generatedBytes = await File.ReadAllBytesAsync(
+                Path.Combine(this.stagingDirectory.FullName, fileName));
 
             Assert.That(
-                generated,
-                Is.EqualTo(expected),
-                $"Generated class '{className}.cs' differs from its reviewed golden file.");
+                generatedBytes,
+                Is.EqualTo(expectedBytes),
+                $"Generated class '{fileName}' differs byte-for-byte from its reviewed golden file.");
         }
 
         private static string[] QueryCSharpFileNames(DirectoryInfo directory)

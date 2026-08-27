@@ -9,9 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
-    using System;
-    using System.Linq;
-
     using HandlebarsDotNet;
     using HandlebarsDotNet.Helpers.Utils;
 
@@ -31,7 +28,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// The Handlebars environment in which the enumeration helpers are registered.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="handlebars"/> is <see langword="null" />.
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
         /// </exception>
         public static void RegisterEnumerationHelper(this IHandlebars handlebars)
         {
@@ -66,8 +63,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// The UML enumeration to inspect.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> when the DTO namespace should be emitted;
-        /// otherwise, <see langword="false"/>.
+        /// <see langword="true" /> when the DTO namespace should be emitted;
+        /// otherwise, <see langword="false" />.
         /// </returns>
         private static bool RequiresDtoNamespace(IEnumeration enumeration)
         {
@@ -82,8 +79,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// The UML element whose documentation is inspected.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> when a documentation reference is present;
-        /// otherwise, <see langword="false"/>.
+        /// <see langword="true" /> when a documentation reference is present;
+        /// otherwise, <see langword="false" />.
         /// </returns>
         private static bool ContainsDocumentationReference(IElement element)
         {

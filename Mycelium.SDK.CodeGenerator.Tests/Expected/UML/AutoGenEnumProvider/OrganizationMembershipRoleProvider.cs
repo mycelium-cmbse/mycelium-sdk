@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="ActivationStatusProvider.cs" company="Starion Group S.A.">
+//  <copyright file="OrganizationMembershipRoleProvider.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -19,57 +19,47 @@ namespace Mycelium.SDK.Extensions
     using Mycelium.SDK;
 
     /// <summary>
-    /// Provides exact XMI-literal conversions for <see cref="ActivationStatus" />.
+    /// Provides exact XMI-literal conversions for <see cref="OrganizationMembershipRole" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public static partial class ActivationStatusProvider
+    public static partial class OrganizationMembershipRoleProvider
     {
         /// <summary>
-        /// Parses an exact XMI literal as a <see cref="ActivationStatus" /> value.
+        /// Parses an exact XMI literal as a <see cref="OrganizationMembershipRole" /> value.
         /// </summary>
         /// <param name="value">
         /// The case-sensitive XMI literal to parse.
         /// </param>
         /// <returns>
-        /// The corresponding <see cref="ActivationStatus" /> value.
+        /// The corresponding <see cref="OrganizationMembershipRole" /> value.
         /// </returns>
         /// <exception cref="ArgumentException">
         /// Thrown when <paramref name="value" /> is not an exact XMI literal.
         /// </exception>
-        public static ActivationStatus Parse(ReadOnlySpan<char> value)
+        public static OrganizationMembershipRole Parse(ReadOnlySpan<char> value)
         {
-            if (value.Equals("Active".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Administrator".AsSpan(), StringComparison.Ordinal))
             {
-                return ActivationStatus.Active;
+                return OrganizationMembershipRole.Administrator;
             }
 
-            if (value.Equals("Pending".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Member".AsSpan(), StringComparison.Ordinal))
             {
-                return ActivationStatus.Pending;
+                return OrganizationMembershipRole.Member;
             }
 
-            if (value.Equals("Suspended".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Owner".AsSpan(), StringComparison.Ordinal))
             {
-                return ActivationStatus.Suspended;
-            }
-
-            if (value.Equals("Archived".AsSpan(), StringComparison.Ordinal))
-            {
-                return ActivationStatus.Archived;
-            }
-
-            if (value.Equals("Deleted".AsSpan(), StringComparison.Ordinal))
-            {
-                return ActivationStatus.Deleted;
+                return OrganizationMembershipRole.Owner;
             }
 
             throw new ArgumentException(
-            $"'{new string(value)}' is not a valid ActivationStatus literal.",
+            $"'{new string(value)}' is not a valid OrganizationMembershipRole literal.",
             nameof(value));
         }
 
         /// <summary>
-        /// Tries to parse an exact XMI literal as a <see cref="ActivationStatus" /> value.
+        /// Tries to parse an exact XMI literal as a <see cref="OrganizationMembershipRole" /> value.
         /// </summary>
         /// <param name="value">
         /// The case-sensitive XMI literal to parse.
@@ -80,35 +70,23 @@ namespace Mycelium.SDK.Extensions
         /// <returns>
         /// <see langword="true" /> when parsing succeeds; otherwise, <see langword="false" />.
         /// </returns>
-        public static bool TryParse(ReadOnlySpan<char> value, out ActivationStatus result)
+        public static bool TryParse(ReadOnlySpan<char> value, out OrganizationMembershipRole result)
         {
-            if (value.Equals("Active".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Administrator".AsSpan(), StringComparison.Ordinal))
             {
-                result = ActivationStatus.Active;
+                result = OrganizationMembershipRole.Administrator;
                 return true;
             }
 
-            if (value.Equals("Pending".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Member".AsSpan(), StringComparison.Ordinal))
             {
-                result = ActivationStatus.Pending;
+                result = OrganizationMembershipRole.Member;
                 return true;
             }
 
-            if (value.Equals("Suspended".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Owner".AsSpan(), StringComparison.Ordinal))
             {
-                result = ActivationStatus.Suspended;
-                return true;
-            }
-
-            if (value.Equals("Archived".AsSpan(), StringComparison.Ordinal))
-            {
-                result = ActivationStatus.Archived;
-                return true;
-            }
-
-            if (value.Equals("Deleted".AsSpan(), StringComparison.Ordinal))
-            {
-                result = ActivationStatus.Deleted;
+                result = OrganizationMembershipRole.Owner;
                 return true;
             }
 
@@ -117,7 +95,7 @@ namespace Mycelium.SDK.Extensions
         }
 
         /// <summary>
-        /// Formats a <see cref="ActivationStatus" /> value as its exact XMI literal.
+        /// Formats a <see cref="OrganizationMembershipRole" /> value as its exact XMI literal.
         /// </summary>
         /// <param name="value">
         /// The enumeration value to format.
@@ -128,19 +106,17 @@ namespace Mycelium.SDK.Extensions
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when <paramref name="value" /> is not a defined enumeration value.
         /// </exception>
-        public static string Format(ActivationStatus value)
+        public static string Format(OrganizationMembershipRole value)
         {
             return value switch
             {
-                ActivationStatus.Active => "Active",
-                ActivationStatus.Pending => "Pending",
-                ActivationStatus.Suspended => "Suspended",
-                ActivationStatus.Archived => "Archived",
-                ActivationStatus.Deleted => "Deleted",
+                OrganizationMembershipRole.Administrator => "Administrator",
+                OrganizationMembershipRole.Member => "Member",
+                OrganizationMembershipRole.Owner => "Owner",
                 _ => throw new ArgumentOutOfRangeException(
                 nameof(value),
                 value,
-                $"'{value}' is not a defined ActivationStatus value.")
+                $"'{value}' is not a defined OrganizationMembershipRole value.")
             };
         }
     }

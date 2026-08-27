@@ -1,9 +1,9 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="ProjectMember.cs" company="Starion Group S.A.">
-//
+// 
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-//
+// 
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
@@ -32,20 +32,19 @@ namespace Mycelium.SDK.POCO
         private bool ComputeIsOutsideCollaborator()
         {
             var user = this.User
-                ?? throw new InvalidOperationException("A project member must reference a user.");
+                       ?? throw new InvalidOperationException("A project member must reference a user.");
 
             var project = this.IsPartOf
-                ?? throw new InvalidOperationException("A project member must reference a functional project.");
+                          ?? throw new InvalidOperationException("A project member must reference a functional project.");
 
             var owningOrganization = project.BelongsTo
-                ?? throw new InvalidOperationException("A functional project must reference its owning organization.");
+                                     ?? throw new InvalidOperationException("A functional project must reference its owning organization.");
 
             var organizationMemberships = user.IsPartOfOrganizations
-                ?? throw new InvalidOperationException("A user must provide its organization memberships.");
+                                          ?? throw new InvalidOperationException("A user must provide its organization memberships.");
 
-            return organizationMemberships.All(
-                membership =>
-                    membership?.Organization?.Id != owningOrganization.Id);
+            return organizationMemberships.All(membership =>
+                membership?.Organization?.Id != owningOrganization.Id);
         }
     }
 }

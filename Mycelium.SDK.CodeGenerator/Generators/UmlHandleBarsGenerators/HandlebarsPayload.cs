@@ -9,10 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-
     using uml4net.Packages;
     using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
@@ -23,7 +19,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
     public sealed class HandlebarsPayload
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="HandlebarsPayload"/> class.
+        /// Initializes a new instance of the <see cref="HandlebarsPayload" /> class.
         /// </summary>
         /// <param name="rootPackage">
         /// The root UML package selected for generation.

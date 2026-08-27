@@ -13,8 +13,6 @@ namespace Mycelium.SDK.Tests.Enumeration
     using System.Collections.Generic;
     using System.Linq;
 
-    using Mycelium.SDK;
-
     /// <summary>
     /// Verifies the complete public runtime contract of the generated enumerations.
     /// </summary>
@@ -81,28 +79,6 @@ namespace Mycelium.SDK.Tests.Enumeration
                 };
 
         [Test]
-        public void Verify_that_public_enum_inventory_matches_the_reviewed_contract()
-        {
-            var expectedTypes = LiteralNamesByEnumeration.Keys
-                .OrderBy(type => type.Name, StringComparer.Ordinal)
-                .ToArray();
-
-            var actualTypes = typeof(ActivationStatus).Assembly
-                .GetExportedTypes()
-                .Where(
-                    type => type.IsEnum
-                            && type.Namespace == EnumerationNamespace)
-                .OrderBy(type => type.Name, StringComparer.Ordinal)
-                .ToArray();
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(expectedTypes, Has.Length.EqualTo(8));
-                Assert.That(actualTypes, Is.EqualTo(expectedTypes), "The public enum set contains missing or extra types.");
-            }
-        }
-
-        [Test]
         public void Verify_that_every_enum_exposes_the_exact_reviewed_literals()
         {
             using (Assert.EnterMultipleScope())
@@ -116,6 +92,27 @@ namespace Mycelium.SDK.Tests.Enumeration
                         Is.EqualTo(contract.Value),
                         $"Enum '{contract.Key.Name}' does not expose the reviewed literal spelling, casing, and order.");
                 }
+            }
+        }
+
+        [Test]
+        public void Verify_that_public_enum_inventory_matches_the_reviewed_contract()
+        {
+            var expectedTypes = LiteralNamesByEnumeration.Keys
+                .OrderBy(type => type.Name, StringComparer.Ordinal)
+                .ToArray();
+
+            var actualTypes = typeof(ActivationStatus).Assembly
+                .GetExportedTypes()
+                .Where(type => type.IsEnum
+                               && type.Namespace == EnumerationNamespace)
+                .OrderBy(type => type.Name, StringComparer.Ordinal)
+                .ToArray();
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(expectedTypes, Has.Length.EqualTo(8));
+                Assert.That(actualTypes, Is.EqualTo(expectedTypes), "The public enum set contains missing or extra types.");
             }
         }
     }

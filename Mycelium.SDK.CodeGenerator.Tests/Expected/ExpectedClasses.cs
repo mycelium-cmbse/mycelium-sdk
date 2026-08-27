@@ -10,7 +10,6 @@
 namespace Mycelium.SDK.CodeGenerator.Tests.Expected
 {
     using System.Collections;
-    using System.Collections.Generic;
 
     /// <summary>
     /// Provides the expected abstract and concrete UML class names.

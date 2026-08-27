@@ -9,18 +9,14 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
     using System.Text;
-    using System.Threading.Tasks;
 
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
     using Mycelium.SDK.CodeGenerator.Tests.Xmi;
 
     using uml4net.SimpleClassifiers;
+    using uml4net.StructuredClassifiers;
     using uml4net.xmi.Readers;
 
     [TestFixture]
@@ -28,7 +24,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     {
         private const string TemplateName = "enumeration-uml-template";
         private static readonly string[] ExpectedKeywordFileNames = ["class.cs"];
-        private static readonly UTF8Encoding StrictUtf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+        private static readonly UTF8Encoding StrictUtf8WithoutBom = new(false, true);
 
         private DirectoryInfo committedDirectory = null!;
         private DirectoryInfo expectedDirectory = null!;
@@ -58,12 +54,63 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             if (this.stagingDirectory.Exists)
             {
-                this.stagingDirectory.Delete(recursive: true);
+                this.stagingDirectory.Delete(true);
             }
 
             var generator = new UmlEnumGenerator();
-            
+
             await generator.GenerateAsync(GeneratorSetupFixture.ResourcesDirectory, this.stagingDirectory);
+        }
+
+        [Test]
+        public async Task Verify_that_complete_staged_output_matches_committed_AutoGenEnum()
+        {
+            Assert.That(
+                this.committedDirectory.Exists,
+                Is.True,
+                "The committed SDK enum directory was not copied to the test output.");
+
+            if (!this.committedDirectory.Exists)
+            {
+                return;
+            }
+
+            var stagedFileNames = QueryRelativeFileNames(this.stagingDirectory);
+            var committedFileNames = QueryRelativeFileNames(this.committedDirectory);
+
+            Assert.That(
+                stagedFileNames,
+                Is.EqualTo(committedFileNames),
+                "The staged and committed enum manifests differ.");
+
+            foreach (var fileName in stagedFileNames)
+            {
+                var stagedBytes = await File.ReadAllBytesAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
+                var committedBytes = await File.ReadAllBytesAsync(Path.Combine(this.committedDirectory.FullName, fileName));
+
+                Assert.That(
+                    stagedBytes,
+                    Is.EqualTo(committedBytes),
+                    $"Staged enum '{fileName}' differs byte-for-byte from the committed SDK source.");
+            }
+        }
+
+        [Test]
+        public async Task Verify_that_enum_and_literal_keywords_are_escaped()
+        {
+            var outputDirectory = GeneratorSetupFixture.QueryFreshOutputDirectory("_Mycelium.SDK.KeywordAutoGenEnum");
+            var enumeration = CreateEnumeration("class", "event", "Value");
+            var generator = new UmlEnumGenerator();
+
+            var source = await generator.GenerateEnumerationAsync(outputDirectory, enumeration);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(QueryRelativeFileNames(outputDirectory), Is.EqualTo(ExpectedKeywordFileNames));
+                Assert.That(source, Does.Contain("enum @class"));
+                Assert.That(source, Does.Contain("@event,"));
+                Assert.That(source, Does.Contain("Value,"));
+            }
         }
 
         [Test]
@@ -110,39 +157,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 $"Generated '{fileName}' differs byte-for-byte from its approved golden.");
         }
 
-        [Test]
-        public async Task Verify_that_complete_staged_output_matches_committed_AutoGenEnum()
-        {
-            Assert.That(
-                this.committedDirectory.Exists,
-                Is.True,
-                "The committed SDK enum directory was not copied to the test output.");
-
-            if (!this.committedDirectory.Exists)
-            {
-                return;
-            }
-
-            var stagedFileNames = QueryRelativeFileNames(this.stagingDirectory);
-            var committedFileNames = QueryRelativeFileNames(this.committedDirectory);
-
-            Assert.That(
-                stagedFileNames,
-                Is.EqualTo(committedFileNames),
-                "The staged and committed enum manifests differ.");
-
-            foreach (var fileName in stagedFileNames)
-            {
-                var stagedBytes = await File.ReadAllBytesAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
-                var committedBytes = await File.ReadAllBytesAsync(Path.Combine(this.committedDirectory.FullName, fileName));
-
-                Assert.That(
-                    stagedBytes,
-                    Is.EqualTo(committedBytes),
-                    $"Staged enum '{fileName}' differs byte-for-byte from the committed SDK source.");
-            }
-        }
-
         [TestCaseSource(typeof(ExpectedEnumerations))]
         public async Task Verify_that_generated_enumerations_use_the_required_file_format(string enumerationName)
         {
@@ -156,6 +170,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 && bytes[2] == 0xBF;
 
             var source = StrictUtf8WithoutBom.GetString(bytes);
+
             var sourceWithoutCrLf = source.Replace(
                 "\r\n",
                 string.Empty,
@@ -190,24 +205,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
         }
 
-        [Test]
-        public async Task Verify_that_enum_and_literal_keywords_are_escaped()
-        {
-            var outputDirectory = GeneratorSetupFixture.QueryFreshOutputDirectory("_Mycelium.SDK.KeywordAutoGenEnum");
-            var enumeration = CreateEnumeration("class", "event", "Value");
-            var generator = new UmlEnumGenerator();
-
-            var source = await generator.GenerateEnumerationAsync(outputDirectory, enumeration);
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(QueryRelativeFileNames(outputDirectory), Is.EqualTo(ExpectedKeywordFileNames));
-                Assert.That(source, Does.Contain("enum @class"));
-                Assert.That(source, Does.Contain("@event,"));
-                Assert.That(source, Does.Contain("Value,"));
-            }
-        }
-
         [TestCase("Invalid-Type", "Value", "InvalidType")]
         [TestCase("ValidType", "Invalid-Literal", "InvalidLiteral")]
         public async Task Verify_that_single_enum_identifier_failure_occurs_before_destination_creation(
@@ -235,13 +232,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         [TestCase(BatchPreflightFailure.InvalidEnumerationIdentifier)]
         [TestCase(BatchPreflightFailure.InvalidLiteralIdentifier)]
         [TestCase(BatchPreflightFailure.DuplicateLiteralIdentifier)]
+        [TestCase(BatchPreflightFailure.InvalidModelReference)]
         [TestCase(BatchPreflightFailure.DuplicateFileName)]
         [TestCase(BatchPreflightFailure.InvalidRenderedSyntax)]
         [TestCase(BatchPreflightFailure.UnexpectedManifest)]
         public async Task Verify_that_batch_preflight_failure_leaves_no_new_or_modified_output(BatchPreflightFailure failure)
         {
-            await AssertBatchPreflightFailureLeavesDestinationUntouched(failure, destinationExists: false);
-            await AssertBatchPreflightFailureLeavesDestinationUntouched(failure, destinationExists: true);
+            await AssertBatchPreflightFailureLeavesDestinationUntouched(failure, false);
+            await AssertBatchPreflightFailureLeavesDestinationUntouched(failure, true);
         }
 
         private static void ApplyBatchPreflightFailure(BatchPreflightFailure failure, XmiReaderResult xmiReaderResult, UmlEnumGenerator generator)
@@ -251,12 +249,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 case BatchPreflightFailure.InvalidEnumerationIdentifier:
                     QueryEnumeration(xmiReaderResult, "ReviewStatus")
                         .Name = "Review-Status";
+
                     break;
 
                 case BatchPreflightFailure.InvalidLiteralIdentifier:
                     QueryEnumeration(xmiReaderResult, "ReviewStatus")
                         .OwnedLiteral[0]
                         .Name = "Invalid-Literal";
+
                     break;
 
                 case BatchPreflightFailure.DuplicateLiteralIdentifier:
@@ -265,9 +265,27 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                     reviewStatus.OwnedLiteral[1].Name = reviewStatus.OwnedLiteral[0].Name;
                     break;
 
+                case BatchPreflightFailure.InvalidModelReference:
+                    var functionalData = XmiLoadingTestFixture.QueryFunctionalDataPackage(xmiReaderResult);
+
+                    functionalData.PackagedElement
+                        .OfType<IClass>()
+                        .Single(umlClass => umlClass.Name == "Thing")
+                        .OwnedAttribute
+                        .Single(property => property.Name == "id")
+                        .Type = null!;
+
+                    break;
+
                 case BatchPreflightFailure.DuplicateFileName:
-                    QueryEnumeration(xmiReaderResult, "ReviewStatus")
-                        .Name = "ActivationStatus";
+                    var duplicateFileNameEnumeration =
+                        QueryEnumeration(xmiReaderResult, "ReviewStatus");
+
+                    GeneratorSetupFixture.RegisterPostFirstRenderMutation(
+                        generator,
+                        TemplateName,
+                        () => duplicateFileNameEnumeration.Name = "ActivationStatus");
+
                     break;
 
                 case BatchPreflightFailure.InvalidRenderedSyntax:
@@ -275,8 +293,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                     break;
 
                 case BatchPreflightFailure.UnexpectedManifest:
-                    QueryEnumeration(xmiReaderResult, "ReviewStatus")
-                        .Name = "UnexpectedStatus";
+                    var unexpectedManifestEnumeration = QueryEnumeration(xmiReaderResult, "ReviewStatus");
+
+                    GeneratorSetupFixture.RegisterPostFirstRenderMutation(
+                        generator,
+                        TemplateName,
+                        () => unexpectedManifestEnumeration.Name = "UnexpectedStatus");
+
                     break;
 
                 default:
@@ -321,19 +344,17 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             return functionalData.PackagedElement
                 .OfType<IEnumeration>()
-                .Single(
-                    enumeration => string.Equals(
-                        enumeration.Name,
-                        enumerationName,
-                        StringComparison.Ordinal));
+                .Single(enumeration => string.Equals(
+                    enumeration.Name,
+                    enumerationName,
+                    StringComparison.Ordinal));
         }
 
         private static string[] QueryRelativeFileNames(DirectoryInfo directory)
         {
             return directory
                 .GetFiles("*", SearchOption.AllDirectories)
-                .Select(
-                    file => Path.GetRelativePath(directory.FullName, file.FullName))
+                .Select(file => Path.GetRelativePath(directory.FullName, file.FullName))
                 .OrderBy(fileName => fileName, StringComparer.Ordinal)
                 .ToArray();
         }
@@ -375,12 +396,38 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 or BatchPreflightFailure.InvalidLiteralIdentifier)
             {
                 await Assert.ThatAsync(
-                    () => generator.GenerateAsync(xmiReaderResult, outputDirectory), Throws.TypeOf<ArgumentException>());
+                    () => generator.GenerateAsync(xmiReaderResult, outputDirectory),
+                    Throws.TypeOf<ArgumentException>());
             }
             else
             {
+                var expectedMessage = failure switch
+                {
+                    BatchPreflightFailure.DuplicateLiteralIdentifier =>
+                        "duplicate C# literal identifier",
+
+                    BatchPreflightFailure.InvalidModelReference =>
+                        "no resolved type",
+
+                    BatchPreflightFailure.DuplicateFileName =>
+                        "Enumeration generation produced duplicate filename",
+
+                    BatchPreflightFailure.InvalidRenderedSyntax =>
+                        "invalid C#",
+
+                    BatchPreflightFailure.UnexpectedManifest =>
+                        "Enumeration generation produced an unexpected manifest",
+
+                    _ => throw new ArgumentOutOfRangeException(
+                        nameof(failure),
+                        failure,
+                        "Unsupported enum preflight failure.")
+                };
+
                 await Assert.ThatAsync(
-                    () => generator.GenerateAsync(xmiReaderResult, outputDirectory), Throws.TypeOf<InvalidOperationException>());
+                    () => generator.GenerateAsync(xmiReaderResult, outputDirectory),
+                    Throws.TypeOf<InvalidOperationException>()
+                        .With.Message.Contains(expectedMessage));
             }
 
             outputDirectory.Refresh();
@@ -405,6 +452,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             InvalidEnumerationIdentifier,
             InvalidLiteralIdentifier,
             DuplicateLiteralIdentifier,
+            InvalidModelReference,
             DuplicateFileName,
             InvalidRenderedSyntax,
             UnexpectedManifest

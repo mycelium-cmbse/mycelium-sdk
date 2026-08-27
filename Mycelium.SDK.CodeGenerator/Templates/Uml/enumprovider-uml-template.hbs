@@ -62,9 +62,7 @@ public static {{ #NamedElement.WriteIdentifier this }} Parse(ReadOnlySpan<char> 
     /// <returns>
     /// <see langword="true" /> when parsing succeeds; otherwise, <see langword="false" />.
     /// </returns>
-    public static bool TryParse(
-    ReadOnlySpan<char> value,
-    out {{ #NamedElement.WriteIdentifier this }} result)
+    public static bool TryParse(ReadOnlySpan<char> value, out {{ #NamedElement.WriteIdentifier this }} result)
     {
 {{ #each this.OwnedLiteral as | enumerationLiteral | }}
     if (value.Equals("{{ enumerationLiteral.Name }}".AsSpan(), StringComparison.Ordinal))

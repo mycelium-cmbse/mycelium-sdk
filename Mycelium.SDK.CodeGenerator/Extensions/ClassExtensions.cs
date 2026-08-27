@@ -81,7 +81,6 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// Thrown when the generalization hierarchy is invalid or cyclic, or when a direct or inherited
         /// property has no XMI identifier or name.
         /// </exception>
-
         public static IReadOnlyList<IProperty> QueryDtoImplementationProperties(this IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);
@@ -245,7 +244,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         {
             return !property.IsDerived && !property.IsDerivedUnion;
         }
-        
+
         /// <summary>
         /// Removes duplicate properties and orders them deterministically for generation.
         /// </summary>

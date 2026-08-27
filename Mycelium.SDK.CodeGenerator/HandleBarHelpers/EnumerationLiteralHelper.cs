@@ -9,9 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
-    using System;
-    using System.Linq;
-
     using HandlebarsDotNet;
 
     using Mycelium.SDK.CodeGenerator.Extensions;
@@ -30,7 +27,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// The Handlebars environment in which the enumeration-literal helper is registered.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="handlebars"/> is <see langword="null" />.
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
         /// </exception>
         public static void RegisterEnumerationLiteralHelper(
             this IHandlebars handlebars)

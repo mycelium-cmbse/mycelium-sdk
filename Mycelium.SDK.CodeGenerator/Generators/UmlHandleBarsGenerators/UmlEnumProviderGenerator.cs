@@ -1,19 +1,14 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="UmlEnumProviderGenerator.cs" company="Starion Group S.A.">
-//
+// 
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-//
+// 
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
 namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 {
-    using System;
-    using System.IO;
-    using System.Linq;
-    using System.Threading.Tasks;
-
     using Mycelium.SDK.CodeGenerator.Extensions;
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
 
@@ -99,6 +94,19 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             return generatedFile.Source;
         }
 
+        /// <inheritdoc />
+        protected override void RegisterHelpers()
+        {
+            this.Handlebars.RegisterEnumerationLiteralHelper();
+            this.Handlebars.RegisterNamedElementHelper();
+        }
+
+        /// <inheritdoc />
+        protected override void RegisterTemplates()
+        {
+            this.RegisterTemplate(TemplateName);
+        }
+
         /// <summary>
         /// Validates and renders one enumeration provider without writing it.
         /// </summary>
@@ -130,19 +138,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             var generatedCode = this.Templates[TemplateName](enumeration);
 
             return this.CreateGeneratedFile($"{enumerationName}Provider.cs", generatedCode);
-        }
-
-        /// <inheritdoc />
-        protected override void RegisterHelpers()
-        {
-            this.Handlebars.RegisterEnumerationLiteralHelper();
-            NamedElementHelper.RegisterNamedElementHelper(this.Handlebars);
-        }
-
-        /// <inheritdoc />
-        protected override void RegisterTemplates()
-        {
-            this.RegisterTemplate(TemplateName);
         }
     }
 }

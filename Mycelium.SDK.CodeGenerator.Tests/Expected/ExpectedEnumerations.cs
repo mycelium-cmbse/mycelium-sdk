@@ -9,10 +9,7 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Expected
 {
-    using System;
     using System.Collections;
-    using System.Collections.Generic;
-    using System.Linq;
 
     /// <summary>
     /// Provides the reviewed UML enumeration names and exact ordered literal names.
@@ -76,27 +73,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
             };
 
         /// <summary>
-        /// Returns the exact reviewed literal names for an enumeration.
-        /// </summary>
-        /// <param name="enumerationName">
-        /// The reviewed enumeration name.
-        /// </param>
-        /// <returns>
-        /// The literal names in modeled ordinal order.
-        /// </returns>
-        public static IReadOnlyList<string> QueryLiteralNames(string enumerationName)
-        {
-            ArgumentException.ThrowIfNullOrEmpty(enumerationName);
-
-            if (LiteralNamesByEnumeration.TryGetValue(enumerationName, out var literalNames))
-            {
-                return literalNames;
-            }
-
-            throw new KeyNotFoundException($"Enumeration '{enumerationName}' is not present in the reviewed inventory.");
-        }
-
-        /// <summary>
         /// Returns the expected UML enumeration names in ordinal order.
         /// </summary>
         /// <returns>
@@ -118,6 +94,27 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Returns the exact reviewed literal names for an enumeration.
+        /// </summary>
+        /// <param name="enumerationName">
+        /// The reviewed enumeration name.
+        /// </param>
+        /// <returns>
+        /// The literal names in modeled ordinal order.
+        /// </returns>
+        public static IReadOnlyList<string> QueryLiteralNames(string enumerationName)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(enumerationName);
+
+            if (LiteralNamesByEnumeration.TryGetValue(enumerationName, out var literalNames))
+            {
+                return literalNames;
+            }
+
+            throw new KeyNotFoundException($"Enumeration '{enumerationName}' is not present in the reviewed inventory.");
         }
     }
 }

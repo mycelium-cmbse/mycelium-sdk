@@ -1,22 +1,16 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="UmlEnumProviderGeneratorTestFixture.cs" company="Starion Group S.A.">
-//
+// 
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-//
+// 
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
     using System.Text;
-    using System.Threading.Tasks;
 
-    using Mycelium.SDK;
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
     using Mycelium.SDK.Extensions;
@@ -30,53 +24,53 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     {
         private const string TemplateName = "enumprovider-uml-template";
 
-        private static readonly UTF8Encoding StrictUtf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+        private static readonly UTF8Encoding StrictUtf8WithoutBom = new(false, true);
 
         private static readonly ProviderContract[] ProviderContracts =
         [
-            CreateProviderContract<ActivationStatus>(
+            CreateProviderContract(
                 nameof(ActivationStatus),
                 ActivationStatusProvider.Parse,
                 ActivationStatusProvider.TryParse,
                 ActivationStatusProvider.Format),
 
-            CreateProviderContract<CommentStatus>(
+            CreateProviderContract(
                 nameof(CommentStatus),
                 CommentStatusProvider.Parse,
                 CommentStatusProvider.TryParse,
                 CommentStatusProvider.Format),
 
-            CreateProviderContract<OrganizationMembershipRole>(
+            CreateProviderContract(
                 nameof(OrganizationMembershipRole),
                 OrganizationMembershipRoleProvider.Parse,
                 OrganizationMembershipRoleProvider.TryParse,
                 OrganizationMembershipRoleProvider.Format),
 
-            CreateProviderContract<ProjectLifecycleKind>(
+            CreateProviderContract(
                 nameof(ProjectLifecycleKind),
                 ProjectLifecycleKindProvider.Parse,
                 ProjectLifecycleKindProvider.TryParse,
                 ProjectLifecycleKindProvider.Format),
 
-            CreateProviderContract<ProjectMemberRole>(
+            CreateProviderContract(
                 nameof(ProjectMemberRole),
                 ProjectMemberRoleProvider.Parse,
                 ProjectMemberRoleProvider.TryParse,
                 ProjectMemberRoleProvider.Format),
 
-            CreateProviderContract<ProjectMode>(
+            CreateProviderContract(
                 nameof(ProjectMode),
                 ProjectModeProvider.Parse,
                 ProjectModeProvider.TryParse,
                 ProjectModeProvider.Format),
 
-            CreateProviderContract<ProjectVisibility>(
+            CreateProviderContract(
                 nameof(ProjectVisibility),
                 ProjectVisibilityProvider.Parse,
                 ProjectVisibilityProvider.TryParse,
                 ProjectVisibilityProvider.Format),
 
-            CreateProviderContract<ReviewStatus>(
+            CreateProviderContract(
                 nameof(ReviewStatus),
                 ReviewStatusProvider.Parse,
                 ReviewStatusProvider.TryParse,
@@ -110,6 +104,155 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             var generator = new UmlEnumProviderGenerator();
 
             await generator.GenerateAsync(GeneratorSetupFixture.ResourcesDirectory, this.stagingDirectory);
+        }
+
+        [Test]
+        public async Task Verify_that_complete_staged_output_matches_committed_providers()
+        {
+            Assert.That(
+                this.committedDirectory.Exists,
+                Is.True,
+                "The committed enumeration-provider directory was not copied to the test output.");
+
+            if (!this.committedDirectory.Exists)
+            {
+                return;
+            }
+
+            var stagedFileNames = QueryRelativeFileNames(this.stagingDirectory);
+            var committedFileNames = QueryRelativeFileNames(this.committedDirectory);
+
+            Assert.That(
+                stagedFileNames,
+                Is.EqualTo(committedFileNames),
+                "The staged and committed provider manifests differ.");
+
+            foreach (var fileName in stagedFileNames)
+            {
+                var stagedBytes = await File.ReadAllBytesAsync(
+                    Path.Combine(this.stagingDirectory.FullName, fileName));
+
+                var committedBytes = await File.ReadAllBytesAsync(
+                    Path.Combine(this.committedDirectory.FullName, fileName));
+
+                Assert.That(
+                    stagedBytes,
+                    Is.EqualTo(committedBytes),
+                    $"Staged provider '{fileName}' differs byte-for-byte from the committed source.");
+            }
+        }
+
+        [Test]
+        public void Verify_that_every_provider_rejects_incorrect_literal_casing()
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var provider in ProviderContracts)
+                {
+                    foreach (var literal in provider.Literals)
+                    {
+                        var incorrectCase =
+                            char.ToLowerInvariant(literal.XmiLiteral[0])
+                            + literal.XmiLiteral[1..];
+
+                        Assert.That(
+                            () => provider.Parse(incorrectCase.AsSpan()),
+                            Throws.TypeOf<ArgumentException>(),
+                            $"{provider.EnumerationName}.Parse accepted '{incorrectCase}'.");
+
+                        var parsedSuccessfully = provider.TryParse(
+                            incorrectCase.AsSpan(),
+                            out var result);
+
+                        Assert.That(
+                            parsedSuccessfully,
+                            Is.False,
+                            $"{provider.EnumerationName}.TryParse accepted '{incorrectCase}'.");
+
+                        Assert.That(
+                            result,
+                            Is.EqualTo(Activator.CreateInstance(provider.EnumerationType)),
+                            $"{provider.EnumerationName}.TryParse did not return its default value.");
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void Verify_that_every_provider_round_trips_exact_Xmi_literals()
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var provider in ProviderContracts)
+                {
+                    foreach (var literal in provider.Literals)
+                    {
+                        var parsed = provider.Parse(literal.XmiLiteral.AsSpan());
+
+                        Assert.That(
+                            parsed,
+                            Is.EqualTo(literal.Value),
+                            $"{provider.EnumerationName} did not parse '{literal.XmiLiteral}'.");
+
+                        var parsedSuccessfully = provider.TryParse(
+                            literal.XmiLiteral.AsSpan(),
+                            out var tryParseResult);
+
+                        Assert.That(
+                            parsedSuccessfully,
+                            Is.True,
+                            $"{provider.EnumerationName}.TryParse rejected '{literal.XmiLiteral}'.");
+
+                        Assert.That(
+                            tryParseResult,
+                            Is.EqualTo(literal.Value),
+                            $"{provider.EnumerationName}.TryParse returned the wrong value.");
+
+                        Assert.That(
+                            provider.Format(literal.Value),
+                            Is.EqualTo(literal.XmiLiteral),
+                            $"{provider.EnumerationName}.Format changed the XMI literal.");
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void Verify_that_every_provider_uses_the_required_failure_contract()
+        {
+            const string UnknownLiteral = "NotAnXmiLiteral";
+
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var provider in ProviderContracts)
+                {
+                    Assert.That(
+                        () => provider.Parse(UnknownLiteral.AsSpan()),
+                        Throws.TypeOf<ArgumentException>(),
+                        $"{provider.EnumerationName}.Parse accepted an unknown literal.");
+
+                    var parsedSuccessfully = provider.TryParse(
+                        UnknownLiteral.AsSpan(),
+                        out var result);
+
+                    Assert.That(
+                        parsedSuccessfully,
+                        Is.False,
+                        $"{provider.EnumerationName}.TryParse accepted an unknown literal.");
+
+                    Assert.That(
+                        result,
+                        Is.EqualTo(Activator.CreateInstance(provider.EnumerationType)),
+                        $"{provider.EnumerationName}.TryParse did not return its default value.");
+
+                    var undefinedValue = Enum.ToObject(provider.EnumerationType, int.MaxValue);
+
+                    Assert.That(
+                        () => provider.Format(undefinedValue),
+                        Throws.TypeOf<ArgumentOutOfRangeException>(),
+                        $"{provider.EnumerationName}.Format accepted an undefined value.");
+                }
+            }
         }
 
         [Test]
@@ -165,42 +308,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 generatedBytes,
                 Is.EqualTo(expectedBytes),
                 $"Generated provider '{fileName}' differs byte-for-byte from its approved golden.");
-        }
-
-        [Test]
-        public async Task Verify_that_complete_staged_output_matches_committed_providers()
-        {
-            Assert.That(
-                this.committedDirectory.Exists,
-                Is.True,
-                "The committed enumeration-provider directory was not copied to the test output.");
-
-            if (!this.committedDirectory.Exists)
-            {
-                return;
-            }
-
-            var stagedFileNames = QueryRelativeFileNames(this.stagingDirectory);
-            var committedFileNames = QueryRelativeFileNames(this.committedDirectory);
-
-            Assert.That(
-                stagedFileNames,
-                Is.EqualTo(committedFileNames),
-                "The staged and committed provider manifests differ.");
-
-            foreach (var fileName in stagedFileNames)
-            {
-                var stagedBytes = await File.ReadAllBytesAsync(
-                    Path.Combine(this.stagingDirectory.FullName, fileName));
-
-                var committedBytes = await File.ReadAllBytesAsync(
-                    Path.Combine(this.committedDirectory.FullName, fileName));
-
-                Assert.That(
-                    stagedBytes,
-                    Is.EqualTo(committedBytes),
-                    $"Staged provider '{fileName}' differs byte-for-byte from the committed source.");
-            }
         }
 
         [TestCaseSource(typeof(ExpectedEnumerations))]
@@ -262,119 +369,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
         }
 
-        [Test]
-        public void Verify_that_every_provider_round_trips_exact_Xmi_literals()
-        {
-            using (Assert.EnterMultipleScope())
-            {
-                foreach (var provider in ProviderContracts)
-                {
-                    foreach (var literal in provider.Literals)
-                    {
-                        var parsed = provider.Parse(literal.XmiLiteral.AsSpan());
-
-                        Assert.That(
-                            parsed,
-                            Is.EqualTo(literal.Value),
-                            $"{provider.EnumerationName} did not parse '{literal.XmiLiteral}'.");
-
-                        var parsedSuccessfully = provider.TryParse(
-                            literal.XmiLiteral.AsSpan(),
-                            out var tryParseResult);
-
-                        Assert.That(
-                            parsedSuccessfully,
-                            Is.True,
-                            $"{provider.EnumerationName}.TryParse rejected '{literal.XmiLiteral}'.");
-
-                        Assert.That(
-                            tryParseResult,
-                            Is.EqualTo(literal.Value),
-                            $"{provider.EnumerationName}.TryParse returned the wrong value.");
-
-                        Assert.That(
-                            provider.Format(literal.Value),
-                            Is.EqualTo(literal.XmiLiteral),
-                            $"{provider.EnumerationName}.Format changed the XMI literal.");
-                    }
-                }
-            }
-        }
-
-        [Test]
-        public void Verify_that_every_provider_rejects_incorrect_literal_casing()
-        {
-            using (Assert.EnterMultipleScope())
-            {
-                foreach (var provider in ProviderContracts)
-                {
-                    foreach (var literal in provider.Literals)
-                    {
-                        var incorrectCase =
-                            char.ToLowerInvariant(literal.XmiLiteral[0])
-                            + literal.XmiLiteral[1..];
-
-                        Assert.That(
-                            () => provider.Parse(incorrectCase.AsSpan()),
-                            Throws.TypeOf<ArgumentException>(),
-                            $"{provider.EnumerationName}.Parse accepted '{incorrectCase}'.");
-
-                        var parsedSuccessfully = provider.TryParse(
-                            incorrectCase.AsSpan(),
-                            out var result);
-
-                        Assert.That(
-                            parsedSuccessfully,
-                            Is.False,
-                            $"{provider.EnumerationName}.TryParse accepted '{incorrectCase}'.");
-
-                        Assert.That(
-                            result,
-                            Is.EqualTo(Activator.CreateInstance(provider.EnumerationType)),
-                            $"{provider.EnumerationName}.TryParse did not return its default value.");
-                    }
-                }
-            }
-        }
-
-        [Test]
-        public void Verify_that_every_provider_uses_the_required_failure_contract()
-        {
-            const string UnknownLiteral = "NotAnXmiLiteral";
-
-            using (Assert.EnterMultipleScope())
-            {
-                foreach (var provider in ProviderContracts)
-                {
-                    Assert.That(
-                        () => provider.Parse(UnknownLiteral.AsSpan()),
-                        Throws.TypeOf<ArgumentException>(),
-                        $"{provider.EnumerationName}.Parse accepted an unknown literal.");
-
-                    var parsedSuccessfully = provider.TryParse(
-                        UnknownLiteral.AsSpan(),
-                        out var result);
-
-                    Assert.That(
-                        parsedSuccessfully,
-                        Is.False,
-                        $"{provider.EnumerationName}.TryParse accepted an unknown literal.");
-
-                    Assert.That(
-                        result,
-                        Is.EqualTo(Activator.CreateInstance(provider.EnumerationType)),
-                        $"{provider.EnumerationName}.TryParse did not return its default value.");
-
-                    var undefinedValue = Enum.ToObject(provider.EnumerationType, int.MaxValue);
-
-                    Assert.That(
-                        () => provider.Format(undefinedValue),
-                        Throws.TypeOf<ArgumentOutOfRangeException>(),
-                        $"{provider.EnumerationName}.Format accepted an undefined value.");
-                }
-            }
-        }
-
         [TestCase(ProviderPreflightFailure.InvalidEnumerationIdentifier)]
         [TestCase(ProviderPreflightFailure.InvalidLiteralIdentifier)]
         [TestCase(ProviderPreflightFailure.DuplicateLiteralIdentifier)]
@@ -387,11 +381,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         {
             await AssertProviderPreflightFailureLeavesDestinationUntouched(
                 failure,
-                destinationExists: false);
+                false);
 
             await AssertProviderPreflightFailureLeavesDestinationUntouched(
                 failure,
-                destinationExists: true);
+                true);
         }
 
         private static void ApplyProviderPreflightFailure(
@@ -404,12 +398,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 case ProviderPreflightFailure.InvalidEnumerationIdentifier:
                     QueryEnumeration(xmiReaderResult, "ReviewStatus")
                         .Name = "Review-Status";
+
                     break;
 
                 case ProviderPreflightFailure.InvalidLiteralIdentifier:
                     QueryEnumeration(xmiReaderResult, "ReviewStatus")
                         .OwnedLiteral[0]
                         .Name = "Invalid-Literal";
+
                     break;
 
                 case ProviderPreflightFailure.DuplicateLiteralIdentifier:
@@ -427,11 +423,17 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                         .OwnedAttribute
                         .Single(property => property.Name == "id")
                         .Type = null!;
+
                     break;
 
                 case ProviderPreflightFailure.DuplicateFileName:
-                    QueryEnumeration(xmiReaderResult, "ReviewStatus")
-                        .Name = "ActivationStatus";
+                    var duplicateFileNameEnumeration = QueryEnumeration(xmiReaderResult, "ReviewStatus");
+
+                    GeneratorSetupFixture.RegisterPostFirstRenderMutation(
+                        generator,
+                        TemplateName,
+                        () => duplicateFileNameEnumeration.Name = "ActivationStatus");
+
                     break;
 
                 case ProviderPreflightFailure.InvalidRenderedSyntax:
@@ -439,8 +441,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                     break;
 
                 case ProviderPreflightFailure.UnexpectedManifest:
-                    QueryEnumeration(xmiReaderResult, "ReviewStatus")
-                        .Name = "UnexpectedStatus";
+                    var unexpectedManifestEnumeration = QueryEnumeration(xmiReaderResult, "ReviewStatus");
+
+                    GeneratorSetupFixture.RegisterPostFirstRenderMutation(
+                        generator,
+                        TemplateName,
+                        () => unexpectedManifestEnumeration.Name = "UnexpectedStatus");
+
                     break;
 
                 default:
@@ -460,9 +467,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         {
             var literals = ExpectedEnumerations
                 .QueryLiteralNames(enumerationName)
-                .Select(
-                    xmiLiteral =>
-                        new LiteralContract(xmiLiteral, Enum.Parse<TEnum>(xmiLiteral, ignoreCase: false)))
+                .Select(xmiLiteral =>
+                    new LiteralContract(xmiLiteral, Enum.Parse<TEnum>(xmiLiteral, false)))
                 .ToArray();
 
             return new ProviderContract(
@@ -470,7 +476,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 enumerationName,
                 literals,
                 value => parse(value),
-                (ReadOnlySpan<char> value, out object result) =>
+                (value, out result) =>
                 {
                     var parsedSuccessfully = tryParse(value, out var typedResult);
 
@@ -495,19 +501,17 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             return functionalData.PackagedElement
                 .OfType<IEnumeration>()
-                .Single(
-                    enumeration => string.Equals(
-                        enumeration.Name,
-                        enumerationName,
-                        StringComparison.Ordinal));
+                .Single(enumeration => string.Equals(
+                    enumeration.Name,
+                    enumerationName,
+                    StringComparison.Ordinal));
         }
 
         private static string[] QueryRelativeFileNames(DirectoryInfo directory)
         {
             return directory
                 .GetFiles("*", SearchOption.AllDirectories)
-                .Select(
-                    file => Path.GetRelativePath(directory.FullName, file.FullName))
+                .Select(file => Path.GetRelativePath(directory.FullName, file.FullName))
                 .OrderBy(fileName => fileName, StringComparer.Ordinal)
                 .ToArray();
         }
@@ -556,11 +560,35 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
             else
             {
+                var expectedMessage = failure switch
+                {
+                    ProviderPreflightFailure.DuplicateLiteralIdentifier =>
+                        "duplicate C# literal identifier",
+
+                    ProviderPreflightFailure.InvalidModelReference =>
+                        "no resolved type",
+
+                    ProviderPreflightFailure.DuplicateFileName =>
+                        "Enumeration provider generation produced duplicate filename",
+
+                    ProviderPreflightFailure.InvalidRenderedSyntax =>
+                        "invalid C#",
+
+                    ProviderPreflightFailure.UnexpectedManifest =>
+                        "Enumeration provider generation produced an unexpected manifest",
+
+                    _ => throw new ArgumentOutOfRangeException(
+                        nameof(failure),
+                        failure,
+                        "Unsupported enumeration-provider preflight failure.")
+                };
+
                 await Assert.ThatAsync(
                     () => generator.GenerateAsync(
                         xmiReaderResult,
                         outputDirectory),
-                    Throws.TypeOf<InvalidOperationException>());
+                    Throws.TypeOf<InvalidOperationException>()
+                        .With.Message.Contains(expectedMessage));
             }
 
             outputDirectory.Refresh();

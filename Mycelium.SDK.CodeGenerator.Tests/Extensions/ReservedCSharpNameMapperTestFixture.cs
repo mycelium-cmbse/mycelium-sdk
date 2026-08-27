@@ -17,6 +17,26 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
     [TestFixture]
     public class ReservedCSharpNameMapperTestFixture
     {
+        [Test]
+        public void Verify_that_Map_rejects_null_and_empty_input()
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(() => ReservedCSharpNameMapper.Map(null), Throws.ArgumentNullException);
+                Assert.That(() => ReservedCSharpNameMapper.Map(string.Empty), Throws.TypeOf<ArgumentException>());
+            }
+        }
+
+        [Test]
+        public void Verify_that_QueryIsReserved_rejects_null_and_empty_input()
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(() => ReservedCSharpNameMapper.QueryIsReserved(null), Throws.ArgumentNullException);
+                Assert.That(() => ReservedCSharpNameMapper.QueryIsReserved(string.Empty), Throws.TypeOf<ArgumentException>());
+            }
+        }
+
         [TestCase("ProjectVisibility")]
         [TestCase("ChangesRequested")]
         [TestCase("_")]
@@ -52,16 +72,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             }
         }
 
-        [Test]
-        public void Verify_that_Map_rejects_null_and_empty_input()
-        {
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(() => ReservedCSharpNameMapper.Map(null), Throws.ArgumentNullException);
-                Assert.That(() => ReservedCSharpNameMapper.Map(string.Empty), Throws.TypeOf<ArgumentException>());
-            }
-        }
-
         [TestCase("class", true)]
         [TestCase("event", true)]
         [TestCase("record", false)]
@@ -69,16 +79,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         public void Verify_that_QueryIsReserved_identifies_reserved_keywords(string identifier, bool expected)
         {
             Assert.That(ReservedCSharpNameMapper.QueryIsReserved(identifier), Is.EqualTo(expected));
-        }
-
-        [Test]
-        public void Verify_that_QueryIsReserved_rejects_null_and_empty_input()
-        {
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(() => ReservedCSharpNameMapper.QueryIsReserved(null), Throws.ArgumentNullException);
-                Assert.That(() => ReservedCSharpNameMapper.QueryIsReserved(string.Empty), Throws.TypeOf<ArgumentException>());
-            }
         }
     }
 }
