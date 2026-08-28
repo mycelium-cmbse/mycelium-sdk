@@ -118,8 +118,8 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// The reviewed enumeration literal names keyed by enumeration name, preserving modeled order,
         /// spelling, and casing.
         /// </summary>
-        private static readonly IReadOnlyDictionary<string, string[]> ExpectedLiteralNames =
-            new Dictionary<string, string[]>(StringComparer.Ordinal)
+        private static readonly Dictionary<string, string[]> ExpectedLiteralNames =
+            new(StringComparer.Ordinal)
             {
                 ["ActivationStatus"] =
                 [
@@ -177,8 +177,8 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <summary>
         /// The reviewed C# type mappings keyed by standard or custom UML primitive type name.
         /// </summary>
-        private static readonly IReadOnlyDictionary<string, string> ExpectedPrimitiveMappings =
-            new Dictionary<string, string>(StringComparer.Ordinal)
+        private static readonly Dictionary<string, string> ExpectedPrimitiveMappings =
+            new(StringComparer.Ordinal)
             {
                 ["Boolean"] = "bool",
                 ["Integer"] = "int",
@@ -554,7 +554,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// Thrown when the class name, its generated interface identifier, or a property name cannot be
         /// represented as a legal C# identifier.
         /// </exception>
-        private static void ValidateClass(IClass umlClass, ISet<IClass> validClasses, ISet<IType> validTypes)
+        private static void ValidateClass(IClass umlClass, HashSet<IClass> validClasses, ISet<IType> validTypes)
         {
             ValidateRequiredXmiIdentifier(umlClass, $"Class '{umlClass.Name}'");
 
@@ -759,10 +759,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// end is unresolved, has an invalid type or multiplicity, is not owned by a validated class, or is
         /// not queryable through its owning class.
         /// </exception>
-        private static string ValidateAssociation(
-            IAssociation association,
-            ISet<IClass> validClasses,
-            ISet<IType> validTypes)
+        private static string ValidateAssociation(IAssociation association, HashSet<IClass> validClasses, ISet<IType> validTypes)
         {
             ValidateRequiredXmiIdentifier(association, $"Association '{association.Name}'");
 
