@@ -66,6 +66,23 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             await generator.GenerateAsync(xmiReaderResult, this.stagingDirectory);
         }
 
+        [Test]
+        [Category("Expected")]
+        public void Verify_that_golden_set_matches_representative_selection()
+        {
+            var representativeFileNames = new RepresentativeEnumerations()
+                .Select(enumerationName => $"{enumerationName}.cs")
+                .OrderBy(fileName => fileName, StringComparer.Ordinal)
+                .ToArray();
+
+            var goldenFileNames = QueryRelativeFileNames(this.expectedDirectory);
+
+            Assert.That(
+                goldenFileNames,
+                Is.EqualTo(representativeFileNames),
+                "The reviewed enum golden set must contain exactly the bounded representative selection.");
+        }
+
         [TestCaseSource(typeof(RepresentativeEnumerations))]
         [Category("Expected")]
         public async Task Verify_that_representative_enumerations_match_their_goldens_exactly(
