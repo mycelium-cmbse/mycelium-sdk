@@ -28,10 +28,11 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// <summary>
         /// The UTF-8 encoding without a byte-order mark used for generated files.
         /// </summary>
-        private static readonly Encoding Utf8WithoutBom = new UTF8Encoding(false);
+        private static readonly Encoding Utf8WithoutBom =
+            new UTF8Encoding(false);
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Generator"/> class.
+        /// Initializes a new instance of the <see cref="Generator" /> class.
         /// </summary>
         /// <param name="templateSubfolder">
         /// The optional template subdirectory.
@@ -40,13 +41,18 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         {
             var assemblyDirectory =
                 Path.GetDirectoryName(typeof(Generator).Assembly.Location)
-                ?? throw new InvalidOperationException("The code-generator assembly directory could not be resolved.");
+                ?? throw new InvalidOperationException(
+                    "The code-generator assembly directory could not be resolved.");
 
-            this.TemplateFolderPath = Path.Combine(assemblyDirectory, "Templates");
+            this.TemplateFolderPath =
+                Path.Combine(assemblyDirectory, "Templates");
 
             if (!string.IsNullOrWhiteSpace(templateSubfolder))
             {
-                this.TemplateFolderPath = Path.Combine(this.TemplateFolderPath, templateSubfolder);
+                this.TemplateFolderPath =
+                    Path.Combine(
+                        this.TemplateFolderPath,
+                        templateSubfolder);
             }
         }
 
@@ -56,35 +62,59 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         public string TemplateFolderPath { get; protected set; }
 
         /// <summary>
-        /// Formats generated C# and normalizes it for deterministic comparison.
+        /// Formats generated C# when possible and normalizes it for deterministic comparison.
         /// </summary>
         /// <param name="generatedCode">
         /// The generated C# source.
         /// </param>
         /// <returns>
-        /// The formatted C# source using CRLF line endings.
+        /// Formatted C# using CRLF line endings, or normalized rendered source when formatting
+        /// cannot process it.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="generatedCode"/> is <see langword="null" />.
+        /// Thrown when <paramref name="generatedCode" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="generatedCode"/> is empty.
+        /// Thrown when <paramref name="generatedCode" /> is empty.
         /// </exception>
         protected virtual string CodeCleanup(string generatedCode)
         {
-            ArgumentNullException.ThrowIfNullOrEmpty(generatedCode);
+            ArgumentException.ThrowIfNullOrEmpty(generatedCode);
 
-            generatedCode = generatedCode.Replace("&nbsp;", " ", StringComparison.OrdinalIgnoreCase);
-            using var workspace = new AdhocWorkspace();
+            var renderedCode = generatedCode.Replace(
+                "&nbsp;",
+                " ",
+                StringComparison.OrdinalIgnoreCase);
 
-            var syntaxTree = CSharpSyntaxTree.ParseText(generatedCode);
-            var root = syntaxTree.GetRoot();
-            var formattedRoot = Formatter.Format(root, workspace);
+            try
+            {
+                using var workspace = new AdhocWorkspace();
 
-            return formattedRoot.SyntaxTree
-                .GetText()
-                .ToString()
-                .ReplaceLineEndings("\r\n");
+                var syntaxTree =
+                    CSharpSyntaxTree.ParseText(renderedCode);
+
+                var formattedRoot =
+                    Formatter.Format(
+                        syntaxTree.GetRoot(),
+                        workspace);
+
+                return formattedRoot.SyntaxTree
+                    .GetText()
+                    .ToString()
+                    .ReplaceLineEndings("\r\n");
+            }
+            catch (ArgumentException)
+            {
+                return renderedCode.ReplaceLineEndings("\r\n");
+            }
+            catch (InvalidOperationException)
+            {
+                return renderedCode.ReplaceLineEndings("\r\n");
+            }
+            catch (NotSupportedException)
+            {
+                return renderedCode.ReplaceLineEndings("\r\n");
+            }
         }
 
         /// <summary>
@@ -103,21 +133,28 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// An awaitable task.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="generatedCode"/>, <paramref name="outputDirectory"/>, or
-        /// <paramref name="fileName"/> is <see langword="null" />.
+        /// Thrown when <paramref name="generatedCode" />, <paramref name="outputDirectory" />, or
+        /// <paramref name="fileName" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="generatedCode"/> or <paramref name="fileName"/> is empty.
+        /// Thrown when <paramref name="generatedCode" /> or <paramref name="fileName" /> is empty.
         /// </exception>
-        protected static async Task WriteAsync(string generatedCode, DirectoryInfo outputDirectory, string fileName)
+        protected static async Task WriteAsync(
+            string generatedCode,
+            DirectoryInfo outputDirectory,
+            string fileName)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(generatedCode);
             ArgumentNullException.ThrowIfNull(outputDirectory);
             ArgumentNullException.ThrowIfNullOrEmpty(fileName);
 
-            var filePath = Path.Combine(outputDirectory.FullName, fileName);
+            var filePath =
+                Path.Combine(outputDirectory.FullName, fileName);
 
-            await File.WriteAllTextAsync(filePath,generatedCode,Utf8WithoutBom);
+            await File.WriteAllTextAsync(
+                filePath,
+                generatedCode,
+                Utf8WithoutBom);
         }
 
         /// <summary>
@@ -133,15 +170,16 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// An awaitable task.
         /// </returns>
         /// <remarks>
-        /// Callers must render and validate the whole batch before calling this method: it is the point
-        /// at which the output directory comes into existence, so anything that can reject the batch has
-        /// to have run already. That ordering is what keeps generation all-or-nothing.
+        /// Callers must render the whole batch before invoking this method so generation does not
+        /// produce partial output when rendering cannot complete.
         /// </remarks>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="generatedFiles"/> or <paramref name="outputDirectory"/> is
+        /// Thrown when <paramref name="generatedFiles" /> or <paramref name="outputDirectory" /> is
         /// <see langword="null" />.
         /// </exception>
-        protected static async Task WriteAsync(IReadOnlyCollection<GeneratedFile> generatedFiles, DirectoryInfo outputDirectory)
+        protected static async Task WriteAsync(
+            IReadOnlyCollection<GeneratedFile> generatedFiles,
+            DirectoryInfo outputDirectory)
         {
             ArgumentNullException.ThrowIfNull(generatedFiles);
             ArgumentNullException.ThrowIfNull(outputDirectory);
@@ -150,7 +188,10 @@ namespace Mycelium.SDK.CodeGenerator.Generators
 
             foreach (var generatedFile in generatedFiles)
             {
-                await WriteAsync(generatedFile.Source, outputDirectory, generatedFile.FileName);
+                await WriteAsync(
+                    generatedFile.Source,
+                    outputDirectory,
+                    generatedFile.FileName);
             }
         }
 
@@ -164,28 +205,33 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// The artifact name used in the validation message.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="generatedFiles"/> is <see langword="null" />.
+        /// Thrown when <paramref name="generatedFiles" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="artifactName"/> is <see langword="null" /> or empty.
+        /// Thrown when <paramref name="artifactName" /> is <see langword="null" /> or empty.
         /// </exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown when multiple generated files have the same filename.
         /// </exception>
-        protected static void ThrowIfDuplicateFileNames(IReadOnlyCollection<GeneratedFile> generatedFiles, string artifactName)
+        protected static void ThrowIfDuplicateFileNames(
+            IReadOnlyCollection<GeneratedFile> generatedFiles,
+            string artifactName)
         {
             ArgumentNullException.ThrowIfNull(generatedFiles);
             ArgumentException.ThrowIfNullOrEmpty(artifactName);
 
             var duplicateFileName = generatedFiles
-                .GroupBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
+                .GroupBy(
+                    generatedFile => generatedFile.FileName,
+                    StringComparer.Ordinal)
                 .FirstOrDefault(group => group.Count() > 1)
                 ?.Key;
 
             if (duplicateFileName is not null)
             {
                 throw new InvalidOperationException(
-                    $"{artifactName} generation produced duplicate filename '{duplicateFileName}'.");
+                    $"{artifactName} generation produced duplicate filename "
+                    + $"'{duplicateFileName}'.");
             }
         }
 
@@ -196,8 +242,10 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// The generated filename.
         /// </param>
         /// <param name="Source">
-        /// The formatted generated C# source.
+        /// The formatted or normalized generated C# source.
         /// </param>
-        protected sealed record GeneratedFile(string FileName, string Source);
+        protected sealed record GeneratedFile(
+            string FileName,
+            string Source);
     }
 }

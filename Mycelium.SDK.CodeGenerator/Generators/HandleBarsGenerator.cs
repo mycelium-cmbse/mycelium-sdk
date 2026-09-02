@@ -15,7 +15,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators
     using System.Text;
 
     using HandlebarsDotNet;
-    using HandlebarsDotNet.Helpers;
 
     /// <summary>
     /// Base class for Handlebars-backed generators.
@@ -24,27 +23,22 @@ namespace Mycelium.SDK.CodeGenerator.Generators
     {
         /// <summary>
         /// Initializes a new instance of the
-        /// <see cref="HandleBarsGenerator"/> class.
+        /// <see cref="HandleBarsGenerator" /> class.
         /// </summary>
         /// <param name="templateSubfolder">
         /// The optional template subdirectory.
         /// </param>
-        protected HandleBarsGenerator(string templateSubfolder = null) : base(templateSubfolder)
+        protected HandleBarsGenerator(string templateSubfolder = null)
+            : base(templateSubfolder)
         {
-            this.Templates = new Dictionary<string, HandlebarsTemplate<object, object>>(StringComparer.Ordinal);
-            this.Handlebars = HandlebarsDotNet.Handlebars.CreateSharedEnvironment();
+            this.Templates =
+                new Dictionary<string, HandlebarsTemplate<object, object>>(
+                    StringComparer.Ordinal);
 
-            HandlebarsHelpers.Register(this.Handlebars);
+            this.Handlebars =
+                HandlebarsDotNet.Handlebars.CreateSharedEnvironment();
+
             this.Register();
-        }
-
-        /// <summary>
-        /// Registers the generator-specific helpers and templates.
-        /// </summary>
-        private void Register()
-        {
-            this.RegisterHelpers();
-            this.RegisterTemplates();
         }
 
         /// <summary>
@@ -86,11 +80,23 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         {
             ArgumentNullException.ThrowIfNullOrEmpty(name);
 
-            var templatePath = Path.Combine(this.TemplateFolderPath, $"{name}.hbs");
+            var templatePath =
+                Path.Combine(this.TemplateFolderPath, $"{name}.hbs");
 
             var template = File.ReadAllText(templatePath, Encoding.UTF8);
 
-            this.Templates.Add(name, this.Handlebars.Compile(template));
+            this.Templates.Add(
+                name,
+                this.Handlebars.Compile(template));
+        }
+
+        /// <summary>
+        /// Registers the generator-specific helpers and templates.
+        /// </summary>
+        private void Register()
+        {
+            this.RegisterHelpers();
+            this.RegisterTemplates();
         }
     }
 }
