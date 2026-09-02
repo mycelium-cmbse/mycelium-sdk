@@ -21,7 +21,6 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="uml4net.xmi.Extensions.EnterpriseArchitect" Version="8.3.0"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -30,6 +29,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Mycelium.SDK.CodeGenerator\Mycelium.SDK.CodeGenerator.csproj"/>
+        <ProjectReference Include="..\Mycelium.SDK.Extensions\Mycelium.SDK.Extensions.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -73,10 +73,21 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="..\Mycelium.SDK.Extensions\AutoGenEnumProvider\**\*"
+              Link="Committed\Mycelium.SDK.Extensions\AutoGenEnumProvider\%(RecursiveDir)%(Filename)%(Extension)">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
         <None Include="..\Mycelium.SDK\AutoGenPOCO\*.cs"
               Link="Committed\Mycelium.SDK\AutoGenPOCO\%(Filename)%(Extension)">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Committed\Mycelium.SDK.Extensions\AutoGenEnumProvider\"/>
     </ItemGroup>
 
 </Project>

@@ -21,54 +21,56 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
     using uml4net.xmi.Readers;
 
     /// <summary>
-    /// Base class for UML generators that produce interfaces and concrete
-    /// class implementations.
+    /// Base class for UML generators that produce interfaces and concrete class implementations.
     /// </summary>
     public abstract class UmlClassHandleBarsGenerator : UmlHandleBarsGenerator
     {
         /// <summary>
-        /// Gets the artifact name used in validation messages.
+        /// Gets the artifact family name used in generation errors.
         /// </summary>
+        /// <value>
+        /// The artifact family name.
+        /// </value>
         protected abstract string ArtifactName { get; }
 
         /// <summary>
         /// Gets the registered template name used for concrete classes.
         /// </summary>
-        /// <remarks>
-        /// The implementation must not depend on derived-constructor state because
-        /// templates are registered during base construction.
-        /// </remarks>
+        /// <value>
+        /// The concrete-class template name.
+        /// </value>
         protected abstract string ClassTemplate { get; }
 
         /// <summary>
         /// Gets the registered template name used for interfaces.
         /// </summary>
-        /// <remarks>
-        /// The implementation must not depend on derived-constructor state because
-        /// templates are registered during base construction.
-        /// </remarks>
+        /// <value>
+        /// The interface template name.
+        /// </value>
         protected abstract string InterfaceTemplate { get; }
 
         /// <inheritdoc />
-        public sealed override async Task GenerateAsync(XmiReaderResult xmiReaderResult, DirectoryInfo outputDirectory)
+        public sealed override async Task GenerateAsync(
+            XmiReaderResult xmiReaderResult,
+            DirectoryInfo outputDirectory)
         {
             ArgumentNullException.ThrowIfNull(xmiReaderResult);
             ArgumentNullException.ThrowIfNull(outputDirectory);
 
             var payload = CreateHandlebarsPayload(xmiReaderResult);
 
-            // Render and validate the complete batch before creating or writing
-            // the output directory. This prevents partial output when any model
-            // element cannot be generated.
+            this.ConfigureDocumentationSymbols(payload);
+
             var generatedFiles = payload.Classes
                 .Select(this.RenderInterface)
-                .Concat(payload.Classes
-                    .Where(umlClass => !umlClass.IsAbstract)
-                    .Select(this.RenderClass))
-                .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
+                .Concat(
+                    payload.Classes
+                        .Where(umlClass => !umlClass.IsAbstract)
+                        .Select(this.RenderClass))
+                .OrderBy(
+                    generatedFile => generatedFile.FileName,
+                    StringComparer.Ordinal)
                 .ToArray();
-
-            ThrowIfDuplicateFileNames(generatedFiles, this.ArtifactName);
 
             await WriteAsync(generatedFiles, outputDirectory);
         }
@@ -83,12 +85,20 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The UML class for which the interface is generated.
         /// </param>
         /// <returns>
-        /// A task whose result contains the generated and formatted C# source.
+        /// A task whose result contains the generated and formatted source.
         /// </returns>
-        protected async Task<string> GenerateInterfaceAsync(DirectoryInfo outputDirectory, IClass umlClass)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="outputDirectory" /> or <paramref name="umlClass" /> is
+        /// <see langword="null" />.
+        /// </exception>
+        protected async Task<string> GenerateInterfaceAsync(
+            DirectoryInfo outputDirectory,
+            IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(outputDirectory);
             ArgumentNullException.ThrowIfNull(umlClass);
+
+            this.ClearDocumentationSymbols();
 
             var generatedFile = this.RenderInterface(umlClass);
 
@@ -107,12 +117,23 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The UML class for which the implementation is generated.
         /// </param>
         /// <returns>
-        /// A task whose result contains the generated and formatted C# source.
+        /// A task whose result contains the generated and formatted source.
         /// </returns>
-        protected async Task<string> GenerateClassAsync(DirectoryInfo outputDirectory, IClass umlClass)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="outputDirectory" /> or <paramref name="umlClass" /> is
+        /// <see langword="null" />.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when <paramref name="umlClass" /> is abstract or unnamed.
+        /// </exception>
+        protected async Task<string> GenerateClassAsync(
+            DirectoryInfo outputDirectory,
+            IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(outputDirectory);
             ArgumentNullException.ThrowIfNull(umlClass);
+
+            this.ClearDocumentationSymbols();
 
             var generatedFile = this.RenderClass(umlClass);
 
@@ -122,18 +143,16 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
-        /// Registers the helpers that differ between artifact types.
+        /// Registers the helpers that differ between artifact families.
         /// </summary>
-        /// <remarks>
-        /// This method is invoked during base construction and must not depend
-        /// on fields initialized by a derived constructor.
-        /// </remarks>
         protected abstract void RegisterArtifactHelpers();
 
         /// <inheritdoc />
         protected sealed override void RegisterHelpers()
         {
-            DocumentationHelper.RegisterDocumentationHelper(this.Handlebars);
+            this.Handlebars.RegisterDocumentationHelper(
+                this.ResolveDocumentationCref);
+
             this.RegisterArtifactHelpers();
             NamedElementHelper.RegisterNamedElementHelper(this.Handlebars);
         }
@@ -152,18 +171,27 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The UML class to render.
         /// </param>
         /// <returns>
-        /// The generated filename and source.
+        /// The generated filename and formatted source.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="umlClass" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when <paramref name="umlClass" /> is unnamed.
+        /// </exception>
         private GeneratedFile RenderInterface(IClass umlClass)
         {
             ArgumentNullException.ThrowIfNull(umlClass);
 
             var className = QueryRequiredClassName(umlClass);
-            var generatedCode = this.Templates[this.InterfaceTemplate](umlClass);
+            var generatedCode =
+                this.Templates[this.InterfaceTemplate](umlClass);
 
             generatedCode = this.CodeCleanup(generatedCode);
 
-            return new GeneratedFile($"I{className}.cs", generatedCode);
+            return new GeneratedFile(
+                $"I{className}.cs",
+                generatedCode);
         }
 
         /// <summary>
@@ -173,10 +201,13 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The UML class to render.
         /// </param>
         /// <returns>
-        /// The generated filename and source.
+        /// The generated filename and formatted source.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="umlClass" /> is <see langword="null" />.
+        /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the UML class is abstract or has no name.
+        /// Thrown when <paramref name="umlClass" /> is abstract or unnamed.
         /// </exception>
         private GeneratedFile RenderClass(IClass umlClass)
         {
@@ -190,11 +221,14 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             }
 
             var className = QueryRequiredClassName(umlClass);
-            var generatedCode = this.Templates[this.ClassTemplate](umlClass);
+            var generatedCode =
+                this.Templates[this.ClassTemplate](umlClass);
 
             generatedCode = this.CodeCleanup(generatedCode);
 
-            return new GeneratedFile($"{className}.cs", generatedCode);
+            return new GeneratedFile(
+                $"{className}.cs",
+                generatedCode);
         }
 
         /// <summary>
@@ -207,17 +241,17 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The UML class name.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the UML class has no name.
+        /// Thrown when <paramref name="umlClass" /> is unnamed.
         /// </exception>
         private static string QueryRequiredClassName(IClass umlClass)
         {
             if (string.IsNullOrWhiteSpace(umlClass.Name))
             {
-                throw new InvalidOperationException($"Class '{umlClass.XmiId}' has no name.");
+                throw new InvalidOperationException(
+                    $"Class '{umlClass.XmiId}' has no name.");
             }
 
             return umlClass.Name;
         }
-
     }
 }
