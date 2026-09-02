@@ -25,8 +25,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <summary>
         /// The current model-derived documentation-symbol mappings.
         /// </summary>
-        private IReadOnlyDictionary<string, string> documentationSymbols =
-            new Dictionary<string, string>(StringComparer.Ordinal);
+        private Dictionary<string, string> documentationSymbols =
+            new(StringComparer.Ordinal);
 
         /// <summary>
         /// Initializes a new instance of the
@@ -239,14 +239,14 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                         : umlClass.Name);
             }
 
-            foreach (var enumeration in payload.Enumerations)
+            foreach (var enumerationName in payload.Enumerations.Select(enumeration => enumeration.Name))
             {
-                AddSymbol(enumeration.Name, enumeration.Name);
+                AddSymbol(enumerationName, enumerationName);
             }
 
-            foreach (var primitiveType in payload.PrimitiveTypes)
+            foreach (var primitiveTypeName in payload.PrimitiveTypes.Select(primitiveType => primitiveType.Name))
             {
-                AddSymbol(primitiveType.Name, primitiveType.Name);
+                AddSymbol(primitiveTypeName, primitiveTypeName);
             }
 
             this.documentationSymbols = symbols;

@@ -166,16 +166,11 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// </returns>
         private static IEnumerable<IProperty> OrderProperties(IEnumerable<IProperty> properties)
         {
-            var distinctProperties = new List<IProperty>();
             var propertyIds = new HashSet<string>(StringComparer.Ordinal);
 
-            foreach (var property in properties)
-            {
-                if (propertyIds.Add(property.XmiId))
-                {
-                    distinctProperties.Add(property);
-                }
-            }
+            var distinctProperties = properties
+                .Where(property => propertyIds.Add(property.XmiId))
+                .ToArray();
 
             return distinctProperties
                 .OrderBy(property => string.Equals(property.Name, "id", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
