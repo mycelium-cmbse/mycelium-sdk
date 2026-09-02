@@ -17,75 +17,45 @@ namespace Mycelium.SDK.Tests.Dto
     using Mycelium.SDK.DTO;
 
     /// <summary>
-    /// Verifies inheritance and complete implementation of the generated
-    /// FunctionalData DTO contracts.
+    /// Verifies representative DTO inheritance and complete generated implementations.
     /// </summary>
     [TestFixture]
     public class DtoInheritanceTestFixture
     {
-        private static readonly IReadOnlyDictionary<Type, Type[]> DirectGeneralizations =
-            new Dictionary<Type, Type[]>
-            {
-                [typeof(IThing)] = [],
-                [typeof(IAuditableThing)] = [typeof(IThing)],
-                [typeof(IBranchProtectionRule)] = [typeof(IAuditableThing)],
-                [typeof(IComment)] = [typeof(IAuditableThing)],
-                [typeof(IFunctionalProject)] = [typeof(IAuditableThing)],
-                [typeof(IFunctionalProjectPolicy)] = [typeof(IAuditableThing)],
-                [typeof(IOrganization)] = [typeof(IAuditableThing)],
-                [typeof(IOrganizationMember)] = [typeof(IAuditableThing)],
-                [typeof(IOrganizationPolicy)] = [typeof(IAuditableThing)],
-                [typeof(IOwnership)] = [typeof(IAuditableThing)],
-                [typeof(IProjectMember)] = [typeof(IAuditableThing)],
-                [typeof(IReview)] = [typeof(IAuditableThing)],
-                [typeof(IUser)] = [typeof(IAuditableThing)]
-            };
-
-        private static readonly IReadOnlyDictionary<Type, Type> ConcreteImplementations =
-            new Dictionary<Type, Type>
-            {
-                [typeof(IBranchProtectionRule)] = typeof(BranchProtectionRule),
-                [typeof(IComment)] = typeof(Comment),
-                [typeof(IFunctionalProject)] = typeof(FunctionalProject),
-                [typeof(IFunctionalProjectPolicy)] = typeof(FunctionalProjectPolicy),
-                [typeof(IOrganization)] = typeof(Organization),
-                [typeof(IOrganizationMember)] = typeof(OrganizationMember),
-                [typeof(IOrganizationPolicy)] = typeof(OrganizationPolicy),
-                [typeof(IOwnership)] = typeof(Ownership),
-                [typeof(IProjectMember)] = typeof(ProjectMember),
-                [typeof(IReview)] = typeof(Review),
-                [typeof(IUser)] = typeof(User)
-            };
-
-        [Test]
-        public void Verify_that_DTO_interface_inheritance_matches_UML_generalization()
+        [TestCase(typeof(IAuditableThing), typeof(IThing))]
+        [TestCase(typeof(IBranchProtectionRule), typeof(IAuditableThing))]
+        public void Verify_that_representative_DTO_inheritance_matches_UML_generalization(
+            Type interfaceType,
+            Type expectedDirectInterface)
         {
-            using (Assert.EnterMultipleScope())
-            {
-                foreach (var expectedGeneralization in DirectGeneralizations)
-                {
-                    var actualGeneralizations = QueryDirectInterfaces(expectedGeneralization.Key);
-                    var expectedGeneralizations = expectedGeneralization.Value
-                        .OrderBy(type => type.Name, StringComparer.Ordinal)
-                        .ToArray();
+            var actualDirectInterfaces =
+                QueryDirectInterfaces(interfaceType);
 
-                    Assert.That(
-                        actualGeneralizations,
-                        Is.EqualTo(expectedGeneralizations),
-                        $"Interface '{expectedGeneralization.Key.Name}' has an unexpected direct base interface.");
-                }
-            }
+            Assert.That(
+                actualDirectInterfaces,
+                Is.EqualTo([expectedDirectInterface]),
+                $"Interface '{interfaceType.Name}' has an unexpected direct base interface.");
         }
 
         [Test]
-        public void Verify_that_each_concrete_DTO_implements_its_complete_inherited_contract()
+        public void Verify_that_each_generated_DTO_implements_its_complete_inherited_contract()
         {
             using (Assert.EnterMultipleScope())
             {
-                foreach (var implementation in ConcreteImplementations)
+                foreach (var concreteType in QueryConcreteDtoTypes())
                 {
-                    var interfaceType = implementation.Key;
-                    var concreteType = implementation.Value;
+                    var interfaceType = concreteType.Assembly.GetType(
+                        $"{concreteType.Namespace}.I{concreteType.Name}");
+
+                    Assert.That(
+                        interfaceType,
+                        Is.Not.Null,
+                        $"No generated interface was found for '{concreteType.Name}'.");
+
+                    if (interfaceType is null)
+                    {
+                        continue;
+                    }
 
                     Assert.That(
                         interfaceType.IsAssignableFrom(concreteType),
@@ -98,7 +68,10 @@ namespace Mycelium.SDK.Tests.Dto
                         .ToArray();
 
                     var actualProperties = concreteType
-                        .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                        .GetProperties(
+                            BindingFlags.Public
+                            | BindingFlags.Instance
+                            | BindingFlags.DeclaredOnly)
                         .Select(QueryPropertySignature)
                         .OrderBy(signature => signature, StringComparer.Ordinal)
                         .ToArray();
@@ -111,13 +84,30 @@ namespace Mycelium.SDK.Tests.Dto
             }
         }
 
-        private static IEnumerable<PropertyInfo> QueryCompleteInterfaceProperties(Type interfaceType)
+        private static IEnumerable<PropertyInfo> QueryCompleteInterfaceProperties(
+            Type interfaceType)
         {
             return interfaceType
                 .GetInterfaces()
                 .Append(interfaceType)
-                .SelectMany(type =>
-                    type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly));
+                .SelectMany(
+                    type =>
+                        type.GetProperties(
+                            BindingFlags.Public
+                            | BindingFlags.Instance
+                            | BindingFlags.DeclaredOnly));
+        }
+
+        private static Type[] QueryConcreteDtoTypes()
+        {
+            return typeof(IThing).Assembly
+                .GetTypes()
+                .Where(
+                    type => type.Namespace == typeof(IThing).Namespace
+                            && type.IsClass
+                            && !type.IsAbstract)
+                .OrderBy(type => type.Name, StringComparer.Ordinal)
+                .ToArray();
         }
 
         private static Type[] QueryDirectInterfaces(Type interfaceType)

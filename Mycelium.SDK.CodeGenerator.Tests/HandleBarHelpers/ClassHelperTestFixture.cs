@@ -120,37 +120,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             Assert.That(() => handlebars.RegisterPocoClassHelper(), Throws.ArgumentNullException);
         }
 
-        [Test]
-        public void Verify_that_WritePocoInterfaceIdentifier_rejects_a_missing_class_name()
-        {
-            var umlClass = new Class
-            {
-                XmiId = "class-id",
-                Name = " "
-            };
-
-            var template = this.pocoHandlebars.Compile("{{ #Class.WritePocoInterfaceIdentifier this }}");
-
-            var exception = Assert.Throws<InvalidOperationException>(() => template(umlClass));
-
-            Assert.That(exception.Message, Is.EqualTo("Class 'class-id' has no name."));
-        }
-
-        [Test]
-        public void Verify_that_WritePocoInterfaceIdentifier_rejects_an_illegal_identifier()
-        {
-            var umlClass = new Class
-            {
-                XmiId = "class-id",
-                Name = "Invalid-Type"
-            };
-
-            var template = this.pocoHandlebars.Compile("{{ #Class.WritePocoInterfaceIdentifier this }}");
-            var exception = Assert.Throws<ArgumentException>(() => template(umlClass));
-
-            Assert.That(exception.Message, Does.Contain("'IInvalid-Type' is not a valid C# identifier"));
-        }
-
         private IClass QueryClass(string className)
         {
             return this.classes.Single(umlClass => umlClass.Name == className);

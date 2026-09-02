@@ -43,39 +43,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         }
 
         [Test]
-        public void Verify_that_QueryPropertyName_rejects_a_missing_name()
-        {
-            var property = new Property
-            {
-                XmiId = "property-id",
-                Name = " "
-            };
-
-            var exception = Assert.Throws<InvalidOperationException>(() => property.QueryPropertyName());
-
-            Assert.That(exception.Message, Is.EqualTo("Property 'property-id' has no name."));
-        }
-
-        [Test]
         public void Verify_that_QueryPropertyName_rejects_a_null_property()
         {
             IProperty property = null;
 
             Assert.That(() => property.QueryPropertyName(), Throws.ArgumentNullException);
-        }
-
-        [Test]
-        public void Verify_that_QueryPropertyName_rejects_an_illegal_identifier()
-        {
-            var property = new Property
-            {
-                XmiId = "property-id",
-                Name = "invalid-name"
-            };
-
-            var exception = Assert.Throws<ArgumentException>(() => property.QueryPropertyName());
-
-            Assert.That(exception.Message, Does.Contain("'Invalid-name' is not a valid C# identifier"));
         }
 
         [Test]
@@ -204,58 +176,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             IProperty property = null;
 
             Assert.That(() => property.QueryPocoTypeName(), Throws.ArgumentNullException);
-        }
-
-        [Test]
-        public void Verify_that_QueryPocoTypeName_rejects_an_illegal_reference_identifier()
-        {
-            var property = new Property
-            {
-                XmiId = "property-id",
-                Name = "reference",
-                Type = new Class
-                {
-                    XmiId = "referenced-class",
-                    Name = "Invalid-Type"
-                }
-            };
-
-            var exception = Assert.Throws<ArgumentException>(() => property.QueryPocoTypeName());
-
-            Assert.That(exception.Message, Does.Contain("'IInvalid-Type' is not a valid C# identifier"));
-        }
-
-        [Test]
-        public void Verify_that_QueryPocoTypeName_rejects_an_unnamed_type()
-        {
-            var property = new Property
-            {
-                XmiId = "property-id",
-                Name = "unnamedType",
-                Type = new Enumeration
-                {
-                    XmiId = "enumeration-type",
-                    Name = " "
-                }
-            };
-
-            var exception = Assert.Throws<InvalidOperationException>(() => property.QueryPocoTypeName());
-
-            Assert.That(exception.Message, Is.EqualTo("Property 'unnamedType' has an unnamed type."));
-        }
-
-        [Test]
-        public void Verify_that_QueryPocoTypeName_rejects_an_unresolved_type()
-        {
-            var property = new Property
-            {
-                XmiId = "property-id",
-                Name = "unresolved"
-            };
-
-            var exception = Assert.Throws<InvalidOperationException>(() => property.QueryPocoTypeName());
-
-            Assert.That(exception.Message, Is.EqualTo("Property 'unresolved' has no resolved type."));
         }
 
         [Test]

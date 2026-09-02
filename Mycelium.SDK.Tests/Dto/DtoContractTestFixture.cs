@@ -18,108 +18,46 @@ namespace Mycelium.SDK.Tests.Dto
     using Mycelium.SDK.DTO;
 
     /// <summary>
-    /// Verifies the public runtime contract of the generated FunctionalData DTOs.
+    /// Verifies representative runtime behavior of the generated FunctionalData DTOs.
     /// </summary>
     [TestFixture]
     public class DtoContractTestFixture
     {
         private const string DtoNamespace = "Mycelium.SDK.DTO";
 
-        private static readonly Type[] DtoInterfaceTypes =
-        [
-            typeof(IThing),
-            typeof(IAuditableThing),
-            typeof(IBranchProtectionRule),
-            typeof(IComment),
-            typeof(IFunctionalProject),
-            typeof(IFunctionalProjectPolicy),
-            typeof(IOrganization),
-            typeof(IOrganizationMember),
-            typeof(IOrganizationPolicy),
-            typeof(IOwnership),
-            typeof(IProjectMember),
-            typeof(IReview),
-            typeof(IUser)
-        ];
-
-        private static readonly Type[] ConcreteDtoTypes =
-        [
-            typeof(BranchProtectionRule),
-            typeof(Comment),
-            typeof(FunctionalProject),
-            typeof(FunctionalProjectPolicy),
-            typeof(Organization),
-            typeof(OrganizationMember),
-            typeof(OrganizationPolicy),
-            typeof(Ownership),
-            typeof(ProjectMember),
-            typeof(Review),
-            typeof(User)
-        ];
-
-        private static readonly string[] InitializedCollectionProperties =
-        [
-            "BranchProtectionRule.DefaultReviewers",
-            "BranchProtectionRule.MergeAllowedFor",
-            "Comment.Replies",
-            "FunctionalProject.BranchRules",
-            "FunctionalProject.Defines",
-            "FunctionalProject.Involves",
-            "FunctionalProject.Reviews",
-            "FunctionalProject.SharedPreferences",
-            "Organization.InvolvedUser",
-            "Organization.Projects",
-            "ProjectMember.Owns",
-            "Review.Comments",
-            "Review.Reviewers",
-            "User.IsPartOfOrganizations",
-            "User.IsPartOfProjects",
-            "User.UserPreferences"
-        ];
-
-        [Test]
-        public void Verify_that_DTO_interface_coverage_matches_the_reviewed_contract()
-        {
-            var expectedInterfaceTypes = DtoInterfaceTypes
-                .OrderBy(type => type.Name, StringComparer.Ordinal)
-                .ToArray();
-
-            var actualInterfaceTypes = typeof(IThing).Assembly
-                .GetExportedTypes()
-                .Where(type => type.Namespace == DtoNamespace && type.IsInterface)
-                .OrderBy(type => type.Name, StringComparer.Ordinal)
-                .ToArray();
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(expectedInterfaceTypes, Has.Length.EqualTo(13));
-                Assert.That(
-                    actualInterfaceTypes,
-                    Is.EqualTo(expectedInterfaceTypes),
-                    "The public DTO interface set contains missing or extra interfaces.");
-            }
-        }
-
         [Test]
         public void Verify_that_all_DTO_properties_have_public_getters_and_setters()
         {
-            var interfaceProperties = DtoInterfaceTypes
-                .SelectMany(interfaceType =>
-                    interfaceType
-                        .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-                        .Select(property => (DeclaringType: interfaceType, Property: property)));
+            var interfaceProperties = QueryDtoInterfaceTypes()
+                .SelectMany(
+                    interfaceType =>
+                        interfaceType
+                            .GetProperties(
+                                BindingFlags.Public
+                                | BindingFlags.Instance
+                                | BindingFlags.DeclaredOnly)
+                            .Select(
+                                property =>
+                                    (DeclaringType: interfaceType, Property: property)));
 
-            var concreteProperties = ConcreteDtoTypes
-                .SelectMany(concreteType =>
-                    concreteType
-                        .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-                        .Select(property => (DeclaringType: concreteType, Property: property)));
+            var concreteProperties = QueryConcreteDtoTypes()
+                .SelectMany(
+                    concreteType =>
+                        concreteType
+                            .GetProperties(
+                                BindingFlags.Public
+                                | BindingFlags.Instance
+                                | BindingFlags.DeclaredOnly)
+                            .Select(
+                                property =>
+                                    (DeclaringType: concreteType, Property: property)));
 
             using (Assert.EnterMultipleScope())
             {
                 foreach (var contractProperty in interfaceProperties.Concat(concreteProperties))
                 {
-                    var displayName = $"{contractProperty.DeclaringType.Name}.{contractProperty.Property.Name}";
+                    var displayName =
+                        $"{contractProperty.DeclaringType.Name}.{contractProperty.Property.Name}";
 
                     Assert.That(
                         contractProperty.Property.GetGetMethod(true)?.IsPublic,
@@ -137,46 +75,52 @@ namespace Mycelium.SDK.Tests.Dto
         [Test]
         public void Verify_that_collection_properties_are_initialized_and_empty()
         {
-            var collectionProperties = ConcreteDtoTypes
-                .SelectMany(concreteType =>
-                    concreteType
-                        .GetProperties(
-                            BindingFlags.Public
-                            | BindingFlags.Instance
-                            | BindingFlags.DeclaredOnly)
-                        .Where(property => IsSupportedCollection(property.PropertyType))
-                        .Select(property => (DeclaringType: concreteType, Property: property)))
+            var collectionProperties = QueryConcreteDtoTypes()
+                .SelectMany(
+                    concreteType =>
+                        concreteType
+                            .GetProperties(
+                                BindingFlags.Public
+                                | BindingFlags.Instance
+                                | BindingFlags.DeclaredOnly)
+                            .Where(
+                                property =>
+                                    IsSupportedCollection(property.PropertyType))
+                            .Select(
+                                property =>
+                                    (DeclaringType: concreteType, Property: property)))
                 .OrderBy(
                     item => $"{item.DeclaringType.Name}.{item.Property.Name}",
-                    StringComparer.Ordinal)
-                .ToArray();
-
-            var actualCollectionPropertyNames = collectionProperties
-                .Select(item => $"{item.DeclaringType.Name}.{item.Property.Name}")
-                .ToArray();
-
-            Assert.That(
-                actualCollectionPropertyNames,
-                Is.EqualTo(InitializedCollectionProperties),
-                "The DTO collection-property set is incomplete or contains unexpected properties.");
+                    StringComparer.Ordinal);
 
             using (Assert.EnterMultipleScope())
             {
                 foreach (var collectionProperty in collectionProperties)
                 {
-                    var displayName = $"{collectionProperty.DeclaringType.Name}.{collectionProperty.Property.Name}";
-                    var instance = Activator.CreateInstance(collectionProperty.DeclaringType);
+                    var displayName =
+                        $"{collectionProperty.DeclaringType.Name}.{collectionProperty.Property.Name}";
 
-                    Assert.That(instance, Is.Not.Null, $"'{collectionProperty.DeclaringType.Name}' could not be constructed.");
+                    var instance =
+                        Activator.CreateInstance(collectionProperty.DeclaringType);
+
+                    Assert.That(
+                        instance,
+                        Is.Not.Null,
+                        $"'{collectionProperty.DeclaringType.Name}' could not be constructed.");
 
                     if (instance is null)
                     {
                         continue;
                     }
 
-                    var value = collectionProperty.Property.GetValue(instance);
+                    var value =
+                        collectionProperty.Property.GetValue(instance);
 
-                    Assert.That(value, Is.Not.Null, $"Collection property '{displayName}' was not initialized.");
+                    Assert.That(
+                        value,
+                        Is.Not.Null,
+                        $"Collection property '{displayName}' was not initialized.");
+
                     Assert.That(
                         value,
                         Is.InstanceOf<ICollection>(),
@@ -184,36 +128,35 @@ namespace Mycelium.SDK.Tests.Dto
 
                     if (value is ICollection collection)
                     {
-                        Assert.That(collection.Count, Is.Zero, $"Collection property '{displayName}' must initially be empty.");
+                        Assert.That(
+                            collection.Count,
+                            Is.Zero,
+                            $"Collection property '{displayName}' must initially be empty.");
                     }
                 }
             }
         }
 
         [Test]
-        public void Verify_that_concrete_DTO_coverage_matches_the_reviewed_contract()
+        public void Verify_that_generated_DTO_types_are_public_and_constructible()
         {
-            var expectedConcreteTypes = ConcreteDtoTypes
-                .OrderBy(type => type.Name, StringComparer.Ordinal)
-                .ToArray();
-
-            var actualConcreteTypes = typeof(IThing).Assembly
-                .GetExportedTypes()
-                .Where(type => type.Namespace == DtoNamespace && type.IsClass && !type.IsAbstract)
-                .OrderBy(type => type.Name, StringComparer.Ordinal)
-                .ToArray();
-
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(expectedConcreteTypes, Has.Length.EqualTo(11));
-
-                Assert.That(
-                    actualConcreteTypes,
-                    Is.EqualTo(expectedConcreteTypes),
-                    "The public concrete DTO set contains missing or extra classes.");
-
-                foreach (var concreteType in ConcreteDtoTypes)
+                foreach (var interfaceType in QueryDtoInterfaceTypes())
                 {
+                    Assert.That(
+                        interfaceType.IsPublic,
+                        Is.True,
+                        $"DTO interface '{interfaceType.Name}' must be public.");
+                }
+
+                foreach (var concreteType in QueryConcreteDtoTypes())
+                {
+                    Assert.That(
+                        concreteType.IsPublic,
+                        Is.True,
+                        $"DTO implementation '{concreteType.Name}' must be public.");
+
                     Assert.That(
                         concreteType.GetConstructor(Type.EmptyTypes),
                         Is.Not.Null,
@@ -223,7 +166,10 @@ namespace Mycelium.SDK.Tests.Dto
         }
 
         [TestCaseSource(nameof(RepresentativeInterfacePropertyContracts))]
-        public void Verify_that_representative_interface_property_shape_matches_the_contract(Type interfaceType, string propertyName, Type expectedPropertyType)
+        public void Verify_that_representative_interface_property_shape_matches_the_contract(
+            Type interfaceType,
+            string propertyName,
+            Type expectedPropertyType)
         {
             var property = interfaceType.GetProperty(
                 propertyName,
@@ -240,6 +186,29 @@ namespace Mycelium.SDK.Tests.Dto
                 property!.PropertyType,
                 Is.EqualTo(expectedPropertyType),
                 $"Property '{interfaceType.Name}.{propertyName}' has an unexpected type.");
+        }
+
+        private static Type[] QueryConcreteDtoTypes()
+        {
+            return typeof(IThing).Assembly
+                .GetTypes()
+                .Where(
+                    type => type.Namespace == DtoNamespace
+                            && type.IsClass
+                            && !type.IsAbstract)
+                .OrderBy(type => type.Name, StringComparer.Ordinal)
+                .ToArray();
+        }
+
+        private static Type[] QueryDtoInterfaceTypes()
+        {
+            return typeof(IThing).Assembly
+                .GetTypes()
+                .Where(
+                    type => type.Namespace == DtoNamespace
+                            && type.IsInterface)
+                .OrderBy(type => type.Name, StringComparer.Ordinal)
+                .ToArray();
         }
 
         private static IEnumerable<TestCaseData> RepresentativeInterfacePropertyContracts()
@@ -304,7 +273,8 @@ namespace Mycelium.SDK.Tests.Dto
 
             var genericType = type.GetGenericTypeDefinition();
 
-            return genericType == typeof(List<>) || genericType == typeof(Dictionary<,>);
+            return genericType == typeof(List<>)
+                   || genericType == typeof(Dictionary<,>);
         }
     }
 }

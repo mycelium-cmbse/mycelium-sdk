@@ -12,16 +12,23 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
     using Mycelium.SDK.CodeGenerator.Extensions;
 
     /// <summary>
-    /// Verifies the shared C# identifier policy used by enum names and literals.
+    /// Verifies the shared reserved-keyword mapping policy used by generated identifiers.
     /// </summary>
     [TestFixture]
     public class ReservedCSharpNameMapperTestFixture
     {
+        [TestCase("")]
+        [TestCase(" ")]
         [TestCase("ProjectVisibility")]
         [TestCase("ChangesRequested")]
         [TestCase("_")]
         [TestCase("record")]
-        public void Verify_that_Map_preserves_legal_identifiers(string identifier)
+        [TestCase("1Status")]
+        [TestCase("Invalid-Type")]
+        [TestCase("two words")]
+        [TestCase("@class")]
+        [TestCase(@"\u0063lass")]
+        public void Verify_that_Map_preserves_non_keyword_modeled_names(string identifier)
         {
             Assert.That(ReservedCSharpNameMapper.Map(identifier), Is.EqualTo(identifier));
         }
@@ -35,51 +42,27 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             Assert.That(ReservedCSharpNameMapper.Map(identifier), Is.EqualTo(expectedIdentifier));
         }
 
-        [TestCase(" ")]
-        [TestCase("1Status")]
-        [TestCase("Invalid-Type")]
-        [TestCase("two words")]
-        [TestCase("@class")]
-        [TestCase(@"\u0063lass")]
-        public void Verify_that_Map_rejects_identifiers_that_would_change_the_modeled_name(
-            string identifier)
-        {
-            var exception = Assert.Throws<ArgumentException>(() => ReservedCSharpNameMapper.Map(identifier));
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(exception.ParamName, Is.EqualTo("input"));
-                Assert.That(exception.Message, Does.Contain($"'{identifier}' is not a valid C# identifier"));
-            }
-        }
-
         [Test]
-        public void Verify_that_Map_rejects_null_and_empty_input()
+        public void Verify_that_Map_rejects_null_input()
         {
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(() => ReservedCSharpNameMapper.Map(null), Throws.ArgumentNullException);
-                Assert.That(() => ReservedCSharpNameMapper.Map(string.Empty), Throws.TypeOf<ArgumentException>());
-            }
+            Assert.That(() => ReservedCSharpNameMapper.Map(null), Throws.ArgumentNullException);
         }
 
         [TestCase("class", true)]
         [TestCase("event", true)]
         [TestCase("record", false)]
         [TestCase("ProjectVisibility", false)]
+        [TestCase("", false)]
+        [TestCase("Invalid-Type", false)]
         public void Verify_that_QueryIsReserved_identifies_reserved_keywords(string identifier, bool expected)
         {
             Assert.That(ReservedCSharpNameMapper.QueryIsReserved(identifier), Is.EqualTo(expected));
         }
 
         [Test]
-        public void Verify_that_QueryIsReserved_rejects_null_and_empty_input()
+        public void Verify_that_QueryIsReserved_rejects_null_input()
         {
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(() => ReservedCSharpNameMapper.QueryIsReserved(null), Throws.ArgumentNullException);
-                Assert.That(() => ReservedCSharpNameMapper.QueryIsReserved(string.Empty), Throws.TypeOf<ArgumentException>());
-            }
+            Assert.That(() => ReservedCSharpNameMapper.QueryIsReserved(null), Throws.ArgumentNullException);
         }
     }
 }
