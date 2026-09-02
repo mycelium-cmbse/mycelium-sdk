@@ -10,6 +10,7 @@
 namespace Mycelium.SDK.Tests.Poco
 {
     using System;
+    using System.CodeDom.Compiler;
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
@@ -377,7 +378,8 @@ namespace Mycelium.SDK.Tests.Poco
                 .Where(
                     type => type.Namespace == PocoNamespace
                             && type.IsClass
-                            && !type.IsAbstract)
+                            && !type.IsAbstract
+                            && type.GetCustomAttribute<GeneratedCodeAttribute>() is not null)
                 .OrderBy(type => type.Name, StringComparer.Ordinal)
                 .ToArray();
         }
