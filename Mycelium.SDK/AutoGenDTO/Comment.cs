@@ -45,12 +45,12 @@ namespace Mycelium.SDK.DTO
         public string Content { get; set; }
 
         /// <summary>
-        /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
+        /// References the <see cref="User" /> that created the current <see cref="IAuditableThing" />.
         /// </summary>
         public Guid CreatedBy { get; set; }
 
         /// <summary>
-        /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
+        /// Provides the creation <see cref="DateTime" /> of the current <see cref="IAuditableThing" />
         /// </summary>
         public DateTime CreatedOn { get; set; }
 
@@ -72,12 +72,12 @@ namespace Mycelium.SDK.DTO
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
-        /// <see cref="AuditableThing" />.
+        /// <see cref="IAuditableThing" />.
         /// </summary>
         public Guid UpdatedBy { get; set; }
 
         /// <summary>
-        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
+        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="IAuditableThing" />
         /// </summary>
         public DateTime UpdatedOn { get; set; }
     }
