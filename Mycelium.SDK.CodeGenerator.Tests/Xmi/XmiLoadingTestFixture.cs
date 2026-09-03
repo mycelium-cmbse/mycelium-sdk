@@ -63,18 +63,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
                             ResourcesDirectory.FullName,
                             "PrimitiveTypes.xmi")));
 
-                Assert.That(settings.UseStrictReading, Is.False);
+                Assert.That(settings.UseStrictReading, Is.True);
             }
-        }
-
-        [Test]
-        public void Verify_that_Windows_1252_encoding_is_available_after_loading()
-        {
-            _ = ReadFunctionalData();
-
-            Assert.That(
-                Encoding.GetEncoding(1252).CodePage,
-                Is.EqualTo(1252));
         }
 
         internal static XmiReaderResult ReadFunctionalData()

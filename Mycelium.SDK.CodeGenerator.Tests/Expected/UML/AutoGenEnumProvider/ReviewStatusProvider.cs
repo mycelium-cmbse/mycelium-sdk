@@ -19,46 +19,46 @@ namespace Mycelium.SDK.Extensions
     using Mycelium.SDK;
 
     /// <summary>
-    /// Provides exact XMI-literal conversions for <see cref="ReviewStatus" />.
+    /// Provides XMI-literal conversions for <see cref="ReviewStatus" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public static partial class ReviewStatusProvider
     {
         /// <summary>
-        /// Parses an exact XMI literal as a <see cref="ReviewStatus" /> value.
+        /// Parses an XMI literal using ordinal, case-insensitive matching.
         /// </summary>
         /// <param name="value">
-        /// The case-sensitive XMI literal to parse.
+        /// The XMI literal to parse. Letter casing is ignored.
         /// </param>
         /// <returns>
         /// The corresponding <see cref="ReviewStatus" /> value.
         /// </returns>
         /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="value" /> is not an exact XMI literal.
+        /// Thrown when <paramref name="value" /> does not match a defined XMI literal.
         /// </exception>
         public static ReviewStatus Parse(ReadOnlySpan<char> value)
         {
-            if (value.Equals("Draft".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Draft".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ReviewStatus.Draft;
             }
 
-            if (value.Equals("Ready".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Ready".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ReviewStatus.Ready;
             }
 
-            if (value.Equals("Approved".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Approved".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ReviewStatus.Approved;
             }
 
-            if (value.Equals("ChangesRequested".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("ChangesRequested".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ReviewStatus.ChangesRequested;
             }
 
-            if (value.Equals("Closed".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Closed".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ReviewStatus.Closed;
             }
@@ -69,10 +69,10 @@ namespace Mycelium.SDK.Extensions
         }
 
         /// <summary>
-        /// Tries to parse an exact XMI literal as a <see cref="ReviewStatus" /> value.
+        /// Tries to parse an XMI literal using ordinal, case-insensitive matching.
         /// </summary>
         /// <param name="value">
-        /// The case-sensitive XMI literal to parse.
+        /// The XMI literal to parse. Letter casing is ignored.
         /// </param>
         /// <param name="result">
         /// The parsed value, or the default enumeration value when parsing fails.
@@ -82,31 +82,31 @@ namespace Mycelium.SDK.Extensions
         /// </returns>
         public static bool TryParse(ReadOnlySpan<char> value, out ReviewStatus result)
         {
-            if (value.Equals("Draft".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Draft".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ReviewStatus.Draft;
                 return true;
             }
 
-            if (value.Equals("Ready".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Ready".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ReviewStatus.Ready;
                 return true;
             }
 
-            if (value.Equals("Approved".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Approved".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ReviewStatus.Approved;
                 return true;
             }
 
-            if (value.Equals("ChangesRequested".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("ChangesRequested".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ReviewStatus.ChangesRequested;
                 return true;
             }
 
-            if (value.Equals("Closed".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Closed".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ReviewStatus.Closed;
                 return true;
@@ -117,13 +117,13 @@ namespace Mycelium.SDK.Extensions
         }
 
         /// <summary>
-        /// Formats a <see cref="ReviewStatus" /> value as its exact XMI literal.
+        /// Formats a <see cref="ReviewStatus" /> value using its exact XMI literal.
         /// </summary>
         /// <param name="value">
         /// The enumeration value to format.
         /// </param>
         /// <returns>
-        /// The exact case-sensitive XMI literal.
+        /// The exact XMI literal spelling and casing.
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when <paramref name="value" /> is not a defined enumeration value.

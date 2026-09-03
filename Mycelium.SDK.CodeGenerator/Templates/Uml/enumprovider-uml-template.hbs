@@ -19,27 +19,27 @@ using System.CodeDom.Compiler;
 using Mycelium.SDK;
 
 /// <summary>
-    /// Provides exact XMI-literal conversions for <see cref="{{ #NamedElement.WriteIdentifier this }}" />.
+    /// Provides XMI-literal conversions for <see cref="{{ #NamedElement.WriteIdentifier this }}" />.
     /// </summary>
 [GeneratedCode("Mycelium.SDK", "latest")]
 public static partial class {{ this.Name }}Provider
 {
 /// <summary>
-    /// Parses an exact XMI literal as a <see cref="{{ #NamedElement.WriteIdentifier this }}" /> value.
+    /// Parses an XMI literal using ordinal, case-insensitive matching.
     /// </summary>
 /// <param name="value">
-/// The case-sensitive XMI literal to parse.
+/// The XMI literal to parse. Letter casing is ignored.
 /// </param>
 /// <returns>
     /// The corresponding <see cref="{{ #NamedElement.WriteIdentifier this }}" /> value.
     /// </returns>
 /// <exception cref="ArgumentException">
-    /// Thrown when <paramref name="value" /> is not an exact XMI literal.
+    /// Thrown when <paramref name="value" /> does not match a defined XMI literal.
     /// </exception>
 public static {{ #NamedElement.WriteIdentifier this }} Parse(ReadOnlySpan<char> value)
     {
 {{ #each this.OwnedLiteral as | enumerationLiteral | }}
-    if (value.Equals("{{ enumerationLiteral.Name }}".AsSpan(), StringComparison.Ordinal))
+    if (value.Equals("{{ enumerationLiteral.Name }}".AsSpan(), StringComparison.OrdinalIgnoreCase))
     {
     return {{ #NamedElement.WriteIdentifier ../this }}.{{ #EnumerationLiteral.Write enumerationLiteral }};
     }
@@ -51,10 +51,10 @@ public static {{ #NamedElement.WriteIdentifier this }} Parse(ReadOnlySpan<char> 
     }
 
     /// <summary>
-    /// Tries to parse an exact XMI literal as a <see cref="{{ #NamedElement.WriteIdentifier this }}" /> value.
+    /// Tries to parse an XMI literal using ordinal, case-insensitive matching.
     /// </summary>
     /// <param name="value">
-    /// The case-sensitive XMI literal to parse.
+    /// The XMI literal to parse. Letter casing is ignored.
     /// </param>
     /// <param name="result">
     /// The parsed value, or the default enumeration value when parsing fails.
@@ -65,7 +65,7 @@ public static {{ #NamedElement.WriteIdentifier this }} Parse(ReadOnlySpan<char> 
     public static bool TryParse(ReadOnlySpan<char> value, out {{ #NamedElement.WriteIdentifier this }} result)
     {
 {{ #each this.OwnedLiteral as | enumerationLiteral | }}
-    if (value.Equals("{{ enumerationLiteral.Name }}".AsSpan(), StringComparison.Ordinal))
+    if (value.Equals("{{ enumerationLiteral.Name }}".AsSpan(), StringComparison.OrdinalIgnoreCase))
     {
     result = {{ #NamedElement.WriteIdentifier ../this }}.{{ #EnumerationLiteral.Write enumerationLiteral }};
     return true;
@@ -77,13 +77,13 @@ public static {{ #NamedElement.WriteIdentifier this }} Parse(ReadOnlySpan<char> 
     }
 
     /// <summary>
-    /// Formats a <see cref="{{ #NamedElement.WriteIdentifier this }}" /> value as its exact XMI literal.
+    /// Formats a <see cref="{{ #NamedElement.WriteIdentifier this }}" /> value using its exact XMI literal.
     /// </summary>
     /// <param name="value">
     /// The enumeration value to format.
     /// </param>
     /// <returns>
-    /// The exact case-sensitive XMI literal.
+    /// The exact XMI literal spelling and casing.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when <paramref name="value" /> is not a defined enumeration value.

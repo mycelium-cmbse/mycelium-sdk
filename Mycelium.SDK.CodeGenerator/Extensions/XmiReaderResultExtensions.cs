@@ -69,7 +69,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 {
                     [PrimitiveTypesUri] = Path.Combine(resourcesDirectory.FullName, "PrimitiveTypes.xmi")
                 },
-                UseStrictReading = false
+                UseStrictReading = true
             };
         }
 

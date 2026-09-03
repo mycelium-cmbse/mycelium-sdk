@@ -19,36 +19,36 @@ namespace Mycelium.SDK.Extensions
     using Mycelium.SDK;
 
     /// <summary>
-    /// Provides exact XMI-literal conversions for <see cref="ProjectMemberRole" />.
+    /// Provides XMI-literal conversions for <see cref="ProjectMemberRole" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public static partial class ProjectMemberRoleProvider
     {
         /// <summary>
-        /// Parses an exact XMI literal as a <see cref="ProjectMemberRole" /> value.
+        /// Parses an XMI literal using ordinal, case-insensitive matching.
         /// </summary>
         /// <param name="value">
-        /// The case-sensitive XMI literal to parse.
+        /// The XMI literal to parse. Letter casing is ignored.
         /// </param>
         /// <returns>
         /// The corresponding <see cref="ProjectMemberRole" /> value.
         /// </returns>
         /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="value" /> is not an exact XMI literal.
+        /// Thrown when <paramref name="value" /> does not match a defined XMI literal.
         /// </exception>
         public static ProjectMemberRole Parse(ReadOnlySpan<char> value)
         {
-            if (value.Equals("Administrator".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Administrator".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ProjectMemberRole.Administrator;
             }
 
-            if (value.Equals("Participant".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Participant".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ProjectMemberRole.Participant;
             }
 
-            if (value.Equals("Viewer".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Viewer".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ProjectMemberRole.Viewer;
             }
@@ -59,10 +59,10 @@ namespace Mycelium.SDK.Extensions
         }
 
         /// <summary>
-        /// Tries to parse an exact XMI literal as a <see cref="ProjectMemberRole" /> value.
+        /// Tries to parse an XMI literal using ordinal, case-insensitive matching.
         /// </summary>
         /// <param name="value">
-        /// The case-sensitive XMI literal to parse.
+        /// The XMI literal to parse. Letter casing is ignored.
         /// </param>
         /// <param name="result">
         /// The parsed value, or the default enumeration value when parsing fails.
@@ -72,19 +72,19 @@ namespace Mycelium.SDK.Extensions
         /// </returns>
         public static bool TryParse(ReadOnlySpan<char> value, out ProjectMemberRole result)
         {
-            if (value.Equals("Administrator".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Administrator".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ProjectMemberRole.Administrator;
                 return true;
             }
 
-            if (value.Equals("Participant".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Participant".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ProjectMemberRole.Participant;
                 return true;
             }
 
-            if (value.Equals("Viewer".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Viewer".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ProjectMemberRole.Viewer;
                 return true;
@@ -95,13 +95,13 @@ namespace Mycelium.SDK.Extensions
         }
 
         /// <summary>
-        /// Formats a <see cref="ProjectMemberRole" /> value as its exact XMI literal.
+        /// Formats a <see cref="ProjectMemberRole" /> value using its exact XMI literal.
         /// </summary>
         /// <param name="value">
         /// The enumeration value to format.
         /// </param>
         /// <returns>
-        /// The exact case-sensitive XMI literal.
+        /// The exact XMI literal spelling and casing.
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when <paramref name="value" /> is not a defined enumeration value.

@@ -19,36 +19,36 @@ namespace Mycelium.SDK.Extensions
     using Mycelium.SDK;
 
     /// <summary>
-    /// Provides exact XMI-literal conversions for <see cref="ProjectVisibility" />.
+    /// Provides XMI-literal conversions for <see cref="ProjectVisibility" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public static partial class ProjectVisibilityProvider
     {
         /// <summary>
-        /// Parses an exact XMI literal as a <see cref="ProjectVisibility" /> value.
+        /// Parses an XMI literal using ordinal, case-insensitive matching.
         /// </summary>
         /// <param name="value">
-        /// The case-sensitive XMI literal to parse.
+        /// The XMI literal to parse. Letter casing is ignored.
         /// </param>
         /// <returns>
         /// The corresponding <see cref="ProjectVisibility" /> value.
         /// </returns>
         /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="value" /> is not an exact XMI literal.
+        /// Thrown when <paramref name="value" /> does not match a defined XMI literal.
         /// </exception>
         public static ProjectVisibility Parse(ReadOnlySpan<char> value)
         {
-            if (value.Equals("Private".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Private".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ProjectVisibility.Private;
             }
 
-            if (value.Equals("Organization".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Organization".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ProjectVisibility.Organization;
             }
 
-            if (value.Equals("Public".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Public".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ProjectVisibility.Public;
             }
@@ -59,10 +59,10 @@ namespace Mycelium.SDK.Extensions
         }
 
         /// <summary>
-        /// Tries to parse an exact XMI literal as a <see cref="ProjectVisibility" /> value.
+        /// Tries to parse an XMI literal using ordinal, case-insensitive matching.
         /// </summary>
         /// <param name="value">
-        /// The case-sensitive XMI literal to parse.
+        /// The XMI literal to parse. Letter casing is ignored.
         /// </param>
         /// <param name="result">
         /// The parsed value, or the default enumeration value when parsing fails.
@@ -72,19 +72,19 @@ namespace Mycelium.SDK.Extensions
         /// </returns>
         public static bool TryParse(ReadOnlySpan<char> value, out ProjectVisibility result)
         {
-            if (value.Equals("Private".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Private".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ProjectVisibility.Private;
                 return true;
             }
 
-            if (value.Equals("Organization".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Organization".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ProjectVisibility.Organization;
                 return true;
             }
 
-            if (value.Equals("Public".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Public".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ProjectVisibility.Public;
                 return true;
@@ -95,13 +95,13 @@ namespace Mycelium.SDK.Extensions
         }
 
         /// <summary>
-        /// Formats a <see cref="ProjectVisibility" /> value as its exact XMI literal.
+        /// Formats a <see cref="ProjectVisibility" /> value using its exact XMI literal.
         /// </summary>
         /// <param name="value">
         /// The enumeration value to format.
         /// </param>
         /// <returns>
-        /// The exact case-sensitive XMI literal.
+        /// The exact XMI literal spelling and casing.
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when <paramref name="value" /> is not a defined enumeration value.

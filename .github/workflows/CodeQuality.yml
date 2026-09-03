@@ -45,10 +45,7 @@ jobs:
         run: dotnet build --no-restore --no-incremental /p:ContinuousIntegrationBuild=true
 
       - name: Run Tests and Compute Coverage
-        run: |
-          dotnet-coverage collect "dotnet test Mycelium.SDK.Tests/Mycelium.SDK.Tests.csproj --no-restore --no-build --verbosity normal" -f coverage -o sdk.coverage
-          dotnet-coverage collect "dotnet test Mycelium.SDK.CodeGenerator.Tests/Mycelium.SDK.CodeGenerator.Tests.csproj --no-restore --no-build --verbosity normal" -f coverage -o codegenerator.coverage
-          dotnet-coverage merge sdk.coverage codegenerator.coverage -f xml -o coverage.xml
+        run: dotnet-coverage collect "dotnet test Mycelium.SDK.sln --no-restore --no-build --verbosity normal" -f xml -o "coverage.xml"
 
       - name: Sonarqube end
         env:

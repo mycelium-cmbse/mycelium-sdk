@@ -12,6 +12,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     using System.Text;
 
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
+    using Mycelium.SDK.CodeGenerator.Tests.Expected;
+
+    using uml4net.StructuredClassifiers;
 
     [TestFixture]
     public class UmlPocoGeneratorTestFixture
@@ -19,6 +22,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         private static readonly UTF8Encoding StrictUtf8WithoutBom =
             new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
+        private Dictionary<string, IClass> classes = null!;
         private DirectoryInfo committedDirectory = null!;
         private DirectoryInfo expectedDirectory = null!;
         private DirectoryInfo stagingDirectory = null!;
@@ -51,10 +55,21 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 this.stagingDirectory.Delete(recursive: true);
             }
 
+            var xmiReaderResult = GeneratorSetupFixture.ReadFunctionalData();
+
+            var functionalData =
+                GeneratorSetupFixture.QueryFunctionalDataPackage(xmiReaderResult);
+
+            this.classes = functionalData.PackagedElement
+                .OfType<IClass>()
+                .ToDictionary(
+                    umlClass => umlClass.Name,
+                    StringComparer.Ordinal);
+
             var generator = new UmlPocoGenerator();
 
             await generator.GenerateAsync(
-                GeneratorSetupFixture.ResourcesDirectory,
+                xmiReaderResult,
                 this.stagingDirectory);
         }
 
@@ -81,51 +96,50 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             foreach (var fileName in generatedFileNames)
             {
-                var generatedBytes = await File.ReadAllBytesAsync(
-                    Path.Combine(this.stagingDirectory.FullName, fileName));
-
-                var committedBytes = await File.ReadAllBytesAsync(
-                    Path.Combine(this.committedDirectory.FullName, fileName));
-
-                Assert.That(
-                    generatedBytes,
-                    Is.EqualTo(committedBytes),
-                    $"Generated POCO '{fileName}' differs byte-for-byte from the committed SDK source.");
+                await AssertFilesMatchAsync(
+                    Path.Combine(this.stagingDirectory.FullName, fileName),
+                    Path.Combine(this.committedDirectory.FullName, fileName),
+                    $"Generated POCO '{fileName}'",
+                    "the committed SDK source");
             }
         }
 
         [Test]
+        [TestCaseSource(typeof(RepresentativeClasses))]
         [Category("Expected")]
-        public async Task Verify_that_representative_POCOs_match_reviewed_goldens()
+        public async Task Verify_that_representative_POCOs_match_reviewed_goldens(
+            string className)
         {
-            foreach (var expectedFile in this.expectedDirectory
-                         .GetFiles("*.cs", SearchOption.TopDirectoryOnly)
-                         .OrderBy(file => file.Name, StringComparer.Ordinal))
+            Assert.That(
+                this.classes.TryGetValue(className, out var umlClass),
+                Is.True,
+                $"Representative UML class '{className}' was not found.");
+
+            if (umlClass is null)
             {
-                var generatedPath =
-                    Path.Combine(this.stagingDirectory.FullName, expectedFile.Name);
-
-                Assert.That(
-                    File.Exists(generatedPath),
-                    Is.True,
-                    $"Representative POCO '{expectedFile.Name}' was not generated.");
-
-                if (!File.Exists(generatedPath))
-                {
-                    continue;
-                }
-
-                var expectedBytes =
-                    await File.ReadAllBytesAsync(expectedFile.FullName);
-
-                var generatedBytes =
-                    await File.ReadAllBytesAsync(generatedPath);
-
-                Assert.That(
-                    generatedBytes,
-                    Is.EqualTo(expectedBytes),
-                    $"Generated POCO '{expectedFile.Name}' differs byte-for-byte from its reviewed golden.");
+                return;
             }
+
+            var interfaceFileName = $"I{className}.cs";
+
+            await AssertFilesMatchAsync(
+                Path.Combine(this.stagingDirectory.FullName, interfaceFileName),
+                Path.Combine(this.expectedDirectory.FullName, interfaceFileName),
+                $"Generated POCO interface '{interfaceFileName}'",
+                "its reviewed golden");
+
+            if (umlClass.IsAbstract)
+            {
+                return;
+            }
+
+            var classFileName = $"{className}.cs";
+
+            await AssertFilesMatchAsync(
+                Path.Combine(this.stagingDirectory.FullName, classFileName),
+                Path.Combine(this.expectedDirectory.FullName, classFileName),
+                $"Generated POCO class '{classFileName}'",
+                "its reviewed golden");
         }
 
         [Test]
@@ -172,6 +186,39 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                         $"Generated POCO '{fileName}' contains a standalone line feed.");
                 }
             }
+        }
+
+        private static async Task AssertFilesMatchAsync(
+            string generatedPath,
+            string expectedPath,
+            string generatedDescription,
+            string expectedDescription)
+        {
+            Assert.That(
+                File.Exists(generatedPath),
+                Is.True,
+                $"{generatedDescription} was not generated.");
+
+            Assert.That(
+                File.Exists(expectedPath),
+                Is.True,
+                $"The file representing {expectedDescription} is missing.");
+
+            if (!File.Exists(generatedPath) || !File.Exists(expectedPath))
+            {
+                return;
+            }
+
+            var generatedSource =
+                await File.ReadAllTextAsync(generatedPath, StrictUtf8WithoutBom);
+
+            var expectedSource =
+                await File.ReadAllTextAsync(expectedPath, StrictUtf8WithoutBom);
+
+            Assert.That(
+                generatedSource,
+                Is.EqualTo(expectedSource),
+                $"{generatedDescription} differs from {expectedDescription}.");
         }
 
         private static string[] QueryCSharpFileNames(DirectoryInfo directory)

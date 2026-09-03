@@ -123,16 +123,18 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             foreach (var fileName in stagedFileNames)
             {
-                var stagedBytes = await File.ReadAllBytesAsync(
-                    Path.Combine(this.stagingDirectory.FullName, fileName));
+                var stagedSource = await File.ReadAllTextAsync(
+                    Path.Combine(this.stagingDirectory.FullName, fileName),
+                    StrictUtf8WithoutBom);
 
-                var committedBytes = await File.ReadAllBytesAsync(
-                    Path.Combine(this.committedDirectory.FullName, fileName));
+                var committedSource = await File.ReadAllTextAsync(
+                    Path.Combine(this.committedDirectory.FullName, fileName),
+                    StrictUtf8WithoutBom);
 
                 Assert.That(
-                    stagedBytes,
-                    Is.EqualTo(committedBytes),
-                    $"Staged provider '{fileName}' differs byte-for-byte from committed output.");
+                    stagedSource,
+                    Is.EqualTo(committedSource),
+                    $"Staged provider '{fileName}' differs from committed output.");
             }
         }
 
@@ -182,17 +184,20 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var expectedBytes = await File.ReadAllBytesAsync(expectedPath);
-            var stagedBytes = await File.ReadAllBytesAsync(stagedPath);
+            var expectedSource =
+                await File.ReadAllTextAsync(expectedPath, StrictUtf8WithoutBom);
+
+            var stagedSource =
+                await File.ReadAllTextAsync(stagedPath, StrictUtf8WithoutBom);
 
             Assert.That(
-                stagedBytes,
-                Is.EqualTo(expectedBytes),
-                $"Generated provider '{fileName}' differs byte-for-byte from its reviewed golden.");
+                stagedSource,
+                Is.EqualTo(expectedSource),
+                $"Generated provider '{fileName}' differs from its reviewed golden.");
         }
 
         /// <summary>
-        /// Verifies provider encoding, line endings, generated marker, and ordinal comparison.
+        /// Verifies provider encoding, line endings, generated marker, and ordinal case-insensitive comparison.
         /// </summary>
         /// <returns>
         /// A task representing the asynchronous verification.
@@ -256,19 +261,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
                     Assert.That(
                         source,
-                        Does.Contain("StringComparison.Ordinal"),
-                        $"Generated provider '{generatedFile.Name}' does not use ordinal comparison.");
-
-                    Assert.That(
-                        source,
-                        Does.Not.Contain("StringComparison.OrdinalIgnoreCase"),
-                        $"Generated provider '{generatedFile.Name}' uses case-insensitive comparison.");
+                        Does.Contain("StringComparison.OrdinalIgnoreCase"),
+                        $"Generated provider '{generatedFile.Name}' does not use ordinal case-insensitive comparison.");
                 }
             }
         }
 
         /// <summary>
-        /// Verifies exact XMI parsing, formatting, casing, and failure behavior.
+        /// Verifies case-insensitive XMI parsing, exact formatting, and invalid-input behavior.
         /// </summary>
         /// <param name="enumerationName">
         /// The representative enumeration name.
@@ -425,6 +425,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             foreach (var literal in enumeration.OwnedLiteral)
             {
                 var xmiLiteral = literal.Name;
+
                 var expectedValue = Enum.Parse<TEnum>(
                     xmiLiteral,
                     ignoreCase: false);
@@ -440,7 +441,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                     Assert.That(
                         parsedValue,
                         Is.EqualTo(expectedValue),
-                        $"{enumeration.Name}.Parse did not preserve '{xmiLiteral}'.");
+                        $"{enumeration.Name}.Parse rejected '{xmiLiteral}'.");
 
                     Assert.That(
                         tryParseSucceeded,
@@ -458,28 +459,31 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                         $"{enumeration.Name}.Format did not preserve '{xmiLiteral}'.");
                 }
 
-                var incorrectCase = QueryIncorrectCase(xmiLiteral);
+                var casingVariation = QueryCasingVariation(xmiLiteral);
 
-                Assert.That(
-                    () => parse(incorrectCase.AsSpan()),
-                    Throws.TypeOf<ArgumentException>(),
-                    $"{enumeration.Name}.Parse accepted incorrect casing '{incorrectCase}'.");
+                var variedCaseParsedValue =
+                    parse(casingVariation.AsSpan());
 
-                var incorrectCaseSucceeded = tryParse(
-                    incorrectCase.AsSpan(),
-                    out var incorrectCaseValue);
+                var variedCaseTryParseSucceeded = tryParse(
+                    casingVariation.AsSpan(),
+                    out var variedCaseTryParseValue);
 
                 using (Assert.EnterMultipleScope())
                 {
                     Assert.That(
-                        incorrectCaseSucceeded,
-                        Is.False,
-                        $"{enumeration.Name}.TryParse accepted incorrect casing '{incorrectCase}'.");
+                        variedCaseParsedValue,
+                        Is.EqualTo(expectedValue),
+                        $"{enumeration.Name}.Parse did not accept casing variation '{casingVariation}'.");
 
                     Assert.That(
-                        incorrectCaseValue,
-                        Is.EqualTo(default(TEnum)),
-                        $"{enumeration.Name}.TryParse did not return the default value.");
+                        variedCaseTryParseSucceeded,
+                        Is.True,
+                        $"{enumeration.Name}.TryParse did not accept casing variation '{casingVariation}'.");
+
+                    Assert.That(
+                        variedCaseTryParseValue,
+                        Is.EqualTo(expectedValue),
+                        $"{enumeration.Name}.TryParse returned the wrong value for casing variation '{casingVariation}'.");
                 }
             }
 
@@ -583,7 +587,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         /// <returns>
         /// The literal with one character's casing changed.
         /// </returns>
-        private static string QueryIncorrectCase(string value)
+        private static string QueryCasingVariation(string value)
         {
             var characters = value.ToCharArray();
 

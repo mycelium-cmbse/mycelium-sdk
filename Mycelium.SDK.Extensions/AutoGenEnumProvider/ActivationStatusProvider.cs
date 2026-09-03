@@ -19,46 +19,46 @@ namespace Mycelium.SDK.Extensions
     using Mycelium.SDK;
 
     /// <summary>
-    /// Provides exact XMI-literal conversions for <see cref="ActivationStatus" />.
+    /// Provides XMI-literal conversions for <see cref="ActivationStatus" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public static partial class ActivationStatusProvider
     {
         /// <summary>
-        /// Parses an exact XMI literal as a <see cref="ActivationStatus" /> value.
+        /// Parses an XMI literal using ordinal, case-insensitive matching.
         /// </summary>
         /// <param name="value">
-        /// The case-sensitive XMI literal to parse.
+        /// The XMI literal to parse. Letter casing is ignored.
         /// </param>
         /// <returns>
         /// The corresponding <see cref="ActivationStatus" /> value.
         /// </returns>
         /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="value" /> is not an exact XMI literal.
+        /// Thrown when <paramref name="value" /> does not match a defined XMI literal.
         /// </exception>
         public static ActivationStatus Parse(ReadOnlySpan<char> value)
         {
-            if (value.Equals("Active".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Active".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ActivationStatus.Active;
             }
 
-            if (value.Equals("Pending".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Pending".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ActivationStatus.Pending;
             }
 
-            if (value.Equals("Suspended".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Suspended".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ActivationStatus.Suspended;
             }
 
-            if (value.Equals("Archived".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Archived".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ActivationStatus.Archived;
             }
 
-            if (value.Equals("Deleted".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Deleted".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 return ActivationStatus.Deleted;
             }
@@ -69,10 +69,10 @@ namespace Mycelium.SDK.Extensions
         }
 
         /// <summary>
-        /// Tries to parse an exact XMI literal as a <see cref="ActivationStatus" /> value.
+        /// Tries to parse an XMI literal using ordinal, case-insensitive matching.
         /// </summary>
         /// <param name="value">
-        /// The case-sensitive XMI literal to parse.
+        /// The XMI literal to parse. Letter casing is ignored.
         /// </param>
         /// <param name="result">
         /// The parsed value, or the default enumeration value when parsing fails.
@@ -82,31 +82,31 @@ namespace Mycelium.SDK.Extensions
         /// </returns>
         public static bool TryParse(ReadOnlySpan<char> value, out ActivationStatus result)
         {
-            if (value.Equals("Active".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Active".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ActivationStatus.Active;
                 return true;
             }
 
-            if (value.Equals("Pending".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Pending".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ActivationStatus.Pending;
                 return true;
             }
 
-            if (value.Equals("Suspended".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Suspended".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ActivationStatus.Suspended;
                 return true;
             }
 
-            if (value.Equals("Archived".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Archived".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ActivationStatus.Archived;
                 return true;
             }
 
-            if (value.Equals("Deleted".AsSpan(), StringComparison.Ordinal))
+            if (value.Equals("Deleted".AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
                 result = ActivationStatus.Deleted;
                 return true;
@@ -117,13 +117,13 @@ namespace Mycelium.SDK.Extensions
         }
 
         /// <summary>
-        /// Formats a <see cref="ActivationStatus" /> value as its exact XMI literal.
+        /// Formats a <see cref="ActivationStatus" /> value using its exact XMI literal.
         /// </summary>
         /// <param name="value">
         /// The enumeration value to format.
         /// </param>
         /// <returns>
-        /// The exact case-sensitive XMI literal.
+        /// The exact XMI literal spelling and casing.
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when <paramref name="value" /> is not a defined enumeration value.
