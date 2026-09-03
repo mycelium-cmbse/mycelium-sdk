@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="PocoContractTestFixture.cs" company="Starion Group S.A.">
+//  <copyright file="ProjectMemberTestFixture.cs" company="Starion Group S.A.">
 // 
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -15,10 +15,11 @@ namespace Mycelium.SDK.Tests.Poco
     using Mycelium.SDK.POCO;
 
     /// <summary>
-    /// Verifies the handwritten runtime behavior of FunctionalData POCOs.
+    /// Verifies the handwritten runtime behavior of the
+    /// <see cref="ProjectMember" /> POCO.
     /// </summary>
     [TestFixture]
-    public class PocoContractTestFixture
+    public class ProjectMemberTestFixture
     {
         [Test]
         public void Verify_that_IsOutsideCollaborator_is_false_when_any_membership_matches_the_owning_organization()

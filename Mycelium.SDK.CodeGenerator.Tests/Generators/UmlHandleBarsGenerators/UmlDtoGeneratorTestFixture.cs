@@ -9,19 +9,14 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
-    using System.Text;
-
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
 
     using uml4net.StructuredClassifiers;
 
     [TestFixture]
-    public class UmlDtoGeneratorTestFixture
+    public class UmlDtoGeneratorTestFixture : UmlClassGeneratorTestFixtureBase
     {
-        private static readonly UTF8Encoding StrictUtf8WithoutBom =
-            new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
-
         private Dictionary<string, IClass> classes = null!;
         private DirectoryInfo committedDirectory = null!;
         private DirectoryInfo expectedDirectory = null!;
@@ -199,48 +194,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                         $"Generated DTO '{fileName}' contains a standalone line feed.");
                 }
             }
-        }
-
-        private static async Task AssertFilesMatchAsync(
-            string generatedPath,
-            string expectedPath,
-            string generatedDescription,
-            string expectedDescription)
-        {
-            Assert.That(
-                File.Exists(generatedPath),
-                Is.True,
-                $"{generatedDescription} was not generated.");
-
-            Assert.That(
-                File.Exists(expectedPath),
-                Is.True,
-                $"The file representing {expectedDescription} is missing.");
-
-            if (!File.Exists(generatedPath) || !File.Exists(expectedPath))
-            {
-                return;
-            }
-
-            var generatedSource =
-                await File.ReadAllTextAsync(generatedPath, StrictUtf8WithoutBom);
-
-            var expectedSource =
-                await File.ReadAllTextAsync(expectedPath, StrictUtf8WithoutBom);
-
-            Assert.That(
-                generatedSource,
-                Is.EqualTo(expectedSource),
-                $"{generatedDescription} differs from {expectedDescription}.");
-        }
-
-        private static string[] QueryCSharpFileNames(DirectoryInfo directory)
-        {
-            return directory
-                .GetFiles("*.cs", SearchOption.TopDirectoryOnly)
-                .Select(file => file.Name)
-                .OrderBy(fileName => fileName, StringComparer.Ordinal)
-                .ToArray();
         }
     }
 }
