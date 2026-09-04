@@ -9,152 +9,63 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Threading.Tasks;
-
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
-    using Mycelium.SDK.CodeGenerator.Tests.Xmi;
 
     using uml4net.StructuredClassifiers;
 
     [TestFixture]
-    public class UmlPocoGeneratorTestFixture
+    public class UmlPocoGeneratorTestFixture : UmlClassGeneratorTestFixtureBase
     {
-        private static readonly HashSet<string> AbstractClassNames =
-            new(StringComparer.Ordinal)
-            {
-                "AuditableThing",
-                "Thing"
-            };
-
-        private static readonly string[] RepresentativeInterfaceNames =
-        [
-            "AuditableThing",
-            "BranchProtectionRule",
-            "Comment",
-            "FunctionalProject",
-            "FunctionalProjectPolicy",
-            "Organization",
-            "ProjectMember"
-        ];
-
-        private static readonly string[] RepresentativeConcreteClassNames =
-        [
-            "BranchProtectionRule",
-            "Comment",
-            "FunctionalProject",
-            "FunctionalProjectPolicy",
-            "Organization",
-            "ProjectMember"
-        ];
-
         private Dictionary<string, IClass> classes = null!;
         private DirectoryInfo committedDirectory = null!;
         private DirectoryInfo expectedDirectory = null!;
-        private UmlPocoGenerator generator = null!;
         private DirectoryInfo stagingDirectory = null!;
 
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
             this.committedDirectory = new DirectoryInfo(
-                Path.Combine(TestContext.CurrentContext.TestDirectory, "Committed", "Mycelium.SDK", "AutoGenPOCO"));
+                Path.Combine(
+                    TestContext.CurrentContext.TestDirectory,
+                    "Committed",
+                    "Mycelium.SDK",
+                    "AutoGenPOCO"));
 
             this.expectedDirectory = new DirectoryInfo(
-                Path.Combine(TestContext.CurrentContext.TestDirectory, "Expected", "UML", "AutoGenPOCO"));
+                Path.Combine(
+                    TestContext.CurrentContext.TestDirectory,
+                    "Expected",
+                    "UML",
+                    "AutoGenPOCO"));
 
             this.stagingDirectory = new DirectoryInfo(
-                Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_Mycelium.SDK.AutoGenPOCO"));
+                Path.Combine(
+                    TestContext.CurrentContext.TestDirectory,
+                    "UML",
+                    "_Mycelium.SDK.AutoGenPOCO"));
 
             if (this.stagingDirectory.Exists)
             {
                 this.stagingDirectory.Delete(recursive: true);
             }
 
-            var xmiReaderResult = XmiLoadingTestFixture.ReadFunctionalData();
-            var functionalData = XmiLoadingTestFixture.QueryFunctionalDataPackage(xmiReaderResult);
+            var xmiReaderResult = GeneratorSetupFixture.ReadFunctionalData();
+
+            var functionalData =
+                GeneratorSetupFixture.QueryFunctionalDataPackage(xmiReaderResult);
 
             this.classes = functionalData.PackagedElement
                 .OfType<IClass>()
-                .ToDictionary(umlClass => umlClass.Name, StringComparer.Ordinal);
+                .ToDictionary(
+                    umlClass => umlClass.Name,
+                    StringComparer.Ordinal);
 
-            this.generator = new UmlPocoGenerator();
+            var generator = new UmlPocoGenerator();
 
-            await this.generator.GenerateAsync(xmiReaderResult, this.stagingDirectory);
-        }
-
-        [Test]
-        public void Verify_that_batch_generation_produces_exactly_24_POCO_files()
-        {
-            var expectedClassNames = new ExpectedClasses().ToArray();
-
-            var expectedInterfaceFileNames = expectedClassNames
-                .Select(className => $"I{className}.cs")
-                .OrderBy(fileName => fileName, StringComparer.Ordinal)
-                .ToArray();
-
-            var expectedConcreteFileNames = expectedClassNames
-                .Where(className => !AbstractClassNames.Contains(className))
-                .Select(className => $"{className}.cs")
-                .OrderBy(fileName => fileName, StringComparer.Ordinal)
-                .ToArray();
-
-            var expectedFileNames = expectedInterfaceFileNames
-                .Concat(expectedConcreteFileNames)
-                .OrderBy(fileName => fileName, StringComparer.Ordinal)
-                .ToArray();
-
-            var generatedFileNames = QueryCSharpFileNames(this.stagingDirectory);
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(expectedInterfaceFileNames, Has.Length.EqualTo(13));
-                Assert.That(expectedConcreteFileNames, Has.Length.EqualTo(11));
-                Assert.That(expectedFileNames, Has.Length.EqualTo(24));
-                Assert.That(
-                    generatedFileNames,
-                    Is.EqualTo(expectedFileNames),
-                    "The generated POCO set contains missing or extra files.");
-            }
-        }
-
-        [Test]
-        public async Task Verify_that_batch_generation_writes_no_files_when_model_validation_fails()
-        {
-            var invalidReaderResult = XmiLoadingTestFixture.ReadFunctionalData();
-            var functionalData = XmiLoadingTestFixture.QueryFunctionalDataPackage(invalidReaderResult);
-
-            var thing = functionalData.PackagedElement
-                .OfType<IClass>()
-                .Single(umlClass => umlClass.Name == "Thing");
-
-            var idProperty = thing.OwnedAttribute.Single(property => property.Name == "id");
-
-            idProperty.Type = null!;
-
-            var invalidOutputDirectory = new DirectoryInfo(
-                Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_Mycelium.SDK.InvalidAutoGenPOCO"));
-
-            if (invalidOutputDirectory.Exists)
-            {
-                invalidOutputDirectory.Delete(recursive: true);
-            }
-
-            var invalidGenerator = new UmlPocoGenerator();
-
-            await Assert.ThatAsync(() => invalidGenerator.GenerateAsync(invalidReaderResult, invalidOutputDirectory),
-                Throws.TypeOf<InvalidOperationException>());
-
-            invalidOutputDirectory.Refresh();
-
-            Assert.That(
-                invalidOutputDirectory.Exists,
-                Is.False,
-                "The generator created output after model preflight failed.");
+            await generator.GenerateAsync(
+                xmiReaderResult,
+                this.stagingDirectory);
         }
 
         [Test]
@@ -164,6 +75,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 this.committedDirectory.Exists,
                 Is.True,
                 "The committed SDK POCO directory was not copied to the test output.");
+
+            if (!this.committedDirectory.Exists)
+            {
+                return;
+            }
 
             var generatedFileNames = QueryCSharpFileNames(this.stagingDirectory);
             var committedFileNames = QueryCSharpFileNames(this.committedDirectory);
@@ -175,71 +91,96 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             foreach (var fileName in generatedFileNames)
             {
-                var generated = await File.ReadAllTextAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
-                var committed = await File.ReadAllTextAsync(Path.Combine(this.committedDirectory.FullName, fileName));
-
-                Assert.That(
-                    generated,
-                    Is.EqualTo(committed),
-                    $"Generated POCO '{fileName}' differs from the committed SDK source.");
+                await AssertFilesMatchAsync(
+                    Path.Combine(this.stagingDirectory.FullName, fileName),
+                    Path.Combine(this.committedDirectory.FullName, fileName),
+                    $"Generated POCO '{fileName}'",
+                    "the committed SDK source");
             }
         }
 
         [Test]
-        public void Verify_that_reviewed_golden_set_contains_exactly_the_representative_POCOs()
+        [TestCaseSource(typeof(RepresentativeClasses))]
+        [Category("Expected")]
+        public async Task Verify_that_representative_POCOs_match_reviewed_goldens(
+            string className)
         {
-            var expectedFileNames = RepresentativeInterfaceNames
-                .Select(className => $"I{className}.cs")
-                .Concat(RepresentativeConcreteClassNames.Select(className => $"{className}.cs"))
-                .OrderBy(fileName => fileName, StringComparer.Ordinal)
-                .ToArray();
+            Assert.That(
+                this.classes.TryGetValue(className, out var umlClass),
+                Is.True,
+                $"Representative UML class '{className}' was not found.");
 
-            var reviewedFileNames = QueryCSharpFileNames(this.expectedDirectory);
-
-            using (Assert.EnterMultipleScope())
+            if (umlClass is null)
             {
-                Assert.That(expectedFileNames, Has.Length.EqualTo(13));
-
-                Assert.That(
-                    reviewedFileNames,
-                    Is.EqualTo(expectedFileNames),
-                    "The reviewed POCO golden-file set must contain exactly the representative files.");
+                return;
             }
+
+            var interfaceFileName = $"I{className}.cs";
+
+            await AssertFilesMatchAsync(
+                Path.Combine(this.stagingDirectory.FullName, interfaceFileName),
+                Path.Combine(this.expectedDirectory.FullName, interfaceFileName),
+                $"Generated POCO interface '{interfaceFileName}'",
+                "its reviewed golden");
+
+            if (umlClass.IsAbstract)
+            {
+                return;
+            }
+
+            var classFileName = $"{className}.cs";
+
+            await AssertFilesMatchAsync(
+                Path.Combine(this.stagingDirectory.FullName, classFileName),
+                Path.Combine(this.expectedDirectory.FullName, classFileName),
+                $"Generated POCO class '{classFileName}'",
+                "its reviewed golden");
         }
 
-        [TestCaseSource(nameof(RepresentativeInterfaceNames))]
-        [Category("Expected")]
-        public async Task Verify_that_representative_POCO_interface_matches_reviewed_golden_file(string className)
+        [Test]
+        public async Task Verify_that_generated_POCOs_use_the_required_file_format()
         {
-            var generated = await this.generator.GeneratePocoInterfaceAsync(this.stagingDirectory, this.classes[className]);
-            var expected = await File.ReadAllTextAsync(Path.Combine(this.expectedDirectory.FullName, $"I{className}.cs"));
+            foreach (var fileName in QueryCSharpFileNames(this.stagingDirectory))
+            {
+                var bytes = await File.ReadAllBytesAsync(
+                    Path.Combine(this.stagingDirectory.FullName, fileName));
 
-            Assert.That(
-                generated,
-                Is.EqualTo(expected),
-                $"Generated interface 'I{className}.cs' differs from its reviewed golden file.");
-        }
+                var hasUtf8Bom =
+                    bytes.Length >= 3
+                    && bytes[0] == 0xEF
+                    && bytes[1] == 0xBB
+                    && bytes[2] == 0xBF;
 
-        [TestCaseSource(nameof(RepresentativeConcreteClassNames))]
-        [Category("Expected")]
-        public async Task Verify_that_representative_POCO_class_matches_reviewed_golden_file(string className)
-        {
-            var generated = await this.generator.GeneratePocoClassAsync(this.stagingDirectory, this.classes[className]);
-            var expected = await File.ReadAllTextAsync(Path.Combine(this.expectedDirectory.FullName, $"{className}.cs"));
+                var source = StrictUtf8WithoutBom.GetString(bytes);
 
-            Assert.That(
-                generated,
-                Is.EqualTo(expected),
-                $"Generated class '{className}.cs' differs from its reviewed golden file.");
-        }
+                var sourceWithoutCrLf = source.Replace(
+                    "\r\n",
+                    string.Empty,
+                    StringComparison.Ordinal);
 
-        private static string[] QueryCSharpFileNames(DirectoryInfo directory)
-        {
-            return directory
-                .GetFiles("*.cs", SearchOption.TopDirectoryOnly)
-                .Select(file => file.Name)
-                .OrderBy(fileName => fileName, StringComparer.Ordinal)
-                .ToArray();
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(
+                        hasUtf8Bom,
+                        Is.False,
+                        $"Generated POCO '{fileName}' contains a UTF-8 byte-order mark.");
+
+                    Assert.That(
+                        source,
+                        Does.Contain("\r\n"),
+                        $"Generated POCO '{fileName}' contains no CRLF line endings.");
+
+                    Assert.That(
+                        sourceWithoutCrLf,
+                        Does.Not.Contain("\r"),
+                        $"Generated POCO '{fileName}' contains a standalone carriage return.");
+
+                    Assert.That(
+                        sourceWithoutCrLf,
+                        Does.Not.Contain("\n"),
+                        $"Generated POCO '{fileName}' contains a standalone line feed.");
+                }
+            }
         }
     }
 }

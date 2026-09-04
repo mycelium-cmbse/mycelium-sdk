@@ -18,29 +18,29 @@ namespace Mycelium.SDK.POCO
     using System.Collections.Generic;
 
     /// <summary>
-    /// Any <see cref="Thing" /> that shall record creation and update date and authority.
+    /// Any <see cref="IThing" /> that shall record creation and update date and authority.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial interface IAuditableThing : IThing
     {
         /// <summary>
-        /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
+        /// References the <see cref="User" /> that created the current <see cref="IAuditableThing" />.
         /// </summary>
         IUser CreatedBy { get; set; }
 
         /// <summary>
-        /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
+        /// Provides the creation <see cref="DateTime" /> of the current <see cref="IAuditableThing" />
         /// </summary>
         DateTime CreatedOn { get; set; }
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
-        /// <see cref="AuditableThing" />.
+        /// <see cref="IAuditableThing" />.
         /// </summary>
         IUser UpdatedBy { get; set; }
 
         /// <summary>
-        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
+        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="IAuditableThing" />
         /// </summary>
         DateTime UpdatedOn { get; set; }
     }

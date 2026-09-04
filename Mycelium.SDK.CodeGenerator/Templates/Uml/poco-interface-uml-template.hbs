@@ -1,10 +1,10 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="I{{this.Name}}.cs" company="Starion Group S.A.">
-//
-//    Copyright 2026 Starion Group S.A.
-//    SPDX-License-Identifier: Apache-2.0
-//
-//  </copyright>
+    //
+    //    Copyright 2026 Starion Group S.A.
+    //    SPDX-License-Identifier: Apache-2.0
+    //
+    //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
 // ------------------------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ using System.Collections.Generic;
 {{ #Documentation this }}[GeneratedCode("Mycelium.SDK", "latest")]
 public partial interface {{ #Class.WritePocoInterfaceIdentifier this }}{{ #Class.WritePocoInterfaceGeneralizations this }}
 {
-{{ #each (Class.QueryPocoInterfaceProperties this) as | property | }}
+{{ #each (#Class.QueryPocoInterfaceProperties this) as | property | }}
 {{ #Documentation property }}{{ #Property.WritePocoInterfaceDeclaration property }}
 {{#unless @last}}
 

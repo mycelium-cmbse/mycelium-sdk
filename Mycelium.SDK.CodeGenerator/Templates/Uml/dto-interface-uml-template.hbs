@@ -1,10 +1,10 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="I{{this.Name}}.cs" company="Starion Group S.A.">
-//
-//    Copyright 2026 Starion Group S.A.
-//    SPDX-License-Identifier: Apache-2.0
-//
-//  </copyright>
+    //
+    //    Copyright 2026 Starion Group S.A.
+    //    SPDX-License-Identifier: Apache-2.0
+    //
+    //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
 // ------------------------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ using System.Collections.Generic;
 {{ #Documentation this }}[GeneratedCode("Mycelium.SDK", "latest")]
 public partial interface {{ #Class.WriteDtoInterfaceIdentifier this }}{{ #Class.WriteDtoInterfaceGeneralizations this }}
 {
-{{ #each (Class.QueryDtoInterfaceProperties this) as | property | }}
+{{ #each (#Class.QueryDtoInterfaceProperties this) as | property | }}
 {{ #Documentation property }}{{ #Property.WriteDtoInterfaceDeclaration property }}
 {{#unless @last}}
 

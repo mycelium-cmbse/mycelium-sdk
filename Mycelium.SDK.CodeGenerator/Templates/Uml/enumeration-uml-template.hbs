@@ -1,10 +1,10 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="{{this.Name}}.cs" company="Starion Group S.A.">
-//
-//    Copyright 2026 Starion Group S.A.
-//    SPDX-License-Identifier: Apache-2.0
-//
-//  </copyright>
+    //
+    //    Copyright 2026 Starion Group S.A.
+    //    SPDX-License-Identifier: Apache-2.0
+    //
+    //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
 // ------------------------------------------------------------------------------------------------
@@ -13,23 +13,22 @@
 
 namespace Mycelium.SDK
 {
-    using System.CodeDom.Compiler;{{ #Enumeration.WriteDtoUsing this }}
+using System.CodeDom.Compiler;{{ #Enumeration.WriteDtoUsing this }}
 
-    {{ #Documentation this }}
-    [GeneratedCode("Mycelium.SDK", "latest")]
-    {{ Enum.ToString this.Visibility }} enum {{ #NamedElement.WriteIdentifier this }}
-    {
-        {{ #each this.OwnedLiteral as | enumerationLiteral | }}
-        {{ #Documentation enumerationLiteral }}
-        {{ #EnumerationLiteral.Write enumerationLiteral }},
-        {{#unless @last}}
+{{ #Documentation this }}
+[GeneratedCode("Mycelium.SDK", "latest")]
+public enum {{ #NamedElement.WriteIdentifier this }}
+{
+{{ #each this.OwnedLiteral as | enumerationLiteral | }}
+{{ #Documentation enumerationLiteral }}
+{{ #EnumerationLiteral.Write enumerationLiteral }},
+{{#unless @last}}
 
-        {{/unless}}
-        {{/each}}
-    }
+{{/unless}}
+{{/each}}
+}
 }
 
 // ------------------------------------------------------------------------------------------------
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
-    

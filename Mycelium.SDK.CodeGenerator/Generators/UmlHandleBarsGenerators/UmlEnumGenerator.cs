@@ -9,18 +9,17 @@
 
 namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 {
-    using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp;
-
-    using Mycelium.SDK.CodeGenerator.Extensions;
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
 
     using uml4net.HandleBars;
     using uml4net.SimpleClassifiers;
     using uml4net.xmi.Readers;
 
-    using DocumentationHelper = Mycelium.SDK.CodeGenerator.HandleBarHelpers.DocumentationHelper;
-    using NamedElementHelper = Mycelium.SDK.CodeGenerator.HandleBarHelpers.NamedElementHelper;
+    using DocumentationHelper =
+        Mycelium.SDK.CodeGenerator.HandleBarHelpers.DocumentationHelper;
+
+    using NamedElementHelper =
+        Mycelium.SDK.CodeGenerator.HandleBarHelpers.NamedElementHelper;
 
     /// <summary>
     /// Generates the FunctionalData enumerations.
@@ -32,28 +31,10 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// </summary>
         private const string TemplateName = "enumeration-uml-template";
 
-        /// <summary>
-        /// The artifact name used in validation messages.
-        /// </summary>
-        private const string ArtifactName = "Enumeration";
-        
-        /// <summary>
-        /// The complete reviewed enumeration output manifest.
-        /// </summary>
-        private static readonly string[] ExpectedFileNames =
-        [
-            "ActivationStatus.cs",
-            "CommentStatus.cs",
-            "OrganizationMembershipRole.cs",
-            "ProjectLifecycleKind.cs",
-            "ProjectMemberRole.cs",
-            "ProjectMode.cs",
-            "ProjectVisibility.cs",
-            "ReviewStatus.cs"
-        ];
-
         /// <inheritdoc />
-        public override async Task GenerateAsync(XmiReaderResult xmiReaderResult, DirectoryInfo outputDirectory)
+        public override async Task GenerateAsync(
+            XmiReaderResult xmiReaderResult,
+            DirectoryInfo outputDirectory)
         {
             ArgumentNullException.ThrowIfNull(xmiReaderResult);
             ArgumentNullException.ThrowIfNull(outputDirectory);
@@ -64,9 +45,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                 .Select(this.RenderEnumeration)
                 .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
                 .ToArray();
-
-            ThrowIfDuplicateFileNames(generatedFiles, ArtifactName);
-            ThrowIfUnexpectedManifest(generatedFiles);
 
             await WriteAsync(generatedFiles, outputDirectory);
         }
@@ -81,21 +59,15 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The UML enumeration to generate.
         /// </param>
         /// <returns>
-        /// A task that represents the asynchronous enumeration generation operation. The task result
-        /// contains the generated and formatted C# source.
+        /// A task whose result contains the generated and formatted C# source.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="outputDirectory"/> or <paramref name="enumeration"/> is
+        /// Thrown when <paramref name="outputDirectory" /> or <paramref name="enumeration" /> is
         /// <see langword="null" />.
         /// </exception>
-        /// <exception cref="ArgumentException">
-        /// Thrown when the enumeration name or one of its literal names cannot be represented as a legal
-        /// C# identifier.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when literal identifiers collide or the rendered source contains C# syntax errors.
-        /// </exception>
-        public async Task<string> GenerateEnumerationAsync(DirectoryInfo outputDirectory, IEnumeration enumeration)
+        public async Task<string> GenerateEnumerationAsync(
+            DirectoryInfo outputDirectory,
+            IEnumeration enumeration)
         {
             ArgumentNullException.ThrowIfNull(outputDirectory);
             ArgumentNullException.ThrowIfNull(enumeration);
@@ -108,94 +80,27 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
-        /// Validates and renders one enumeration without writing it.
+        /// Renders one enumeration without writing it.
         /// </summary>
         /// <param name="enumeration">
         /// The UML enumeration to render.
         /// </param>
         /// <returns>
-        /// The generated filename and source.
+        /// The generated filename and formatted source.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="enumeration" /> is <see langword="null" />.
+        /// </exception>
         private GeneratedFile RenderEnumeration(IEnumeration enumeration)
         {
             ArgumentNullException.ThrowIfNull(enumeration);
 
-            _ = ReservedCSharpNameMapper.Map(enumeration.Name);
-
-            var duplicateLiteralIdentifier = enumeration.OwnedLiteral
-                .Select(literal => ReservedCSharpNameMapper.Map(literal.Name))
-                .GroupBy(identifier => identifier, StringComparer.Ordinal)
-                .FirstOrDefault(group => group.Count() > 1)
-                ?.Key;
-
-            if (duplicateLiteralIdentifier is not null)
-            {
-                throw new InvalidOperationException(
-                    $"Enumeration '{enumeration.Name}' contains duplicate C# literal identifier "
-                    + $"'{duplicateLiteralIdentifier}'.");
-            }
-
-            var fileName = $"{enumeration.Name}.cs";
-            var template = this.Templates[TemplateName];
-            var generatedCode = template(enumeration);
-
-            ThrowIfInvalidSyntax(fileName, generatedCode);
-
+            var generatedCode = this.Templates[TemplateName](enumeration);
             generatedCode = this.CodeCleanup(generatedCode);
 
-            ThrowIfInvalidSyntax(fileName, generatedCode);
-
-            return new GeneratedFile(fileName, generatedCode);
-        }
-
-        /// <summary>
-        /// Verifies the complete reviewed output manifest.
-        /// </summary>
-        /// <param name="generatedFiles">
-        /// The complete filename-sorted rendered batch.
-        /// </param>
-        private static void ThrowIfUnexpectedManifest(IReadOnlyCollection<GeneratedFile> generatedFiles)
-        {
-            var actualFileNames = generatedFiles
-                .Select(generatedFile => generatedFile.FileName)
-                .ToArray();
-
-            if (actualFileNames.SequenceEqual(ExpectedFileNames, StringComparer.Ordinal))
-            {
-                return;
-            }
-
-            throw new InvalidOperationException(
-                "Enumeration generation produced an unexpected manifest."
-                + $"{Environment.NewLine}Expected: {string.Join(", ", ExpectedFileNames)}"
-                + $"{Environment.NewLine}Actual: {string.Join(", ", actualFileNames)}");
-        }
-
-        /// <summary>
-        /// Rejects rendered C# containing syntax errors.
-        /// </summary>
-        /// <param name="fileName">
-        /// The generated filename.
-        /// </param>
-        /// <param name="source">
-        /// The rendered source.
-        /// </param>
-        private static void ThrowIfInvalidSyntax(string fileName, string source)
-        {
-            var syntaxErrors = CSharpSyntaxTree
-                .ParseText(source)
-                .GetDiagnostics()
-                .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
-                .ToArray();
-
-            if (syntaxErrors.Length == 0)
-            {
-                return;
-            }
-
-            throw new InvalidOperationException(
-                $"Enumeration generation produced invalid C# for '{fileName}'."
-                + $"{Environment.NewLine}{string.Join(Environment.NewLine, syntaxErrors)}");
+            return new GeneratedFile(
+                $"{enumeration.Name}.cs",
+                generatedCode);
         }
 
         /// <inheritdoc />

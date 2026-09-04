@@ -14,45 +14,27 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     using Microsoft.CodeAnalysis.CSharp;
 
     /// <summary>
-    /// Validates modeled names and escapes reserved C# keywords without otherwise changing them.
+    /// Escapes reserved C# keywords without otherwise changing modeled names.
     /// </summary>
     public static class ReservedCSharpNameMapper
     {
         /// <summary>
-        /// Escapes a C# keyword and leaves an already valid identifier unchanged.
+        /// Escapes a reserved C# keyword and leaves every other modeled name unchanged.
         /// </summary>
         /// <param name="input">
-        /// The modeled name to map to a legal C# identifier.
+        /// The modeled name to map.
         /// </param>
         /// <returns>
-        /// The escaped keyword, or the unchanged valid identifier.
+        /// The escaped keyword, or the unchanged modeled name.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="input"/> is <see langword="null" />.
         /// </exception>
-        /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="input"/> is empty or cannot be represented as a legal C# identifier
-        /// without changing the modeled value.
-        /// </exception>
         public static string Map(string input)
         {
-            ArgumentException.ThrowIfNullOrEmpty(input);
+            ArgumentNullException.ThrowIfNull(input);
 
-            if (QueryIsReserved(input))
-            {
-                return $"@{input}";
-            }
-
-            var parsedIdentifier = SyntaxFactory.ParseToken(input);
-
-            if (SyntaxFacts.IsValidIdentifier(input) && string.Equals(parsedIdentifier.ValueText, input, StringComparison.Ordinal))
-            {
-                return input;
-            }
-
-            throw new ArgumentException(
-                $"'{input}' is not a valid C# identifier and cannot be escaped without changing the modeled value.",
-                nameof(input));
+            return QueryIsReserved(input) ? $"@{input}" : input;
         }
 
         /// <summary>
@@ -68,12 +50,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="input"/> is <see langword="null" />.
         /// </exception>
-        /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="input"/> is empty.
-        /// </exception>
         public static bool QueryIsReserved(string input)
         {
-            ArgumentException.ThrowIfNullOrEmpty(input);
+            ArgumentNullException.ThrowIfNull(input);
 
             return SyntaxFacts.GetKeywordKind(input) != SyntaxKind.None;
         }

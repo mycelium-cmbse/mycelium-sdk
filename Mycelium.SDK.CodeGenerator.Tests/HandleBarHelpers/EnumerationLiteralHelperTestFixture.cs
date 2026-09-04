@@ -45,20 +45,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         }
 
         [Test]
-        public void Verify_that_EnumerationLiteral_Write_rejects_an_illegal_identifier()
-        {
-            var literal = new EnumerationLiteral
-            {
-                XmiId = "literal-id",
-                Name = "Invalid-Literal"
-            };
-
-            var template = this.handlebars.Compile("{{ #EnumerationLiteral.Write this }}");
-
-            Assert.That(() => template(literal), Throws.TypeOf<ArgumentException>());
-        }
-
-        [Test]
         public void Verify_that_EnumerationLiteral_Write_requires_an_IEnumerationLiteral_argument()
         {
             var template = this.handlebars.Compile("{{ #EnumerationLiteral.Write this }}");

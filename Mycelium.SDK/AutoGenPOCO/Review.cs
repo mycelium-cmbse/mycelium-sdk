@@ -40,12 +40,12 @@ namespace Mycelium.SDK.POCO
         public List<IComment> Comments { get; set; } = [];
 
         /// <summary>
-        /// References the <see cref="User" /> that created the current <see cref="AuditableThing" />.
+        /// References the <see cref="User" /> that created the current <see cref="IAuditableThing" />.
         /// </summary>
         public IUser CreatedBy { get; set; }
 
         /// <summary>
-        /// Provides the creation <see cref="DateTime" /> of the current <see cref="AuditableThing" />
+        /// Provides the creation <see cref="DateTime" /> of the current <see cref="IAuditableThing" />
         /// </summary>
         public DateTime CreatedOn { get; set; }
 
@@ -85,12 +85,12 @@ namespace Mycelium.SDK.POCO
 
         /// <summary>
         /// References the <see cref="User" /> that provide the last update on the current
-        /// <see cref="AuditableThing" />.
+        /// <see cref="IAuditableThing" />.
         /// </summary>
         public IUser UpdatedBy { get; set; }
 
         /// <summary>
-        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="AuditableThing" />
+        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="IAuditableThing" />
         /// </summary>
         public DateTime UpdatedOn { get; set; }
     }
