@@ -1,0 +1,97 @@
+{{ #if (Property.QueryIsStringDictionary property) }}
+writer.WriteStartObject("{{ #String.LowerCaseFirstLetter property.Name }}"u8);
+
+foreach (var entry in System.Linq.Enumerable.OrderBy(
+dto.{{ #Property.WritePropertyName property }},
+entry => entry.Key,
+StringComparer.Ordinal))
+{
+writer.WriteString(entry.Key, entry.Value);
+}
+
+writer.WriteEndObject();
+{{ else if (Property.QueryIsEnumerable property) }}
+writer.WriteStartArray("{{ #String.LowerCaseFirstLetter property.Name }}"u8);
+
+foreach (var item in dto.{{ #Property.WritePropertyName property }})
+{
+{{ #if (Property.QueryIsReferenceProperty property) }}
+writer.WriteStartObject();
+writer.WriteString("@id"u8, item);
+writer.WriteEndObject();
+{{ else if (Property.QueryIsBool property) }}
+writer.WriteBooleanValue(item);
+{{ else if (Property.QueryIsEnum property) }}
+writer.WriteStringValue(
+Mycelium.SDK.Extensions.{{ #NamedElement.WriteIdentifier property.Type }}Provider
+.Format(item)
+.ToUpperInvariant());
+{{ else if (Property.QueryIsNumeric property) }}
+writer.WriteNumberValue(item);
+{{ else }}
+writer.WriteStringValue(item);
+{{ /if }}
+}
+
+writer.WriteEndArray();
+{{ else if (Property.QueryIsNullable property) }}
+writer.WritePropertyName(
+"{{ #String.LowerCaseFirstLetter property.Name }}"u8);
+{{ #if (Property.QueryIsString property) }}
+writer.WriteStringValue(
+dto.{{ #Property.WritePropertyName property }});
+{{ else }}
+if (dto.{{ #Property.WritePropertyName property }}.HasValue)
+{
+{{ #if (Property.QueryIsReferenceProperty property) }}
+writer.WriteStartObject();
+writer.WriteString(
+"@id"u8,
+dto.{{ #Property.WritePropertyName property }}.Value);
+writer.WriteEndObject();
+{{ else if (Property.QueryIsBool property) }}
+writer.WriteBooleanValue(
+dto.{{ #Property.WritePropertyName property }}.Value);
+{{ else if (Property.QueryIsEnum property) }}
+writer.WriteStringValue(
+Mycelium.SDK.Extensions.{{ #NamedElement.WriteIdentifier property.Type }}Provider
+.Format(dto.{{ #Property.WritePropertyName property }}.Value)
+.ToUpperInvariant());
+{{ else if (Property.QueryIsNumeric property) }}
+writer.WriteNumberValue(
+dto.{{ #Property.WritePropertyName property }}.Value);
+{{ else }}
+writer.WriteStringValue(
+dto.{{ #Property.WritePropertyName property }}.Value);
+{{ /if }}
+}
+else
+{
+writer.WriteNullValue();
+}
+{{ /if }}
+{{ else if (Property.QueryIsScalar property) }}
+writer.WritePropertyName(
+"{{ #String.LowerCaseFirstLetter property.Name }}"u8);
+{{ #if (Property.QueryIsReferenceProperty property) }}
+writer.WriteStartObject();
+writer.WriteString(
+"@id"u8,
+dto.{{ #Property.WritePropertyName property }});
+writer.WriteEndObject();
+{{ else if (Property.QueryIsBool property) }}
+writer.WriteBooleanValue(
+dto.{{ #Property.WritePropertyName property }});
+{{ else if (Property.QueryIsEnum property) }}
+writer.WriteStringValue(
+Mycelium.SDK.Extensions.{{ #NamedElement.WriteIdentifier property.Type }}Provider
+.Format(dto.{{ #Property.WritePropertyName property }})
+.ToUpperInvariant());
+{{ else if (Property.QueryIsNumeric property) }}
+writer.WriteNumberValue(
+dto.{{ #Property.WritePropertyName property }});
+{{ else }}
+writer.WriteStringValue(
+dto.{{ #Property.WritePropertyName property }});
+{{ /if }}
+{{ /if }}
