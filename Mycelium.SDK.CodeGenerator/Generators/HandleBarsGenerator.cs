@@ -91,6 +91,29 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         }
 
         /// <summary>
+        /// Loads and registers a partial template using its filename without
+        /// the <c>.hbs</c> extension.
+        /// </summary>
+        /// <param name="name">
+        /// The case-sensitive partial-template name.
+        /// </param>
+        protected void RegisterPartialTemplate(string name)
+        {
+            ArgumentNullException.ThrowIfNullOrEmpty(name);
+
+            var templatePath =
+                Path.Combine(
+                    this.TemplateFolderPath,
+                    "Partials",
+                    $"{name}.hbs");
+
+            var template =
+                File.ReadAllText(templatePath, Encoding.UTF8);
+
+            this.Handlebars.RegisterTemplate(name, template);
+        }
+
+        /// <summary>
         /// Registers the generator-specific helpers and templates.
         /// </summary>
         private void Register()
