@@ -1,4 +1,4 @@
-﻿// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 //  <copyright file="SerializerTestFixture.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
@@ -24,6 +24,80 @@ namespace Mycelium.SDK.Serializer.Json.Tests
     [TestFixture]
     public class SerializerTestFixture
     {
+        /// <summary>
+        /// Expected modeled property order for a branch protection rule.
+        /// </summary>
+        private static readonly string[] ExpectedBranchProtectionRulePropertyNames =
+        [
+            "@type",
+            "@id",
+            "createdBy",
+            "createdOn",
+            "defaultReviewers",
+            "engineeringBranchId",
+            "mergeAllowedFor",
+            "minimumRequiredApproval",
+            "name",
+            "reviewRequired",
+            "updatedBy",
+            "updatedOn",
+        ];
+
+        /// <summary>
+        /// Expected invariant-uppercase enumeration literals for merge roles.
+        /// </summary>
+        private static readonly string[] ExpectedMergeAllowedForLiterals =
+        [
+            "VIEWER",
+            "ADMINISTRATOR",
+        ];
+
+        /// <summary>
+        /// Expected modeled property order for a project member.
+        /// </summary>
+        private static readonly string[] ExpectedProjectMemberPropertyNames =
+        [
+            "@type",
+            "@id",
+            "activeOwnership",
+            "createdBy",
+            "createdOn",
+            "isPartOf",
+            "owns",
+            "role",
+            "updatedBy",
+            "updatedOn",
+            "user",
+        ];
+
+        /// <summary>
+        /// Expected ordinally ordered shared-preference keys.
+        /// </summary>
+        private static readonly string[] ExpectedSharedPreferenceKeys =
+        [
+            "A-first",
+            "a-middle",
+            "z-last",
+        ];
+
+        /// <summary>
+        /// Expected shared-preference values corresponding to the ordinal keys.
+        /// </summary>
+        private static readonly string[] ExpectedSharedPreferenceValues =
+        [
+            "FIRST value",
+            "MiXeD value",
+            "last value",
+        ];
+
+        /// <summary>
+        /// Expected property set for an exact JSON reference envelope.
+        /// </summary>
+        private static readonly string[] ExpectedReferenceEnvelopePropertyNames =
+        [
+            "@id",
+        ];
+
         /// <summary>
         /// Verifies that serializer lookup supports only exact concrete DTO
         /// runtime types and does not use interface or inheritance fallback.
@@ -145,22 +219,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
                 Assert.That(
                     propertyNames,
-                    Is.EqualTo(
-                        new[]
-                        {
-                            "@type",
-                            "@id",
-                            "createdBy",
-                            "createdOn",
-                            "defaultReviewers",
-                            "engineeringBranchId",
-                            "mergeAllowedFor",
-                            "minimumRequiredApproval",
-                            "name",
-                            "reviewRequired",
-                            "updatedBy",
-                            "updatedOn",
-                        }));
+                    Is.EqualTo(ExpectedBranchProtectionRulePropertyNames));
 
                 Assert.That(
                     root.GetProperty("@type").GetString(),
@@ -180,12 +239,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
                 Assert.That(
                     mergeAllowedFor,
-                    Is.EqualTo(
-                        new[]
-                        {
-                            "VIEWER",
-                            "ADMINISTRATOR",
-                        }));
+                    Is.EqualTo(ExpectedMergeAllowedForLiterals));
 
                 Assert.That(
                     root.GetProperty("minimumRequiredApproval").GetInt32(),
@@ -308,21 +362,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             {
                 Assert.That(
                     propertyNames,
-                    Is.EqualTo(
-                        new[]
-                        {
-                            "@type",
-                            "@id",
-                            "activeOwnership",
-                            "createdBy",
-                            "createdOn",
-                            "isPartOf",
-                            "owns",
-                            "role",
-                            "updatedBy",
-                            "updatedOn",
-                            "user",
-                        }));
+                    Is.EqualTo(ExpectedProjectMemberPropertyNames));
 
                 Assert.That(
                     rootWithReference.GetProperty("@type").GetString(),
@@ -488,25 +528,13 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                     dictionaryEntries
                         .Select(entry => entry.Name)
                         .ToArray(),
-                    Is.EqualTo(
-                        new[]
-                        {
-                            "A-first",
-                            "a-middle",
-                            "z-last",
-                        }));
+                    Is.EqualTo(ExpectedSharedPreferenceKeys));
 
                 Assert.That(
                     dictionaryEntries
                         .Select(entry => entry.Value.GetString())
                         .ToArray(),
-                    Is.EqualTo(
-                        new[]
-                        {
-                            "FIRST value",
-                            "MiXeD value",
-                            "last value",
-                        }));
+                    Is.EqualTo(ExpectedSharedPreferenceValues));
             }
         }
 
@@ -563,7 +591,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                     properties
                         .Select(property => property.Name)
                         .ToArray(),
-                    Is.EqualTo(new[] { "@id" }));
+                    Is.EqualTo(ExpectedReferenceEnvelopePropertyNames));
 
                 Assert.That(
                     properties[0].Value.GetGuid(),
