@@ -91,14 +91,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         ];
 
         /// <summary>
-        /// Expected property set for an exact JSON reference envelope.
-        /// </summary>
-        private static readonly string[] ExpectedReferenceEnvelopePropertyNames =
-        [
-            "@id",
-        ];
-
-        /// <summary>
         /// Verifies that serializer lookup supports only exact concrete DTO
         /// runtime types and does not use interface or inheritance fallback.
         /// </summary>
@@ -262,25 +254,25 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                     Has.Length.EqualTo(2));
             }
 
-            AssertReferenceEnvelope(
+            AssertReferenceValue(
                 root.GetProperty("createdBy"),
                 createdBy);
 
-            AssertReferenceEnvelope(
+            AssertReferenceValue(
                 defaultReviewers[0],
                 firstReviewer);
 
-            AssertReferenceEnvelope(
+            AssertReferenceValue(
                 defaultReviewers[1],
                 secondReviewer);
 
-            AssertReferenceEnvelope(
+            AssertReferenceValue(
                 root.GetProperty("updatedBy"),
                 updatedBy);
         }
 
         /// <summary>
-        /// Verifies nullable reference envelopes and confirms that the
+        /// Verifies nullable reference values and confirms that the
         /// POCO-only derived property is not represented in DTO JSON.
         /// </summary>
         [Test]
@@ -383,31 +375,31 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                     Is.False);
             }
 
-            AssertReferenceEnvelope(
+            AssertReferenceValue(
                 rootWithReference.GetProperty("activeOwnership"),
                 activeOwnership);
 
-            AssertReferenceEnvelope(
+            AssertReferenceValue(
                 rootWithReference.GetProperty("createdBy"),
                 createdBy);
 
-            AssertReferenceEnvelope(
+            AssertReferenceValue(
                 rootWithReference.GetProperty("isPartOf"),
                 project);
 
-            AssertReferenceEnvelope(
+            AssertReferenceValue(
                 ownerships[0],
                 firstOwnership);
 
-            AssertReferenceEnvelope(
+            AssertReferenceValue(
                 ownerships[1],
                 secondOwnership);
 
-            AssertReferenceEnvelope(
+            AssertReferenceValue(
                 rootWithReference.GetProperty("updatedBy"),
                 updatedBy);
 
-            AssertReferenceEnvelope(
+            AssertReferenceValue(
                 rootWithReference.GetProperty("user"),
                 user);
 
@@ -564,39 +556,25 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         }
 
         /// <summary>
-        /// Verifies the exact shape and identifier of a JSON reference
-        /// envelope.
+        /// Verifies the directly serialized JSON reference value.
         /// </summary>
         /// <param name="reference">
-        /// The JSON reference envelope.
+        /// The JSON string containing the referenced identifier.
         /// </param>
         /// <param name="expectedId">
         /// The expected referenced identifier.
         /// </param>
-        private static void AssertReferenceEnvelope(
+        private static void AssertReferenceValue(
             JsonElement reference,
             Guid expectedId)
         {
             Assert.That(
                 reference.ValueKind,
-                Is.EqualTo(JsonValueKind.Object));
+                Is.EqualTo(JsonValueKind.String));
 
-            var properties = reference
-                .EnumerateObject()
-                .ToArray();
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(
-                    properties
-                        .Select(property => property.Name)
-                        .ToArray(),
-                    Is.EqualTo(ExpectedReferenceEnvelopePropertyNames));
-
-                Assert.That(
-                    properties[0].Value.GetGuid(),
-                    Is.EqualTo(expectedId));
-            }
+            Assert.That(
+                reference.GetGuid(),
+                Is.EqualTo(expectedId));
         }
 
         /// <summary>

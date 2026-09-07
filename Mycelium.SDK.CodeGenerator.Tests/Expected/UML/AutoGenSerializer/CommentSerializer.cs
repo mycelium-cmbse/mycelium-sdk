@@ -67,11 +67,8 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteString("@id"u8, dto.Id);
             writer.WritePropertyName(
             "author"u8);
-            writer.WriteStartObject();
-            writer.WriteString(
-            "@id"u8,
+            writer.WriteStringValue(
             dto.Author);
-            writer.WriteEndObject();
             writer.WritePropertyName(
             "commentStatus"u8);
             writer.WriteStringValue(
@@ -84,11 +81,8 @@ namespace Mycelium.SDK.Serializer.Json
             dto.Content);
             writer.WritePropertyName(
             "createdBy"u8);
-            writer.WriteStartObject();
-            writer.WriteString(
-            "@id"u8,
+            writer.WriteStringValue(
             dto.CreatedBy);
-            writer.WriteEndObject();
             writer.WritePropertyName(
             "createdOn"u8);
             writer.WriteStringValue(
@@ -97,11 +91,8 @@ namespace Mycelium.SDK.Serializer.Json
             "quotes"u8);
             if (dto.Quotes.HasValue)
             {
-                writer.WriteStartObject();
-                writer.WriteString(
-                "@id"u8,
+                writer.WriteStringValue(
                 dto.Quotes.Value);
-                writer.WriteEndObject();
             }
             else
             {
@@ -111,9 +102,7 @@ namespace Mycelium.SDK.Serializer.Json
 
             foreach (var item in dto.Replies)
             {
-                writer.WriteStartObject();
-                writer.WriteString("@id"u8, item);
-                writer.WriteEndObject();
+                writer.WriteStringValue(item);
             }
 
             writer.WriteEndArray();
@@ -123,11 +112,8 @@ namespace Mycelium.SDK.Serializer.Json
             dto.TargetElementId);
             writer.WritePropertyName(
             "updatedBy"u8);
-            writer.WriteStartObject();
-            writer.WriteString(
-            "@id"u8,
+            writer.WriteStringValue(
             dto.UpdatedBy);
-            writer.WriteEndObject();
             writer.WritePropertyName(
             "updatedOn"u8);
             writer.WriteStringValue(

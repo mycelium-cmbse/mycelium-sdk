@@ -67,28 +67,20 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteString("@id"u8, dto.Id);
             writer.WritePropertyName(
             "belongsTo"u8);
-            writer.WriteStartObject();
-            writer.WriteString(
-            "@id"u8,
+            writer.WriteStringValue(
             dto.BelongsTo);
-            writer.WriteEndObject();
             writer.WriteStartArray("branchRules"u8);
 
             foreach (var item in dto.BranchRules)
             {
-                writer.WriteStartObject();
-                writer.WriteString("@id"u8, item);
-                writer.WriteEndObject();
+                writer.WriteStringValue(item);
             }
 
             writer.WriteEndArray();
             writer.WritePropertyName(
             "createdBy"u8);
-            writer.WriteStartObject();
-            writer.WriteString(
-            "@id"u8,
+            writer.WriteStringValue(
             dto.CreatedBy);
-            writer.WriteEndObject();
             writer.WritePropertyName(
             "createdOn"u8);
             writer.WriteStringValue(
@@ -103,9 +95,7 @@ namespace Mycelium.SDK.Serializer.Json
 
             foreach (var item in dto.Defines)
             {
-                writer.WriteStartObject();
-                writer.WriteString("@id"u8, item);
-                writer.WriteEndObject();
+                writer.WriteStringValue(item);
             }
 
             writer.WriteEndArray();
@@ -121,9 +111,7 @@ namespace Mycelium.SDK.Serializer.Json
 
             foreach (var item in dto.Involves)
             {
-                writer.WriteStartObject();
-                writer.WriteString("@id"u8, item);
-                writer.WriteEndObject();
+                writer.WriteStringValue(item);
             }
 
             writer.WriteEndArray();
@@ -139,18 +127,13 @@ namespace Mycelium.SDK.Serializer.Json
             dto.Name);
             writer.WritePropertyName(
             "policy"u8);
-            writer.WriteStartObject();
-            writer.WriteString(
-            "@id"u8,
+            writer.WriteStringValue(
             dto.Policy);
-            writer.WriteEndObject();
             writer.WriteStartArray("reviews"u8);
 
             foreach (var item in dto.Reviews)
             {
-                writer.WriteStartObject();
-                writer.WriteString("@id"u8, item);
-                writer.WriteEndObject();
+                writer.WriteStringValue(item);
             }
 
             writer.WriteEndArray();
@@ -167,11 +150,8 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteEndObject();
             writer.WritePropertyName(
             "updatedBy"u8);
-            writer.WriteStartObject();
-            writer.WriteString(
-            "@id"u8,
+            writer.WriteStringValue(
             dto.UpdatedBy);
-            writer.WriteEndObject();
             writer.WritePropertyName(
             "updatedOn"u8);
             writer.WriteStringValue(

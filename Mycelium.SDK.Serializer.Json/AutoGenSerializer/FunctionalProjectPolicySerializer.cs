@@ -79,22 +79,16 @@ namespace Mycelium.SDK.Serializer.Json
             dto.AllowVersionBranching);
             writer.WritePropertyName(
             "createdBy"u8);
-            writer.WriteStartObject();
-            writer.WriteString(
-            "@id"u8,
+            writer.WriteStringValue(
             dto.CreatedBy);
-            writer.WriteEndObject();
             writer.WritePropertyName(
             "createdOn"u8);
             writer.WriteStringValue(
             dto.CreatedOn);
             writer.WritePropertyName(
             "updatedBy"u8);
-            writer.WriteStartObject();
-            writer.WriteString(
-            "@id"u8,
+            writer.WriteStringValue(
             dto.UpdatedBy);
-            writer.WriteEndObject();
             writer.WritePropertyName(
             "updatedOn"u8);
             writer.WriteStringValue(

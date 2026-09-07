@@ -67,22 +67,16 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteString("@id"u8, dto.Id);
             writer.WritePropertyName(
             "createdBy"u8);
-            writer.WriteStartObject();
-            writer.WriteString(
-            "@id"u8,
+            writer.WriteStringValue(
             dto.CreatedBy);
-            writer.WriteEndObject();
             writer.WritePropertyName(
             "createdOn"u8);
             writer.WriteStringValue(
             dto.CreatedOn);
             writer.WritePropertyName(
             "organization"u8);
-            writer.WriteStartObject();
-            writer.WriteString(
-            "@id"u8,
+            writer.WriteStringValue(
             dto.Organization);
-            writer.WriteEndObject();
             writer.WritePropertyName(
             "role"u8);
             writer.WriteStringValue(
@@ -91,22 +85,16 @@ namespace Mycelium.SDK.Serializer.Json
             .ToUpperInvariant());
             writer.WritePropertyName(
             "updatedBy"u8);
-            writer.WriteStartObject();
-            writer.WriteString(
-            "@id"u8,
+            writer.WriteStringValue(
             dto.UpdatedBy);
-            writer.WriteEndObject();
             writer.WritePropertyName(
             "updatedOn"u8);
             writer.WriteStringValue(
             dto.UpdatedOn);
             writer.WritePropertyName(
             "user"u8);
-            writer.WriteStartObject();
-            writer.WriteString(
-            "@id"u8,
+            writer.WriteStringValue(
             dto.User);
-            writer.WriteEndObject();
             writer.WriteEndObject();
         }
     }

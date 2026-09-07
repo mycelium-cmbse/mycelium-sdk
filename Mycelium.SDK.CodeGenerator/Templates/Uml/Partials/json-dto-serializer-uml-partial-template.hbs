@@ -16,9 +16,7 @@ writer.WriteStartArray("{{ #String.LowerCaseFirstLetter property.Name }}"u8);
 foreach (var item in dto.{{ #Property.WritePropertyName property }})
 {
 {{ #if (Property.QueryIsReferenceProperty property) }}
-writer.WriteStartObject();
-writer.WriteString("@id"u8, item);
-writer.WriteEndObject();
+writer.WriteStringValue(item);
 {{ else if (Property.QueryIsBool property) }}
 writer.WriteBooleanValue(item);
 {{ else if (Property.QueryIsEnum property) }}
@@ -28,6 +26,11 @@ Mycelium.SDK.Extensions.{{ #NamedElement.WriteIdentifier property.Type }}Provide
 .ToUpperInvariant());
 {{ else if (Property.QueryIsNumeric property) }}
 writer.WriteNumberValue(item);
+{{ else if (Property.QueryIsDateTime property) }}
+writer.WriteStringValue(
+item.ToString(
+"o",
+System.Globalization.CultureInfo.InvariantCulture));
 {{ else }}
 writer.WriteStringValue(item);
 {{ /if }}
@@ -44,11 +47,8 @@ dto.{{ #Property.WritePropertyName property }});
 if (dto.{{ #Property.WritePropertyName property }}.HasValue)
 {
 {{ #if (Property.QueryIsReferenceProperty property) }}
-writer.WriteStartObject();
-writer.WriteString(
-"@id"u8,
+writer.WriteStringValue(
 dto.{{ #Property.WritePropertyName property }}.Value);
-writer.WriteEndObject();
 {{ else if (Property.QueryIsBool property) }}
 writer.WriteBooleanValue(
 dto.{{ #Property.WritePropertyName property }}.Value);
@@ -60,6 +60,11 @@ Mycelium.SDK.Extensions.{{ #NamedElement.WriteIdentifier property.Type }}Provide
 {{ else if (Property.QueryIsNumeric property) }}
 writer.WriteNumberValue(
 dto.{{ #Property.WritePropertyName property }}.Value);
+{{ else if (Property.QueryIsDateTime property) }}
+writer.WriteStringValue(
+dto.{{ #Property.WritePropertyName property }}.Value.ToString(
+"o",
+System.Globalization.CultureInfo.InvariantCulture));
 {{ else }}
 writer.WriteStringValue(
 dto.{{ #Property.WritePropertyName property }}.Value);
@@ -74,11 +79,8 @@ writer.WriteNullValue();
 writer.WritePropertyName(
 "{{ #String.LowerCaseFirstLetter property.Name }}"u8);
 {{ #if (Property.QueryIsReferenceProperty property) }}
-writer.WriteStartObject();
-writer.WriteString(
-"@id"u8,
+writer.WriteStringValue(
 dto.{{ #Property.WritePropertyName property }});
-writer.WriteEndObject();
 {{ else if (Property.QueryIsBool property) }}
 writer.WriteBooleanValue(
 dto.{{ #Property.WritePropertyName property }});
@@ -90,6 +92,11 @@ Mycelium.SDK.Extensions.{{ #NamedElement.WriteIdentifier property.Type }}Provide
 {{ else if (Property.QueryIsNumeric property) }}
 writer.WriteNumberValue(
 dto.{{ #Property.WritePropertyName property }});
+{{ else if (Property.QueryIsDateTime property) }}
+writer.WriteStringValue(
+dto.{{ #Property.WritePropertyName property }}.ToString(
+"o",
+System.Globalization.CultureInfo.InvariantCulture));
 {{ else }}
 writer.WriteStringValue(
 dto.{{ #Property.WritePropertyName property }});
