@@ -31,8 +31,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         /// <summary>
         /// Public serializer facade under test.
         /// </summary>
-        private static readonly ISerializer JsonSerializer =
-            new Serializer();
+        private static readonly Serializer JsonSerializer = new();
 
         /// <summary>
         /// Expected modeled property order for a branch protection rule.
