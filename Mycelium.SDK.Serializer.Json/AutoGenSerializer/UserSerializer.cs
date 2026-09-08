@@ -65,18 +65,12 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteStartObject();
             writer.WriteString("@type"u8, "User"u8);
             writer.WriteString("@id"u8, dto.Id);
-            writer.WritePropertyName(
-            "createdBy"u8);
-            writer.WriteStringValue(
-            dto.CreatedBy);
-            writer.WritePropertyName(
-            "createdOn"u8);
-            writer.WriteStringValue(
-            dto.CreatedOn);
-            writer.WritePropertyName(
-            "externalIdentifier"u8);
-            writer.WriteStringValue(
-            dto.ExternalIdentifier);
+            writer.WritePropertyName("createdBy"u8);
+            writer.WriteStringValue(dto.CreatedBy);
+            writer.WritePropertyName("createdOn"u8);
+            writer.WriteStringValue(dto.CreatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("externalIdentifier"u8);
+            writer.WriteStringValue(dto.ExternalIdentifier);
             writer.WriteStartArray("isPartOfOrganizations"u8);
 
             foreach (var item in dto.IsPartOfOrganizations)
@@ -93,34 +87,19 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             writer.WriteEndArray();
-            writer.WritePropertyName(
-            "mail"u8);
-            writer.WriteStringValue(
-            dto.Mail);
-            writer.WritePropertyName(
-            "name"u8);
-            writer.WriteStringValue(
-            dto.Name);
-            writer.WritePropertyName(
-            "status"u8);
-            writer.WriteStringValue(
-            Mycelium.SDK.Extensions.ActivationStatusProvider
-            .Format(dto.Status)
-            .ToUpperInvariant());
-            writer.WritePropertyName(
-            "updatedBy"u8);
-            writer.WriteStringValue(
-            dto.UpdatedBy);
-            writer.WritePropertyName(
-            "updatedOn"u8);
-            writer.WriteStringValue(
-            dto.UpdatedOn);
+            writer.WritePropertyName("mail"u8);
+            writer.WriteStringValue(dto.Mail);
+            writer.WritePropertyName("name"u8);
+            writer.WriteStringValue(dto.Name);
+            writer.WritePropertyName("status"u8);
+            writer.WriteStringValue(Mycelium.SDK.Extensions.ActivationStatusProvider.Format(dto.Status).ToUpperInvariant());
+            writer.WritePropertyName("updatedBy"u8);
+            writer.WriteStringValue(dto.UpdatedBy);
+            writer.WritePropertyName("updatedOn"u8);
+            writer.WriteStringValue(dto.UpdatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
             writer.WriteStartObject("userPreferences"u8);
 
-            foreach (var entry in System.Linq.Enumerable.OrderBy(
-            dto.UserPreferences,
-            entry => entry.Key,
-            StringComparer.Ordinal))
+            foreach (var entry in dto.UserPreferences)
             {
                 writer.WriteString(entry.Key, entry.Value);
             }

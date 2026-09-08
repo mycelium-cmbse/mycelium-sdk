@@ -65,10 +65,8 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteStartObject();
             writer.WriteString("@type"u8, "FunctionalProject"u8);
             writer.WriteString("@id"u8, dto.Id);
-            writer.WritePropertyName(
-            "belongsTo"u8);
-            writer.WriteStringValue(
-            dto.BelongsTo);
+            writer.WritePropertyName("belongsTo"u8);
+            writer.WriteStringValue(dto.BelongsTo);
             writer.WriteStartArray("branchRules"u8);
 
             foreach (var item in dto.BranchRules)
@@ -77,20 +75,12 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             writer.WriteEndArray();
-            writer.WritePropertyName(
-            "createdBy"u8);
-            writer.WriteStringValue(
-            dto.CreatedBy);
-            writer.WritePropertyName(
-            "createdOn"u8);
-            writer.WriteStringValue(
-            dto.CreatedOn);
-            writer.WritePropertyName(
-            "currentMode"u8);
-            writer.WriteStringValue(
-            Mycelium.SDK.Extensions.ProjectModeProvider
-            .Format(dto.CurrentMode)
-            .ToUpperInvariant());
+            writer.WritePropertyName("createdBy"u8);
+            writer.WriteStringValue(dto.CreatedBy);
+            writer.WritePropertyName("createdOn"u8);
+            writer.WriteStringValue(dto.CreatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("currentMode"u8);
+            writer.WriteStringValue(Mycelium.SDK.Extensions.ProjectModeProvider.Format(dto.CurrentMode).ToUpperInvariant());
             writer.WriteStartArray("defines"u8);
 
             foreach (var item in dto.Defines)
@@ -99,14 +89,10 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             writer.WriteEndArray();
-            writer.WritePropertyName(
-            "description"u8);
-            writer.WriteStringValue(
-            dto.Description);
-            writer.WritePropertyName(
-            "engineeringProjectId"u8);
-            writer.WriteStringValue(
-            dto.EngineeringProjectId);
+            writer.WritePropertyName("description"u8);
+            writer.WriteStringValue(dto.Description);
+            writer.WritePropertyName("engineeringProjectId"u8);
+            writer.WriteStringValue(dto.EngineeringProjectId);
             writer.WriteStartArray("involves"u8);
 
             foreach (var item in dto.Involves)
@@ -115,20 +101,12 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             writer.WriteEndArray();
-            writer.WritePropertyName(
-            "lifecycle"u8);
-            writer.WriteStringValue(
-            Mycelium.SDK.Extensions.ProjectLifecycleKindProvider
-            .Format(dto.Lifecycle)
-            .ToUpperInvariant());
-            writer.WritePropertyName(
-            "name"u8);
-            writer.WriteStringValue(
-            dto.Name);
-            writer.WritePropertyName(
-            "policy"u8);
-            writer.WriteStringValue(
-            dto.Policy);
+            writer.WritePropertyName("lifecycle"u8);
+            writer.WriteStringValue(Mycelium.SDK.Extensions.ProjectLifecycleKindProvider.Format(dto.Lifecycle).ToUpperInvariant());
+            writer.WritePropertyName("name"u8);
+            writer.WriteStringValue(dto.Name);
+            writer.WritePropertyName("policy"u8);
+            writer.WriteStringValue(dto.Policy);
             writer.WriteStartArray("reviews"u8);
 
             foreach (var item in dto.Reviews)
@@ -139,29 +117,18 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteEndArray();
             writer.WriteStartObject("sharedPreferences"u8);
 
-            foreach (var entry in System.Linq.Enumerable.OrderBy(
-            dto.SharedPreferences,
-            entry => entry.Key,
-            StringComparer.Ordinal))
+            foreach (var entry in dto.SharedPreferences)
             {
                 writer.WriteString(entry.Key, entry.Value);
             }
 
             writer.WriteEndObject();
-            writer.WritePropertyName(
-            "updatedBy"u8);
-            writer.WriteStringValue(
-            dto.UpdatedBy);
-            writer.WritePropertyName(
-            "updatedOn"u8);
-            writer.WriteStringValue(
-            dto.UpdatedOn);
-            writer.WritePropertyName(
-            "visibility"u8);
-            writer.WriteStringValue(
-            Mycelium.SDK.Extensions.ProjectVisibilityProvider
-            .Format(dto.Visibility)
-            .ToUpperInvariant());
+            writer.WritePropertyName("updatedBy"u8);
+            writer.WriteStringValue(dto.UpdatedBy);
+            writer.WritePropertyName("updatedOn"u8);
+            writer.WriteStringValue(dto.UpdatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("visibility"u8);
+            writer.WriteStringValue(Mycelium.SDK.Extensions.ProjectVisibilityProvider.Format(dto.Visibility).ToUpperInvariant());
             writer.WriteEndObject();
         }
     }

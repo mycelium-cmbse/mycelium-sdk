@@ -65,14 +65,10 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteStartObject();
             writer.WriteString("@type"u8, "BranchProtectionRule"u8);
             writer.WriteString("@id"u8, dto.Id);
-            writer.WritePropertyName(
-            "createdBy"u8);
-            writer.WriteStringValue(
-            dto.CreatedBy);
-            writer.WritePropertyName(
-            "createdOn"u8);
-            writer.WriteStringValue(
-            dto.CreatedOn);
+            writer.WritePropertyName("createdBy"u8);
+            writer.WriteStringValue(dto.CreatedBy);
+            writer.WritePropertyName("createdOn"u8);
+            writer.WriteStringValue(dto.CreatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
             writer.WriteStartArray("defaultReviewers"u8);
 
             foreach (var item in dto.DefaultReviewers)
@@ -81,41 +77,26 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             writer.WriteEndArray();
-            writer.WritePropertyName(
-            "engineeringBranchId"u8);
-            writer.WriteStringValue(
-            dto.EngineeringBranchId);
+            writer.WritePropertyName("engineeringBranchId"u8);
+            writer.WriteStringValue(dto.EngineeringBranchId);
             writer.WriteStartArray("mergeAllowedFor"u8);
 
             foreach (var item in dto.MergeAllowedFor)
             {
-                writer.WriteStringValue(
-                Mycelium.SDK.Extensions.ProjectMemberRoleProvider
-                .Format(item)
-                .ToUpperInvariant());
+                writer.WriteStringValue(Mycelium.SDK.Extensions.ProjectMemberRoleProvider.Format(item).ToUpperInvariant());
             }
 
             writer.WriteEndArray();
-            writer.WritePropertyName(
-            "minimumRequiredApproval"u8);
-            writer.WriteNumberValue(
-            dto.MinimumRequiredApproval);
-            writer.WritePropertyName(
-            "name"u8);
-            writer.WriteStringValue(
-            dto.Name);
-            writer.WritePropertyName(
-            "reviewRequired"u8);
-            writer.WriteBooleanValue(
-            dto.ReviewRequired);
-            writer.WritePropertyName(
-            "updatedBy"u8);
-            writer.WriteStringValue(
-            dto.UpdatedBy);
-            writer.WritePropertyName(
-            "updatedOn"u8);
-            writer.WriteStringValue(
-            dto.UpdatedOn);
+            writer.WritePropertyName("minimumRequiredApproval"u8);
+            writer.WriteNumberValue(dto.MinimumRequiredApproval);
+            writer.WritePropertyName("name"u8);
+            writer.WriteStringValue(dto.Name);
+            writer.WritePropertyName("reviewRequired"u8);
+            writer.WriteBooleanValue(dto.ReviewRequired);
+            writer.WritePropertyName("updatedBy"u8);
+            writer.WriteStringValue(dto.UpdatedBy);
+            writer.WritePropertyName("updatedOn"u8);
+            writer.WriteStringValue(dto.UpdatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
             writer.WriteEndObject();
         }
     }

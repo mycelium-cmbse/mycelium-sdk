@@ -1,10 +1,7 @@
 {{ #if (Property.QueryIsStringDictionary property) }}
 writer.WriteStartObject("{{ #String.LowerCaseFirstLetter property.Name }}"u8);
 
-foreach (var entry in System.Linq.Enumerable.OrderBy(
-dto.{{ #Property.WritePropertyName property }},
-entry => entry.Key,
-StringComparer.Ordinal))
+foreach (var entry in dto.{{ #Property.WritePropertyName property }})
 {
 writer.WriteString(entry.Key, entry.Value);
 }
@@ -20,17 +17,11 @@ writer.WriteStringValue(item);
 {{ else if (Property.QueryIsBool property) }}
 writer.WriteBooleanValue(item);
 {{ else if (Property.QueryIsEnum property) }}
-writer.WriteStringValue(
-Mycelium.SDK.Extensions.{{ #NamedElement.WriteIdentifier property.Type }}Provider
-.Format(item)
-.ToUpperInvariant());
+writer.WriteStringValue(Mycelium.SDK.Extensions.{{ #NamedElement.WriteIdentifier property.Type }}Provider.Format(item).ToUpperInvariant());
 {{ else if (Property.QueryIsNumeric property) }}
 writer.WriteNumberValue(item);
 {{ else if (Property.QueryIsDateTime property) }}
-writer.WriteStringValue(
-item.ToString(
-"o",
-System.Globalization.CultureInfo.InvariantCulture));
+writer.WriteStringValue(item.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
 {{ else }}
 writer.WriteStringValue(item);
 {{ /if }}
@@ -38,36 +29,24 @@ writer.WriteStringValue(item);
 
 writer.WriteEndArray();
 {{ else if (Property.QueryIsNullable property) }}
-writer.WritePropertyName(
-"{{ #String.LowerCaseFirstLetter property.Name }}"u8);
+writer.WritePropertyName("{{ #String.LowerCaseFirstLetter property.Name }}"u8);
 {{ #if (Property.QueryIsString property) }}
-writer.WriteStringValue(
-dto.{{ #Property.WritePropertyName property }});
+writer.WriteStringValue(dto.{{ #Property.WritePropertyName property }});
 {{ else }}
 if (dto.{{ #Property.WritePropertyName property }}.HasValue)
 {
 {{ #if (Property.QueryIsReferenceProperty property) }}
-writer.WriteStringValue(
-dto.{{ #Property.WritePropertyName property }}.Value);
+writer.WriteStringValue(dto.{{ #Property.WritePropertyName property }}.Value);
 {{ else if (Property.QueryIsBool property) }}
-writer.WriteBooleanValue(
-dto.{{ #Property.WritePropertyName property }}.Value);
+writer.WriteBooleanValue(dto.{{ #Property.WritePropertyName property }}.Value);
 {{ else if (Property.QueryIsEnum property) }}
-writer.WriteStringValue(
-Mycelium.SDK.Extensions.{{ #NamedElement.WriteIdentifier property.Type }}Provider
-.Format(dto.{{ #Property.WritePropertyName property }}.Value)
-.ToUpperInvariant());
+writer.WriteStringValue(Mycelium.SDK.Extensions.{{ #NamedElement.WriteIdentifier property.Type }}Provider.Format(dto.{{ #Property.WritePropertyName property }}.Value).ToUpperInvariant());
 {{ else if (Property.QueryIsNumeric property) }}
-writer.WriteNumberValue(
-dto.{{ #Property.WritePropertyName property }}.Value);
+writer.WriteNumberValue(dto.{{ #Property.WritePropertyName property }}.Value);
 {{ else if (Property.QueryIsDateTime property) }}
-writer.WriteStringValue(
-dto.{{ #Property.WritePropertyName property }}.Value.ToString(
-"o",
-System.Globalization.CultureInfo.InvariantCulture));
+writer.WriteStringValue(dto.{{ #Property.WritePropertyName property }}.Value.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
 {{ else }}
-writer.WriteStringValue(
-dto.{{ #Property.WritePropertyName property }}.Value);
+writer.WriteStringValue(dto.{{ #Property.WritePropertyName property }}.Value);
 {{ /if }}
 }
 else
@@ -76,29 +55,18 @@ writer.WriteNullValue();
 }
 {{ /if }}
 {{ else if (Property.QueryIsScalar property) }}
-writer.WritePropertyName(
-"{{ #String.LowerCaseFirstLetter property.Name }}"u8);
+writer.WritePropertyName("{{ #String.LowerCaseFirstLetter property.Name }}"u8);
 {{ #if (Property.QueryIsReferenceProperty property) }}
-writer.WriteStringValue(
-dto.{{ #Property.WritePropertyName property }});
+writer.WriteStringValue(dto.{{ #Property.WritePropertyName property }});
 {{ else if (Property.QueryIsBool property) }}
-writer.WriteBooleanValue(
-dto.{{ #Property.WritePropertyName property }});
+writer.WriteBooleanValue(dto.{{ #Property.WritePropertyName property }});
 {{ else if (Property.QueryIsEnum property) }}
-writer.WriteStringValue(
-Mycelium.SDK.Extensions.{{ #NamedElement.WriteIdentifier property.Type }}Provider
-.Format(dto.{{ #Property.WritePropertyName property }})
-.ToUpperInvariant());
+writer.WriteStringValue(Mycelium.SDK.Extensions.{{ #NamedElement.WriteIdentifier property.Type }}Provider.Format(dto.{{ #Property.WritePropertyName property }}).ToUpperInvariant());
 {{ else if (Property.QueryIsNumeric property) }}
-writer.WriteNumberValue(
-dto.{{ #Property.WritePropertyName property }});
+writer.WriteNumberValue(dto.{{ #Property.WritePropertyName property }});
 {{ else if (Property.QueryIsDateTime property) }}
-writer.WriteStringValue(
-dto.{{ #Property.WritePropertyName property }}.ToString(
-"o",
-System.Globalization.CultureInfo.InvariantCulture));
+writer.WriteStringValue(dto.{{ #Property.WritePropertyName property }}.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
 {{ else }}
-writer.WriteStringValue(
-dto.{{ #Property.WritePropertyName property }});
+writer.WriteStringValue(dto.{{ #Property.WritePropertyName property }});
 {{ /if }}
 {{ /if }}

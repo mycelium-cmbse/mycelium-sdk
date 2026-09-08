@@ -65,29 +65,21 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteStartObject();
             writer.WriteString("@type"u8, "ProjectMember"u8);
             writer.WriteString("@id"u8, dto.Id);
-            writer.WritePropertyName(
-            "activeOwnership"u8);
+            writer.WritePropertyName("activeOwnership"u8);
             if (dto.ActiveOwnership.HasValue)
             {
-                writer.WriteStringValue(
-                dto.ActiveOwnership.Value);
+                writer.WriteStringValue(dto.ActiveOwnership.Value);
             }
             else
             {
                 writer.WriteNullValue();
             }
-            writer.WritePropertyName(
-            "createdBy"u8);
-            writer.WriteStringValue(
-            dto.CreatedBy);
-            writer.WritePropertyName(
-            "createdOn"u8);
-            writer.WriteStringValue(
-            dto.CreatedOn);
-            writer.WritePropertyName(
-            "isPartOf"u8);
-            writer.WriteStringValue(
-            dto.IsPartOf);
+            writer.WritePropertyName("createdBy"u8);
+            writer.WriteStringValue(dto.CreatedBy);
+            writer.WritePropertyName("createdOn"u8);
+            writer.WriteStringValue(dto.CreatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("isPartOf"u8);
+            writer.WriteStringValue(dto.IsPartOf);
             writer.WriteStartArray("owns"u8);
 
             foreach (var item in dto.Owns)
@@ -96,24 +88,14 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             writer.WriteEndArray();
-            writer.WritePropertyName(
-            "role"u8);
-            writer.WriteStringValue(
-            Mycelium.SDK.Extensions.ProjectMemberRoleProvider
-            .Format(dto.Role)
-            .ToUpperInvariant());
-            writer.WritePropertyName(
-            "updatedBy"u8);
-            writer.WriteStringValue(
-            dto.UpdatedBy);
-            writer.WritePropertyName(
-            "updatedOn"u8);
-            writer.WriteStringValue(
-            dto.UpdatedOn);
-            writer.WritePropertyName(
-            "user"u8);
-            writer.WriteStringValue(
-            dto.User);
+            writer.WritePropertyName("role"u8);
+            writer.WriteStringValue(Mycelium.SDK.Extensions.ProjectMemberRoleProvider.Format(dto.Role).ToUpperInvariant());
+            writer.WritePropertyName("updatedBy"u8);
+            writer.WriteStringValue(dto.UpdatedBy);
+            writer.WritePropertyName("updatedOn"u8);
+            writer.WriteStringValue(dto.UpdatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("user"u8);
+            writer.WriteStringValue(dto.User);
             writer.WriteEndObject();
         }
     }

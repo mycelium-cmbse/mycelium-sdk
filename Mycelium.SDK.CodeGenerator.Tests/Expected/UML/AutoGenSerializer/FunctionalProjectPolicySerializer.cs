@@ -65,34 +65,20 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteStartObject();
             writer.WriteString("@type"u8, "FunctionalProjectPolicy"u8);
             writer.WriteString("@id"u8, dto.Id);
-            writer.WritePropertyName(
-            "allowAutoNamespaceImport"u8);
-            writer.WriteBooleanValue(
-            dto.AllowAutoNamespaceImport);
-            writer.WritePropertyName(
-            "allowAutoPublishMode"u8);
-            writer.WriteBooleanValue(
-            dto.AllowAutoPublishMode);
-            writer.WritePropertyName(
-            "allowVersionBranching"u8);
-            writer.WriteBooleanValue(
-            dto.AllowVersionBranching);
-            writer.WritePropertyName(
-            "createdBy"u8);
-            writer.WriteStringValue(
-            dto.CreatedBy);
-            writer.WritePropertyName(
-            "createdOn"u8);
-            writer.WriteStringValue(
-            dto.CreatedOn);
-            writer.WritePropertyName(
-            "updatedBy"u8);
-            writer.WriteStringValue(
-            dto.UpdatedBy);
-            writer.WritePropertyName(
-            "updatedOn"u8);
-            writer.WriteStringValue(
-            dto.UpdatedOn);
+            writer.WritePropertyName("allowAutoNamespaceImport"u8);
+            writer.WriteBooleanValue(dto.AllowAutoNamespaceImport);
+            writer.WritePropertyName("allowAutoPublishMode"u8);
+            writer.WriteBooleanValue(dto.AllowAutoPublishMode);
+            writer.WritePropertyName("allowVersionBranching"u8);
+            writer.WriteBooleanValue(dto.AllowVersionBranching);
+            writer.WritePropertyName("createdBy"u8);
+            writer.WriteStringValue(dto.CreatedBy);
+            writer.WritePropertyName("createdOn"u8);
+            writer.WriteStringValue(dto.CreatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("updatedBy"u8);
+            writer.WriteStringValue(dto.UpdatedBy);
+            writer.WritePropertyName("updatedOn"u8);
+            writer.WriteStringValue(dto.UpdatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
             writer.WriteEndObject();
         }
     }

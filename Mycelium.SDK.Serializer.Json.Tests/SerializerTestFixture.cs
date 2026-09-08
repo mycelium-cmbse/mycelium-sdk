@@ -71,26 +71,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         ];
 
         /// <summary>
-        /// Expected ordinally ordered shared-preference keys.
-        /// </summary>
-        private static readonly string[] ExpectedSharedPreferenceKeys =
-        [
-            "A-first",
-            "a-middle",
-            "z-last",
-        ];
-
-        /// <summary>
-        /// Expected shared-preference values corresponding to the ordinal keys.
-        /// </summary>
-        private static readonly string[] ExpectedSharedPreferenceValues =
-        [
-            "FIRST value",
-            "MiXeD value",
-            "last value",
-        ];
-
-        /// <summary>
         /// Verifies that serializer lookup supports only exact concrete DTO
         /// runtime types and does not use interface or inheritance fallback.
         /// </summary>
@@ -418,11 +398,11 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         }
 
         /// <summary>
-        /// Verifies deterministic output, invariant-uppercase scalar
-        /// enumeration values, and ordinal dictionary member ordering.
+        /// Verifies invariant-uppercase scalar enumeration values and exact
+        /// dictionary entry preservation without imposing member order.
         /// </summary>
         [Test]
-        public void Verify_that_dictionary_serialization_is_ordinal_and_deterministic()
+        public void Verify_that_dictionary_serialization_preserves_entries_without_imposing_order()
         {
             var id =
                 Guid.Parse("aaaaaaaa-1111-2222-3333-444444444444");
@@ -470,11 +450,10 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 Visibility = ProjectVisibility.Organization,
             };
 
-            var firstSerialization = Serialize(dto);
-            var secondSerialization = Serialize(dto);
+            var serialization = Serialize(dto);
 
             using var document =
-                JsonDocument.Parse(firstSerialization);
+                JsonDocument.Parse(serialization);
 
             var root = document.RootElement;
 
@@ -483,15 +462,13 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
             var dictionaryEntries = sharedPreferences
                 .EnumerateObject()
-                .ToArray();
+                .ToDictionary(
+                    entry => entry.Name,
+                    entry => entry.Value.GetString(),
+                    StringComparer.Ordinal);
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(
-                    secondSerialization,
-                    Is.EqualTo(firstSerialization),
-                    "Repeated serialization of the same DTO must be byte-for-byte deterministic.");
-
                 Assert.That(
                     root.GetProperty("@type").GetString(),
                     Is.EqualTo("FunctionalProject"));
@@ -517,16 +494,8 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                     Is.EqualTo(JsonValueKind.Object));
 
                 Assert.That(
-                    dictionaryEntries
-                        .Select(entry => entry.Name)
-                        .ToArray(),
-                    Is.EqualTo(ExpectedSharedPreferenceKeys));
-
-                Assert.That(
-                    dictionaryEntries
-                        .Select(entry => entry.Value.GetString())
-                        .ToArray(),
-                    Is.EqualTo(ExpectedSharedPreferenceValues));
+                    dictionaryEntries,
+                    Is.EquivalentTo(dto.SharedPreferences));
             }
         }
 

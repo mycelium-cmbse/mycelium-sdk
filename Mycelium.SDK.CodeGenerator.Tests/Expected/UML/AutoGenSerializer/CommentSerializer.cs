@@ -65,34 +65,20 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteStartObject();
             writer.WriteString("@type"u8, "Comment"u8);
             writer.WriteString("@id"u8, dto.Id);
-            writer.WritePropertyName(
-            "author"u8);
-            writer.WriteStringValue(
-            dto.Author);
-            writer.WritePropertyName(
-            "commentStatus"u8);
-            writer.WriteStringValue(
-            Mycelium.SDK.Extensions.CommentStatusProvider
-            .Format(dto.CommentStatus)
-            .ToUpperInvariant());
-            writer.WritePropertyName(
-            "content"u8);
-            writer.WriteStringValue(
-            dto.Content);
-            writer.WritePropertyName(
-            "createdBy"u8);
-            writer.WriteStringValue(
-            dto.CreatedBy);
-            writer.WritePropertyName(
-            "createdOn"u8);
-            writer.WriteStringValue(
-            dto.CreatedOn);
-            writer.WritePropertyName(
-            "quotes"u8);
+            writer.WritePropertyName("author"u8);
+            writer.WriteStringValue(dto.Author);
+            writer.WritePropertyName("commentStatus"u8);
+            writer.WriteStringValue(Mycelium.SDK.Extensions.CommentStatusProvider.Format(dto.CommentStatus).ToUpperInvariant());
+            writer.WritePropertyName("content"u8);
+            writer.WriteStringValue(dto.Content);
+            writer.WritePropertyName("createdBy"u8);
+            writer.WriteStringValue(dto.CreatedBy);
+            writer.WritePropertyName("createdOn"u8);
+            writer.WriteStringValue(dto.CreatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("quotes"u8);
             if (dto.Quotes.HasValue)
             {
-                writer.WriteStringValue(
-                dto.Quotes.Value);
+                writer.WriteStringValue(dto.Quotes.Value);
             }
             else
             {
@@ -106,18 +92,12 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             writer.WriteEndArray();
-            writer.WritePropertyName(
-            "targetElementId"u8);
-            writer.WriteStringValue(
-            dto.TargetElementId);
-            writer.WritePropertyName(
-            "updatedBy"u8);
-            writer.WriteStringValue(
-            dto.UpdatedBy);
-            writer.WritePropertyName(
-            "updatedOn"u8);
-            writer.WriteStringValue(
-            dto.UpdatedOn);
+            writer.WritePropertyName("targetElementId"u8);
+            writer.WriteStringValue(dto.TargetElementId);
+            writer.WritePropertyName("updatedBy"u8);
+            writer.WriteStringValue(dto.UpdatedBy);
+            writer.WritePropertyName("updatedOn"u8);
+            writer.WriteStringValue(dto.UpdatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
             writer.WriteEndObject();
         }
     }

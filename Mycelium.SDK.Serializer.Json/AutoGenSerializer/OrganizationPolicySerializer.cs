@@ -65,36 +65,20 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteStartObject();
             writer.WriteString("@type"u8, "OrganizationPolicy"u8);
             writer.WriteString("@id"u8, dto.Id);
-            writer.WritePropertyName(
-            "allowProjectCreation"u8);
-            writer.WriteBooleanValue(
-            dto.AllowProjectCreation);
-            writer.WritePropertyName(
-            "createdBy"u8);
-            writer.WriteStringValue(
-            dto.CreatedBy);
-            writer.WritePropertyName(
-            "createdOn"u8);
-            writer.WriteStringValue(
-            dto.CreatedOn);
-            writer.WritePropertyName(
-            "defaultProjectLifecycleOnCreate"u8);
-            writer.WriteStringValue(
-            Mycelium.SDK.Extensions.ProjectLifecycleKindProvider
-            .Format(dto.DefaultProjectLifecycleOnCreate)
-            .ToUpperInvariant());
-            writer.WritePropertyName(
-            "grantReadOnlyViewForAudit"u8);
-            writer.WriteBooleanValue(
-            dto.GrantReadOnlyViewForAudit);
-            writer.WritePropertyName(
-            "updatedBy"u8);
-            writer.WriteStringValue(
-            dto.UpdatedBy);
-            writer.WritePropertyName(
-            "updatedOn"u8);
-            writer.WriteStringValue(
-            dto.UpdatedOn);
+            writer.WritePropertyName("allowProjectCreation"u8);
+            writer.WriteBooleanValue(dto.AllowProjectCreation);
+            writer.WritePropertyName("createdBy"u8);
+            writer.WriteStringValue(dto.CreatedBy);
+            writer.WritePropertyName("createdOn"u8);
+            writer.WriteStringValue(dto.CreatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("defaultProjectLifecycleOnCreate"u8);
+            writer.WriteStringValue(Mycelium.SDK.Extensions.ProjectLifecycleKindProvider.Format(dto.DefaultProjectLifecycleOnCreate).ToUpperInvariant());
+            writer.WritePropertyName("grantReadOnlyViewForAudit"u8);
+            writer.WriteBooleanValue(dto.GrantReadOnlyViewForAudit);
+            writer.WritePropertyName("updatedBy"u8);
+            writer.WriteStringValue(dto.UpdatedBy);
+            writer.WritePropertyName("updatedOn"u8);
+            writer.WriteStringValue(dto.UpdatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
             writer.WriteEndObject();
         }
     }

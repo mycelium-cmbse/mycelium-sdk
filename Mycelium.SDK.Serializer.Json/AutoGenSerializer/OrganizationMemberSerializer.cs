@@ -65,36 +65,20 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteStartObject();
             writer.WriteString("@type"u8, "OrganizationMember"u8);
             writer.WriteString("@id"u8, dto.Id);
-            writer.WritePropertyName(
-            "createdBy"u8);
-            writer.WriteStringValue(
-            dto.CreatedBy);
-            writer.WritePropertyName(
-            "createdOn"u8);
-            writer.WriteStringValue(
-            dto.CreatedOn);
-            writer.WritePropertyName(
-            "organization"u8);
-            writer.WriteStringValue(
-            dto.Organization);
-            writer.WritePropertyName(
-            "role"u8);
-            writer.WriteStringValue(
-            Mycelium.SDK.Extensions.OrganizationMembershipRoleProvider
-            .Format(dto.Role)
-            .ToUpperInvariant());
-            writer.WritePropertyName(
-            "updatedBy"u8);
-            writer.WriteStringValue(
-            dto.UpdatedBy);
-            writer.WritePropertyName(
-            "updatedOn"u8);
-            writer.WriteStringValue(
-            dto.UpdatedOn);
-            writer.WritePropertyName(
-            "user"u8);
-            writer.WriteStringValue(
-            dto.User);
+            writer.WritePropertyName("createdBy"u8);
+            writer.WriteStringValue(dto.CreatedBy);
+            writer.WritePropertyName("createdOn"u8);
+            writer.WriteStringValue(dto.CreatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("organization"u8);
+            writer.WriteStringValue(dto.Organization);
+            writer.WritePropertyName("role"u8);
+            writer.WriteStringValue(Mycelium.SDK.Extensions.OrganizationMembershipRoleProvider.Format(dto.Role).ToUpperInvariant());
+            writer.WritePropertyName("updatedBy"u8);
+            writer.WriteStringValue(dto.UpdatedBy);
+            writer.WritePropertyName("updatedOn"u8);
+            writer.WriteStringValue(dto.UpdatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("user"u8);
+            writer.WriteStringValue(dto.User);
             writer.WriteEndObject();
         }
     }

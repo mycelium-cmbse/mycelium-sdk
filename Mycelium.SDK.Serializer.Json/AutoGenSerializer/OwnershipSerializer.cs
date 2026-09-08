@@ -65,38 +65,22 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteStartObject();
             writer.WriteString("@type"u8, "Ownership"u8);
             writer.WriteString("@id"u8, dto.Id);
-            writer.WritePropertyName(
-            "createdBy"u8);
-            writer.WriteStringValue(
-            dto.CreatedBy);
-            writer.WritePropertyName(
-            "createdOn"u8);
-            writer.WriteStringValue(
-            dto.CreatedOn);
-            writer.WritePropertyName(
-            "description"u8);
-            writer.WriteStringValue(
-            dto.Description);
-            writer.WritePropertyName(
-            "engineeringMetadataId"u8);
-            writer.WriteStringValue(
-            dto.EngineeringMetadataId);
-            writer.WritePropertyName(
-            "name"u8);
-            writer.WriteStringValue(
-            dto.Name);
-            writer.WritePropertyName(
-            "shortName"u8);
-            writer.WriteStringValue(
-            dto.ShortName);
-            writer.WritePropertyName(
-            "updatedBy"u8);
-            writer.WriteStringValue(
-            dto.UpdatedBy);
-            writer.WritePropertyName(
-            "updatedOn"u8);
-            writer.WriteStringValue(
-            dto.UpdatedOn);
+            writer.WritePropertyName("createdBy"u8);
+            writer.WriteStringValue(dto.CreatedBy);
+            writer.WritePropertyName("createdOn"u8);
+            writer.WriteStringValue(dto.CreatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("description"u8);
+            writer.WriteStringValue(dto.Description);
+            writer.WritePropertyName("engineeringMetadataId"u8);
+            writer.WriteStringValue(dto.EngineeringMetadataId);
+            writer.WritePropertyName("name"u8);
+            writer.WriteStringValue(dto.Name);
+            writer.WritePropertyName("shortName"u8);
+            writer.WriteStringValue(dto.ShortName);
+            writer.WritePropertyName("updatedBy"u8);
+            writer.WriteStringValue(dto.UpdatedBy);
+            writer.WritePropertyName("updatedOn"u8);
+            writer.WriteStringValue(dto.UpdatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
             writer.WriteEndObject();
         }
     }

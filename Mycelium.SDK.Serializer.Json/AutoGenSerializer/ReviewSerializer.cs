@@ -65,10 +65,8 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteStartObject();
             writer.WriteString("@type"u8, "Review"u8);
             writer.WriteString("@id"u8, dto.Id);
-            writer.WritePropertyName(
-            "author"u8);
-            writer.WriteStringValue(
-            dto.Author);
+            writer.WritePropertyName("author"u8);
+            writer.WriteStringValue(dto.Author);
             writer.WriteStartArray("comments"u8);
 
             foreach (var item in dto.Comments)
@@ -77,18 +75,12 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             writer.WriteEndArray();
-            writer.WritePropertyName(
-            "createdBy"u8);
-            writer.WriteStringValue(
-            dto.CreatedBy);
-            writer.WritePropertyName(
-            "createdOn"u8);
-            writer.WriteStringValue(
-            dto.CreatedOn);
-            writer.WritePropertyName(
-            "description"u8);
-            writer.WriteStringValue(
-            dto.Description);
+            writer.WritePropertyName("createdBy"u8);
+            writer.WriteStringValue(dto.CreatedBy);
+            writer.WritePropertyName("createdOn"u8);
+            writer.WriteStringValue(dto.CreatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("description"u8);
+            writer.WriteStringValue(dto.Description);
             writer.WriteStartArray("reviewers"u8);
 
             foreach (var item in dto.Reviewers)
@@ -97,32 +89,18 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             writer.WriteEndArray();
-            writer.WritePropertyName(
-            "sourceBranchId"u8);
-            writer.WriteStringValue(
-            dto.SourceBranchId);
-            writer.WritePropertyName(
-            "status"u8);
-            writer.WriteStringValue(
-            Mycelium.SDK.Extensions.ReviewStatusProvider
-            .Format(dto.Status)
-            .ToUpperInvariant());
-            writer.WritePropertyName(
-            "targetBranchId"u8);
-            writer.WriteStringValue(
-            dto.TargetBranchId);
-            writer.WritePropertyName(
-            "title"u8);
-            writer.WriteStringValue(
-            dto.Title);
-            writer.WritePropertyName(
-            "updatedBy"u8);
-            writer.WriteStringValue(
-            dto.UpdatedBy);
-            writer.WritePropertyName(
-            "updatedOn"u8);
-            writer.WriteStringValue(
-            dto.UpdatedOn);
+            writer.WritePropertyName("sourceBranchId"u8);
+            writer.WriteStringValue(dto.SourceBranchId);
+            writer.WritePropertyName("status"u8);
+            writer.WriteStringValue(Mycelium.SDK.Extensions.ReviewStatusProvider.Format(dto.Status).ToUpperInvariant());
+            writer.WritePropertyName("targetBranchId"u8);
+            writer.WriteStringValue(dto.TargetBranchId);
+            writer.WritePropertyName("title"u8);
+            writer.WriteStringValue(dto.Title);
+            writer.WritePropertyName("updatedBy"u8);
+            writer.WriteStringValue(dto.UpdatedBy);
+            writer.WritePropertyName("updatedOn"u8);
+            writer.WriteStringValue(dto.UpdatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
             writer.WriteEndObject();
         }
     }
