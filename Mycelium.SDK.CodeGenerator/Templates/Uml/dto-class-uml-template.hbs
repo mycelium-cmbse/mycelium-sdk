@@ -1,10 +1,10 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="{{this.Name}}.cs" company="Starion Group S.A.">
-    //
-    //    Copyright 2026 Starion Group S.A.
-    //    SPDX-License-Identifier: Apache-2.0
-    //
-    //  </copyright>
+//  <copyright file="{{ this.Name }}.cs" company="Starion Group S.A.">
+//
+//    Copyright 2026 Starion Group S.A.
+//    SPDX-License-Identifier: Apache-2.0
+//
+//  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
 // ------------------------------------------------------------------------------------------------
@@ -13,20 +13,20 @@
 
 namespace Mycelium.SDK.DTO
 {
-using System;
-using System.CodeDom.Compiler;
-using System.Collections.Generic;
+    using System;
+    using System.CodeDom.Compiler;
+    using System.Collections.Generic;
 
-{{ #Documentation this }}[GeneratedCode("Mycelium.SDK", "latest")]
-public partial class {{ #NamedElement.WriteIdentifier this }} : {{ #Class.WriteDtoInterfaceIdentifier this }}
-{
-{{ #each (#Class.QueryDtoImplementationProperties this) as | property | }}
-{{ #Documentation property }}{{ #Property.WriteDtoImplementationDeclaration property }}
-{{#unless @last}}
+    {{ #Documentation this }}[GeneratedCode("Mycelium.SDK", "latest")]
+    public partial class {{ #NamedElement.WriteIdentifier this }} : {{ #Class.WriteDtoInterfaceIdentifier this }}
+    {
+        {{ #each (#Class.QueryDtoImplementationProperties this) as | property | }}
+            {{ #Documentation property }}{{ #Property.WriteDtoImplementationDeclaration property }}
+            {{ #unless @last }}
 
-{{/unless}}
-{{/each}}
-}
+            {{ /unless }}
+        {{ /each }}
+    }
 }
 
 // ------------------------------------------------------------------------------------------------
