@@ -63,9 +63,7 @@ namespace Mycelium.SDK.Extensions
                 return ReviewStatus.Closed;
             }
 
-            throw new ArgumentException(
-            $"'{new string(value)}' is not a valid ReviewStatus literal.",
-            nameof(value));
+            throw new ArgumentException($"'{new string(value)}' is not a valid ReviewStatus literal.", nameof(value));
         }
 
         /// <summary>
@@ -137,10 +135,7 @@ namespace Mycelium.SDK.Extensions
                 ReviewStatus.Approved => "Approved",
                 ReviewStatus.ChangesRequested => "ChangesRequested",
                 ReviewStatus.Closed => "Closed",
-                _ => throw new ArgumentOutOfRangeException(
-                nameof(value),
-                value,
-                $"'{value}' is not a defined ReviewStatus value.")
+                _ => throw new ArgumentOutOfRangeException(nameof(value), value, $"'{value}' is not a defined ReviewStatus value.")
             };
         }
     }

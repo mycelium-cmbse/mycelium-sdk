@@ -17,7 +17,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     using uml4net.Extensions;
 
     /// <summary>
-    /// Provides Handlebars support for UML properties used to generate DTOs and POCOs.
+    /// Provides Handlebars support for UML properties used to generate DTOs, POCOs,
+    /// and JSON serializers.
     /// </summary>
     public static class PropertyHelper
     {
@@ -55,6 +56,65 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                         $"public {propertyTypeName} " +
                         $"{property.QueryPropertyName()} {QueryAccessors(property)}" +
                         collectionInitializer);
+                });
+        }
+
+        /// <summary>
+        /// Registers the JSON serializer property helpers independently of the DTO
+        /// and POCO declaration helpers.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the JSON serializer helpers are registered.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
+        /// </exception>
+        public static void RegisterJsonSerializerPropertyHelper(
+            this IHandlebars handlebars)
+        {
+            ArgumentNullException.ThrowIfNull(handlebars);
+
+            handlebars.RegisterHelper(
+                "Property.QueryIsIdentifier",
+                (_, arguments) =>
+                {
+                    var property = QueryProperty(
+                        arguments,
+                        "{{Property.QueryIsIdentifier}}");
+
+                    return string.Equals(
+                               property.Name,
+                               "id",
+                               StringComparison.Ordinal)
+                           && string.Equals(
+                               property.QueryDtoTypeName(),
+                               "Guid",
+                               StringComparison.Ordinal);
+                });
+
+            handlebars.RegisterHelper(
+                "Property.QueryIsStringDictionary",
+                (_, arguments) =>
+                {
+                    var property = QueryProperty(
+                        arguments,
+                        "{{Property.QueryIsStringDictionary}}");
+
+                    return string.Equals(
+                        property.QueryDtoTypeName(),
+                        "Dictionary<string,string>",
+                        StringComparison.Ordinal);
+                });
+
+            handlebars.RegisterHelper(
+                "Property.WritePropertyName",
+                (writer, _, arguments) =>
+                {
+                    var property = QueryProperty(
+                        arguments,
+                        "{{Property.WritePropertyName}}");
+
+                    writer.WriteSafeString(property.QueryPropertyName());
                 });
         }
 

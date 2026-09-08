@@ -48,9 +48,7 @@ namespace Mycelium.SDK.Extensions
                 return ProjectMode.Concurrent;
             }
 
-            throw new ArgumentException(
-            $"'{new string(value)}' is not a valid ProjectMode literal.",
-            nameof(value));
+            throw new ArgumentException($"'{new string(value)}' is not a valid ProjectMode literal.", nameof(value));
         }
 
         /// <summary>
@@ -101,10 +99,7 @@ namespace Mycelium.SDK.Extensions
             {
                 ProjectMode.Regular => "Regular",
                 ProjectMode.Concurrent => "Concurrent",
-                _ => throw new ArgumentOutOfRangeException(
-                nameof(value),
-                value,
-                $"'{value}' is not a defined ProjectMode value.")
+                _ => throw new ArgumentOutOfRangeException(nameof(value), value, $"'{value}' is not a defined ProjectMode value.")
             };
         }
     }

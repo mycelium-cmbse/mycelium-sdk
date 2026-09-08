@@ -53,9 +53,7 @@ namespace Mycelium.SDK.Extensions
                 return ProjectMemberRole.Viewer;
             }
 
-            throw new ArgumentException(
-            $"'{new string(value)}' is not a valid ProjectMemberRole literal.",
-            nameof(value));
+            throw new ArgumentException($"'{new string(value)}' is not a valid ProjectMemberRole literal.", nameof(value));
         }
 
         /// <summary>
@@ -113,10 +111,7 @@ namespace Mycelium.SDK.Extensions
                 ProjectMemberRole.Administrator => "Administrator",
                 ProjectMemberRole.Participant => "Participant",
                 ProjectMemberRole.Viewer => "Viewer",
-                _ => throw new ArgumentOutOfRangeException(
-                nameof(value),
-                value,
-                $"'{value}' is not a defined ProjectMemberRole value.")
+                _ => throw new ArgumentOutOfRangeException(nameof(value), value, $"'{value}' is not a defined ProjectMemberRole value.")
             };
         }
     }

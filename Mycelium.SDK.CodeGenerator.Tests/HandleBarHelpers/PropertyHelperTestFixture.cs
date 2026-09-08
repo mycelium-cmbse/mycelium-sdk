@@ -24,6 +24,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
     public class PropertyHelperTestFixture
     {
         private IClass[] classes = [];
+        private IHandlebars jsonSerializerHandlebars;
         private IHandlebars pocoHandlebars;
 
         [OneTimeSetUp]
@@ -39,6 +40,18 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             this.pocoHandlebars = Handlebars.CreateSharedEnvironment();
             HandlebarsHelpers.Register(this.pocoHandlebars);
             this.pocoHandlebars.RegisterPocoPropertyHelper();
+
+            this.jsonSerializerHandlebars =
+                Handlebars.CreateSharedEnvironment();
+
+            HandlebarsHelpers.Register(
+                this.jsonSerializerHandlebars);
+
+            this.jsonSerializerHandlebars
+                .RegisterJsonSerializerPropertyHelper();
+
+            this.jsonSerializerHandlebars
+                .RegisterSafeContextHelper();
         }
 
         [Test]
@@ -115,8 +128,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(this.RenderPocoInterface(property), Is.EqualTo("bool DerivedUnion { get; }"));
-                Assert.That(this.RenderPocoImplementation(property), Is.EqualTo("public bool DerivedUnion => this.ComputeDerivedUnion();"));
+                Assert.That(
+                    this.RenderPocoInterface(property),
+                    Is.EqualTo("bool DerivedUnion { get; }"));
+
+                Assert.That(
+                    this.RenderPocoImplementation(property),
+                    Is.EqualTo(
+                        "public bool DerivedUnion => this.ComputeDerivedUnion();"));
             }
         }
 
@@ -171,11 +190,102 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         }
 
         [Test]
+        public void Verify_that_Json_serializer_property_helpers_match_the_FunctionalData_contract()
+        {
+            var identifier =
+                this.QueryProperty("Thing", "id");
+
+            var ordinaryProperty =
+                this.QueryProperty("BranchProtectionRule", "name");
+
+            var dictionary =
+                this.QueryProperty("FunctionalProject", "sharedPreferences");
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(
+                    this.RenderJsonSerializerProperty(
+                        "{{#if (Property.QueryIsIdentifier this)}}identifier{{else}}ordinary{{/if}}",
+                        identifier),
+                    Is.EqualTo("identifier"));
+
+                Assert.That(
+                    this.RenderJsonSerializerProperty(
+                        "{{#if (Property.QueryIsIdentifier this)}}identifier{{else}}ordinary{{/if}}",
+                        ordinaryProperty),
+                    Is.EqualTo("ordinary"));
+
+                Assert.That(
+                    this.RenderJsonSerializerProperty(
+                        "{{#if (Property.QueryIsStringDictionary this)}}dictionary{{else}}ordinary{{/if}}",
+                        dictionary),
+                    Is.EqualTo("dictionary"));
+
+                Assert.That(
+                    this.RenderJsonSerializerProperty(
+                        "{{#if (Property.QueryIsStringDictionary this)}}dictionary{{else}}ordinary{{/if}}",
+                        ordinaryProperty),
+                    Is.EqualTo("ordinary"));
+
+                Assert.That(
+                    this.RenderJsonSerializerProperty(
+                        "{{Property.WritePropertyName this}}",
+                        this.QueryProperty("ProjectMember", "role")),
+                    Is.EqualTo("Role"));
+            }
+        }
+
+        [Test]
+        public void Verify_that_safe_context_exposes_the_property_and_owning_class()
+        {
+            var classContext =
+                this.classes.Single(umlClass => umlClass.Name == "ProjectMember");
+
+            var property =
+                this.QueryProperty("ProjectMember", "role");
+
+            var template = this.jsonSerializerHandlebars.Compile(
+                "{{#withPropertyClassContext property classContext}}" +
+                "{{property.Name}}:{{classContext.Name}}" +
+                "{{/withPropertyClassContext}}");
+
+            var renderedContext = template(
+                new
+                {
+                    property,
+                    classContext
+                });
+
+            Assert.That(
+                renderedContext,
+                Is.EqualTo("role:ProjectMember"));
+        }
+
+        [Test]
         public void Verify_that_RegisterPocoPropertyHelper_rejects_a_null_environment()
         {
             IHandlebars handlebars = null;
 
-            Assert.That(() => handlebars.RegisterPocoPropertyHelper(), Throws.ArgumentNullException);
+            Assert.That(
+                () => handlebars.RegisterPocoPropertyHelper(),
+                Throws.ArgumentNullException);
+        }
+
+        [Test]
+        public void Verify_that_RegisterJsonSerializerPropertyHelper_rejects_a_null_environment()
+        {
+            IHandlebars handlebars = null;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(
+                    () => handlebars.RegisterJsonSerializerPropertyHelper(),
+                    Throws.ArgumentNullException);
+
+                Assert.That(
+                    () => handlebars.RegisterSafeContextHelper(),
+                    Throws.ArgumentNullException);
+            }
         }
 
         [Test]
@@ -200,6 +310,16 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
                 exception.Message,
                 Is.EqualTo(
                     "{{Property.WritePocoInterfaceDeclaration}} requires exactly one argument."));
+        }
+
+        private string RenderJsonSerializerProperty(
+            string templateText,
+            IProperty property)
+        {
+            var template =
+                this.jsonSerializerHandlebars.Compile(templateText);
+
+            return template(property);
         }
 
         private string RenderPocoInterface(IProperty property)

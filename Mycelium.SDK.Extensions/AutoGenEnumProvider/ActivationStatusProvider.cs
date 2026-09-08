@@ -63,9 +63,7 @@ namespace Mycelium.SDK.Extensions
                 return ActivationStatus.Deleted;
             }
 
-            throw new ArgumentException(
-            $"'{new string(value)}' is not a valid ActivationStatus literal.",
-            nameof(value));
+            throw new ArgumentException($"'{new string(value)}' is not a valid ActivationStatus literal.", nameof(value));
         }
 
         /// <summary>
@@ -137,10 +135,7 @@ namespace Mycelium.SDK.Extensions
                 ActivationStatus.Suspended => "Suspended",
                 ActivationStatus.Archived => "Archived",
                 ActivationStatus.Deleted => "Deleted",
-                _ => throw new ArgumentOutOfRangeException(
-                nameof(value),
-                value,
-                $"'{value}' is not a defined ActivationStatus value.")
+                _ => throw new ArgumentOutOfRangeException(nameof(value), value, $"'{value}' is not a defined ActivationStatus value.")
             };
         }
     }

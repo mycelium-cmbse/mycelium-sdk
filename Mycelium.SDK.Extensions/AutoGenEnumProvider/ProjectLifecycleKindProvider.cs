@@ -58,9 +58,7 @@ namespace Mycelium.SDK.Extensions
                 return ProjectLifecycleKind.Archived;
             }
 
-            throw new ArgumentException(
-            $"'{new string(value)}' is not a valid ProjectLifecycleKind literal.",
-            nameof(value));
+            throw new ArgumentException($"'{new string(value)}' is not a valid ProjectLifecycleKind literal.", nameof(value));
         }
 
         /// <summary>
@@ -125,10 +123,7 @@ namespace Mycelium.SDK.Extensions
                 ProjectLifecycleKind.Open => "Open",
                 ProjectLifecycleKind.Review => "Review",
                 ProjectLifecycleKind.Archived => "Archived",
-                _ => throw new ArgumentOutOfRangeException(
-                nameof(value),
-                value,
-                $"'{value}' is not a defined ProjectLifecycleKind value.")
+                _ => throw new ArgumentOutOfRangeException(nameof(value), value, $"'{value}' is not a defined ProjectLifecycleKind value.")
             };
         }
     }
