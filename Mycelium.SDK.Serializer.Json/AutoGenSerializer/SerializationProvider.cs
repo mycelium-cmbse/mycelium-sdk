@@ -30,20 +30,20 @@ namespace Mycelium.SDK.Serializer.Json
         /// Maps exact concrete DTO types to their generated serializers.
         /// </summary>
         private static readonly IReadOnlyDictionary<Type, Action<object, Utf8JsonWriter>> SerializerActionMap =
-        new Dictionary<Type, Action<object, Utf8JsonWriter>>
-        {
-            [typeof(BranchProtectionRule)] = BranchProtectionRuleSerializer.Serialize,
-            [typeof(Comment)] = CommentSerializer.Serialize,
-            [typeof(FunctionalProject)] = FunctionalProjectSerializer.Serialize,
-            [typeof(FunctionalProjectPolicy)] = FunctionalProjectPolicySerializer.Serialize,
-            [typeof(Organization)] = OrganizationSerializer.Serialize,
-            [typeof(OrganizationMember)] = OrganizationMemberSerializer.Serialize,
-            [typeof(OrganizationPolicy)] = OrganizationPolicySerializer.Serialize,
-            [typeof(Ownership)] = OwnershipSerializer.Serialize,
-            [typeof(ProjectMember)] = ProjectMemberSerializer.Serialize,
-            [typeof(Review)] = ReviewSerializer.Serialize,
-            [typeof(User)] = UserSerializer.Serialize,
-        };
+            new Dictionary<Type, Action<object, Utf8JsonWriter>>
+            {
+                [typeof(BranchProtectionRule)] = BranchProtectionRuleSerializer.Serialize,
+                [typeof(Comment)] = CommentSerializer.Serialize,
+                [typeof(FunctionalProject)] = FunctionalProjectSerializer.Serialize,
+                [typeof(FunctionalProjectPolicy)] = FunctionalProjectPolicySerializer.Serialize,
+                [typeof(Organization)] = OrganizationSerializer.Serialize,
+                [typeof(OrganizationMember)] = OrganizationMemberSerializer.Serialize,
+                [typeof(OrganizationPolicy)] = OrganizationPolicySerializer.Serialize,
+                [typeof(Ownership)] = OwnershipSerializer.Serialize,
+                [typeof(ProjectMember)] = ProjectMemberSerializer.Serialize,
+                [typeof(Review)] = ReviewSerializer.Serialize,
+                [typeof(User)] = UserSerializer.Serialize,
+            };
 
         /// <summary>
         /// Provides the generated serializer registered for an exact concrete DTO type.
@@ -72,8 +72,7 @@ namespace Mycelium.SDK.Serializer.Json
                 return serializer;
             }
 
-            throw new NotSupportedException(
-            $"Runtime DTO type '{runtimeType.FullName}' is not supported by the serialization provider.");
+            throw new NotSupportedException($"Runtime DTO type '{runtimeType.FullName}' is not supported by the serialization provider.");
         }
     }
 }

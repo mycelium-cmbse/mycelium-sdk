@@ -48,9 +48,7 @@ namespace Mycelium.SDK.Extensions
                 return CommentStatus.Resolved;
             }
 
-            throw new ArgumentException(
-            $"'{new string(value)}' is not a valid CommentStatus literal.",
-            nameof(value));
+            throw new ArgumentException($"'{new string(value)}' is not a valid CommentStatus literal.", nameof(value));
         }
 
         /// <summary>
@@ -101,10 +99,7 @@ namespace Mycelium.SDK.Extensions
             {
                 CommentStatus.Open => "Open",
                 CommentStatus.Resolved => "Resolved",
-                _ => throw new ArgumentOutOfRangeException(
-                nameof(value),
-                value,
-                $"'{value}' is not a defined CommentStatus value.")
+                _ => throw new ArgumentOutOfRangeException(nameof(value), value, $"'{value}' is not a defined CommentStatus value.")
             };
         }
     }

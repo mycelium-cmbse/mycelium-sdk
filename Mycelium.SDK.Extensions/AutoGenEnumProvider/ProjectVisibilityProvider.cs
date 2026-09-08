@@ -53,9 +53,7 @@ namespace Mycelium.SDK.Extensions
                 return ProjectVisibility.Public;
             }
 
-            throw new ArgumentException(
-            $"'{new string(value)}' is not a valid ProjectVisibility literal.",
-            nameof(value));
+            throw new ArgumentException($"'{new string(value)}' is not a valid ProjectVisibility literal.", nameof(value));
         }
 
         /// <summary>
@@ -113,10 +111,7 @@ namespace Mycelium.SDK.Extensions
                 ProjectVisibility.Private => "Private",
                 ProjectVisibility.Organization => "Organization",
                 ProjectVisibility.Public => "Public",
-                _ => throw new ArgumentOutOfRangeException(
-                nameof(value),
-                value,
-                $"'{value}' is not a defined ProjectVisibility value.")
+                _ => throw new ArgumentOutOfRangeException(nameof(value), value, $"'{value}' is not a defined ProjectVisibility value.")
             };
         }
     }

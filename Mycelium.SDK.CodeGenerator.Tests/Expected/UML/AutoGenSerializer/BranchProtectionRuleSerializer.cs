@@ -56,8 +56,7 @@ namespace Mycelium.SDK.Serializer.Json
 
             if (obj.GetType() != typeof(BranchProtectionRule))
             {
-                throw new NotSupportedException(
-                $"Runtime DTO type '{obj.GetType().FullName}' is not supported by BranchProtectionRuleSerializer.");
+                throw new NotSupportedException($"Runtime DTO type '{obj.GetType().FullName}' is not supported by BranchProtectionRuleSerializer.");
             }
 
             var dto = (BranchProtectionRule)obj;

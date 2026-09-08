@@ -56,8 +56,7 @@ namespace Mycelium.SDK.Serializer.Json
 
             if (obj.GetType() != typeof(Review))
             {
-                throw new NotSupportedException(
-                $"Runtime DTO type '{obj.GetType().FullName}' is not supported by ReviewSerializer.");
+                throw new NotSupportedException($"Runtime DTO type '{obj.GetType().FullName}' is not supported by ReviewSerializer.");
             }
 
             var dto = (Review)obj;

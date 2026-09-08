@@ -56,8 +56,7 @@ namespace Mycelium.SDK.Serializer.Json
 
             if (obj.GetType() != typeof(Comment))
             {
-                throw new NotSupportedException(
-                $"Runtime DTO type '{obj.GetType().FullName}' is not supported by CommentSerializer.");
+                throw new NotSupportedException($"Runtime DTO type '{obj.GetType().FullName}' is not supported by CommentSerializer.");
             }
 
             var dto = (Comment)obj;

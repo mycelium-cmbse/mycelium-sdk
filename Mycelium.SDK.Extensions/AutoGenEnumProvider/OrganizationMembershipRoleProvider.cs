@@ -53,9 +53,7 @@ namespace Mycelium.SDK.Extensions
                 return OrganizationMembershipRole.Owner;
             }
 
-            throw new ArgumentException(
-            $"'{new string(value)}' is not a valid OrganizationMembershipRole literal.",
-            nameof(value));
+            throw new ArgumentException($"'{new string(value)}' is not a valid OrganizationMembershipRole literal.", nameof(value));
         }
 
         /// <summary>
@@ -113,10 +111,7 @@ namespace Mycelium.SDK.Extensions
                 OrganizationMembershipRole.Administrator => "Administrator",
                 OrganizationMembershipRole.Member => "Member",
                 OrganizationMembershipRole.Owner => "Owner",
-                _ => throw new ArgumentOutOfRangeException(
-                nameof(value),
-                value,
-                $"'{value}' is not a defined OrganizationMembershipRole value.")
+                _ => throw new ArgumentOutOfRangeException(nameof(value), value, $"'{value}' is not a defined OrganizationMembershipRole value.")
             };
         }
     }

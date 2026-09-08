@@ -56,8 +56,7 @@ namespace Mycelium.SDK.Serializer.Json
 
             if (obj.GetType() != typeof(ProjectMember))
             {
-                throw new NotSupportedException(
-                $"Runtime DTO type '{obj.GetType().FullName}' is not supported by ProjectMemberSerializer.");
+                throw new NotSupportedException($"Runtime DTO type '{obj.GetType().FullName}' is not supported by ProjectMemberSerializer.");
             }
 
             var dto = (ProjectMember)obj;

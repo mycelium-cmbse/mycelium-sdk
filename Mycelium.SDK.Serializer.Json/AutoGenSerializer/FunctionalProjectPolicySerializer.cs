@@ -56,8 +56,7 @@ namespace Mycelium.SDK.Serializer.Json
 
             if (obj.GetType() != typeof(FunctionalProjectPolicy))
             {
-                throw new NotSupportedException(
-                $"Runtime DTO type '{obj.GetType().FullName}' is not supported by FunctionalProjectPolicySerializer.");
+                throw new NotSupportedException($"Runtime DTO type '{obj.GetType().FullName}' is not supported by FunctionalProjectPolicySerializer.");
             }
 
             var dto = (FunctionalProjectPolicy)obj;
