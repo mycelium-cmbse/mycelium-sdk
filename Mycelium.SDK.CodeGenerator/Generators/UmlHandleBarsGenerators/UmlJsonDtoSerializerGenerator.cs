@@ -67,10 +67,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                     StringComparer.Ordinal)
                 .ToArray();
 
-            ThrowIfDuplicateFileNames(
-                generatedFiles,
-                "JSON DTO serializer");
-
             await WriteAsync(
                 generatedFiles,
                 outputDirectory);

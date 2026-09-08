@@ -11,19 +11,29 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
+    using System.Text;
     using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     using Mycelium.SDK.DTO;
     using Mycelium.SDK.Serializer.Json;
 
     /// <summary>
-    /// Verifies the generated JSON DTO serialization runtime contract.
+    /// Verifies the public JSON facade and generated DTO serialization runtime contract.
     /// </summary>
     [TestFixture]
     public class SerializerTestFixture
     {
+        /// <summary>
+        /// Public serializer facade under test.
+        /// </summary>
+        private static readonly ISerializer JsonSerializer =
+            new Serializer();
+
         /// <summary>
         /// Expected modeled property order for a branch protection rule.
         /// </summary>
@@ -69,6 +79,443 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             "updatedOn",
             "user",
         ];
+
+        /// <summary>
+        /// Verifies the exact public API defined by architecture section 5.5.
+        /// </summary>
+        [Test]
+        public void Verify_that_public_facade_has_the_architecture_defined_shape()
+        {
+            var serializerInterface = typeof(ISerializer);
+            var serializerType = typeof(Serializer);
+
+            var synchronousDtoMethod = serializerInterface.GetMethod(
+                nameof(ISerializer.Serialize),
+                new[]
+                {
+                    typeof(IThing),
+                    typeof(Stream),
+                    typeof(JsonWriterOptions),
+                });
+
+            var synchronousSequenceMethod = serializerInterface.GetMethod(
+                nameof(ISerializer.Serialize),
+                new[]
+                {
+                    typeof(IEnumerable<IThing>),
+                    typeof(Stream),
+                    typeof(JsonWriterOptions),
+                });
+
+            var asynchronousDtoMethod = serializerInterface.GetMethod(
+                nameof(ISerializer.SerializeAsync),
+                new[]
+                {
+                    typeof(IThing),
+                    typeof(Stream),
+                    typeof(JsonWriterOptions),
+                    typeof(CancellationToken),
+                });
+
+            var asynchronousSequenceMethod = serializerInterface.GetMethod(
+                nameof(ISerializer.SerializeAsync),
+                new[]
+                {
+                    typeof(IEnumerable<IThing>),
+                    typeof(Stream),
+                    typeof(JsonWriterOptions),
+                    typeof(CancellationToken),
+                });
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(
+                    serializerInterface.GetMethods(),
+                    Has.Length.EqualTo(4));
+
+                Assert.That(
+                    synchronousDtoMethod?.ReturnType,
+                    Is.EqualTo(typeof(void)));
+
+                Assert.That(
+                    synchronousSequenceMethod?.ReturnType,
+                    Is.EqualTo(typeof(void)));
+
+                Assert.That(
+                    asynchronousDtoMethod?.ReturnType,
+                    Is.EqualTo(typeof(Task)));
+
+                Assert.That(
+                    asynchronousSequenceMethod?.ReturnType,
+                    Is.EqualTo(typeof(Task)));
+
+                Assert.That(
+                    serializerType.IsPublic,
+                    Is.True);
+
+                Assert.That(
+                    serializerType.IsAbstract,
+                    Is.False);
+
+                Assert.That(
+                    serializerInterface.IsAssignableFrom(serializerType),
+                    Is.True);
+
+                Assert.That(
+                    serializerType.GetConstructor(Type.EmptyTypes),
+                    Is.Not.Null);
+            }
+        }
+
+        /// <summary>
+        /// Verifies roots, writer options, flushing, stream ownership, and
+        /// synchronous/asynchronous byte parity.
+        /// </summary>
+        /// <returns>
+        /// A task representing asynchronous verification.
+        /// </returns>
+        [Test]
+        public async Task Verify_that_facade_roots_options_flushing_stream_ownership_and_async_parity_follow_the_contract()
+        {
+            var firstDto = CreateComment(
+                Guid.Parse("10000000-0000-0000-0000-000000000001"));
+
+            var secondDto = CreateComment(
+                Guid.Parse("10000000-0000-0000-0000-000000000002"));
+
+            var dtos = new IThing[]
+            {
+                firstDto,
+                secondDto,
+            };
+
+            var writerOptions = new JsonWriterOptions
+            {
+                Indented = true,
+            };
+
+            using var synchronousDtoStream =
+                new RecordingMemoryStream();
+
+            JsonSerializer.Serialize(
+                firstDto,
+                synchronousDtoStream,
+                writerOptions);
+
+            using var asynchronousDtoStream =
+                new RecordingMemoryStream();
+
+            await JsonSerializer.SerializeAsync(
+                firstDto,
+                asynchronousDtoStream,
+                writerOptions,
+                CancellationToken.None);
+
+            using var synchronousSequenceStream =
+                new RecordingMemoryStream();
+
+            JsonSerializer.Serialize(
+                dtos,
+                synchronousSequenceStream,
+                writerOptions);
+
+            using var asynchronousSequenceStream =
+                new RecordingMemoryStream();
+
+            await JsonSerializer.SerializeAsync(
+                dtos,
+                asynchronousSequenceStream,
+                writerOptions,
+                CancellationToken.None);
+
+            var synchronousDtoBytes =
+                synchronousDtoStream.ToArray();
+
+            var asynchronousDtoBytes =
+                asynchronousDtoStream.ToArray();
+
+            var synchronousSequenceBytes =
+                synchronousSequenceStream.ToArray();
+
+            var asynchronousSequenceBytes =
+                asynchronousSequenceStream.ToArray();
+
+            using var dtoDocument =
+                JsonDocument.Parse(synchronousDtoBytes);
+
+            using var sequenceDocument =
+                JsonDocument.Parse(synchronousSequenceBytes);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(
+                    dtoDocument.RootElement.ValueKind,
+                    Is.EqualTo(JsonValueKind.Object));
+
+                Assert.That(
+                    sequenceDocument.RootElement.ValueKind,
+                    Is.EqualTo(JsonValueKind.Array));
+
+                Assert.That(
+                    sequenceDocument.RootElement.GetArrayLength(),
+                    Is.EqualTo(2));
+
+                Assert.That(
+                    asynchronousDtoBytes,
+                    Is.EqualTo(synchronousDtoBytes));
+
+                Assert.That(
+                    asynchronousSequenceBytes,
+                    Is.EqualTo(synchronousSequenceBytes));
+
+                Assert.That(
+                    Encoding.UTF8.GetString(synchronousDtoBytes),
+                    Does.Contain("\n"));
+
+                Assert.That(
+                    Encoding.UTF8.GetString(synchronousSequenceBytes),
+                    Does.Contain("\n"));
+
+                Assert.That(
+                    synchronousDtoStream.WasFlushedSynchronously,
+                    Is.True);
+
+                Assert.That(
+                    synchronousSequenceStream.WasFlushedSynchronously,
+                    Is.True);
+
+                Assert.That(
+                    asynchronousDtoStream.WasFlushedAsynchronously,
+                    Is.True);
+
+                Assert.That(
+                    asynchronousSequenceStream.WasFlushedAsynchronously,
+                    Is.True);
+
+                Assert.That(
+                    synchronousDtoStream.CanWrite,
+                    Is.True);
+
+                Assert.That(
+                    asynchronousDtoStream.CanWrite,
+                    Is.True);
+
+                Assert.That(
+                    synchronousSequenceStream.CanWrite,
+                    Is.True);
+
+                Assert.That(
+                    asynchronousSequenceStream.CanWrite,
+                    Is.True);
+            }
+        }
+
+        /// <summary>
+        /// Verifies null handling and unsupported exact-runtime-type failures
+        /// for synchronous and asynchronous facade operations.
+        /// </summary>
+        /// <returns>
+        /// A task representing asynchronous verification.
+        /// </returns>
+        [Test]
+        public async Task Verify_that_facade_rejects_null_and_unsupported_values()
+        {
+            var supportedDto = CreateComment(
+                Guid.Parse("20000000-0000-0000-0000-000000000001"));
+
+            var unsupportedDto = new DerivedComment();
+
+            var writerOptions =
+                default(JsonWriterOptions);
+
+            using var synchronousArgumentStream =
+                new MemoryStream();
+
+            Assert.That(
+                () => JsonSerializer.Serialize(
+                    (IThing)null,
+                    synchronousArgumentStream,
+                    writerOptions),
+                Throws.TypeOf<ArgumentNullException>());
+
+            Assert.That(
+                () => JsonSerializer.Serialize(
+                    (IEnumerable<IThing>)null,
+                    synchronousArgumentStream,
+                    writerOptions),
+                Throws.TypeOf<ArgumentNullException>());
+
+            Assert.That(
+                () => JsonSerializer.Serialize(
+                    supportedDto,
+                    null,
+                    writerOptions),
+                Throws.TypeOf<ArgumentNullException>());
+
+            Assert.That(
+                () => JsonSerializer.Serialize(
+                    new IThing[]
+                    {
+                        supportedDto,
+                    },
+                    null,
+                    writerOptions),
+                Throws.TypeOf<ArgumentNullException>());
+
+            using var synchronousNullElementStream =
+                new MemoryStream();
+
+            Assert.That(
+                () => JsonSerializer.Serialize(
+                    new IThing[]
+                    {
+                        supportedDto,
+                        null,
+                    },
+                    synchronousNullElementStream,
+                    writerOptions),
+                Throws.TypeOf<ArgumentNullException>());
+
+            using var synchronousUnsupportedStream =
+                new MemoryStream();
+
+            Assert.That(
+                () => JsonSerializer.Serialize(
+                    unsupportedDto,
+                    synchronousUnsupportedStream,
+                    writerOptions),
+                Throws.TypeOf<NotSupportedException>());
+
+            Assert.That(
+                () => JsonSerializer.Serialize(
+                    new IThing[]
+                    {
+                        supportedDto,
+                        unsupportedDto,
+                    },
+                    synchronousUnsupportedStream,
+                    writerOptions),
+                Throws.TypeOf<NotSupportedException>());
+
+            using var asynchronousArgumentStream =
+                new MemoryStream();
+
+            await Assert.ThatAsync(
+                () => JsonSerializer.SerializeAsync(
+                    (IThing)null,
+                    asynchronousArgumentStream,
+                    writerOptions,
+                    CancellationToken.None),
+                Throws.TypeOf<ArgumentNullException>());
+
+            await Assert.ThatAsync(
+                () => JsonSerializer.SerializeAsync(
+                    (IEnumerable<IThing>)null,
+                    asynchronousArgumentStream,
+                    writerOptions,
+                    CancellationToken.None),
+                Throws.TypeOf<ArgumentNullException>());
+
+            await Assert.ThatAsync(
+                () => JsonSerializer.SerializeAsync(
+                    supportedDto,
+                    null,
+                    writerOptions,
+                    CancellationToken.None),
+                Throws.TypeOf<ArgumentNullException>());
+
+            await Assert.ThatAsync(
+                () => JsonSerializer.SerializeAsync(
+                    new IThing[]
+                    {
+                        supportedDto,
+                    },
+                    null,
+                    writerOptions,
+                    CancellationToken.None),
+                Throws.TypeOf<ArgumentNullException>());
+
+            using var asynchronousNullElementStream =
+                new MemoryStream();
+
+            await Assert.ThatAsync(
+                () => JsonSerializer.SerializeAsync(
+                    new IThing[]
+                    {
+                        supportedDto,
+                        null,
+                    },
+                    asynchronousNullElementStream,
+                    writerOptions,
+                    CancellationToken.None),
+                Throws.TypeOf<ArgumentNullException>());
+
+            using var asynchronousUnsupportedStream =
+                new MemoryStream();
+
+            await Assert.ThatAsync(
+                () => JsonSerializer.SerializeAsync(
+                    unsupportedDto,
+                    asynchronousUnsupportedStream,
+                    writerOptions,
+                    CancellationToken.None),
+                Throws.TypeOf<NotSupportedException>());
+
+            await Assert.ThatAsync(
+                () => JsonSerializer.SerializeAsync(
+                    new IThing[]
+                    {
+                        supportedDto,
+                        unsupportedDto,
+                    },
+                    asynchronousUnsupportedStream,
+                    writerOptions,
+                    CancellationToken.None),
+                Throws.TypeOf<NotSupportedException>());
+        }
+
+        /// <summary>
+        /// Verifies that both asynchronous facade overloads observe cancellation.
+        /// </summary>
+        /// <returns>
+        /// A task representing asynchronous verification.
+        /// </returns>
+        [Test]
+        public async Task Verify_that_async_facade_observes_cancellation()
+        {
+            var dto = CreateComment(
+                Guid.Parse("30000000-0000-0000-0000-000000000001"));
+
+            using var cancellationTokenSource =
+                new CancellationTokenSource();
+
+            cancellationTokenSource.Cancel();
+
+            using var dtoStream =
+                new MemoryStream();
+
+            await Assert.ThatAsync(
+                () => JsonSerializer.SerializeAsync(
+                    dto,
+                    dtoStream,
+                    default,
+                    cancellationTokenSource.Token),
+                Throws.TypeOf<OperationCanceledException>());
+
+            using var sequenceStream =
+                new MemoryStream();
+
+            await Assert.ThatAsync(
+                () => JsonSerializer.SerializeAsync(
+                    new IThing[]
+                    {
+                        dto,
+                    },
+                    sequenceStream,
+                    default,
+                    cancellationTokenSource.Token),
+                Throws.TypeOf<OperationCanceledException>());
+        }
 
         /// <summary>
         /// Verifies that serializer lookup supports only exact concrete DTO
@@ -206,6 +653,13 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                     Is.EqualTo(createdOn));
 
                 Assert.That(
+                    root.GetProperty("createdOn").GetString(),
+                    Is.EqualTo(
+                        createdOn.ToString(
+                            "o",
+                            CultureInfo.InvariantCulture)));
+
+                Assert.That(
                     root.GetProperty("engineeringBranchId").GetGuid(),
                     Is.EqualTo(engineeringBranchId));
 
@@ -228,6 +682,13 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 Assert.That(
                     root.GetProperty("updatedOn").GetDateTime(),
                     Is.EqualTo(updatedOn));
+
+                Assert.That(
+                    root.GetProperty("updatedOn").GetString(),
+                    Is.EqualTo(
+                        updatedOn.ToString(
+                            "o",
+                            CultureInfo.InvariantCulture)));
 
                 Assert.That(
                     defaultReviewers,
@@ -500,7 +961,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         }
 
         /// <summary>
-        /// Serializes a DTO through the exact-runtime-type provider.
+        /// Serializes a DTO through the public facade.
         /// </summary>
         /// <param name="dto">
         /// The concrete DTO to serialize.
@@ -508,20 +969,66 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         /// <returns>
         /// The generated UTF-8 JSON bytes.
         /// </returns>
-        private static byte[] Serialize(object dto)
+        private static byte[] Serialize(IThing dto)
         {
             using var stream = new MemoryStream();
 
-            using (var writer = new Utf8JsonWriter(stream))
-            {
-                var serializer =
-                    SerializationProvider.Provide(dto.GetType());
-
-                serializer(dto, writer);
-                writer.Flush();
-            }
+            JsonSerializer.Serialize(
+                dto,
+                stream,
+                default);
 
             return stream.ToArray();
+        }
+
+        /// <summary>
+        /// Creates a representative comment DTO.
+        /// </summary>
+        /// <param name="id">
+        /// The DTO identifier.
+        /// </param>
+        /// <returns>
+        /// A populated comment DTO.
+        /// </returns>
+        private static Comment CreateComment(Guid id)
+        {
+            return new Comment
+            {
+                Id = id,
+                Author =
+                    Guid.Parse("40000000-0000-0000-0000-000000000001"),
+                CommentStatus = CommentStatus.Open,
+                Content = "Facade serialization",
+                CreatedBy =
+                    Guid.Parse("40000000-0000-0000-0000-000000000002"),
+                CreatedOn =
+                    new DateTime(
+                        2026,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        DateTimeKind.Utc),
+                Quotes = null,
+                Replies =
+                [
+                    Guid.Parse("40000000-0000-0000-0000-000000000003"),
+                ],
+                TargetElementId =
+                    Guid.Parse("40000000-0000-0000-0000-000000000004"),
+                UpdatedBy =
+                    Guid.Parse("40000000-0000-0000-0000-000000000005"),
+                UpdatedOn =
+                    new DateTime(
+                        2026,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        DateTimeKind.Utc),
+            };
         }
 
         /// <summary>
@@ -544,6 +1051,38 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             Assert.That(
                 reference.GetGuid(),
                 Is.EqualTo(expectedId));
+        }
+
+        /// <summary>
+        /// Memory stream that records synchronous and asynchronous flushes.
+        /// </summary>
+        private sealed class RecordingMemoryStream : MemoryStream
+        {
+            /// <summary>
+            /// Gets a value indicating whether a synchronous flush occurred.
+            /// </summary>
+            public bool WasFlushedSynchronously { get; private set; }
+
+            /// <summary>
+            /// Gets a value indicating whether an asynchronous flush occurred.
+            /// </summary>
+            public bool WasFlushedAsynchronously { get; private set; }
+
+            /// <inheritdoc />
+            public override void Flush()
+            {
+                this.WasFlushedSynchronously = true;
+                base.Flush();
+            }
+
+            /// <inheritdoc />
+            public override Task FlushAsync(
+                CancellationToken cancellationToken)
+            {
+                this.WasFlushedAsynchronously = true;
+
+                return base.FlushAsync(cancellationToken);
+            }
         }
 
         /// <summary>
