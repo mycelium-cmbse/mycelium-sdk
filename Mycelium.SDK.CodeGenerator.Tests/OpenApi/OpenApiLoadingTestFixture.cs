@@ -23,6 +23,12 @@ namespace Mycelium.SDK.CodeGenerator.Tests.OpenApi
         private static string ResourcesDirectory => Path.Combine(AppContext.BaseDirectory, "Resources");
 
         [Test]
+        public void VerifyThatReadingAnAbsentResourceThrows()
+        {
+            Assert.That(() => ReadAsync("does-not-exist.json"), Throws.InstanceOf<FileNotFoundException>());
+        }
+
+        [Test]
         public async Task VerifyThatTheSystemsModelingApiResourceIsReadCleanly()
         {
             var readResult = await ReadAsync(SystemsModelingApiFileName);
@@ -36,14 +42,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.OpenApi
                 Assert.That(readResult.Document.Info.Title, Is.EqualTo("Systems Modeling API and Services"));
                 Assert.That(readResult.Document.Info.Version, Is.EqualTo("1.0"));
             }
-        }
-
-        [Test]
-        public void VerifyThatReadingAnAbsentResourceThrows()
-        {
-            Assert.That(
-                () => ReadAsync("does-not-exist.json"),
-                Throws.InstanceOf<FileNotFoundException>());
         }
 
         /// <summary>
@@ -90,10 +88,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.OpenApi
         /// </remarks>
         private static OpenApiReaderSettings CreateReaderSettings()
         {
-            return new OpenApiReaderSettings
-            {
-                RuleSet = ValidationRuleSet.GetEmptyRuleSet()
-            };
+            return new OpenApiReaderSettings { RuleSet = ValidationRuleSet.GetEmptyRuleSet() };
         }
     }
 }

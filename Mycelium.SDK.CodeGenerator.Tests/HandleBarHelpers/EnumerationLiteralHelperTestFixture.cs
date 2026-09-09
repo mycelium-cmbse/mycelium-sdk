@@ -29,21 +29,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             this.handlebars.RegisterEnumerationLiteralHelper();
         }
 
-        [TestCase("ChangesRequested", "ChangesRequested")]
-        [TestCase("class", "@class")]
-        public void Verify_that_EnumerationLiteral_Write_writes_the_mapped_identifier(string literalName, string expectedIdentifier)
-        {
-            var literal = new EnumerationLiteral
-            {
-                XmiId = "literal-id",
-                Name = literalName
-            };
-
-            var template = this.handlebars.Compile("{{ #EnumerationLiteral.Write this }}");
-
-            Assert.That(template(literal), Is.EqualTo(expectedIdentifier));
-        }
-
         [Test]
         public void Verify_that_EnumerationLiteral_Write_requires_an_IEnumerationLiteral_argument()
         {
@@ -68,6 +53,17 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             IHandlebars nullHandlebars = null;
 
             Assert.That(() => nullHandlebars.RegisterEnumerationLiteralHelper(), Throws.ArgumentNullException);
+        }
+
+        [TestCase("ChangesRequested", "ChangesRequested")]
+        [TestCase("class", "@class")]
+        public void Verify_that_EnumerationLiteral_Write_writes_the_mapped_identifier(string literalName, string expectedIdentifier)
+        {
+            var literal = new EnumerationLiteral { XmiId = "literal-id", Name = literalName };
+
+            var template = this.handlebars.Compile("{{ #EnumerationLiteral.Write this }}");
+
+            Assert.That(template(literal), Is.EqualTo(expectedIdentifier));
         }
     }
 }

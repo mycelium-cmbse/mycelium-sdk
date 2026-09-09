@@ -9,9 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
-    using System;
-    using System.Linq;
-
     using HandlebarsDotNet;
 
     using Mycelium.SDK.CodeGenerator.Extensions;
@@ -36,25 +33,20 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper(
-                "NamedElement.WriteIdentifier",
-                (writer, _, arguments) =>
+            handlebars.RegisterHelper("NamedElement.WriteIdentifier", (writer, _, arguments) =>
+            {
+                if (arguments.Length != 1)
                 {
-                    if (arguments.Length != 1)
-                    {
-                        throw new HandlebarsException(
-                            "{{NamedElement.WriteIdentifier}} requires exactly one argument.");
-                    }
+                    throw new HandlebarsException("{{NamedElement.WriteIdentifier}} requires exactly one argument.");
+                }
 
-                    if (arguments.Single() is not INamedElement namedElement)
-                    {
-                        throw new HandlebarsException(
-                            "{{NamedElement.WriteIdentifier}} requires an INamedElement argument.");
-                    }
+                if (arguments.Single() is not INamedElement namedElement)
+                {
+                    throw new HandlebarsException("{{NamedElement.WriteIdentifier}} requires an INamedElement argument.");
+                }
 
-                    writer.WriteSafeString(
-                        ReservedCSharpNameMapper.Map(namedElement.Name));
-                });
+                writer.WriteSafeString(ReservedCSharpNameMapper.Map(namedElement.Name));
+            });
         }
     }
 }

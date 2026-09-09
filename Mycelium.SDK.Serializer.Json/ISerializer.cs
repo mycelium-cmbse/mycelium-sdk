@@ -37,10 +37,7 @@ namespace Mycelium.SDK.Serializer.Json
         /// <exception cref="NotSupportedException">
         /// Thrown when the exact runtime DTO type is not supported.
         /// </exception>
-        void Serialize(
-            IThing dto,
-            Stream stream,
-            JsonWriterOptions jsonWriterOptions);
+        void Serialize(IThing dto, Stream stream, JsonWriterOptions jsonWriterOptions);
 
         /// <summary>
         /// Serializes a sequence of DTOs as a JSON array.
@@ -61,10 +58,7 @@ namespace Mycelium.SDK.Serializer.Json
         /// <exception cref="NotSupportedException">
         /// Thrown when an exact runtime DTO type is not supported.
         /// </exception>
-        void Serialize(
-            IEnumerable<IThing> dtos,
-            Stream stream,
-            JsonWriterOptions jsonWriterOptions);
+        void Serialize(IEnumerable<IThing> dtos, Stream stream, JsonWriterOptions jsonWriterOptions);
 
         /// <summary>
         /// Asynchronously serializes one DTO as a JSON object.
@@ -91,11 +85,7 @@ namespace Mycelium.SDK.Serializer.Json
         /// <exception cref="NotSupportedException">
         /// Thrown when the exact runtime DTO type is not supported.
         /// </exception>
-        Task SerializeAsync(
-            IThing dto,
-            Stream stream,
-            JsonWriterOptions jsonWriterOptions,
-            CancellationToken cancellationToken);
+        Task SerializeAsync(IThing dto, Stream stream, JsonWriterOptions jsonWriterOptions, CancellationToken cancellationToken);
 
         /// <summary>
         /// Asynchronously serializes a sequence of DTOs as a JSON array.
@@ -122,10 +112,6 @@ namespace Mycelium.SDK.Serializer.Json
         /// <exception cref="NotSupportedException">
         /// Thrown when an exact runtime DTO type is not supported.
         /// </exception>
-        Task SerializeAsync(
-            IEnumerable<IThing> dtos,
-            Stream stream,
-            JsonWriterOptions jsonWriterOptions,
-            CancellationToken cancellationToken);
+        Task SerializeAsync(IEnumerable<IThing> dtos, Stream stream, JsonWriterOptions jsonWriterOptions, CancellationToken cancellationToken);
     }
 }

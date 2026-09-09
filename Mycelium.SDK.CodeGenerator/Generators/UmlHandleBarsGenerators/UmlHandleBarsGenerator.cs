@@ -25,8 +25,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <summary>
         /// The current model-derived documentation-symbol mappings.
         /// </summary>
-        private Dictionary<string, string> documentationSymbols =
-            new(StringComparer.Ordinal);
+        private Dictionary<string, string> documentationSymbols = new(StringComparer.Ordinal);
 
         /// <summary>
         /// Initializes a new instance of the
@@ -61,15 +60,12 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <exception cref="InvalidOperationException">
         /// Thrown when the loaded model does not contain exactly one FunctionalData package.
         /// </exception>
-        public Task GenerateAsync(
-            DirectoryInfo resourcesDirectory,
-            DirectoryInfo outputDirectory)
+        public Task GenerateAsync(DirectoryInfo resourcesDirectory, DirectoryInfo outputDirectory)
         {
             ArgumentNullException.ThrowIfNull(resourcesDirectory);
             ArgumentNullException.ThrowIfNull(outputDirectory);
 
-            var xmiReaderResult =
-                XmiReaderResultExtensions.ReadFunctionalData(resourcesDirectory);
+            var xmiReaderResult = XmiReaderResultExtensions.ReadFunctionalData(resourcesDirectory);
 
             return this.GenerateAsync(xmiReaderResult, outputDirectory);
         }
@@ -90,9 +86,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// Thrown when <paramref name="xmiReaderResult" /> or <paramref name="outputDirectory" /> is
         /// <see langword="null" />.
         /// </exception>
-        public abstract Task GenerateAsync(
-            XmiReaderResult xmiReaderResult,
-            DirectoryInfo outputDirectory);
+        public abstract Task GenerateAsync(XmiReaderResult xmiReaderResult, DirectoryInfo outputDirectory);
 
         /// <summary>
         /// Creates a deterministic payload for the FunctionalData package.
@@ -109,8 +103,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <exception cref="InvalidOperationException">
         /// Thrown when the model does not contain exactly one FunctionalData package.
         /// </exception>
-        protected static HandlebarsPayload CreateHandlebarsPayload(
-            XmiReaderResult xmiReaderResult)
+        protected static HandlebarsPayload CreateHandlebarsPayload(XmiReaderResult xmiReaderResult)
         {
             ArgumentNullException.ThrowIfNull(xmiReaderResult);
 
@@ -122,63 +115,32 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var rootPackage = xmiReaderResult.QueryFunctionalDataPackage();
 
-            var generationPackages = rootPackage
-                .QueryPackages()
+            var generationPackages = rootPackage.QueryPackages()
                 .OrderBy(package => package.Name, StringComparer.Ordinal)
                 .ToArray();
 
             var enumerations = generationPackages
-                .SelectMany(
-                    package =>
-                        package.PackagedElement.OfType<IEnumeration>())
-                .OrderBy(
-                    enumeration => enumeration.Name,
-                    StringComparer.Ordinal);
+                .SelectMany(package => package.PackagedElement.OfType<IEnumeration>())
+                .OrderBy(enumeration => enumeration.Name, StringComparer.Ordinal);
 
             var primitiveTypes = allPackages
-                .SelectMany(
-                    package =>
-                        package.PackagedElement.OfType<IPrimitiveType>())
-                .OrderBy(
-                    primitiveType => primitiveType.Name,
-                    StringComparer.Ordinal);
+                .SelectMany(package => package.PackagedElement.OfType<IPrimitiveType>())
+                .OrderBy(primitiveType => primitiveType.Name, StringComparer.Ordinal);
 
             var dataTypes = generationPackages
-                .SelectMany(
-                    package =>
-                        package.PackagedElement.OfType<IDataType>())
-                .Where(
-                    dataType =>
-                        dataType is not IEnumeration
-                        && dataType is not IPrimitiveType)
-                .OrderBy(
-                    dataType => dataType.Name,
-                    StringComparer.Ordinal);
+                .SelectMany(package => package.PackagedElement.OfType<IDataType>())
+                .Where(dataType => dataType is not IEnumeration && dataType is not IPrimitiveType)
+                .OrderBy(dataType => dataType.Name, StringComparer.Ordinal);
 
             var classes = generationPackages
-                .SelectMany(
-                    package =>
-                        package.PackagedElement.OfType<IClass>())
-                .OrderBy(
-                    umlClass => umlClass.Name,
-                    StringComparer.Ordinal);
+                .SelectMany(package => package.PackagedElement.OfType<IClass>())
+                .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal);
 
             var interfaces = generationPackages
-                .SelectMany(
-                    package =>
-                        package.PackagedElement.OfType<IInterface>())
-                .OrderBy(
-                    umlInterface => umlInterface.Name,
-                    StringComparer.Ordinal);
+                .SelectMany(package => package.PackagedElement.OfType<IInterface>())
+                .OrderBy(umlInterface => umlInterface.Name, StringComparer.Ordinal);
 
-            return new HandlebarsPayload(
-                rootPackage,
-                allPackages,
-                enumerations,
-                primitiveTypes,
-                dataTypes,
-                classes,
-                interfaces);
+            return new HandlebarsPayload(rootPackage, allPackages, enumerations, primitiveTypes, dataTypes, classes, interfaces);
         }
 
         /// <summary>
@@ -190,21 +152,17 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="payload" /> is <see langword="null" />.
         /// </exception>
-        protected void ConfigureDocumentationSymbols(
-            HandlebarsPayload payload)
+        protected void ConfigureDocumentationSymbols(HandlebarsPayload payload)
         {
             ArgumentNullException.ThrowIfNull(payload);
 
-            var symbols =
-                new Dictionary<string, string>(StringComparer.Ordinal);
+            var symbols = new Dictionary<string, string>(StringComparer.Ordinal);
 
-            var ambiguousNames =
-                new HashSet<string>(StringComparer.Ordinal);
+            var ambiguousNames = new HashSet<string>(StringComparer.Ordinal);
 
             void AddSymbol(string umlName, string generatedName)
             {
-                if (string.IsNullOrWhiteSpace(umlName)
-                    || ambiguousNames.Contains(umlName))
+                if (string.IsNullOrWhiteSpace(umlName) || ambiguousNames.Contains(umlName))
                 {
                     return;
                 }
@@ -213,8 +171,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
                 try
                 {
-                    generatedIdentifier =
-                        ReservedCSharpNameMapper.Map(generatedName);
+                    generatedIdentifier = ReservedCSharpNameMapper.Map(generatedName);
                 }
                 catch (ArgumentException)
                 {
@@ -232,11 +189,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             foreach (var umlClass in payload.Classes)
             {
-                AddSymbol(
-                    umlClass.Name,
-                    umlClass.IsAbstract
-                        ? $"I{umlClass.Name}"
-                        : umlClass.Name);
+                AddSymbol(umlClass.Name, umlClass.IsAbstract ? $"I{umlClass.Name}" : umlClass.Name);
             }
 
             foreach (var enumerationName in payload.Enumerations.Select(enumeration => enumeration.Name))
@@ -257,8 +210,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// </summary>
         protected void ClearDocumentationSymbols()
         {
-            this.documentationSymbols =
-                new Dictionary<string, string>(StringComparer.Ordinal);
+            this.documentationSymbols = new Dictionary<string, string>(StringComparer.Ordinal);
         }
 
         /// <summary>
@@ -272,12 +224,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// </returns>
         protected string ResolveDocumentationCref(string cref)
         {
-            return cref is not null
-                   && this.documentationSymbols.TryGetValue(
-                       cref,
-                       out var generatedSymbol)
-                ? generatedSymbol
-                : null;
+            return cref is not null && this.documentationSymbols.TryGetValue(cref, out var generatedSymbol) ? generatedSymbol : null;
         }
     }
 }

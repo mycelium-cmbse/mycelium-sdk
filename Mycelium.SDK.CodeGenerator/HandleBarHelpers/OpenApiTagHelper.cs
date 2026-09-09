@@ -9,8 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
-    using System;
-    using System.Linq;
     using System.Security;
 
     using HandlebarsDotNet;
@@ -35,23 +33,19 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper(
-                "Tag.WriteModuleName",
-                (writer, _, arguments) =>
-                {
-                    var tag = QueryTag(arguments, "{{Tag.WriteModuleName}}");
+            handlebars.RegisterHelper("Tag.WriteModuleName", (writer, _, arguments) =>
+            {
+                var tag = QueryTag(arguments, "{{Tag.WriteModuleName}}");
 
-                    writer.WriteSafeString(tag.QueryModuleName());
-                });
+                writer.WriteSafeString(tag.QueryModuleName());
+            });
 
-            handlebars.RegisterHelper(
-                "Tag.WriteXmlName",
-                (writer, _, arguments) =>
-                {
-                    var tag = QueryTag(arguments, "{{Tag.WriteXmlName}}");
+            handlebars.RegisterHelper("Tag.WriteXmlName", (writer, _, arguments) =>
+            {
+                var tag = QueryTag(arguments, "{{Tag.WriteXmlName}}");
 
-                    writer.WriteSafeString(SecurityElement.Escape(tag));
-                });
+                writer.WriteSafeString(SecurityElement.Escape(tag));
+            });
         }
 
         /// <summary>

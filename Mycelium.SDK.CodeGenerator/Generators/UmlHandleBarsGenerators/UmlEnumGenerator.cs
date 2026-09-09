@@ -15,11 +15,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
     using uml4net.SimpleClassifiers;
     using uml4net.xmi.Readers;
 
-    using DocumentationHelper =
-        Mycelium.SDK.CodeGenerator.HandleBarHelpers.DocumentationHelper;
-
-    using NamedElementHelper =
-        Mycelium.SDK.CodeGenerator.HandleBarHelpers.NamedElementHelper;
+    using DocumentationHelper = Mycelium.SDK.CodeGenerator.HandleBarHelpers.DocumentationHelper;
+    using NamedElementHelper = Mycelium.SDK.CodeGenerator.HandleBarHelpers.NamedElementHelper;
 
     /// <summary>
     /// Generates the FunctionalData enumerations.
@@ -47,9 +44,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// Thrown when <paramref name="xmiReaderResult" /> or <paramref name="outputDirectory" /> is
         /// <see langword="null" />.
         /// </exception>
-        public override async Task GenerateAsync(
-            XmiReaderResult xmiReaderResult,
-            DirectoryInfo outputDirectory)
+        public override async Task GenerateAsync(XmiReaderResult xmiReaderResult, DirectoryInfo outputDirectory)
         {
             ArgumentNullException.ThrowIfNull(xmiReaderResult);
             ArgumentNullException.ThrowIfNull(outputDirectory);
@@ -80,9 +75,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// Thrown when <paramref name="outputDirectory" /> or <paramref name="enumeration" /> is
         /// <see langword="null" />.
         /// </exception>
-        public async Task<string> GenerateEnumerationAsync(
-            DirectoryInfo outputDirectory,
-            IEnumeration enumeration)
+        public async Task<string> GenerateEnumerationAsync(DirectoryInfo outputDirectory, IEnumeration enumeration)
         {
             ArgumentNullException.ThrowIfNull(outputDirectory);
             ArgumentNullException.ThrowIfNull(enumeration);
@@ -92,30 +85,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             await WriteAsync([generatedFile], outputDirectory);
 
             return generatedFile.Source;
-        }
-
-        /// <summary>
-        /// Renders one enumeration without writing it.
-        /// </summary>
-        /// <param name="enumeration">
-        /// The UML enumeration to render.
-        /// </param>
-        /// <returns>
-        /// The generated filename and formatted source.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="enumeration" /> is <see langword="null" />.
-        /// </exception>
-        private GeneratedFile RenderEnumeration(IEnumeration enumeration)
-        {
-            ArgumentNullException.ThrowIfNull(enumeration);
-
-            var generatedCode = this.Templates[TemplateName](enumeration);
-            generatedCode = this.CodeCleanup(generatedCode);
-
-            return new GeneratedFile(
-                $"{enumeration.Name}.cs",
-                generatedCode);
         }
 
         /// <summary>
@@ -143,9 +112,28 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// This method is invoked during base construction. Implementations
         /// must not depend on fields initialized by a derived constructor.
         /// </remarks>
-        protected override void RegisterTemplates()
+        protected override void RegisterTemplates() => this.RegisterTemplate(TemplateName);
+
+        /// <summary>
+        /// Renders one enumeration without writing it.
+        /// </summary>
+        /// <param name="enumeration">
+        /// The UML enumeration to render.
+        /// </param>
+        /// <returns>
+        /// The generated filename and formatted source.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="enumeration" /> is <see langword="null" />.
+        /// </exception>
+        private GeneratedFile RenderEnumeration(IEnumeration enumeration)
         {
-            this.RegisterTemplate(TemplateName);
+            ArgumentNullException.ThrowIfNull(enumeration);
+
+            var generatedCode = this.Templates[TemplateName](enumeration);
+            generatedCode = this.CodeCleanup(generatedCode);
+
+            return new GeneratedFile($"{enumeration.Name}.cs", generatedCode);
         }
     }
 }

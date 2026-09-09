@@ -1,4 +1,4 @@
-﻿// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 //  <copyright file="UmlJsonDtoSerializerGenerator.cs" company="Starion Group S.A.">
 // 
 //    Copyright 2026 Starion Group S.A.
@@ -25,20 +25,17 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <summary>
         /// The concrete DTO serializer template name.
         /// </summary>
-        private const string SerializerTemplateName =
-            "json-dto-serializer-uml-template";
+        private const string SerializerTemplateName = "json-dto-serializer-uml-template";
 
         /// <summary>
         /// The serialization-provider template name.
         /// </summary>
-        private const string SerializationProviderTemplateName =
-            "json-dto-serialization-provider-uml-template";
+        private const string SerializationProviderTemplateName = "json-dto-serialization-provider-uml-template";
 
         /// <summary>
         /// The per-property serializer partial-template name.
         /// </summary>
-        private const string SerializerPartialTemplateName =
-            "json-dto-serializer-uml-partial-template";
+        private const string SerializerPartialTemplateName = "json-dto-serializer-uml-partial-template";
 
         /// <summary>
         /// Generates the artifacts supported by the concrete generator.
@@ -56,35 +53,25 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// Thrown when <paramref name="xmiReaderResult" /> or <paramref name="outputDirectory" /> is
         /// <see langword="null" />.
         /// </exception>
-        public override async Task GenerateAsync(
-            XmiReaderResult xmiReaderResult,
-            DirectoryInfo outputDirectory)
+        public override async Task GenerateAsync(XmiReaderResult xmiReaderResult, DirectoryInfo outputDirectory)
         {
             ArgumentNullException.ThrowIfNull(xmiReaderResult);
             ArgumentNullException.ThrowIfNull(outputDirectory);
 
-            var payload =
-                CreateHandlebarsPayload(xmiReaderResult);
+            var payload = CreateHandlebarsPayload(xmiReaderResult);
 
             var concreteClasses = payload.Classes
                 .Where(umlClass => !umlClass.IsAbstract)
-                .OrderBy(
-                    umlClass => umlClass.Name,
-                    StringComparer.Ordinal)
+                .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal)
                 .ToArray();
 
             var generatedFiles = concreteClasses
                 .Select(this.RenderSerializer)
-                .Append(
-                    this.RenderSerializationProvider(concreteClasses))
-                .OrderBy(
-                    generatedFile => generatedFile.FileName,
-                    StringComparer.Ordinal)
+                .Append(this.RenderSerializationProvider(concreteClasses))
+                .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
                 .ToArray();
 
-            await WriteAsync(
-                generatedFiles,
-                outputDirectory);
+            await WriteAsync(generatedFiles, outputDirectory);
         }
 
         /// <summary>
@@ -102,14 +89,11 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             this.Handlebars.RegisterJsonSerializerPropertyHelper();
             this.Handlebars.RegisterSafeContextHelper();
 
-            NamedElementHelper.RegisterNamedElementHelper(
-                this.Handlebars);
+            NamedElementHelper.RegisterNamedElementHelper(this.Handlebars);
 
-            uml4net.HandleBars.StringHelper.RegisterStringHelper(
-                this.Handlebars);
+            uml4net.HandleBars.StringHelper.RegisterStringHelper(this.Handlebars);
 
-            uml4net.HandleBars.PropertyHelper.RegisterPropertyHelper(
-                this.Handlebars);
+            uml4net.HandleBars.PropertyHelper.RegisterPropertyHelper(this.Handlebars);
         }
 
         /// <summary>
@@ -137,15 +121,11 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// </returns>
         private GeneratedFile RenderSerializer(IClass umlClass)
         {
-            var generatedCode =
-                this.Templates[SerializerTemplateName](umlClass);
+            var generatedCode = this.Templates[SerializerTemplateName](umlClass);
 
-            generatedCode =
-                this.CodeCleanup(generatedCode);
+            generatedCode = this.CodeCleanup(generatedCode);
 
-            return new GeneratedFile(
-                $"{umlClass.Name}Serializer.cs",
-                generatedCode);
+            return new GeneratedFile($"{umlClass.Name}Serializer.cs", generatedCode);
         }
 
         /// <summary>
@@ -157,19 +137,13 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <returns>
         /// The provider filename and formatted source.
         /// </returns>
-        private GeneratedFile RenderSerializationProvider(
-            IReadOnlyCollection<IClass> concreteClasses)
+        private GeneratedFile RenderSerializationProvider(IReadOnlyCollection<IClass> concreteClasses)
         {
-            var generatedCode =
-                this.Templates[SerializationProviderTemplateName](
-                    concreteClasses);
+            var generatedCode = this.Templates[SerializationProviderTemplateName](concreteClasses);
 
-            generatedCode =
-                this.CodeCleanup(generatedCode);
+            generatedCode = this.CodeCleanup(generatedCode);
 
-            return new GeneratedFile(
-                "SerializationProvider.cs",
-                generatedCode);
+            return new GeneratedFile("SerializationProvider.cs", generatedCode);
         }
     }
 }

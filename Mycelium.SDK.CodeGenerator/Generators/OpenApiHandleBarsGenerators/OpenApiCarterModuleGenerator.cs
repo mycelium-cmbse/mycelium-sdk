@@ -9,12 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Generators.OpenApiHandleBarsGenerators
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Threading.Tasks;
-
     using Microsoft.OpenApi;
 
     using Mycelium.SDK.CodeGenerator.Extensions;
@@ -106,9 +100,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.OpenApiHandleBarsGenerators
         /// Thrown when <paramref name="outputDirectory"/> or <paramref name="operations"/> is
         /// <see langword="null" />.
         /// </exception>
-        public async Task<string> GenerateCarterModuleAsync(
-            DirectoryInfo outputDirectory,
-            IGrouping<string, SearchResult> operations)
+        public async Task<string> GenerateCarterModuleAsync(DirectoryInfo outputDirectory, IGrouping<string, SearchResult> operations)
         {
             ArgumentNullException.ThrowIfNull(outputDirectory);
             ArgumentNullException.ThrowIfNull(operations);
@@ -140,10 +132,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.OpenApiHandleBarsGenerators
         /// This method is invoked during base construction. Implementations
         /// must not depend on fields initialized by a derived constructor.
         /// </remarks>
-        protected override void RegisterTemplates()
-        {
-            this.RegisterTemplate(ModuleTemplateName);
-        }
+        protected override void RegisterTemplates() => this.RegisterTemplate(ModuleTemplateName);
 
         /// <summary>
         /// Renders the Carter module of a single tag.
@@ -163,6 +152,5 @@ namespace Mycelium.SDK.CodeGenerator.Generators.OpenApiHandleBarsGenerators
 
             return new GeneratedFile($"{moduleName}.cs", generatedCode);
         }
-
     }
 }

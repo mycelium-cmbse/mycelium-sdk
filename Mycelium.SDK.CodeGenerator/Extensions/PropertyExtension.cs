@@ -246,27 +246,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 return true;
             }
 
-            return property.Type is IPrimitiveType &&
-                   elementTypeName is
-                       "bool" or
-                       "byte" or
-                       "sbyte" or
-                       "short" or
-                       "ushort" or
-                       "int" or
-                       "uint" or
-                       "long" or
-                       "ulong" or
-                       "nint" or
-                       "nuint" or
-                       "char" or
-                       "float" or
-                       "double" or
-                       "decimal" or
-                       "DateTime" or
-                       "DateTimeOffset" or
-                       "Guid" or
-                       "TimeSpan";
+            return property.Type is IPrimitiveType && elementTypeName is "bool" or "byte" or "sbyte" or "short" or "ushort" or "int" or "uint" or "long" or "ulong" or "nint" or "nuint" or "char" or "float" or "double" or "decimal" or "DateTime" or "DateTimeOffset" or "Guid" or "TimeSpan";
         }
 
         /// <summary>

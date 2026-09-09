@@ -9,11 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Extensions
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Net.Http;
-
     using Humanizer;
 
     using Microsoft.OpenApi;
@@ -55,8 +50,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
                 if (rank < 0)
                 {
-                    throw new InvalidOperationException(
-                        $"Operation '{searchResult.Describe()}' uses HTTP method '{httpMethod}', which has no defined emission order.");
+                    throw new InvalidOperationException($"Operation '{searchResult.Describe()}' uses HTTP method '{httpMethod}', which has no defined emission order.");
                 }
 
                 return rank;
@@ -82,8 +76,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
                 if (string.IsNullOrWhiteSpace(path))
                 {
-                    throw new InvalidOperationException(
-                        $"Operation '{searchResult.Operation?.OperationId}' has no path.");
+                    throw new InvalidOperationException($"Operation '{searchResult.Operation?.OperationId}' has no path.");
                 }
 
                 return path;
@@ -106,14 +99,13 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             {
                 ArgumentNullException.ThrowIfNull(searchResult);
 
-                var tag = searchResult.Operation?.Tags?
-                    .Select(operationTag => operationTag.Name)
+                var tag = searchResult.Operation?.Tags
+                    ?.Select(operationTag => operationTag.Name)
                     .FirstOrDefault(name => !string.IsNullOrWhiteSpace(name));
 
                 if (string.IsNullOrWhiteSpace(tag))
                 {
-                    throw new InvalidOperationException(
-                        $"Operation '{searchResult.Describe()}' carries no tag, so it cannot be assigned to a Carter module.");
+                    throw new InvalidOperationException($"Operation '{searchResult.Describe()}' carries no tag, so it cannot be assigned to a Carter module.");
                 }
 
                 return tag;
@@ -188,8 +180,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
                 if (string.IsNullOrWhiteSpace(operationId))
                 {
-                    throw new InvalidOperationException(
-                        $"Operation '{searchResult.Describe()}' has no operationId, so it has no handler name.");
+                    throw new InvalidOperationException($"Operation '{searchResult.Describe()}' has no operationId, so it has no handler name.");
                 }
 
                 return ReservedCSharpNameMapper.Map(operationId.Pascalize());
@@ -226,9 +217,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// </exception>
         private static HttpMethod QueryHttpMethod(SearchResult searchResult)
         {
-            return searchResult.CurrentKeys?.Operation
-                   ?? throw new InvalidOperationException(
-                       $"Operation '{searchResult.Operation?.OperationId}' has no HTTP method.");
+            return searchResult.CurrentKeys?.Operation ?? throw new InvalidOperationException($"Operation '{searchResult.Operation?.OperationId}' has no HTTP method.");
         }
 
         /// <summary>
@@ -248,6 +237,5 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 .Select(parameter => parameter.Name)
                 .Where(name => !string.IsNullOrWhiteSpace(name));
         }
-
     }
 }

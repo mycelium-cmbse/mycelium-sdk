@@ -37,85 +37,25 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         }
 
         [Test]
-        public void Verify_that_QueryPropertyName_preserves_the_FunctionalData_contract()
-        {
-            Assert.That(this.roleProperty.QueryPropertyName(), Is.EqualTo("Role"));
-        }
-
-        [Test]
-        public void Verify_that_QueryPropertyName_rejects_a_null_property()
-        {
-            IProperty property = null;
-
-            Assert.That(() => property.QueryPropertyName(), Throws.ArgumentNullException);
-        }
-
-        [Test]
         public void Verify_that_QueryPocoTypeName_applies_multiplicity_and_nullability()
         {
-            var optionalInteger = new Property
-            {
-                XmiId = "optional-integer",
-                Name = "optionalInteger",
-                Type = new PrimitiveType
-                {
-                    XmiId = "integer-type",
-                    Name = "Integer"
-                }
-            };
+            var optionalInteger = new Property { XmiId = "optional-integer", Name = "optionalInteger", Type = new PrimitiveType { XmiId = "integer-type", Name = "Integer" } };
 
             optionalInteger.LowerValue.Add(new LiteralInteger { Value = 0 });
 
-            var optionalEnumeration = new Property
-            {
-                XmiId = "optional-enumeration",
-                Name = "optionalEnumeration",
-                Type = new Enumeration
-                {
-                    XmiId = "enumeration-type",
-                    Name = "OptionalKind"
-                }
-            };
+            var optionalEnumeration = new Property { XmiId = "optional-enumeration", Name = "optionalEnumeration", Type = new Enumeration { XmiId = "enumeration-type", Name = "OptionalKind" } };
 
             optionalEnumeration.LowerValue.Add(new LiteralInteger { Value = 0 });
 
-            var optionalReference = new Property
-            {
-                XmiId = "optional-reference",
-                Name = "optionalReference",
-                Type = new Class
-                {
-                    XmiId = "referenced-class",
-                    Name = "ReferencedClass"
-                }
-            };
+            var optionalReference = new Property { XmiId = "optional-reference", Name = "optionalReference", Type = new Class { XmiId = "referenced-class", Name = "ReferencedClass" } };
 
             optionalReference.LowerValue.Add(new LiteralInteger { Value = 0 });
 
-            var manyStrings = new Property
-            {
-                XmiId = "many-strings",
-                Name = "manyStrings",
-                Type = new PrimitiveType
-                {
-                    XmiId = "string-type",
-                    Name = "String"
-                }
-            };
+            var manyStrings = new Property { XmiId = "many-strings", Name = "manyStrings", Type = new PrimitiveType { XmiId = "string-type", Name = "String" } };
 
-            manyStrings.UpperValue.Add(
-                new LiteralUnlimitedNatural { Value = "*" });
+            manyStrings.UpperValue.Add(new LiteralUnlimitedNatural { Value = "*" });
 
-            var guidClassReference = new Property
-            {
-                XmiId = "guid-class-reference",
-                Name = "guidClassReference",
-                Type = new Class
-                {
-                    XmiId = "guid-class",
-                    Name = "Guid"
-                }
-            };
+            var guidClassReference = new Property { XmiId = "guid-class-reference", Name = "guidClassReference", Type = new Class { XmiId = "guid-class", Name = "Guid" } };
 
             using (Assert.EnterMultipleScope())
             {
@@ -132,41 +72,23 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         {
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(
-                    this.QueryProperty("ProjectMember", "activeOwnership").QueryPocoTypeName(),
-                    Is.EqualTo("IOwnership"));
+                Assert.That(this.QueryProperty("ProjectMember", "activeOwnership").QueryPocoTypeName(), Is.EqualTo("IOwnership"));
 
-                Assert.That(
-                    this.QueryProperty("ProjectMember", "owns").QueryPocoTypeName(),
-                    Is.EqualTo("List<IOwnership>"));
+                Assert.That(this.QueryProperty("ProjectMember", "owns").QueryPocoTypeName(), Is.EqualTo("List<IOwnership>"));
 
-                Assert.That(
-                    this.QueryProperty("ProjectMember", "role").QueryPocoTypeName(),
-                    Is.EqualTo("ProjectMemberRole"));
+                Assert.That(this.QueryProperty("ProjectMember", "role").QueryPocoTypeName(), Is.EqualTo("ProjectMemberRole"));
 
-                Assert.That(
-                    this.QueryProperty("BranchProtectionRule", "mergeAllowedFor").QueryPocoTypeName(),
-                    Is.EqualTo("List<ProjectMemberRole>"));
+                Assert.That(this.QueryProperty("BranchProtectionRule", "mergeAllowedFor").QueryPocoTypeName(), Is.EqualTo("List<ProjectMemberRole>"));
 
-                Assert.That(
-                    this.QueryProperty("Thing", "id").QueryPocoTypeName(),
-                    Is.EqualTo("Guid"));
+                Assert.That(this.QueryProperty("Thing", "id").QueryPocoTypeName(), Is.EqualTo("Guid"));
 
-                Assert.That(
-                    this.QueryProperty("AuditableThing", "createdOn").QueryPocoTypeName(),
-                    Is.EqualTo("DateTime"));
+                Assert.That(this.QueryProperty("AuditableThing", "createdOn").QueryPocoTypeName(), Is.EqualTo("DateTime"));
 
-                Assert.That(
-                    this.QueryProperty("BranchProtectionRule", "minimumRequiredApproval").QueryPocoTypeName(),
-                    Is.EqualTo("int"));
+                Assert.That(this.QueryProperty("BranchProtectionRule", "minimumRequiredApproval").QueryPocoTypeName(), Is.EqualTo("int"));
 
-                Assert.That(
-                    this.QueryProperty("BranchProtectionRule", "name").QueryPocoTypeName(),
-                    Is.EqualTo("string"));
+                Assert.That(this.QueryProperty("BranchProtectionRule", "name").QueryPocoTypeName(), Is.EqualTo("string"));
 
-                Assert.That(
-                    this.QueryProperty("FunctionalProject", "sharedPreferences").QueryPocoTypeName(),
-                    Is.EqualTo("Dictionary<string,string>"));
+                Assert.That(this.QueryProperty("FunctionalProject", "sharedPreferences").QueryPocoTypeName(), Is.EqualTo("Dictionary<string,string>"));
             }
         }
 
@@ -181,20 +103,22 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         [Test]
         public void Verify_that_QueryPocoTypeName_rejects_an_unsupported_type()
         {
-            var property = new Property
-            {
-                XmiId = "property-id",
-                Name = "unsupported",
-                Type = new DataType
-                {
-                    XmiId = "unsupported-type",
-                    Name = "UnsupportedType"
-                }
-            };
+            var property = new Property { XmiId = "property-id", Name = "unsupported", Type = new DataType { XmiId = "unsupported-type", Name = "UnsupportedType" } };
 
             var exception = Assert.Throws<InvalidOperationException>(() => property.QueryPocoTypeName());
 
             Assert.That(exception.Message, Is.EqualTo("Property 'unsupported' has unsupported UML type 'UnsupportedType'."));
+        }
+
+        [Test]
+        public void Verify_that_QueryPropertyName_preserves_the_FunctionalData_contract() => Assert.That(this.roleProperty.QueryPropertyName(), Is.EqualTo("Role"));
+
+        [Test]
+        public void Verify_that_QueryPropertyName_rejects_a_null_property()
+        {
+            IProperty property = null;
+
+            Assert.That(() => property.QueryPropertyName(), Throws.ArgumentNullException);
         }
 
         /// <summary>
@@ -212,8 +136,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         private IProperty QueryProperty(string className, string propertyName)
         {
             return this.classes
-                .Single(umlClass => umlClass.Name == className)
-                .OwnedAttribute
+                .Single(umlClass => umlClass.Name == className).OwnedAttribute
                 .Single(property => property.Name == propertyName);
         }
     }

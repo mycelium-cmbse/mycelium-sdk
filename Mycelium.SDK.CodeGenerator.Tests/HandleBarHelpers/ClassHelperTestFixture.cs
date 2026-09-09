@@ -58,6 +58,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         }
 
         [Test]
+        public void Verify_that_Poco_class_helpers_reject_multiple_arguments()
+        {
+            var template = this.pocoHandlebars.Compile("{{ #Class.WritePocoInterfaceIdentifier this this }}");
+            var exception = Assert.Throws<HandlebarsException>(() => template(new object()));
+
+            Assert.That(exception.Message, Is.EqualTo("{{Class.WritePocoInterfaceIdentifier}} requires exactly one argument."));
+        }
+
+        [Test]
         public void Verify_that_Poco_class_helpers_require_an_IClass_argument()
         {
             var template = this.pocoHandlebars.Compile("{{ #Class.WritePocoInterfaceIdentifier this }}");
@@ -68,19 +77,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         }
 
         [Test]
-        public void Verify_that_Poco_class_helpers_reject_multiple_arguments()
-        {
-            var template = this.pocoHandlebars.Compile("{{ #Class.WritePocoInterfaceIdentifier this this }}");
-            var exception = Assert.Throws<HandlebarsException>(() => template(new object()));
-
-            Assert.That(exception.Message, Is.EqualTo("{{Class.WritePocoInterfaceIdentifier}} requires exactly one argument."));
-        }
-
-        [Test]
         public void Verify_that_Poco_identifier_helpers_write_identifiers_and_direct_generalizations()
         {
-            var template = this.pocoHandlebars.Compile("{{ #Class.WritePocoInterfaceIdentifier this }}" +
-                                                       "{{ #Class.WritePocoInterfaceGeneralizations this }}");
+            var template = this.pocoHandlebars.Compile("{{ #Class.WritePocoInterfaceIdentifier this }}{{ #Class.WritePocoInterfaceGeneralizations this }}");
 
             using (Assert.EnterMultipleScope())
             {
@@ -104,9 +103,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
 
             var result = template(projectMember);
 
-            Assert.That(
-                result,
-                Is.EqualTo(
+            Assert.That(result, Is.EqualTo(
                     "activeOwnership;isOutsideCollaborator;isPartOf;owns;role;user;|" +
                     "id;activeOwnership;createdBy;createdOn;isOutsideCollaborator;" +
                     "isPartOf;owns;role;updatedBy;updatedOn;user;"));
@@ -120,9 +117,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             Assert.That(() => handlebars.RegisterPocoClassHelper(), Throws.ArgumentNullException);
         }
 
-        private IClass QueryClass(string className)
-        {
-            return this.classes.Single(umlClass => umlClass.Name == className);
-        }
+        private IClass QueryClass(string className) => this.classes.Single(umlClass => umlClass.Name == className);
     }
 }

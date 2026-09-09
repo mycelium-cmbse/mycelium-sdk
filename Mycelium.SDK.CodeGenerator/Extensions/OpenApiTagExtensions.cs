@@ -9,9 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Extensions
 {
-    using System;
-    using System.Linq;
-
     using Humanizer;
 
     /// <summary>

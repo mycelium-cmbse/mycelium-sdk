@@ -1,9 +1,9 @@
 ﻿// ------------------------------------------------------------------------------------------------
 //  <copyright file="UmlClassGeneratorTestFixtureBase.cs" company="Starion Group S.A.">
-// 
+//
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-// 
+//
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
@@ -19,8 +19,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         /// <summary>
         /// Gets the strict UTF-8 encoding used to validate generated source files.
         /// </summary>
-        protected static UTF8Encoding StrictUtf8WithoutBom { get; } =
-            new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+        protected static UTF8Encoding StrictUtf8WithoutBom { get; } = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         /// <summary>
         /// Verifies that two generated source files contain identical text.
@@ -37,37 +36,22 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         /// <param name="expectedDescription">
         /// A description of the expected file used in assertion messages.
         /// </param>
-        protected static async Task AssertFilesMatchAsync(
-            string generatedPath,
-            string expectedPath,
-            string generatedDescription,
-            string expectedDescription)
+        protected static async Task AssertFilesMatchAsync(string generatedPath, string expectedPath, string generatedDescription, string expectedDescription)
         {
-            Assert.That(
-                File.Exists(generatedPath),
-                Is.True,
-                $"{generatedDescription} was not generated.");
+            Assert.That(File.Exists(generatedPath), Is.True, $"{generatedDescription} was not generated.");
 
-            Assert.That(
-                File.Exists(expectedPath),
-                Is.True,
-                $"The file representing {expectedDescription} is missing.");
+            Assert.That(File.Exists(expectedPath), Is.True, $"The file representing {expectedDescription} is missing.");
 
             if (!File.Exists(generatedPath) || !File.Exists(expectedPath))
             {
                 return;
             }
 
-            var generatedSource =
-                await File.ReadAllTextAsync(generatedPath, StrictUtf8WithoutBom);
+            var generatedSource = await File.ReadAllTextAsync(generatedPath, StrictUtf8WithoutBom);
 
-            var expectedSource =
-                await File.ReadAllTextAsync(expectedPath, StrictUtf8WithoutBom);
+            var expectedSource = await File.ReadAllTextAsync(expectedPath, StrictUtf8WithoutBom);
 
-            Assert.That(
-                generatedSource,
-                Is.EqualTo(expectedSource),
-                $"{generatedDescription} differs from {expectedDescription}.");
+            Assert.That(generatedSource, Is.EqualTo(expectedSource), $"{generatedDescription} differs from {expectedDescription}.");
         }
 
         /// <summary>
@@ -81,8 +65,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         /// </returns>
         protected static string[] QueryCSharpFileNames(DirectoryInfo directory)
         {
-            return directory
-                .GetFiles("*.cs", SearchOption.TopDirectoryOnly)
+            return directory.GetFiles("*.cs", SearchOption.TopDirectoryOnly)
                 .Select(file => file.Name)
                 .OrderBy(fileName => fileName, StringComparer.Ordinal)
                 .ToArray();

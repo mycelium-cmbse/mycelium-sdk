@@ -33,41 +33,28 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper(
-                "Class.QueryDtoInterfaceProperties",
-                (_, arguments) =>
-                    QueryClass(arguments, "{{Class.QueryDtoInterfaceProperties}}")
-                        .QueryDtoInterfaceProperties());
+            handlebars.RegisterHelper("Class.QueryDtoInterfaceProperties", (_, arguments) => QueryClass(arguments, "{{Class.QueryDtoInterfaceProperties}}").QueryDtoInterfaceProperties());
 
-            handlebars.RegisterHelper(
-                "Class.QueryDtoImplementationProperties",
-                (_, arguments) =>
-                    QueryClass(arguments, "{{Class.QueryDtoImplementationProperties}}")
-                        .QueryDtoImplementationProperties());
+            handlebars.RegisterHelper("Class.QueryDtoImplementationProperties", (_, arguments) => QueryClass(arguments, "{{Class.QueryDtoImplementationProperties}}").QueryDtoImplementationProperties());
 
-            handlebars.RegisterHelper(
-                "Class.WriteDtoInterfaceIdentifier",
-                (writer, _, arguments) =>
+            handlebars.RegisterHelper("Class.WriteDtoInterfaceIdentifier", (writer, _, arguments) =>
+            {
+                var umlClass = QueryClass(arguments, "{{Class.WriteDtoInterfaceIdentifier}}");
+
+                writer.WriteSafeString(QueryGeneratedInterfaceIdentifier(umlClass));
+            });
+
+            handlebars.RegisterHelper("Class.WriteDtoInterfaceGeneralizations", (writer, _, arguments) =>
+            {
+                var umlClass = QueryClass(arguments, "{{Class.WriteDtoInterfaceGeneralizations}}");
+                var inheritance = string.Join(", ", umlClass.QueryGeneralizations()
+                    .Select(QueryGeneratedInterfaceIdentifier));
+
+                if (inheritance.Length > 0)
                 {
-                    var umlClass = QueryClass(
-                        arguments,
-                        "{{Class.WriteDtoInterfaceIdentifier}}");
-
-                    writer.WriteSafeString(QueryGeneratedInterfaceIdentifier(umlClass));
-                });
-
-            handlebars.RegisterHelper(
-                "Class.WriteDtoInterfaceGeneralizations",
-                (writer, _, arguments) =>
-                {
-                    var umlClass = QueryClass(arguments, "{{Class.WriteDtoInterfaceGeneralizations}}");
-                    var inheritance = string.Join(", ", umlClass.QueryGeneralizations().Select(QueryGeneratedInterfaceIdentifier));
-
-                    if (inheritance.Length > 0)
-                    {
-                        writer.WriteSafeString($" : {inheritance}");
-                    }
-                });
+                    writer.WriteSafeString($" : {inheritance}");
+                }
+            });
         }
 
         /// <summary>
@@ -83,35 +70,28 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper(
-                "Class.QueryPocoInterfaceProperties",
-                (_, arguments) => QueryClass(arguments, "{{Class.QueryPocoInterfaceProperties}}").QueryPocoInterfaceProperties());
+            handlebars.RegisterHelper("Class.QueryPocoInterfaceProperties", (_, arguments) => QueryClass(arguments, "{{Class.QueryPocoInterfaceProperties}}").QueryPocoInterfaceProperties());
 
-            handlebars.RegisterHelper(
-                "Class.QueryPocoImplementationProperties",
-                (_, arguments) => QueryClass(arguments, "{{Class.QueryPocoImplementationProperties}}").QueryPocoImplementationProperties());
+            handlebars.RegisterHelper("Class.QueryPocoImplementationProperties", (_, arguments) => QueryClass(arguments, "{{Class.QueryPocoImplementationProperties}}").QueryPocoImplementationProperties());
 
-            handlebars.RegisterHelper(
-                "Class.WritePocoInterfaceIdentifier",
-                (writer, _, arguments) =>
+            handlebars.RegisterHelper("Class.WritePocoInterfaceIdentifier", (writer, _, arguments) =>
+            {
+                var umlClass = QueryClass(arguments, "{{Class.WritePocoInterfaceIdentifier}}");
+                writer.WriteSafeString(QueryGeneratedInterfaceIdentifier(umlClass));
+            });
+
+            handlebars.RegisterHelper("Class.WritePocoInterfaceGeneralizations", (writer, _, arguments) =>
+            {
+                var umlClass = QueryClass(arguments, "{{Class.WritePocoInterfaceGeneralizations}}");
+
+                var inheritance = string.Join(", ", umlClass.QueryGeneralizations()
+                    .Select(QueryGeneratedInterfaceIdentifier));
+
+                if (inheritance.Length > 0)
                 {
-                    var umlClass = QueryClass(arguments, "{{Class.WritePocoInterfaceIdentifier}}");
-                    writer.WriteSafeString(QueryGeneratedInterfaceIdentifier(umlClass));
-                });
-
-            handlebars.RegisterHelper(
-                "Class.WritePocoInterfaceGeneralizations",
-                (writer, _, arguments) =>
-                {
-                    var umlClass = QueryClass(arguments, "{{Class.WritePocoInterfaceGeneralizations}}");
-
-                    var inheritance = string.Join(", ", umlClass.QueryGeneralizations().Select(QueryGeneratedInterfaceIdentifier));
-
-                    if (inheritance.Length > 0)
-                    {
-                        writer.WriteSafeString($" : {inheritance}");
-                    }
-                });
+                    writer.WriteSafeString($" : {inheritance}");
+                }
+            });
         }
 
         /// <summary>

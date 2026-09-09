@@ -1,9 +1,9 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="UmlDtoGeneratorTestFixture.cs" company="Starion Group S.A.">
-// 
+//
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-// 
+//
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
@@ -25,56 +25,43 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
-            this.committedDirectory = new DirectoryInfo(
-                Path.Combine(
-                    TestContext.CurrentContext.TestDirectory,
-                    "Committed",
-                    "Mycelium.SDK",
-                    "AutoGenDTO"));
+            this.committedDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "Committed", "Mycelium.SDK", "AutoGenDTO"));
 
-            this.expectedDirectory = new DirectoryInfo(
-                Path.Combine(
-                    TestContext.CurrentContext.TestDirectory,
-                    "Expected",
-                    "UML",
-                    "AutoGenDTO"));
+            this.expectedDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "Expected", "UML", "AutoGenDTO"));
 
-            this.stagingDirectory = new DirectoryInfo(
-                Path.Combine(
-                    TestContext.CurrentContext.TestDirectory,
-                    "UML",
-                    "_Mycelium.SDK.AutoGenDTO"));
+            this.stagingDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_Mycelium.SDK.AutoGenDTO"));
 
             if (this.stagingDirectory.Exists)
             {
-                this.stagingDirectory.Delete(recursive: true);
+                this.stagingDirectory.Delete(true);
             }
 
             var xmiReaderResult = GeneratorSetupFixture.ReadFunctionalData();
 
-            var functionalData =
-                GeneratorSetupFixture.QueryFunctionalDataPackage(xmiReaderResult);
+            var functionalData = GeneratorSetupFixture.QueryFunctionalDataPackage(xmiReaderResult);
 
             this.classes = functionalData.PackagedElement
                 .OfType<IClass>()
-                .ToDictionary(
-                    umlClass => umlClass.Name,
-                    StringComparer.Ordinal);
+                .ToDictionary(umlClass => umlClass.Name, StringComparer.Ordinal);
 
             var generator = new UmlDtoGenerator();
 
-            await generator.GenerateAsync(
-                xmiReaderResult,
-                this.stagingDirectory);
+            await generator.GenerateAsync(xmiReaderResult, this.stagingDirectory);
+        }
+
+        [Test]
+        [Category("Expected")]
+        public async Task Verify_that_IThing_DTO_interface_matches_reviewed_golden()
+        {
+            const string fileName = "IThing.cs";
+
+            await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, fileName), Path.Combine(this.expectedDirectory.FullName, fileName), $"Generated DTO interface '{fileName}'", "its reviewed golden");
         }
 
         [Test]
         public async Task Verify_that_complete_batch_matches_committed_SDK_DTOs()
         {
-            Assert.That(
-                this.committedDirectory.Exists,
-                Is.True,
-                "The committed SDK DTO directory was not copied to the test output.");
+            Assert.That(this.committedDirectory.Exists, Is.True, "The committed SDK DTO directory was not copied to the test output.");
 
             if (!this.committedDirectory.Exists)
             {
@@ -84,31 +71,46 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             var generatedFileNames = QueryCSharpFileNames(this.stagingDirectory);
             var committedFileNames = QueryCSharpFileNames(this.committedDirectory);
 
-            Assert.That(
-                generatedFileNames,
-                Is.EqualTo(committedFileNames),
-                "The generated and committed DTO file sets differ.");
+            Assert.That(generatedFileNames, Is.EqualTo(committedFileNames), "The generated and committed DTO file sets differ.");
 
             foreach (var fileName in generatedFileNames)
             {
-                await AssertFilesMatchAsync(
-                    Path.Combine(this.stagingDirectory.FullName, fileName),
-                    Path.Combine(this.committedDirectory.FullName, fileName),
-                    $"Generated DTO '{fileName}'",
-                    "the committed SDK source");
+                await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, fileName), Path.Combine(this.committedDirectory.FullName, fileName), $"Generated DTO '{fileName}'", "the committed SDK source");
+            }
+        }
+
+        [Test]
+        public async Task Verify_that_generated_DTOs_use_the_required_file_format()
+        {
+            foreach (var fileName in QueryCSharpFileNames(this.stagingDirectory))
+            {
+                var bytes = await File.ReadAllBytesAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
+
+                var hasUtf8Bom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+
+                var source = StrictUtf8WithoutBom.GetString(bytes);
+
+                var sourceWithoutCrLf = source.Replace("\r\n", string.Empty, StringComparison.Ordinal);
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(hasUtf8Bom, Is.False, $"Generated DTO '{fileName}' contains a UTF-8 byte-order mark.");
+
+                    Assert.That(source, Does.Contain("\r\n"), $"Generated DTO '{fileName}' contains no CRLF line endings.");
+
+                    Assert.That(sourceWithoutCrLf, Does.Not.Contain("\r"), $"Generated DTO '{fileName}' contains a standalone carriage return.");
+
+                    Assert.That(sourceWithoutCrLf, Does.Not.Contain("\n"), $"Generated DTO '{fileName}' contains a standalone line feed.");
+                }
             }
         }
 
         [Test]
         [TestCaseSource(typeof(RepresentativeClasses))]
         [Category("Expected")]
-        public async Task Verify_that_representative_DTOs_match_reviewed_goldens(
-            string className)
+        public async Task Verify_that_representative_DTOs_match_reviewed_goldens(string className)
         {
-            Assert.That(
-                this.classes.TryGetValue(className, out var umlClass),
-                Is.True,
-                $"Representative UML class '{className}' was not found.");
+            Assert.That(this.classes.TryGetValue(className, out var umlClass), Is.True, $"Representative UML class '{className}' was not found.");
 
             if (umlClass is null)
             {
@@ -117,11 +119,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var interfaceFileName = $"I{className}.cs";
 
-            await AssertFilesMatchAsync(
-                Path.Combine(this.stagingDirectory.FullName, interfaceFileName),
-                Path.Combine(this.expectedDirectory.FullName, interfaceFileName),
-                $"Generated DTO interface '{interfaceFileName}'",
-                "its reviewed golden");
+            await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, interfaceFileName), Path.Combine(this.expectedDirectory.FullName, interfaceFileName), $"Generated DTO interface '{interfaceFileName}'", "its reviewed golden");
 
             if (umlClass.IsAbstract)
             {
@@ -130,70 +128,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var classFileName = $"{className}.cs";
 
-            await AssertFilesMatchAsync(
-                Path.Combine(this.stagingDirectory.FullName, classFileName),
-                Path.Combine(this.expectedDirectory.FullName, classFileName),
-                $"Generated DTO class '{classFileName}'",
-                "its reviewed golden");
-        }
-
-        [Test]
-        [Category("Expected")]
-        public async Task Verify_that_IThing_DTO_interface_matches_reviewed_golden()
-        {
-            const string fileName = "IThing.cs";
-
-            await AssertFilesMatchAsync(
-                Path.Combine(this.stagingDirectory.FullName, fileName),
-                Path.Combine(this.expectedDirectory.FullName, fileName),
-                $"Generated DTO interface '{fileName}'",
-                "its reviewed golden");
-        }
-
-        [Test]
-        public async Task Verify_that_generated_DTOs_use_the_required_file_format()
-        {
-            foreach (var fileName in QueryCSharpFileNames(this.stagingDirectory))
-            {
-                var bytes = await File.ReadAllBytesAsync(
-                    Path.Combine(this.stagingDirectory.FullName, fileName));
-
-                var hasUtf8Bom =
-                    bytes.Length >= 3
-                    && bytes[0] == 0xEF
-                    && bytes[1] == 0xBB
-                    && bytes[2] == 0xBF;
-
-                var source = StrictUtf8WithoutBom.GetString(bytes);
-
-                var sourceWithoutCrLf = source.Replace(
-                    "\r\n",
-                    string.Empty,
-                    StringComparison.Ordinal);
-
-                using (Assert.EnterMultipleScope())
-                {
-                    Assert.That(
-                        hasUtf8Bom,
-                        Is.False,
-                        $"Generated DTO '{fileName}' contains a UTF-8 byte-order mark.");
-
-                    Assert.That(
-                        source,
-                        Does.Contain("\r\n"),
-                        $"Generated DTO '{fileName}' contains no CRLF line endings.");
-
-                    Assert.That(
-                        sourceWithoutCrLf,
-                        Does.Not.Contain("\r"),
-                        $"Generated DTO '{fileName}' contains a standalone carriage return.");
-
-                    Assert.That(
-                        sourceWithoutCrLf,
-                        Does.Not.Contain("\n"),
-                        $"Generated DTO '{fileName}' contains a standalone line feed.");
-                }
-            }
+            await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, classFileName), Path.Combine(this.expectedDirectory.FullName, classFileName), $"Generated DTO class '{classFileName}'", "its reviewed golden");
         }
     }
 }

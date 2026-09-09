@@ -1,9 +1,9 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="XmiReaderResultExtensions.cs" company="Starion Group S.A.">
-// 
+//
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-// 
+//
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
@@ -100,8 +100,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             if (!resourcesDirectory.Exists)
             {
-                throw new DirectoryNotFoundException(
-                    $"The FunctionalData resources directory '{resourcesDirectory.FullName}' does not exist.");
+                throw new DirectoryNotFoundException($"The FunctionalData resources directory '{resourcesDirectory.FullName}' does not exist.");
             }
 
             foreach (var resourceFileName in RequiredResourceFileNames)
@@ -110,9 +109,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
                 if (!File.Exists(resourcePath))
                 {
-                    throw new FileNotFoundException(
-                        $"Required FunctionalData resource '{resourceFileName}' was not found.",
-                        resourcePath);
+                    throw new FileNotFoundException($"Required FunctionalData resource '{resourceFileName}' was not found.", resourcePath);
                 }
             }
 
@@ -156,10 +153,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             return xmiReaderResult.Packages
                 .SelectMany(package => package.QueryPackages())
-                .Single(package => string.Equals(
-                    package.Name,
-                    FunctionalDataPackageName,
-                    StringComparison.Ordinal));
+                .Single(package => string.Equals(package.Name, FunctionalDataPackageName, StringComparison.Ordinal));
         }
     }
 }
