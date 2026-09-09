@@ -23,7 +23,25 @@ namespace Mycelium.SDK.Serializer.Json
     /// </summary>
     public class Serializer : ISerializer
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Serializes one DTO as a JSON object.
+        /// </summary>
+        /// <param name="dto">
+        /// The DTO to serialize.
+        /// </param>
+        /// <param name="stream">
+        /// The stream that receives the JSON.
+        /// </param>
+        /// <param name="jsonWriterOptions">
+        /// The JSON writer options.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="dto" /> or <paramref name="stream" /> is
+        /// <see langword="null" />.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the exact runtime DTO type is not supported.
+        /// </exception>
         public void Serialize(
             IThing dto,
             Stream stream,
@@ -50,7 +68,25 @@ namespace Mycelium.SDK.Serializer.Json
             writer.Flush();
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Serializes a sequence of DTOs as a JSON array.
+        /// </summary>
+        /// <param name="dtos">
+        /// The DTOs to serialize.
+        /// </param>
+        /// <param name="stream">
+        /// The stream that receives the JSON.
+        /// </param>
+        /// <param name="jsonWriterOptions">
+        /// The JSON writer options.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="dtos" />, <paramref name="stream" />, or
+        /// an element of <paramref name="dtos" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when an exact runtime DTO type is not supported.
+        /// </exception>
         public void Serialize(
             IEnumerable<IThing> dtos,
             Stream stream,
@@ -90,7 +126,31 @@ namespace Mycelium.SDK.Serializer.Json
             writer.Flush();
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Asynchronously serializes one DTO as a JSON object.
+        /// </summary>
+        /// <param name="dto">
+        /// The DTO to serialize.
+        /// </param>
+        /// <param name="stream">
+        /// The stream that receives the JSON.
+        /// </param>
+        /// <param name="jsonWriterOptions">
+        /// The JSON writer options.
+        /// </param>
+        /// <param name="cancellationToken">
+        /// The token used to cancel the operation.
+        /// </param>
+        /// <returns>
+        /// A task representing the asynchronous operation.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="dto" /> or <paramref name="stream" /> is
+        /// <see langword="null" />.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the exact runtime DTO type is not supported.
+        /// </exception>
         public async Task SerializeAsync(
             IThing dto,
             Stream stream,
@@ -120,7 +180,31 @@ namespace Mycelium.SDK.Serializer.Json
             await writer.FlushAsync(cancellationToken);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Asynchronously serializes a sequence of DTOs as a JSON array.
+        /// </summary>
+        /// <param name="dtos">
+        /// The DTOs to serialize.
+        /// </param>
+        /// <param name="stream">
+        /// The stream that receives the JSON.
+        /// </param>
+        /// <param name="jsonWriterOptions">
+        /// The JSON writer options.
+        /// </param>
+        /// <param name="cancellationToken">
+        /// The token used to cancel the operation.
+        /// </param>
+        /// <returns>
+        /// A task representing the asynchronous operation.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="dtos" />, <paramref name="stream" />, or
+        /// an element of <paramref name="dtos" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when an exact runtime DTO type is not supported.
+        /// </exception>
         public async Task SerializeAsync(
             IEnumerable<IThing> dtos,
             Stream stream,

@@ -120,14 +120,26 @@ namespace Mycelium.SDK.CodeGenerator.Generators.OpenApiHandleBarsGenerators
             return generatedFile.Source;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Registers generator-specific helpers.
+        /// </summary>
+        /// <remarks>
+        /// This method is invoked during base construction. Implementations
+        /// must not depend on fields initialized by a derived constructor.
+        /// </remarks>
         protected override void RegisterHelpers()
         {
             this.Handlebars.RegisterOpenApiTagHelper();
             this.Handlebars.RegisterOpenApiOperationHelper();
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Registers generator-specific templates.
+        /// </summary>
+        /// <remarks>
+        /// This method is invoked during base construction. Implementations
+        /// must not depend on fields initialized by a derived constructor.
+        /// </remarks>
         protected override void RegisterTemplates()
         {
             this.RegisterTemplate(ModuleTemplateName);

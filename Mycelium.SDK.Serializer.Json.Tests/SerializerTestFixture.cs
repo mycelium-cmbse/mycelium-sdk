@@ -22,20 +22,11 @@ namespace Mycelium.SDK.Serializer.Json.Tests
     using Mycelium.SDK.DTO;
     using Mycelium.SDK.Serializer.Json;
 
-    /// <summary>
-    /// Verifies the public JSON facade and generated DTO serialization runtime contract.
-    /// </summary>
     [TestFixture]
     public class SerializerTestFixture
     {
-        /// <summary>
-        /// Public serializer facade under test.
-        /// </summary>
         private static readonly Serializer JsonSerializer = new();
 
-        /// <summary>
-        /// Expected modeled property order for a branch protection rule.
-        /// </summary>
         private static readonly string[] ExpectedBranchProtectionRulePropertyNames =
         [
             "@type",
@@ -52,18 +43,12 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             "updatedOn",
         ];
 
-        /// <summary>
-        /// Expected invariant-uppercase enumeration literals for merge roles.
-        /// </summary>
         private static readonly string[] ExpectedMergeAllowedForLiterals =
         [
             "VIEWER",
             "ADMINISTRATOR",
         ];
 
-        /// <summary>
-        /// Expected modeled property order for a project member.
-        /// </summary>
         private static readonly string[] ExpectedProjectMemberPropertyNames =
         [
             "@type",
@@ -79,13 +64,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             "user",
         ];
 
-        /// <summary>
-        /// Verifies roots, writer options, flushing, stream ownership, and
-        /// synchronous/asynchronous byte parity.
-        /// </summary>
-        /// <returns>
-        /// A task representing asynchronous verification.
-        /// </returns>
         [Test]
         public async Task Verify_that_facade_roots_options_flushing_stream_ownership_and_async_parity_follow_the_contract()
         {
@@ -222,13 +200,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
-        /// <summary>
-        /// Verifies null handling and unsupported exact-runtime-type failures
-        /// for synchronous and asynchronous facade operations.
-        /// </summary>
-        /// <returns>
-        /// A task representing asynchronous verification.
-        /// </returns>
         [Test]
         public async Task Verify_that_facade_rejects_null_and_unsupported_values()
         {
@@ -386,12 +357,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 Throws.TypeOf<NotSupportedException>());
         }
 
-        /// <summary>
-        /// Verifies that both asynchronous facade overloads observe cancellation.
-        /// </summary>
-        /// <returns>
-        /// A task representing asynchronous verification.
-        /// </returns>
         [Test]
         public async Task Verify_that_async_facade_observes_cancellation()
         {
@@ -429,10 +394,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 Throws.TypeOf<OperationCanceledException>());
         }
 
-        /// <summary>
-        /// Verifies that serializer lookup supports only exact concrete DTO
-        /// runtime types and does not use interface or inheritance fallback.
-        /// </summary>
         [Test]
         public void Verify_that_provider_dispatches_only_exact_concrete_runtime_types()
         {
@@ -452,10 +413,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
-        /// <summary>
-        /// Verifies metadata, scalar, enumeration, collection, reference, and
-        /// inherited-property serialization.
-        /// </summary>
         [Test]
         public void Verify_that_scalar_collection_and_inherited_properties_follow_the_JSON_contract()
         {
@@ -624,10 +581,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 updatedBy);
         }
 
-        /// <summary>
-        /// Verifies nullable reference values and confirms that the
-        /// POCO-only derived property is not represented in DTO JSON.
-        /// </summary>
         [Test]
         public void Verify_that_nullable_references_and_derived_property_exclusion_follow_the_JSON_contract()
         {
@@ -770,10 +723,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 Is.EqualTo(JsonValueKind.Null));
         }
 
-        /// <summary>
-        /// Verifies invariant-uppercase scalar enumeration values and exact
-        /// dictionary entry preservation without imposing member order.
-        /// </summary>
         [Test]
         public void Verify_that_dictionary_serialization_preserves_entries_without_imposing_order()
         {
@@ -872,15 +821,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
-        /// <summary>
-        /// Serializes a DTO through the public facade.
-        /// </summary>
-        /// <param name="dto">
-        /// The concrete DTO to serialize.
-        /// </param>
-        /// <returns>
-        /// The generated UTF-8 JSON bytes.
-        /// </returns>
         private static byte[] Serialize(IThing dto)
         {
             using var stream = new MemoryStream();
@@ -893,15 +833,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             return stream.ToArray();
         }
 
-        /// <summary>
-        /// Creates a representative comment DTO.
-        /// </summary>
-        /// <param name="id">
-        /// The DTO identifier.
-        /// </param>
-        /// <returns>
-        /// A populated comment DTO.
-        /// </returns>
         private static Comment CreateComment(Guid id)
         {
             return new Comment
@@ -943,15 +874,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             };
         }
 
-        /// <summary>
-        /// Verifies the directly serialized JSON reference value.
-        /// </summary>
-        /// <param name="reference">
-        /// The JSON string containing the referenced identifier.
-        /// </param>
-        /// <param name="expectedId">
-        /// The expected referenced identifier.
-        /// </param>
         private static void AssertReferenceValue(
             JsonElement reference,
             Guid expectedId)
@@ -965,29 +887,18 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 Is.EqualTo(expectedId));
         }
 
-        /// <summary>
-        /// Memory stream that records synchronous and asynchronous flushes.
-        /// </summary>
         private sealed class RecordingMemoryStream : MemoryStream
         {
-            /// <summary>
-            /// Gets a value indicating whether a synchronous flush occurred.
-            /// </summary>
             public bool WasFlushedSynchronously { get; private set; }
 
-            /// <summary>
-            /// Gets a value indicating whether an asynchronous flush occurred.
-            /// </summary>
             public bool WasFlushedAsynchronously { get; private set; }
 
-            /// <inheritdoc />
             public override void Flush()
             {
                 this.WasFlushedSynchronously = true;
                 base.Flush();
             }
 
-            /// <inheritdoc />
             public override Task FlushAsync(
                 CancellationToken cancellationToken)
             {
@@ -997,10 +908,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
-        /// <summary>
-        /// Test-only subtype used to verify that serialization dispatch does
-        /// not fall back through inheritance.
-        /// </summary>
         private sealed class DerivedComment : Comment
         {
         }
