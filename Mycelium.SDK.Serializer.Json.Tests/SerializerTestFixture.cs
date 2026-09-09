@@ -214,36 +214,39 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             using var synchronousArgumentStream =
                 new MemoryStream();
 
-            Assert.That(
-                () => JsonSerializer.Serialize(
-                    (IThing)null,
-                    synchronousArgumentStream,
-                    writerOptions),
-                Throws.TypeOf<ArgumentNullException>());
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(
+                    () => JsonSerializer.Serialize(
+                        (IThing)null,
+                        synchronousArgumentStream,
+                        writerOptions),
+                    Throws.TypeOf<ArgumentNullException>());
 
-            Assert.That(
-                () => JsonSerializer.Serialize(
-                    (IEnumerable<IThing>)null,
-                    synchronousArgumentStream,
-                    writerOptions),
-                Throws.TypeOf<ArgumentNullException>());
+                Assert.That(
+                    () => JsonSerializer.Serialize(
+                        (IEnumerable<IThing>)null,
+                        synchronousArgumentStream,
+                        writerOptions),
+                    Throws.TypeOf<ArgumentNullException>());
 
-            Assert.That(
-                () => JsonSerializer.Serialize(
-                    supportedDto,
-                    null,
-                    writerOptions),
-                Throws.TypeOf<ArgumentNullException>());
-
-            Assert.That(
-                () => JsonSerializer.Serialize(
-                    new IThing[]
-                    {
+                Assert.That(
+                    () => JsonSerializer.Serialize(
                         supportedDto,
-                    },
-                    null,
-                    writerOptions),
-                Throws.TypeOf<ArgumentNullException>());
+                        null,
+                        writerOptions),
+                    Throws.TypeOf<ArgumentNullException>());
+
+                Assert.That(
+                    () => JsonSerializer.Serialize(
+                        new IThing[]
+                        {
+                            supportedDto,
+                        },
+                        null,
+                        writerOptions),
+                    Throws.TypeOf<ArgumentNullException>());
+            }
 
             using var synchronousNullElementStream =
                 new MemoryStream();
@@ -262,61 +265,67 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             using var synchronousUnsupportedStream =
                 new MemoryStream();
 
-            Assert.That(
-                () => JsonSerializer.Serialize(
-                    unsupportedDto,
-                    synchronousUnsupportedStream,
-                    writerOptions),
-                Throws.TypeOf<NotSupportedException>());
-
-            Assert.That(
-                () => JsonSerializer.Serialize(
-                    new IThing[]
-                    {
-                        supportedDto,
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(
+                    () => JsonSerializer.Serialize(
                         unsupportedDto,
-                    },
-                    synchronousUnsupportedStream,
-                    writerOptions),
-                Throws.TypeOf<NotSupportedException>());
+                        synchronousUnsupportedStream,
+                        writerOptions),
+                    Throws.TypeOf<NotSupportedException>());
+
+                Assert.That(
+                    () => JsonSerializer.Serialize(
+                        new IThing[]
+                        {
+                            supportedDto,
+                            unsupportedDto,
+                        },
+                        synchronousUnsupportedStream,
+                        writerOptions),
+                    Throws.TypeOf<NotSupportedException>());
+            }
 
             using var asynchronousArgumentStream =
                 new MemoryStream();
 
-            await Assert.ThatAsync(
-                () => JsonSerializer.SerializeAsync(
-                    (IThing)null,
-                    asynchronousArgumentStream,
-                    writerOptions,
-                    CancellationToken.None),
-                Throws.TypeOf<ArgumentNullException>());
+            using (Assert.EnterMultipleScope())
+            {
+                await Assert.ThatAsync(
+                    () => JsonSerializer.SerializeAsync(
+                        (IThing)null,
+                        asynchronousArgumentStream,
+                        writerOptions,
+                        CancellationToken.None),
+                    Throws.TypeOf<ArgumentNullException>());
 
-            await Assert.ThatAsync(
-                () => JsonSerializer.SerializeAsync(
-                    (IEnumerable<IThing>)null,
-                    asynchronousArgumentStream,
-                    writerOptions,
-                    CancellationToken.None),
-                Throws.TypeOf<ArgumentNullException>());
+                await Assert.ThatAsync(
+                    () => JsonSerializer.SerializeAsync(
+                        (IEnumerable<IThing>)null,
+                        asynchronousArgumentStream,
+                        writerOptions,
+                        CancellationToken.None),
+                    Throws.TypeOf<ArgumentNullException>());
 
-            await Assert.ThatAsync(
-                () => JsonSerializer.SerializeAsync(
-                    supportedDto,
-                    null,
-                    writerOptions,
-                    CancellationToken.None),
-                Throws.TypeOf<ArgumentNullException>());
-
-            await Assert.ThatAsync(
-                () => JsonSerializer.SerializeAsync(
-                    new IThing[]
-                    {
+                await Assert.ThatAsync(
+                    () => JsonSerializer.SerializeAsync(
                         supportedDto,
-                    },
-                    null,
-                    writerOptions,
-                    CancellationToken.None),
-                Throws.TypeOf<ArgumentNullException>());
+                        null,
+                        writerOptions,
+                        CancellationToken.None),
+                    Throws.TypeOf<ArgumentNullException>());
+
+                await Assert.ThatAsync(
+                    () => JsonSerializer.SerializeAsync(
+                        new IThing[]
+                        {
+                            supportedDto,
+                        },
+                        null,
+                        writerOptions,
+                        CancellationToken.None),
+                    Throws.TypeOf<ArgumentNullException>());
+            }
 
             using var asynchronousNullElementStream =
                 new MemoryStream();
@@ -336,25 +345,28 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             using var asynchronousUnsupportedStream =
                 new MemoryStream();
 
-            await Assert.ThatAsync(
-                () => JsonSerializer.SerializeAsync(
-                    unsupportedDto,
-                    asynchronousUnsupportedStream,
-                    writerOptions,
-                    CancellationToken.None),
-                Throws.TypeOf<NotSupportedException>());
-
-            await Assert.ThatAsync(
-                () => JsonSerializer.SerializeAsync(
-                    new IThing[]
-                    {
-                        supportedDto,
+            using (Assert.EnterMultipleScope())
+            {
+                await Assert.ThatAsync(
+                    () => JsonSerializer.SerializeAsync(
                         unsupportedDto,
-                    },
-                    asynchronousUnsupportedStream,
-                    writerOptions,
-                    CancellationToken.None),
-                Throws.TypeOf<NotSupportedException>());
+                        asynchronousUnsupportedStream,
+                        writerOptions,
+                        CancellationToken.None),
+                    Throws.TypeOf<NotSupportedException>());
+
+                await Assert.ThatAsync(
+                    () => JsonSerializer.SerializeAsync(
+                        new IThing[]
+                        {
+                            supportedDto,
+                            unsupportedDto,
+                        },
+                        asynchronousUnsupportedStream,
+                        writerOptions,
+                        CancellationToken.None),
+                    Throws.TypeOf<NotSupportedException>());
+            }
         }
 
         [Test]
@@ -371,38 +383,41 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             using var dtoStream =
                 new MemoryStream();
 
-            await Assert.ThatAsync(
-                () => JsonSerializer.SerializeAsync(
-                    dto,
-                    dtoStream,
-                    default,
-                    cancellationTokenSource.Token),
-                Throws.TypeOf<OperationCanceledException>());
-
             using var sequenceStream =
                 new MemoryStream();
 
-            await Assert.ThatAsync(
-                () => JsonSerializer.SerializeAsync(
-                    new IThing[]
-                    {
+            using (Assert.EnterMultipleScope())
+            {
+                await Assert.ThatAsync(
+                    () => JsonSerializer.SerializeAsync(
                         dto,
-                    },
-                    sequenceStream,
-                    default,
-                    cancellationTokenSource.Token),
-                Throws.TypeOf<OperationCanceledException>());
+                        dtoStream,
+                        default,
+                        cancellationTokenSource.Token),
+                    Throws.TypeOf<OperationCanceledException>());
+
+                await Assert.ThatAsync(
+                    () => JsonSerializer.SerializeAsync(
+                        new IThing[]
+                        {
+                            dto,
+                        },
+                        sequenceStream,
+                        default,
+                        cancellationTokenSource.Token),
+                    Throws.TypeOf<OperationCanceledException>());
+            }
         }
 
         [Test]
         public void Verify_that_provider_dispatches_only_exact_concrete_runtime_types()
         {
-            Assert.That(
-                SerializationProvider.Provide(typeof(Comment)),
-                Is.Not.Null);
-
             using (Assert.EnterMultipleScope())
             {
+                Assert.That(
+                    SerializationProvider.Provide(typeof(Comment)),
+                    Is.Not.Null);
+
                 Assert.That(
                     () => SerializationProvider.Provide(typeof(IComment)),
                     Throws.TypeOf<NotSupportedException>());
@@ -564,21 +579,24 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                     Has.Length.EqualTo(2));
             }
 
-            AssertReferenceValue(
-                root.GetProperty("createdBy"),
-                createdBy);
+            using (Assert.EnterMultipleScope())
+            {
+                AssertReferenceValue(
+                    root.GetProperty("createdBy"),
+                    createdBy);
 
-            AssertReferenceValue(
-                defaultReviewers[0],
-                firstReviewer);
+                AssertReferenceValue(
+                    defaultReviewers[0],
+                    firstReviewer);
 
-            AssertReferenceValue(
-                defaultReviewers[1],
-                secondReviewer);
+                AssertReferenceValue(
+                    defaultReviewers[1],
+                    secondReviewer);
 
-            AssertReferenceValue(
-                root.GetProperty("updatedBy"),
-                updatedBy);
+                AssertReferenceValue(
+                    root.GetProperty("updatedBy"),
+                    updatedBy);
+            }
         }
 
         [Test]
@@ -681,33 +699,36 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                     Is.False);
             }
 
-            AssertReferenceValue(
-                rootWithReference.GetProperty("activeOwnership"),
-                activeOwnership);
+            using (Assert.EnterMultipleScope())
+            {
+                AssertReferenceValue(
+                    rootWithReference.GetProperty("activeOwnership"),
+                    activeOwnership);
 
-            AssertReferenceValue(
-                rootWithReference.GetProperty("createdBy"),
-                createdBy);
+                AssertReferenceValue(
+                    rootWithReference.GetProperty("createdBy"),
+                    createdBy);
 
-            AssertReferenceValue(
-                rootWithReference.GetProperty("isPartOf"),
-                project);
+                AssertReferenceValue(
+                    rootWithReference.GetProperty("isPartOf"),
+                    project);
 
-            AssertReferenceValue(
-                ownerships[0],
-                firstOwnership);
+                AssertReferenceValue(
+                    ownerships[0],
+                    firstOwnership);
 
-            AssertReferenceValue(
-                ownerships[1],
-                secondOwnership);
+                AssertReferenceValue(
+                    ownerships[1],
+                    secondOwnership);
 
-            AssertReferenceValue(
-                rootWithReference.GetProperty("updatedBy"),
-                updatedBy);
+                AssertReferenceValue(
+                    rootWithReference.GetProperty("updatedBy"),
+                    updatedBy);
 
-            AssertReferenceValue(
-                rootWithReference.GetProperty("user"),
-                user);
+                AssertReferenceValue(
+                    rootWithReference.GetProperty("user"),
+                    user);
+            }
 
             dto.ActiveOwnership = null;
 
@@ -878,13 +899,16 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             JsonElement reference,
             Guid expectedId)
         {
-            Assert.That(
-                reference.ValueKind,
-                Is.EqualTo(JsonValueKind.String));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(
+                    reference.ValueKind,
+                    Is.EqualTo(JsonValueKind.String));
 
-            Assert.That(
-                reference.GetGuid(),
-                Is.EqualTo(expectedId));
+                Assert.That(
+                    reference.GetGuid(),
+                    Is.EqualTo(expectedId));
+            }
         }
 
         private sealed class RecordingMemoryStream : MemoryStream
