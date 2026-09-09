@@ -32,13 +32,28 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// </summary>
         private const string InterfaceTemplateName = "dto-interface-uml-template";
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the artifact family name used in generation errors.
+        /// </summary>
+        /// <value>
+        /// The artifact family name.
+        /// </value>
         protected override string ArtifactName => "DTO";
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the registered template name used for concrete classes.
+        /// </summary>
+        /// <value>
+        /// The concrete-class template name.
+        /// </value>
         protected override string ClassTemplate => ClassTemplateName;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the registered template name used for interfaces.
+        /// </summary>
+        /// <value>
+        /// The interface template name.
+        /// </value>
         protected override string InterfaceTemplate => InterfaceTemplateName;
 
         /// <summary>
@@ -101,7 +116,9 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             return this.GenerateClassAsync(outputDirectory, umlClass);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Registers the helpers that differ between artifact families.
+        /// </summary>
         protected override void RegisterArtifactHelpers()
         {
             ClassHelper.RegisterDtoClassHelper(this.Handlebars);

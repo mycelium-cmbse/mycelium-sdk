@@ -24,7 +24,22 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// </summary>
         private const string TemplateName = "enumprovider-uml-template";
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Generates the artifacts supported by the concrete generator.
+        /// </summary>
+        /// <param name="xmiReaderResult">
+        /// The parsed UML model used for generation.
+        /// </param>
+        /// <param name="outputDirectory">
+        /// The directory to which the generated artifacts are written.
+        /// </param>
+        /// <returns>
+        /// A task representing the asynchronous generation operation.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="xmiReaderResult" /> or <paramref name="outputDirectory" /> is
+        /// <see langword="null" />.
+        /// </exception>
         public override async Task GenerateAsync(
             XmiReaderResult xmiReaderResult,
             DirectoryInfo outputDirectory)
@@ -72,14 +87,26 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             return generatedFile.Source;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Registers generator-specific helpers.
+        /// </summary>
+        /// <remarks>
+        /// This method is invoked during base construction. Implementations
+        /// must not depend on fields initialized by a derived constructor.
+        /// </remarks>
         protected override void RegisterHelpers()
         {
             this.Handlebars.RegisterEnumerationLiteralHelper();
             this.Handlebars.RegisterNamedElementHelper();
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Registers generator-specific templates.
+        /// </summary>
+        /// <remarks>
+        /// This method is invoked during base construction. Implementations
+        /// must not depend on fields initialized by a derived constructor.
+        /// </remarks>
         protected override void RegisterTemplates()
         {
             this.RegisterTemplate(TemplateName);

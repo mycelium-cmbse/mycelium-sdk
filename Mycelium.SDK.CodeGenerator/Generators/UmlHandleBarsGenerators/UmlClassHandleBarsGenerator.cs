@@ -49,7 +49,22 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// </value>
         protected abstract string InterfaceTemplate { get; }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Generates the artifacts supported by the concrete generator.
+        /// </summary>
+        /// <param name="xmiReaderResult">
+        /// The parsed UML model used for generation.
+        /// </param>
+        /// <param name="outputDirectory">
+        /// The directory to which the generated artifacts are written.
+        /// </param>
+        /// <returns>
+        /// A task representing the asynchronous generation operation.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="xmiReaderResult" /> or <paramref name="outputDirectory" /> is
+        /// <see langword="null" />.
+        /// </exception>
         public sealed override async Task GenerateAsync(
             XmiReaderResult xmiReaderResult,
             DirectoryInfo outputDirectory)
@@ -147,7 +162,13 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// </summary>
         protected abstract void RegisterArtifactHelpers();
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Registers generator-specific helpers.
+        /// </summary>
+        /// <remarks>
+        /// This method is invoked during base construction. Implementations
+        /// must not depend on fields initialized by a derived constructor.
+        /// </remarks>
         protected sealed override void RegisterHelpers()
         {
             this.Handlebars.RegisterDocumentationHelper(
@@ -157,7 +178,13 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             NamedElementHelper.RegisterNamedElementHelper(this.Handlebars);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Registers generator-specific templates.
+        /// </summary>
+        /// <remarks>
+        /// This method is invoked during base construction. Implementations
+        /// must not depend on fields initialized by a derived constructor.
+        /// </remarks>
         protected sealed override void RegisterTemplates()
         {
             this.RegisterTemplate(this.ClassTemplate);
