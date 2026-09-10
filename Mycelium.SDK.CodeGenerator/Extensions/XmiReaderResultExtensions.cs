@@ -117,8 +117,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
             var settings = CreateFunctionalDataReaderSettings(resourcesDirectory);
 
-            var readerBuilder = XmiReaderBuilder.Create()
-                .UsingSettings(settings)
+            var readerBuilder = XmiReaderBuilder.Create().UsingSettings(settings)
                 .WithLogger(NullLoggerFactory.Instance)
                 .WithExtender<EnterpriseArchitectExtenderReader>()
                 .WithExtensionContentReaderFacade<ExtensionContentReaderFacade>();
