@@ -1,9 +1,9 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="DocumentationHelper.cs" company="Starion Group S.A.">
-// 
+//
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-// 
+//
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
@@ -42,12 +42,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
         /// </exception>
-        public static void RegisterDocumentationHelper(
-            this IHandlebars handlebars)
+        public static void RegisterDocumentationHelper(this IHandlebars handlebars)
         {
-            RegisterDocumentationHelper(
-                handlebars,
-                static cref => cref);
+            RegisterDocumentationHelper(handlebars, static cref => cref);
         }
 
         /// <summary>
@@ -64,54 +61,36 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// Thrown when <paramref name="handlebars" /> or <paramref name="crefNormalizer" /> is
         /// <see langword="null" />.
         /// </exception>
-        public static void RegisterDocumentationHelper(
-            this IHandlebars handlebars,
-            Func<string, string> crefNormalizer)
+        public static void RegisterDocumentationHelper(this IHandlebars handlebars, Func<string, string> crefNormalizer)
         {
             ArgumentNullException.ThrowIfNull(handlebars);
             ArgumentNullException.ThrowIfNull(crefNormalizer);
 
-            handlebars.RegisterHelper(
-                "Documentation",
-                (writer, context, _) =>
+            handlebars.RegisterHelper("Documentation", (writer, context, _) =>
+            {
+                if (context.Value is not IElement element)
                 {
-                    if (context.Value is not IElement element)
-                    {
-                        throw new HandlebarsException(
-                            "{{Documentation}} requires an IElement context.");
-                    }
+                    throw new HandlebarsException("{{Documentation}} requires an IElement context.");
+                }
 
-                    var documentation =
-                        HtmlUtils.HtmlDecode(element.QueryRawDocumentation());
+                var documentation = HtmlUtils.HtmlDecode(element.QueryRawDocumentation());
 
-                    if (string.IsNullOrWhiteSpace(documentation))
-                    {
-                        return;
-                    }
+                if (string.IsNullOrWhiteSpace(documentation))
+                {
+                    return;
+                }
 
-                    documentation = SeeCrefTag()
-                        .Replace(
-                            documentation,
-                            match => NormalizeDocumentationCref(
-                                match,
-                                crefNormalizer))
-                        .Replace(
-                            "</see>",
-                            string.Empty,
-                            StringComparison.Ordinal);
+                documentation = SeeCrefTag().Replace(documentation, match => NormalizeDocumentationCref(match, crefNormalizer)).Replace("</see>", string.Empty, StringComparison.Ordinal);
 
-                    writer.WriteSafeString(
-                        $"/// <summary>{Environment.NewLine}");
+                writer.WriteSafeString($"/// <summary>{Environment.NewLine}");
 
-                    foreach (var line in SplitDocumentation(documentation))
-                    {
-                        writer.WriteSafeString(
-                            $"/// {line}{Environment.NewLine}");
-                    }
+                foreach (var line in SplitDocumentation(documentation))
+                {
+                    writer.WriteSafeString($"/// {line}{Environment.NewLine}");
+                }
 
-                    writer.WriteSafeString(
-                        $"/// </summary>{Environment.NewLine}");
-                });
+                writer.WriteSafeString($"/// </summary>{Environment.NewLine}");
+            });
         }
 
         /// <summary>
@@ -120,10 +99,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// The generated regular expression.
         /// </returns>
-        [GeneratedRegex(
-            @"<see\s+cref=""([^""]+)""\s*/?>",
-            RegexOptions.CultureInvariant,
-            RegexMatchTimeoutMilliseconds)]
+        [GeneratedRegex(@"<see\s+cref=""([^""]+)""\s*/?>", RegexOptions.CultureInvariant, RegexMatchTimeoutMilliseconds)]
         private static partial Regex SeeCrefTag();
 
         /// <summary>
@@ -132,10 +108,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// The generated regular expression.
         /// </returns>
-        [GeneratedRegex(
-            @"(?:<see\s+cref=""[^""]+""\s*/>|<c>.*?</c>)[.,;:!?]?|\S+",
-            RegexOptions.CultureInvariant,
-            RegexMatchTimeoutMilliseconds)]
+        [GeneratedRegex(@"(?:<see\s+cref=""[^""]+""\s*/>|<c>.*?</c>)[.,;:!?]?|\S+", RegexOptions.CultureInvariant, RegexMatchTimeoutMilliseconds)]
         private static partial Regex DocumentationToken();
 
         /// <summary>
@@ -150,16 +123,12 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// A resolved cref tag or safe code-formatted text.
         /// </returns>
-        private static string NormalizeDocumentationCref(
-            Match match,
-            Func<string, string> crefNormalizer)
+        private static string NormalizeDocumentationCref(Match match, Func<string, string> crefNormalizer)
         {
             var cref = match.Groups[1].Value;
             var normalizedCref = crefNormalizer(cref);
 
-            return string.IsNullOrWhiteSpace(normalizedCref)
-                ? $"<c>{WebUtility.HtmlEncode(cref)}</c>"
-                : $"<see cref=\"{normalizedCref}\" />";
+            return string.IsNullOrWhiteSpace(normalizedCref) ? $"<c>{WebUtility.HtmlEncode(cref)}</c>" : $"<see cref=\"{normalizedCref}\" />";
         }
 
         /// <summary>
@@ -171,29 +140,23 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// The wrapped documentation lines.
         /// </returns>
-        private static IEnumerable<string> SplitDocumentation(
-            string documentation)
+        private static IEnumerable<string> SplitDocumentation(string documentation)
         {
             var line = string.Empty;
 
-            foreach (var token in DocumentationToken()
-                         .Matches(documentation)
-                         .Select(match => match.Value))
+            foreach (var token in DocumentationToken().Matches(documentation).Select(match => match.Value))
             {
                 if (string.IsNullOrEmpty(token))
                 {
                     continue;
                 }
 
-                var candidate =
-                    line.Length == 0
-                        ? token
-                        : $"{line} {token}";
+                var candidate = line.Length == 0 ? token : $"{line} {token}";
 
-                if (line.Length > 0
-                    && candidate.Length > DocumentationLineLength)
+                if (line.Length > 0 && candidate.Length > DocumentationLineLength)
                 {
                     yield return line;
+
                     line = token;
                     continue;
                 }

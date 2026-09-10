@@ -9,12 +9,7 @@
 
 namespace Mycelium.SDK.Serializer.Json
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
     using System.Text.Json;
-    using System.Threading;
-    using System.Threading.Tasks;
 
     using Mycelium.SDK.DTO;
 
@@ -42,10 +37,7 @@ namespace Mycelium.SDK.Serializer.Json
         /// <exception cref="NotSupportedException">
         /// Thrown when the exact runtime DTO type is not supported.
         /// </exception>
-        public void Serialize(
-            IThing dto,
-            Stream stream,
-            JsonWriterOptions jsonWriterOptions)
+        public void Serialize(IThing dto, Stream stream, JsonWriterOptions jsonWriterOptions)
         {
             if (dto == null)
             {
@@ -57,11 +49,9 @@ namespace Mycelium.SDK.Serializer.Json
                 throw new ArgumentNullException(nameof(stream));
             }
 
-            using var writer =
-                new Utf8JsonWriter(stream, jsonWriterOptions);
+            using var writer = new Utf8JsonWriter(stream, jsonWriterOptions);
 
-            var serializationAction =
-                SerializationProvider.Provide(dto.GetType());
+            var serializationAction = SerializationProvider.Provide(dto.GetType());
 
             serializationAction(dto, writer);
 
@@ -87,10 +77,7 @@ namespace Mycelium.SDK.Serializer.Json
         /// <exception cref="NotSupportedException">
         /// Thrown when an exact runtime DTO type is not supported.
         /// </exception>
-        public void Serialize(
-            IEnumerable<IThing> dtos,
-            Stream stream,
-            JsonWriterOptions jsonWriterOptions)
+        public void Serialize(IEnumerable<IThing> dtos, Stream stream, JsonWriterOptions jsonWriterOptions)
         {
             if (dtos == null)
             {
@@ -102,8 +89,7 @@ namespace Mycelium.SDK.Serializer.Json
                 throw new ArgumentNullException(nameof(stream));
             }
 
-            using var writer =
-                new Utf8JsonWriter(stream, jsonWriterOptions);
+            using var writer = new Utf8JsonWriter(stream, jsonWriterOptions);
 
             writer.WriteStartArray();
 
@@ -111,13 +97,10 @@ namespace Mycelium.SDK.Serializer.Json
             {
                 if (dto == null)
                 {
-                    throw new ArgumentNullException(
-                        nameof(dtos),
-                        "The DTO sequence contains a null element.");
+                    throw new ArgumentNullException(nameof(dtos), "The DTO sequence contains a null element.");
                 }
 
-                var serializationAction =
-                    SerializationProvider.Provide(dto.GetType());
+                var serializationAction = SerializationProvider.Provide(dto.GetType());
 
                 serializationAction(dto, writer);
             }
@@ -151,11 +134,7 @@ namespace Mycelium.SDK.Serializer.Json
         /// <exception cref="NotSupportedException">
         /// Thrown when the exact runtime DTO type is not supported.
         /// </exception>
-        public async Task SerializeAsync(
-            IThing dto,
-            Stream stream,
-            JsonWriterOptions jsonWriterOptions,
-            CancellationToken cancellationToken)
+        public async Task SerializeAsync(IThing dto, Stream stream, JsonWriterOptions jsonWriterOptions, CancellationToken cancellationToken)
         {
             if (dto == null)
             {
@@ -169,11 +148,9 @@ namespace Mycelium.SDK.Serializer.Json
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            using var writer =
-                new Utf8JsonWriter(stream, jsonWriterOptions);
+            using var writer = new Utf8JsonWriter(stream, jsonWriterOptions);
 
-            var serializationAction =
-                SerializationProvider.Provide(dto.GetType());
+            var serializationAction = SerializationProvider.Provide(dto.GetType());
 
             serializationAction(dto, writer);
 
@@ -205,11 +182,7 @@ namespace Mycelium.SDK.Serializer.Json
         /// <exception cref="NotSupportedException">
         /// Thrown when an exact runtime DTO type is not supported.
         /// </exception>
-        public async Task SerializeAsync(
-            IEnumerable<IThing> dtos,
-            Stream stream,
-            JsonWriterOptions jsonWriterOptions,
-            CancellationToken cancellationToken)
+        public async Task SerializeAsync(IEnumerable<IThing> dtos, Stream stream, JsonWriterOptions jsonWriterOptions, CancellationToken cancellationToken)
         {
             if (dtos == null)
             {
@@ -223,8 +196,7 @@ namespace Mycelium.SDK.Serializer.Json
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            using var writer =
-                new Utf8JsonWriter(stream, jsonWriterOptions);
+            using var writer = new Utf8JsonWriter(stream, jsonWriterOptions);
 
             writer.WriteStartArray();
 
@@ -232,15 +204,12 @@ namespace Mycelium.SDK.Serializer.Json
             {
                 if (dto == null)
                 {
-                    throw new ArgumentNullException(
-                        nameof(dtos),
-                        "The DTO sequence contains a null element.");
+                    throw new ArgumentNullException(nameof(dtos), "The DTO sequence contains a null element.");
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var serializationAction =
-                    SerializationProvider.Provide(dto.GetType());
+                var serializationAction = SerializationProvider.Provide(dto.GetType());
 
                 serializationAction(dto, writer);
             }

@@ -1,18 +1,14 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="UmlDtoGenerator.cs" company="Starion Group S.A.">
-// 
+//
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-// 
+//
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
 namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 {
-    using System;
-    using System.IO;
-    using System.Threading.Tasks;
-
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
 
     using uml4net.StructuredClassifiers;
@@ -26,7 +22,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The registered Handlebars template name used for concrete DTO classes.
         /// </summary>
         private const string ClassTemplateName = "dto-class-uml-template";
-        
+
         /// <summary>
         /// The registered Handlebars template name used for DTO interfaces.
         /// </summary>
@@ -80,9 +76,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <exception cref="ArgumentException">
         /// Thrown when a modeled name cannot be represented as a legal C# identifier.
         /// </exception>
-        public Task<string> GenerateDataTransferObjectInterfaceAsync(
-            DirectoryInfo outputDirectory,
-            IClass umlClass)
+        public Task<string> GenerateDataTransferObjectInterfaceAsync(DirectoryInfo outputDirectory, IClass umlClass)
         {
             return this.GenerateInterfaceAsync(outputDirectory, umlClass);
         }
@@ -111,10 +105,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <exception cref="ArgumentException">
         /// Thrown when a modeled name cannot be represented as a legal C# identifier.
         /// </exception>
-        public Task<string> GenerateDataTransferObjectClassAsync(DirectoryInfo outputDirectory, IClass umlClass)
-        {
-            return this.GenerateClassAsync(outputDirectory, umlClass);
-        }
+        public Task<string> GenerateDataTransferObjectClassAsync(DirectoryInfo outputDirectory, IClass umlClass) => this.GenerateClassAsync(outputDirectory, umlClass);
 
         /// <summary>
         /// Registers the helpers that differ between artifact families.

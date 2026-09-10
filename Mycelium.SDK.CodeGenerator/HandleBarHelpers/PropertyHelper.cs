@@ -35,28 +35,21 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper(
-                "Property.WriteDtoInterfaceDeclaration",
-                (writer, _, arguments) =>
-                {
-                    var property = QueryProperty(arguments, "{{Property.WriteDtoInterfaceDeclaration}}");
+            handlebars.RegisterHelper("Property.WriteDtoInterfaceDeclaration", (writer, _, arguments) =>
+            {
+                var property = QueryProperty(arguments, "{{Property.WriteDtoInterfaceDeclaration}}");
 
-                    writer.WriteSafeString($"{property.QueryDtoTypeName()} " + $"{property.QueryPropertyName()} {QueryAccessors(property)}");
-                });
+                writer.WriteSafeString($"{property.QueryDtoTypeName()} " + $"{property.QueryPropertyName()} {QueryAccessors(property)}");
+            });
 
-            handlebars.RegisterHelper(
-                "Property.WriteDtoImplementationDeclaration",
-                (writer, _, arguments) =>
-                {
-                    var property = QueryProperty(arguments, "{{Property.WriteDtoImplementationDeclaration}}");
-                    var propertyTypeName = property.QueryDtoTypeName();
-                    var collectionInitializer = QueryCollectionInitializer(property, propertyTypeName);
+            handlebars.RegisterHelper("Property.WriteDtoImplementationDeclaration", (writer, _, arguments) =>
+            {
+                var property = QueryProperty(arguments, "{{Property.WriteDtoImplementationDeclaration}}");
+                var propertyTypeName = property.QueryDtoTypeName();
+                var collectionInitializer = QueryCollectionInitializer(property, propertyTypeName);
 
-                    writer.WriteSafeString(
-                        $"public {propertyTypeName} " +
-                        $"{property.QueryPropertyName()} {QueryAccessors(property)}" +
-                        collectionInitializer);
-                });
+                writer.WriteSafeString($"public {propertyTypeName} " + $"{property.QueryPropertyName()} {QueryAccessors(property)}" + collectionInitializer);
+            });
         }
 
         /// <summary>
@@ -69,53 +62,30 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
         /// </exception>
-        public static void RegisterJsonSerializerPropertyHelper(
-            this IHandlebars handlebars)
+        public static void RegisterJsonSerializerPropertyHelper(this IHandlebars handlebars)
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper(
-                "Property.QueryIsIdentifier",
-                (_, arguments) =>
-                {
-                    var property = QueryProperty(
-                        arguments,
-                        "{{Property.QueryIsIdentifier}}");
+            handlebars.RegisterHelper("Property.QueryIsIdentifier", (_, arguments) =>
+            {
+                var property = QueryProperty(arguments, "{{Property.QueryIsIdentifier}}");
 
-                    return string.Equals(
-                               property.Name,
-                               "id",
-                               StringComparison.Ordinal)
-                           && string.Equals(
-                               property.QueryDtoTypeName(),
-                               "Guid",
-                               StringComparison.Ordinal);
-                });
+                return string.Equals(property.Name, "id", StringComparison.Ordinal) && string.Equals(property.QueryDtoTypeName(), "Guid", StringComparison.Ordinal);
+            });
 
-            handlebars.RegisterHelper(
-                "Property.QueryIsStringDictionary",
-                (_, arguments) =>
-                {
-                    var property = QueryProperty(
-                        arguments,
-                        "{{Property.QueryIsStringDictionary}}");
+            handlebars.RegisterHelper("Property.QueryIsStringDictionary", (_, arguments) =>
+            {
+                var property = QueryProperty(arguments, "{{Property.QueryIsStringDictionary}}");
 
-                    return string.Equals(
-                        property.QueryDtoTypeName(),
-                        "Dictionary<string,string>",
-                        StringComparison.Ordinal);
-                });
+                return string.Equals(property.QueryDtoTypeName(), "Dictionary<string,string>", StringComparison.Ordinal);
+            });
 
-            handlebars.RegisterHelper(
-                "Property.WritePropertyName",
-                (writer, _, arguments) =>
-                {
-                    var property = QueryProperty(
-                        arguments,
-                        "{{Property.WritePropertyName}}");
+            handlebars.RegisterHelper("Property.WritePropertyName", (writer, _, arguments) =>
+            {
+                var property = QueryProperty(arguments, "{{Property.WritePropertyName}}");
 
-                    writer.WriteSafeString(property.QueryPropertyName());
-                });
+                writer.WriteSafeString(property.QueryPropertyName());
+            });
         }
 
         /// <summary>
@@ -131,25 +101,21 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper(
-                "Property.WritePocoInterfaceDeclaration",
-                (writer, _, arguments) =>
-                {
-                    var property = QueryProperty(arguments, "{{Property.WritePocoInterfaceDeclaration}}");
+            handlebars.RegisterHelper("Property.WritePocoInterfaceDeclaration", (writer, _, arguments) =>
+            {
+                var property = QueryProperty(arguments, "{{Property.WritePocoInterfaceDeclaration}}");
 
-                    writer.WriteSafeString($"{property.QueryPocoTypeName()} " + $"{property.QueryPropertyName()} {QueryAccessors(property)}");
-                });
+                writer.WriteSafeString($"{property.QueryPocoTypeName()} " + $"{property.QueryPropertyName()} {QueryAccessors(property)}");
+            });
 
-            handlebars.RegisterHelper(
-                "Property.WritePocoImplementationDeclaration",
-                (writer, _, arguments) =>
-                {
-                    var property = QueryProperty(arguments, "{{Property.WritePocoImplementationDeclaration}}");
-                    var propertyTypeName = property.QueryPocoTypeName();
-                    var propertyName = property.QueryPropertyName();
+            handlebars.RegisterHelper("Property.WritePocoImplementationDeclaration", (writer, _, arguments) =>
+            {
+                var property = QueryProperty(arguments, "{{Property.WritePocoImplementationDeclaration}}");
+                var propertyTypeName = property.QueryPocoTypeName();
+                var propertyName = property.QueryPropertyName();
 
-                    writer.WriteSafeString($"public {propertyTypeName} {propertyName} " + QueryPocoImplementationSuffix(property, propertyName, propertyTypeName));
-                });
+                writer.WriteSafeString($"public {propertyTypeName} {propertyName} " + QueryPocoImplementationSuffix(property, propertyName, propertyTypeName));
+            });
         }
 
         /// <summary>
@@ -162,10 +128,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// A getter-only declaration for a derived or derived-union property; otherwise,
         /// a get-and-set declaration.
         /// </returns>
-        private static string QueryAccessors(IProperty property)
-        {
-            return QueryIsDerived(property) ? "{ get; }" : "{ get; set; }";
-        }
+        private static string QueryAccessors(IProperty property) => QueryIsDerived(property) ? "{ get; }" : "{ get; set; }";
 
         /// <summary>
         /// Determines whether the UML property represents derived state.
@@ -176,10 +139,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// <see langword="true" /> for a derived or derived-union property.
         /// </returns>
-        private static bool QueryIsDerived(IProperty property)
-        {
-            return property.IsDerived || property.IsDerivedUnion;
-        }
+        private static bool QueryIsDerived(IProperty property) => property.IsDerived || property.IsDerivedUnion;
 
         /// <summary>
         /// Queries the implementation suffix for a concrete POCO property.
@@ -221,9 +181,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// </returns>
         private static string QueryCollectionInitializer(IProperty property, string propertyTypeName)
         {
-            return property.QueryIsEnumerable() || propertyTypeName.StartsWith("Dictionary<", StringComparison.Ordinal)
-                ? " = [];"
-                : string.Empty;
+            return property.QueryIsEnumerable() || propertyTypeName.StartsWith("Dictionary<", StringComparison.Ordinal) ? " = [];" : string.Empty;
         }
 
         /// <summary>

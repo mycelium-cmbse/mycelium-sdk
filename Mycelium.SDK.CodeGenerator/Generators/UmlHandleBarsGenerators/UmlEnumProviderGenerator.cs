@@ -1,4 +1,4 @@
-﻿// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 //  <copyright file="UmlEnumProviderGenerator.cs" company="Starion Group S.A.">
 // 
 //    Copyright 2026 Starion Group S.A.
@@ -40,9 +40,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// Thrown when <paramref name="xmiReaderResult" /> or <paramref name="outputDirectory" /> is
         /// <see langword="null" />.
         /// </exception>
-        public override async Task GenerateAsync(
-            XmiReaderResult xmiReaderResult,
-            DirectoryInfo outputDirectory)
+        public override async Task GenerateAsync(XmiReaderResult xmiReaderResult, DirectoryInfo outputDirectory)
         {
             ArgumentNullException.ThrowIfNull(xmiReaderResult);
             ArgumentNullException.ThrowIfNull(outputDirectory);
@@ -73,9 +71,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// Thrown when <paramref name="outputDirectory" /> or <paramref name="enumeration" /> is
         /// <see langword="null" />.
         /// </exception>
-        public async Task<string> GenerateEnumerationProviderAsync(
-            DirectoryInfo outputDirectory,
-            IEnumeration enumeration)
+        public async Task<string> GenerateEnumerationProviderAsync(DirectoryInfo outputDirectory, IEnumeration enumeration)
         {
             ArgumentNullException.ThrowIfNull(outputDirectory);
             ArgumentNullException.ThrowIfNull(enumeration);
@@ -107,10 +103,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// This method is invoked during base construction. Implementations
         /// must not depend on fields initialized by a derived constructor.
         /// </remarks>
-        protected override void RegisterTemplates()
-        {
-            this.RegisterTemplate(TemplateName);
-        }
+        protected override void RegisterTemplates() => this.RegisterTemplate(TemplateName);
 
         /// <summary>
         /// Renders one enumeration provider without writing it.
@@ -131,9 +124,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             var generatedCode = this.Templates[TemplateName](enumeration);
             generatedCode = this.CodeCleanup(generatedCode);
 
-            return new GeneratedFile(
-                $"{enumeration.Name}Provider.cs",
-                generatedCode);
+            return new GeneratedFile($"{enumeration.Name}Provider.cs", generatedCode);
         }
     }
 }

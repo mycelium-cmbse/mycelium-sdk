@@ -25,21 +25,44 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.OpenApiHandleBarsGenerator
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
-            this.expectedDirectory = new DirectoryInfo(
-                Path.Combine(TestContext.CurrentContext.TestDirectory, "Expected", "OpenApi", "AutoGenModules"));
+            this.expectedDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "Expected", "OpenApi", "AutoGenModules"));
 
-            this.stagingDirectory = new DirectoryInfo(
-                Path.Combine(TestContext.CurrentContext.TestDirectory, "OpenApi", "_Mycelium.Fabric.AutoGenModules"));
+            this.stagingDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "OpenApi", "_Mycelium.Fabric.AutoGenModules"));
 
             if (this.stagingDirectory.Exists)
             {
-                this.stagingDirectory.Delete(recursive: true);
+                this.stagingDirectory.Delete(true);
             }
 
             var document = await OpenApiLoadingTestFixture.ReadSystemsModelingApiAsync();
             var generator = new OpenApiCarterModuleGenerator();
 
             await generator.GenerateAsync(document, this.stagingDirectory);
+        }
+
+        [Test]
+        public async Task VerifyThatBatchGenerationWritesNoFilesWhenTheDocumentCannotBeGenerated()
+        {
+            var outputDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "OpenApi", "_Mycelium.Fabric.InvalidAutoGenModules"));
+
+            if (outputDirectory.Exists)
+            {
+                outputDirectory.Delete(true);
+            }
+
+            // An operation without a tag cannot be assigned to a module. The mutation is applied to the
+            // freshly read in-memory document; the resource on disk is never touched.
+            var document = await OpenApiLoadingTestFixture.ReadSystemsModelingApiAsync();
+
+            document.Paths["/projects"].Operations[HttpMethod.Get].Tags.Clear();
+
+            var generator = new OpenApiCarterModuleGenerator();
+
+            await Assert.ThatAsync(() => generator.GenerateAsync(document, outputDirectory), Throws.TypeOf<InvalidOperationException>());
+
+            outputDirectory.Refresh();
+
+            Assert.That(outputDirectory.Exists, Is.False, "Batch preflight failure created the destination directory.");
         }
 
         [Test]
@@ -50,16 +73,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.OpenApiHandleBarsGenerator
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(stagedFileNames, Is.EqualTo(goldenFileNames),
-                    "The generated and reviewed module manifests differ.");
+                Assert.That(stagedFileNames, Is.EqualTo(goldenFileNames), "The generated and reviewed module manifests differ.");
 
                 foreach (var fileName in stagedFileNames.Intersect(goldenFileNames, StringComparer.Ordinal))
                 {
                     var stagedContent = await File.ReadAllTextAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
                     var goldenContent = await File.ReadAllTextAsync(Path.Combine(this.expectedDirectory.FullName, fileName));
 
-                    Assert.That(stagedContent, Is.EqualTo(goldenContent),
-                        $"Generated '{fileName}' differs from its approved golden.");
+                    Assert.That(stagedContent, Is.EqualTo(goldenContent), $"Generated '{fileName}' differs from its approved golden.");
                 }
             }
         }
@@ -89,39 +110,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.OpenApiHandleBarsGenerator
             }
         }
 
-        [Test]
-        public async Task VerifyThatBatchGenerationWritesNoFilesWhenTheDocumentCannotBeGenerated()
-        {
-            var outputDirectory = new DirectoryInfo(
-                Path.Combine(TestContext.CurrentContext.TestDirectory, "OpenApi", "_Mycelium.Fabric.InvalidAutoGenModules"));
-
-            if (outputDirectory.Exists)
-            {
-                outputDirectory.Delete(recursive: true);
-            }
-
-            // An operation without a tag cannot be assigned to a module. The mutation is applied to the
-            // freshly read in-memory document; the resource on disk is never touched.
-            var document = await OpenApiLoadingTestFixture.ReadSystemsModelingApiAsync();
-
-            document.Paths["/projects"].Operations[HttpMethod.Get].Tags.Clear();
-
-            var generator = new OpenApiCarterModuleGenerator();
-
-            await Assert.ThatAsync(
-                () => generator.GenerateAsync(document, outputDirectory),
-                Throws.TypeOf<InvalidOperationException>());
-
-            outputDirectory.Refresh();
-
-            Assert.That(outputDirectory.Exists, Is.False,
-                "Batch preflight failure created the destination directory.");
-        }
-
         private static string[] QueryRelativeFileNames(DirectoryInfo directory)
         {
-            return directory
-                .GetFiles("*", SearchOption.AllDirectories)
+            return directory.GetFiles("*", SearchOption.AllDirectories)
                 .Select(file => Path.GetRelativePath(directory.FullName, file.FullName))
                 .OrderBy(fileName => fileName, StringComparer.Ordinal)
                 .ToArray();

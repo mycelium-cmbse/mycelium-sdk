@@ -10,7 +10,6 @@
 namespace Mycelium.SDK.CodeGenerator.Tests.Expected
 {
     using System.Collections;
-    using System.Collections.Generic;
 
     /// <summary>
     /// Provides the bounded representative enumeration selection used by golden tests.
@@ -38,10 +37,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
         /// <returns>
         /// The representative enumeration-name enumerator.
         /// </returns>
-        public IEnumerator<string> GetEnumerator()
-        {
-            return ((IEnumerable<string>)Names).GetEnumerator();
-        }
+        public IEnumerator<string> GetEnumerator() => ((IEnumerable<string>)Names).GetEnumerator();
 
         /// <summary>
         /// Returns the representative enumeration names.
@@ -49,9 +45,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
         /// <returns>
         /// The representative enumeration-name enumerator.
         /// </returns>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
     }
 }

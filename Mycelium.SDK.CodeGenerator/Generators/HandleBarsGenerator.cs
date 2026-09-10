@@ -9,9 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Generators
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
     using System.Text;
 
     using HandlebarsDotNet;
@@ -28,15 +25,11 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// <param name="templateSubfolder">
         /// The optional template subdirectory.
         /// </param>
-        protected HandleBarsGenerator(string templateSubfolder = null)
-            : base(templateSubfolder)
+        protected HandleBarsGenerator(string templateSubfolder = null) : base(templateSubfolder)
         {
-            this.Templates =
-                new Dictionary<string, HandlebarsTemplate<object, object>>(
-                    StringComparer.Ordinal);
+            this.Templates = new Dictionary<string, HandlebarsTemplate<object, object>>(StringComparer.Ordinal);
 
-            this.Handlebars =
-                HandlebarsDotNet.Handlebars.CreateSharedEnvironment();
+            this.Handlebars = HandlebarsDotNet.Handlebars.CreateSharedEnvironment();
 
             this.Register();
         }
@@ -80,14 +73,11 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         {
             ArgumentNullException.ThrowIfNullOrEmpty(name);
 
-            var templatePath =
-                Path.Combine(this.TemplateFolderPath, $"{name}.hbs");
+            var templatePath = Path.Combine(this.TemplateFolderPath, $"{name}.hbs");
 
             var template = File.ReadAllText(templatePath, Encoding.UTF8);
 
-            this.Templates.Add(
-                name,
-                this.Handlebars.Compile(template));
+            this.Templates.Add(name, this.Handlebars.Compile(template));
         }
 
         /// <summary>
@@ -101,14 +91,9 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         {
             ArgumentNullException.ThrowIfNullOrEmpty(name);
 
-            var templatePath =
-                Path.Combine(
-                    this.TemplateFolderPath,
-                    "Partials",
-                    $"{name}.hbs");
+            var templatePath = Path.Combine(this.TemplateFolderPath, "Partials", $"{name}.hbs");
 
-            var template =
-                File.ReadAllText(templatePath, Encoding.UTF8);
+            var template = File.ReadAllText(templatePath, Encoding.UTF8);
 
             this.Handlebars.RegisterTemplate(name, template);
         }

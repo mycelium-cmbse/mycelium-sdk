@@ -9,10 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 {
-    using System;
-    using System.IO;
-    using System.Threading.Tasks;
-
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
 
     using uml4net.StructuredClassifiers;
@@ -26,7 +22,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The registered Handlebars template name used for concrete POCO classes.
         /// </summary>
         private const string ClassTemplateName = "poco-class-uml-template";
-        
+
         /// <summary>
         /// The registered Handlebars template name used for POCO interfaces.
         /// </summary>
@@ -80,10 +76,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <exception cref="ArgumentException">
         /// Thrown when a modeled name cannot be represented as a legal C# identifier.
         /// </exception>
-        public Task<string> GeneratePocoInterfaceAsync(DirectoryInfo outputDirectory, IClass umlClass)
-        {
-            return this.GenerateInterfaceAsync(outputDirectory, umlClass);
-        }
+        public Task<string> GeneratePocoInterfaceAsync(DirectoryInfo outputDirectory, IClass umlClass) => this.GenerateInterfaceAsync(outputDirectory, umlClass);
 
         /// <summary>
         /// Generates one concrete POCO implementation.
@@ -109,10 +102,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <exception cref="ArgumentException">
         /// Thrown when a modeled name cannot be represented as a legal C# identifier.
         /// </exception>
-        public Task<string> GeneratePocoClassAsync(DirectoryInfo outputDirectory, IClass umlClass)
-        {
-            return this.GenerateClassAsync(outputDirectory, umlClass);
-        }
+        public Task<string> GeneratePocoClassAsync(DirectoryInfo outputDirectory, IClass umlClass) => this.GenerateClassAsync(outputDirectory, umlClass);
 
         /// <summary>
         /// Registers the helpers that differ between artifact families.

@@ -9,8 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Extensions
 {
-    using System;
-
     using Microsoft.CodeAnalysis.CSharp;
 
     /// <summary>

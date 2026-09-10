@@ -10,7 +10,6 @@
 namespace Mycelium.SDK.CodeGenerator.Tests.Expected
 {
     using System.Collections;
-    using System.Collections.Generic;
 
     /// <summary>
     /// Provides the representative UML class selection used by class-based golden tests.
@@ -37,10 +36,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
         /// <returns>
         /// The representative UML class-name enumerator.
         /// </returns>
-        public IEnumerator<string> GetEnumerator()
-        {
-            return ((IEnumerable<string>)Names).GetEnumerator();
-        }
+        public IEnumerator<string> GetEnumerator() => ((IEnumerable<string>)Names).GetEnumerator();
 
         /// <summary>
         /// Returns the representative UML class names.
@@ -48,9 +44,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
         /// <returns>
         /// The representative UML class-name enumerator.
         /// </returns>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
     }
 }

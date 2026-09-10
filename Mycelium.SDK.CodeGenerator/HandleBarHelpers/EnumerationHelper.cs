@@ -1,17 +1,14 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="EnumerationHelper.cs" company="Starion Group S.A.">
-// 
+//
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-// 
+//
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
-    using System;
-    using System.Linq;
-
     using HandlebarsDotNet;
     using HandlebarsDotNet.Helpers.Utils;
 
@@ -37,25 +34,23 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper(
-                "Enumeration.WriteDtoUsing",
-                (writer, _, arguments) =>
+            handlebars.RegisterHelper("Enumeration.WriteDtoUsing", (writer, _, arguments) =>
+            {
+                if (arguments.Length != 1)
                 {
-                    if (arguments.Length != 1)
-                    {
-                        throw new HandlebarsException("{{Enumeration.WriteDtoUsing}} requires exactly one argument.");
-                    }
+                    throw new HandlebarsException("{{Enumeration.WriteDtoUsing}} requires exactly one argument.");
+                }
 
-                    if (arguments.Single() is not IEnumeration enumeration)
-                    {
-                        throw new HandlebarsException("{{Enumeration.WriteDtoUsing}} requires an IEnumeration argument.");
-                    }
+                if (arguments.Single() is not IEnumeration enumeration)
+                {
+                    throw new HandlebarsException("{{Enumeration.WriteDtoUsing}} requires an IEnumeration argument.");
+                }
 
-                    if (RequiresDtoNamespace(enumeration))
-                    {
-                        writer.WriteSafeString($"{Environment.NewLine}{Environment.NewLine}using Mycelium.SDK.DTO;");
-                    }
-                });
+                if (RequiresDtoNamespace(enumeration))
+                {
+                    writer.WriteSafeString($"{Environment.NewLine}{Environment.NewLine}using Mycelium.SDK.DTO;");
+                }
+            });
         }
 
         /// <summary>

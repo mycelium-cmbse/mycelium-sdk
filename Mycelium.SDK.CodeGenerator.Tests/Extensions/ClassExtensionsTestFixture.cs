@@ -36,49 +36,27 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         [Test]
         public void Verify_that_Dto_queries_exclude_derived_and_derived_union_properties_only()
         {
-            var umlClass = new Class
-            {
-                XmiId = "class-id",
-                Name = "TestClass"
-            };
+            var umlClass = new Class { XmiId = "class-id", Name = "TestClass" };
 
-            umlClass.OwnedAttribute.Add(new Property
-            {
-                XmiId = "regular-property",
-                Name = "regular"
-            });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "regular-property", Name = "regular" });
 
-            umlClass.OwnedAttribute.Add(new Property
-            {
-                XmiId = "derived-property",
-                Name = "derived",
-                IsDerived = true
-            });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "derived-property", Name = "derived", IsDerived = true });
 
-            umlClass.OwnedAttribute.Add(new Property
-            {
-                XmiId = "derived-union-property",
-                Name = "derivedUnion",
-                IsDerivedUnion = true
-            });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "derived-union-property", Name = "derivedUnion", IsDerivedUnion = true });
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(
-                    umlClass.QueryDtoInterfaceProperties().Select(property => property.Name),
-                    Is.EqualTo(ExpectedRegularPropertyNames));
+                Assert.That(umlClass.QueryDtoInterfaceProperties()
+                    .Select(property => property.Name), Is.EqualTo(ExpectedRegularPropertyNames));
 
-                Assert.That(
-                    umlClass.QueryDtoImplementationProperties().Select(property => property.Name),
-                    Is.EqualTo(ExpectedRegularPropertyNames));
+                Assert.That(umlClass.QueryDtoImplementationProperties()
+                    .Select(property => property.Name), Is.EqualTo(ExpectedRegularPropertyNames));
 
-                Assert.That(
-                    umlClass.QueryPocoInterfaceProperties().Select(property => property.Name),
-                    Is.EquivalentTo(ExpectedAllPocoPropertyNames));
+                Assert.That(umlClass.QueryPocoInterfaceProperties()
+                    .Select(property => property.Name), Is.EquivalentTo(ExpectedAllPocoPropertyNames));
 
-                Assert.That(
-                    umlClass.QueryPocoImplementationProperties().Select(property => property.Name),
-                    Is.EquivalentTo(ExpectedAllPocoPropertyNames));
+                Assert.That(umlClass.QueryPocoImplementationProperties()
+                    .Select(property => property.Name), Is.EquivalentTo(ExpectedAllPocoPropertyNames));
             }
         }
 
@@ -91,49 +69,39 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(
-                    interfaceProperties.Select(property => property.Name),
-                    Is.EqualTo([
-                        "activeOwnership",
-                        "isPartOf",
-                        "owns",
-                        "role",
-                        "user"
-                    ]));
+                Assert.That(interfaceProperties.Select(property => property.Name), Is.EqualTo([
+                    "activeOwnership",
+                    "isPartOf",
+                    "owns",
+                    "role",
+                    "user"
+                ]));
 
-                Assert.That(
-                    implementationProperties.Select(property => property.Name),
-                    Is.EqualTo([
-                        "id",
-                        "activeOwnership",
-                        "createdBy",
-                        "createdOn",
-                        "isPartOf",
-                        "owns",
-                        "role",
-                        "updatedBy",
-                        "updatedOn",
-                        "user"
-                    ]));
+                Assert.That(implementationProperties.Select(property => property.Name), Is.EqualTo([
+                    "id",
+                    "activeOwnership",
+                    "createdBy",
+                    "createdOn",
+                    "isPartOf",
+                    "owns",
+                    "role",
+                    "updatedBy",
+                    "updatedOn",
+                    "user"
+                ]));
 
-                Assert.That(
-                    projectMember.QueryPocoInterfaceProperties().Select(property => property.Name),
-                    Does.Contain("isOutsideCollaborator"));
+                Assert.That(projectMember.QueryPocoInterfaceProperties()
+                    .Select(property => property.Name), Does.Contain("isOutsideCollaborator"));
 
-                Assert.That(
-                    projectMember.QueryPocoImplementationProperties().Select(property => property.Name),
-                    Does.Contain("isOutsideCollaborator"));
+                Assert.That(projectMember.QueryPocoImplementationProperties()
+                    .Select(property => property.Name), Does.Contain("isOutsideCollaborator"));
             }
         }
 
         [Test]
         public void Verify_that_QueryGeneralizations_deduplicates_and_orders_generalizations()
         {
-            var specificClass = new Class
-            {
-                XmiId = "specific-class",
-                Name = "SpecificClass"
-            };
+            var specificClass = new Class { XmiId = "specific-class", Name = "SpecificClass" };
 
             var generalClasses = new IClass[]
             {
@@ -148,23 +116,17 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             {
                 var generalClass = generalClasses[index];
 
-                specificClass.Generalization.Add(new Generalization
-                {
-                    XmiId = $"generalization-{index}",
-                    Specific = specificClass,
-                    General = generalClass
-                });
+                specificClass.Generalization.Add(new Generalization { XmiId = $"generalization-{index}", Specific = specificClass, General = generalClass });
             }
 
             var generalizations = specificClass.QueryGeneralizations();
 
-            Assert.That(generalizations.Select(generalization => generalization.XmiId),
-                Is.EqualTo([
-                    "general-alpha-1",
-                    "general-alpha-2",
-                    "general-alpha-lower",
-                    "general-zeta"
-                ]));
+            Assert.That(generalizations.Select(generalization => generalization.XmiId), Is.EqualTo([
+                "general-alpha-1",
+                "general-alpha-2",
+                "general-alpha-lower",
+                "general-zeta"
+            ]));
         }
 
         [Test]
@@ -182,8 +144,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
 
             var generalizations = projectMember.QueryGeneralizations();
 
-            Assert.That(generalizations.Select(generalization => generalization.Name),
-                Is.EqualTo([ "AuditableThing" ]));
+            Assert.That(generalizations.Select(generalization => generalization.Name), Is.EqualTo(["AuditableThing"]));
         }
 
         [Test]
@@ -201,77 +162,47 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
 
             var properties = projectMember.QueryPocoImplementationProperties();
 
-            Assert.That(properties.Select(property => property.Name),
-                Is.EqualTo([
-                    "id",
-                    "activeOwnership",
-                    "createdBy",
-                    "createdOn",
-                    "isOutsideCollaborator",
-                    "isPartOf",
-                    "owns",
-                    "role",
-                    "updatedBy",
-                    "updatedOn",
-                    "user"
-                ]));
+            Assert.That(properties.Select(property => property.Name), Is.EqualTo([
+                "id",
+                "activeOwnership",
+                "createdBy",
+                "createdOn",
+                "isOutsideCollaborator",
+                "isPartOf",
+                "owns",
+                "role",
+                "updatedBy",
+                "updatedOn",
+                "user"
+            ]));
         }
 
         [Test]
         public void Verify_that_QueryPocoInterfaceProperties_deduplicates_and_orders_properties()
         {
-            var umlClass = new Class
-            {
-                XmiId = "class-id",
-                Name = "TestClass"
-            };
+            var umlClass = new Class { XmiId = "class-id", Name = "TestClass" };
 
-            umlClass.OwnedAttribute.Add(new Property
-            {
-                XmiId = "property-alpha-lower",
-                Name = "alpha"
-            });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "property-alpha-lower", Name = "alpha" });
 
-            umlClass.OwnedAttribute.Add(new Property
-            {
-                XmiId = "property-id",
-                Name = "id"
-            });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "property-id", Name = "id" });
 
-            umlClass.OwnedAttribute.Add(new Property
-            {
-                XmiId = "property-alpha-2",
-                Name = "Alpha"
-            });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "property-alpha-2", Name = "Alpha" });
 
-            umlClass.OwnedAttribute.Add(new Property
-            {
-                XmiId = "property-alpha-1",
-                Name = "Alpha"
-            });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "property-alpha-1", Name = "Alpha" });
 
-            umlClass.OwnedAttribute.Add(new Property
-            {
-                XmiId = "property-zeta",
-                Name = "zeta"
-            });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "property-zeta", Name = "zeta" });
 
-            umlClass.OwnedAttribute.Add(new Property
-            {
-                XmiId = "property-alpha-lower",
-                Name = "shouldNotAppear"
-            });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "property-alpha-lower", Name = "shouldNotAppear" });
 
             var properties = umlClass.QueryPocoInterfaceProperties();
 
-            Assert.That(properties.Select(property => property.XmiId),
-                Is.EqualTo([
-                    "property-id",
-                    "property-alpha-1",
-                    "property-alpha-2",
-                    "property-alpha-lower",
-                    "property-zeta"
-                ]));
+            Assert.That(properties.Select(property => property.XmiId), Is.EqualTo([
+                "property-id",
+                "property-alpha-1",
+                "property-alpha-2",
+                "property-alpha-lower",
+                "property-zeta"
+            ]));
         }
 
         [Test]
@@ -290,27 +221,25 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(properties.Select(property => property.Name),
-                    Is.EqualTo([
-                        "activeOwnership",
-                        "isOutsideCollaborator",
-                        "isPartOf",
-                        "owns",
-                        "role",
-                        "user"
-                    ]));
+                Assert.That(properties.Select(property => property.Name), Is.EqualTo([
+                    "activeOwnership",
+                    "isOutsideCollaborator",
+                    "isPartOf",
+                    "owns",
+                    "role",
+                    "user"
+                ]));
 
                 Assert.That(properties.All(property => projectMember.OwnedAttribute.Contains(property)), Is.True);
 
                 Assert.That(properties
-                        .Where(property => property.Association is not null)
-                        .Select(property => property.Name),
-                    Is.EquivalentTo([
-                        "activeOwnership",
-                        "isPartOf",
-                        "owns",
-                        "user"
-                    ]));
+                    .Where(property => property.Association is not null)
+                    .Select(property => property.Name), Is.EquivalentTo([
+                    "activeOwnership",
+                    "isPartOf",
+                    "owns",
+                    "user"
+                ]));
             }
         }
     }

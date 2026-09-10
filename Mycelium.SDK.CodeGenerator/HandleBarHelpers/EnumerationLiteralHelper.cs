@@ -9,9 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
-    using System;
-    using System.Linq;
-
     using HandlebarsDotNet;
 
     using Mycelium.SDK.CodeGenerator.Extensions;
@@ -32,30 +29,24 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="handlebars"/> is <see langword="null" />.
         /// </exception>
-        public static void RegisterEnumerationLiteralHelper(
-            this IHandlebars handlebars)
+        public static void RegisterEnumerationLiteralHelper(this IHandlebars handlebars)
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper(
-                "EnumerationLiteral.Write",
-                (writer, _, arguments) =>
+            handlebars.RegisterHelper("EnumerationLiteral.Write", (writer, _, arguments) =>
+            {
+                if (arguments.Length != 1)
                 {
-                    if (arguments.Length != 1)
-                    {
-                        throw new HandlebarsException(
-                            "{{EnumerationLiteral.Write}} requires exactly one argument.");
-                    }
+                    throw new HandlebarsException("{{EnumerationLiteral.Write}} requires exactly one argument.");
+                }
 
-                    if (arguments.Single() is not IEnumerationLiteral literal)
-                    {
-                        throw new HandlebarsException(
-                            "{{EnumerationLiteral.Write}} requires an IEnumerationLiteral argument.");
-                    }
+                if (arguments.Single() is not IEnumerationLiteral literal)
+                {
+                    throw new HandlebarsException("{{EnumerationLiteral.Write}} requires an IEnumerationLiteral argument.");
+                }
 
-                    writer.WriteSafeString(
-                        ReservedCSharpNameMapper.Map(literal.Name));
-                });
+                writer.WriteSafeString(ReservedCSharpNameMapper.Map(literal.Name));
+            });
         }
     }
 }

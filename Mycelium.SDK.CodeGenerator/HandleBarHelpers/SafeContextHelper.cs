@@ -29,41 +29,31 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
         /// </exception>
-        public static void RegisterSafeContextHelper(
-            this IHandlebars handlebars)
+        public static void RegisterSafeContextHelper(this IHandlebars handlebars)
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper(
-                "withPropertyClassContext",
-                (output, options, _, arguments) =>
+            handlebars.RegisterHelper("withPropertyClassContext", (output, options, _, arguments) =>
+            {
+                if (arguments.Length != 2)
                 {
-                    if (arguments.Length != 2)
-                    {
-                        throw new HandlebarsException(
-                            "{{#withPropertyClassContext}} requires exactly two arguments.");
-                    }
+                    throw new HandlebarsException("{{#withPropertyClassContext}} requires exactly two arguments.");
+                }
 
-                    if (arguments[0] is not IProperty property)
-                    {
-                        throw new HandlebarsException(
-                            "{{#withPropertyClassContext}} requires an IProperty as its first argument.");
-                    }
+                if (arguments[0] is not IProperty property)
+                {
+                    throw new HandlebarsException("{{#withPropertyClassContext}} requires an IProperty as its first argument.");
+                }
 
-                    if (arguments[1] is not IClass classContext)
-                    {
-                        throw new HandlebarsException(
-                            "{{#withPropertyClassContext}} requires an IClass as its second argument.");
-                    }
+                if (arguments[1] is not IClass classContext)
+                {
+                    throw new HandlebarsException("{{#withPropertyClassContext}} requires an IClass as its second argument.");
+                }
 
-                    var safeContext = new
-                    {
-                        property,
-                        classContext
-                    };
+                var safeContext = new { property, classContext };
 
-                    options.Template(output, safeContext);
-                });
+                options.Template(output, safeContext);
+            });
         }
     }
 }

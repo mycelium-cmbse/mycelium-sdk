@@ -34,8 +34,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         {
             ArgumentNullException.ThrowIfNull(umlClass);
 
-            return OrderProperties(
-                    umlClass.OwnedAttribute.Where(IsDtoProperty))
+            return OrderProperties(umlClass.OwnedAttribute.Where(IsDtoProperty))
                 .ToArray();
         }
 
@@ -55,7 +54,8 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         {
             ArgumentNullException.ThrowIfNull(umlClass);
 
-            return OrderProperties(umlClass.OwnedAttribute).ToArray();
+            return OrderProperties(umlClass.OwnedAttribute)
+                .ToArray();
         }
 
         /// <summary>
@@ -75,8 +75,8 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         {
             ArgumentNullException.ThrowIfNull(umlClass);
 
-            return OrderProperties(
-                    umlClass.QueryAllProperties().Where(IsDtoProperty))
+            return OrderProperties(umlClass.QueryAllProperties()
+                .Where(IsDtoProperty))
                 .ToArray();
         }
 
@@ -98,7 +98,8 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         {
             ArgumentNullException.ThrowIfNull(umlClass);
 
-            return OrderProperties(umlClass.QueryAllProperties()).ToArray();
+            return OrderProperties(umlClass.QueryAllProperties())
+                .ToArray();
         }
 
         /// <summary>
@@ -150,10 +151,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <see langword="true" /> when the property is neither derived nor a
         /// derived union; otherwise, <see langword="false" />.
         /// </returns>
-        private static bool IsDtoProperty(IProperty property)
-        {
-            return !property.IsDerived && !property.IsDerivedUnion;
-        }
+        private static bool IsDtoProperty(IProperty property) => !property.IsDerived && !property.IsDerivedUnion;
 
         /// <summary>
         /// Removes duplicate properties and orders them deterministically for generation.

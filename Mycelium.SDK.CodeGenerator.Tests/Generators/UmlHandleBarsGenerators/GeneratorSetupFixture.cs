@@ -44,10 +44,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         /// <exception cref="InvalidOperationException">
         /// Thrown when exactly one FunctionalData package cannot be selected.
         /// </exception>
-        public static XmiReaderResult ReadFunctionalData()
-        {
-            return XmiReaderResultExtensions.ReadFunctionalData(ResourcesDirectory);
-        }
+        public static XmiReaderResult ReadFunctionalData() => XmiReaderResultExtensions.ReadFunctionalData(ResourcesDirectory);
 
         /// <summary>
         /// Queries the unique FunctionalData package from a loaded model.

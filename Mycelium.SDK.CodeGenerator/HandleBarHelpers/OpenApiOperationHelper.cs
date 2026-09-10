@@ -9,9 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
-    using System;
-    using System.Linq;
-
     using HandlebarsDotNet;
 
     using Microsoft.OpenApi;
@@ -36,32 +33,26 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper(
-                "Operation.WriteHttpMethodName",
-                (writer, _, arguments) =>
-                {
-                    var searchResult = QueryOperation(arguments, "{{Operation.WriteHttpMethodName}}");
+            handlebars.RegisterHelper("Operation.WriteHttpMethodName", (writer, _, arguments) =>
+            {
+                var searchResult = QueryOperation(arguments, "{{Operation.WriteHttpMethodName}}");
 
-                    writer.WriteSafeString(searchResult.QueryHttpMethodName());
-                });
+                writer.WriteSafeString(searchResult.QueryHttpMethodName());
+            });
 
-            handlebars.RegisterHelper(
-                "Operation.WriteRouteTemplate",
-                (writer, _, arguments) =>
-                {
-                    var searchResult = QueryOperation(arguments, "{{Operation.WriteRouteTemplate}}");
+            handlebars.RegisterHelper("Operation.WriteRouteTemplate", (writer, _, arguments) =>
+            {
+                var searchResult = QueryOperation(arguments, "{{Operation.WriteRouteTemplate}}");
 
-                    writer.WriteSafeString(searchResult.QueryRouteTemplate());
-                });
+                writer.WriteSafeString(searchResult.QueryRouteTemplate());
+            });
 
-            handlebars.RegisterHelper(
-                "Operation.WriteHandlerName",
-                (writer, _, arguments) =>
-                {
-                    var searchResult = QueryOperation(arguments, "{{Operation.WriteHandlerName}}");
+            handlebars.RegisterHelper("Operation.WriteHandlerName", (writer, _, arguments) =>
+            {
+                var searchResult = QueryOperation(arguments, "{{Operation.WriteHandlerName}}");
 
-                    writer.WriteSafeString(searchResult.QueryHandlerName());
-                });
+                writer.WriteSafeString(searchResult.QueryHandlerName());
+            });
         }
 
         /// <summary>
