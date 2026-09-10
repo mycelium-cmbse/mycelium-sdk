@@ -59,9 +59,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// Thrown when <paramref name="xmiReaderResult" /> or <paramref name="outputDirectory" />
         /// is <see langword="null" />.
         /// </exception>
-        public override async Task GenerateAsync(
-            XmiReaderResult xmiReaderResult,
-            DirectoryInfo outputDirectory)
+        public override async Task GenerateAsync(XmiReaderResult xmiReaderResult, DirectoryInfo outputDirectory)
         {
             ArgumentNullException.ThrowIfNull(xmiReaderResult);
             ArgumentNullException.ThrowIfNull(outputDirectory);
@@ -164,11 +162,9 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <returns>
         /// The generated provider filename and formatted source.
         /// </returns>
-        private GeneratedFile RenderDeSerializationProvider(
-            IReadOnlyCollection<IClass> concreteClasses)
+        private GeneratedFile RenderDeSerializationProvider(IReadOnlyCollection<IClass> concreteClasses)
         {
-            var generatedCode =
-                this.Templates[DeSerializationProviderTemplateName](concreteClasses);
+            var generatedCode = this.Templates[DeSerializationProviderTemplateName](concreteClasses);
 
             generatedCode = this.CodeCleanup(generatedCode);
 

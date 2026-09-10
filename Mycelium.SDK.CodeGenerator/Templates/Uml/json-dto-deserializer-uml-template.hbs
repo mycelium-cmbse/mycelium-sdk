@@ -1,0 +1,135 @@
+// ------------------------------------------------------------------------------------------------
+//  <copyright file="{{ #NamedElement.WriteIdentifier this }}DeSerializer.cs" company="Starion Group S.A.">
+    //
+    //    Copyright 2026 Starion Group S.A.
+    //    SPDX-License-Identifier: Apache-2.0
+    //
+    //  </copyright>
+//  ------------------------------------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
+namespace Mycelium.SDK.Serializer.Json
+{
+    using System;
+    using System.CodeDom.Compiler;
+    using System.Text.Json;
+
+    using Mycelium.SDK.DTO;
+    using Mycelium.SDK.Serializer.Json.Utility;
+
+    /// <summary>
+    /// Deserializes an exact <see cref="{{ #NamedElement.WriteIdentifier this }}" /> DTO.
+    /// </summary>
+    [GeneratedCode("Mycelium.SDK", "latest")]
+    internal static class {{ #NamedElement.WriteIdentifier this }}DeSerializer
+    {
+        /// <summary>
+        /// Deserializes an exact <see cref="{{ #NamedElement.WriteIdentifier this }}" /> instance.
+        /// </summary>
+        /// <param name="reader">
+        /// The JSON reader positioned on the object-start token.
+        /// </param>
+        /// <returns>
+        /// The deserialized DTO.
+        /// </returns>
+        /// <exception cref="JsonException">
+        /// Thrown when the JSON object, metadata, reference, or modeled property value is invalid.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the exact <c>@type</c> discriminator does not identify
+        /// <see cref="{{ #NamedElement.WriteIdentifier this }}" />.
+        /// </exception>
+        internal static IThing DeSerialize(ref Utf8JsonReader reader)
+        {
+            Utf8JsonReaderHelper.Expect(ref reader, JsonTokenType.StartObject);
+
+            var dto = new {{ #NamedElement.WriteIdentifier this }}();
+            var hasType = false;
+            var hasId = false;
+            var hasEndObject = false;
+
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonTokenType.EndObject)
+                {
+                    hasEndObject = true;
+                    break;
+                }
+
+                Utf8JsonReaderHelper.Expect(ref reader, JsonTokenType.PropertyName);
+
+                if (reader.ValueTextEquals("@type"u8))
+                {
+                    if (hasType)
+                    {
+                        throw new JsonException("The @type metadata property occurs more than once.");
+                    }
+
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    var typeName = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
+
+                    if (!string.Equals(typeName, "{{ this.Name }}", StringComparison.Ordinal))
+                    {
+                        throw new NotSupportedException(
+                            $"JSON discriminator '{typeName}' is not supported by {{ #NamedElement.WriteIdentifier this }}DeSerializer.");
+                    }
+
+                    hasType = true;
+                    continue;
+                }
+
+                if (reader.ValueTextEquals("@id"u8))
+                {
+                    if (hasId)
+                    {
+                        throw new JsonException("The @id metadata property occurs more than once.");
+                    }
+
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.Id = Utf8JsonReaderHelper.ReadGuid(ref reader);
+                    hasId = true;
+                    continue;
+                }
+
+                {{ #with this as | classContext | }}
+                    {{ #each (Class.QueryDtoImplementationProperties this) as | property | }}
+                        {{ #unless (Property.QueryIsIdentifier property) }}
+                            {{ #withPropertyClassContext property classContext }}
+                                {{> json-dto-deserializer-uml-partial-template this}}
+                            {{ /withPropertyClassContext }}
+                        {{ /unless }}
+                    {{ /each }}
+                {{ /with }}
+
+                Utf8JsonReaderHelper.ReadNext(ref reader);
+                Utf8JsonReaderHelper.SkipValue(ref reader);
+            }
+
+            if (!hasEndObject)
+            {
+                throw new JsonException("The JSON DTO object is incomplete.");
+            }
+
+            if (!hasType)
+            {
+                throw new JsonException("The required @type metadata property is missing.");
+            }
+
+            if (!hasId)
+            {
+                throw new JsonException("The required @id metadata property is missing.");
+            }
+
+            return dto;
+        }
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
