@@ -9,8 +9,6 @@
 
 namespace Mycelium.SDK.Serializer.Json.Utility
 {
-    using System;
-    using System.Collections.Generic;
     using System.Text.Json;
 
     /// <summary>
