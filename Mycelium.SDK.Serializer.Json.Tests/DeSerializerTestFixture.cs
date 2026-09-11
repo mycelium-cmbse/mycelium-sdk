@@ -10,17 +10,314 @@
 namespace Mycelium.SDK.Serializer.Json.Tests
 {
     using System;
+    using System.IO;
+    using System.Linq;
     using System.Text;
     using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     using Mycelium.SDK.DTO;
 
     /// <summary>
-    /// Verifies the runtime behavior of generated JSON deserializers.
+    /// Verifies the runtime behavior of generated JSON deserializers and the public facade.
     /// </summary>
     [TestFixture]
     public class DeSerializerTestFixture
     {
+        private static readonly DeSerializer JsonDeSerializer = new();
+
+        private static readonly Serializer JsonSerializer = new();
+
+        /// <summary>
+        /// Verifies complete object and array payloads, payload order, asynchronous parity and stream
+        /// ownership.
+        /// </summary>
+        [Test]
+        public async Task Verify_that_facade_deserializes_complete_object_and_array_payloads()
+        {
+            const string objectPayload = """
+                                         {
+                                           "@id": "70000000-0000-0000-0000-000000000001",
+                                           "ignored": {
+                                             "@type": "Unknown"
+                                           },
+                                           "@type": "Comment"
+                                         }
+                                         """;
+
+            const string arrayPayload = """
+                                        [
+                                          {
+                                            "@id": "70000000-0000-0000-0000-000000000002",
+                                            "@type": "Comment"
+                                          },
+                                          {
+                                            "@type": "ProjectMember",
+                                            "@id": "70000000-0000-0000-0000-000000000003"
+                                          }
+                                        ]
+                                        """;
+
+            using var objectStream = CreateStream(objectPayload);
+
+            var objectDtos = JsonDeSerializer.DeSerialize(objectStream)
+                .ToArray();
+
+            using var synchronousArrayStream = CreateStream(arrayPayload);
+
+            var synchronousArrayDtos = JsonDeSerializer.DeSerialize(synchronousArrayStream)
+                .ToArray();
+
+            using var asynchronousArrayStream = CreateStream(arrayPayload);
+
+            var asynchronousArrayDtos = (await JsonDeSerializer.DeSerializeAsync(
+                asynchronousArrayStream,
+                CancellationToken.None)).ToArray();
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(objectDtos, Has.Length.EqualTo(1));
+
+                Assert.That(objectDtos[0], Is.TypeOf<Comment>());
+
+                Assert.That(
+                    objectDtos[0].Id,
+                    Is.EqualTo(Guid.Parse("70000000-0000-0000-0000-000000000001")));
+
+                Assert.That(synchronousArrayDtos, Has.Length.EqualTo(2));
+
+                Assert.That(
+                    synchronousArrayDtos.Select(dto => dto.GetType()),
+                    Is.EqualTo(new[] { typeof(Comment), typeof(ProjectMember), }));
+
+                Assert.That(
+                    synchronousArrayDtos.Select(dto => dto.Id),
+                    Is.EqualTo(new[]
+                    {
+                        Guid.Parse("70000000-0000-0000-0000-000000000002"),
+                        Guid.Parse("70000000-0000-0000-0000-000000000003"),
+                    }));
+
+                Assert.That(
+                    asynchronousArrayDtos.Select(dto => dto.GetType()),
+                    Is.EqualTo(synchronousArrayDtos.Select(dto => dto.GetType())));
+
+                Assert.That(
+                    asynchronousArrayDtos.Select(dto => dto.Id),
+                    Is.EqualTo(synchronousArrayDtos.Select(dto => dto.Id)));
+
+                Assert.That(objectStream.CanRead, Is.True);
+
+                Assert.That(synchronousArrayStream.CanRead, Is.True);
+
+                Assert.That(asynchronousArrayStream.CanRead, Is.True);
+            }
+        }
+
+        /// <summary>
+        /// Verifies invalid payload framing, exact dispatch, null arguments and cancellation.
+        /// </summary>
+        [Test]
+        public async Task Verify_that_facade_rejects_invalid_payloads_and_observes_cancellation()
+        {
+            var invalidPayloads = new[]
+            {
+                string.Empty,
+                "null",
+                "\"value\"",
+                "{}",
+                "[null]",
+                "{",
+                """
+                {
+                  "@type": "Comment",
+                  "@id": "71000000-0000-0000-0000-000000000001"
+                }
+                {
+                  "@type": "Comment",
+                  "@id": "71000000-0000-0000-0000-000000000002"
+                }
+                """,
+            };
+
+            foreach (var payload in invalidPayloads)
+            {
+                using var stream = CreateStream(payload);
+
+                Assert.That(
+                    () => JsonDeSerializer.DeSerialize(stream),
+                    Throws.TypeOf<JsonException>(),
+                    payload);
+            }
+
+            using var unknownTypeStream = CreateStream("""
+                                                       {
+                                                         "@type": "Unknown",
+                                                         "@id": "72000000-0000-0000-0000-000000000001"
+                                                       }
+                                                       """);
+
+            Assert.That(
+                () => JsonDeSerializer.DeSerialize(unknownTypeStream),
+                Throws.TypeOf<NotSupportedException>());
+
+            Assert.That(
+                () => JsonDeSerializer.DeSerialize(null),
+                Throws.TypeOf<ArgumentNullException>());
+
+            await Assert.ThatAsync(
+                () => JsonDeSerializer.DeSerializeAsync(null, CancellationToken.None),
+                Throws.TypeOf<ArgumentNullException>());
+
+            using var cancelledStream = CreateStream("""
+                                                     {
+                                                       "@type": "Comment",
+                                                       "@id": "73000000-0000-0000-0000-000000000001"
+                                                     }
+                                                     """);
+
+            using var cancellationTokenSource = new CancellationTokenSource();
+
+            cancellationTokenSource.Cancel();
+
+            await Assert.ThatAsync(
+                () => JsonDeSerializer.DeSerializeAsync(
+                    cancelledStream,
+                    cancellationTokenSource.Token),
+                Throws.TypeOf<OperationCanceledException>());
+        }
+
+        /// <summary>
+        /// Verifies representative DTO-to-JSON-to-DTO semantic round trips for object and sequence
+        /// payloads.
+        /// </summary>
+        [Test]
+        public void Verify_that_JSON_facades_round_trip_representative_DTO_payloads()
+        {
+            var reply = Guid.Parse("81000000-0000-0000-0000-000000000001");
+
+            var comment = new Comment
+            {
+                Id = Guid.Parse("80000000-0000-0000-0000-000000000001"),
+                Author = Guid.Parse("80000000-0000-0000-0000-000000000002"),
+                CommentStatus = CommentStatus.Open,
+                Content = "Semantic round trip",
+                CreatedBy = Guid.Parse("80000000-0000-0000-0000-000000000003"),
+                CreatedOn = new DateTime(2026, 9, 10, 11, 12, 13, DateTimeKind.Utc),
+                Quotes = null,
+                Replies =
+                [
+                    reply,
+                ],
+                TargetElementId = Guid.Parse("80000000-0000-0000-0000-000000000004"),
+                UpdatedBy = Guid.Parse("80000000-0000-0000-0000-000000000005"),
+                UpdatedOn = new DateTime(2026, 9, 11, 12, 13, 14, DateTimeKind.Utc),
+            };
+
+            var ownership = Guid.Parse("82000000-0000-0000-0000-000000000001");
+
+            var projectMember = new ProjectMember
+            {
+                Id = Guid.Parse("82000000-0000-0000-0000-000000000002"),
+                ActiveOwnership = ownership,
+                CreatedBy = Guid.Parse("82000000-0000-0000-0000-000000000003"),
+                CreatedOn = new DateTime(2026, 8, 9, 10, 11, 12, DateTimeKind.Utc),
+                IsPartOf = Guid.Parse("82000000-0000-0000-0000-000000000004"),
+                Owns =
+                [
+                    ownership,
+                ],
+                Role = ProjectMemberRole.Participant,
+                UpdatedBy = Guid.Parse("82000000-0000-0000-0000-000000000005"),
+                UpdatedOn = new DateTime(2026, 8, 10, 11, 12, 13, DateTimeKind.Utc),
+                User = Guid.Parse("82000000-0000-0000-0000-000000000006"),
+            };
+
+            using var objectStream = new MemoryStream();
+
+            JsonSerializer.Serialize(comment, objectStream, default);
+
+            objectStream.Position = 0;
+
+            var objectRoundTrip = (Comment)JsonDeSerializer.DeSerialize(objectStream)
+                .Single();
+
+            using var sequenceStream = new MemoryStream();
+
+            JsonSerializer.Serialize(
+                new IThing[] { comment, projectMember, },
+                sequenceStream,
+                default);
+
+            sequenceStream.Position = 0;
+
+            var sequenceRoundTrip = JsonDeSerializer.DeSerialize(sequenceStream)
+                .ToArray();
+
+            var sequenceComment = (Comment)sequenceRoundTrip[0];
+            var sequenceProjectMember = (ProjectMember)sequenceRoundTrip[1];
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(objectRoundTrip.Id, Is.EqualTo(comment.Id));
+
+                Assert.That(objectRoundTrip.Author, Is.EqualTo(comment.Author));
+
+                Assert.That(objectRoundTrip.CommentStatus, Is.EqualTo(comment.CommentStatus));
+
+                Assert.That(objectRoundTrip.Content, Is.EqualTo(comment.Content));
+
+                Assert.That(objectRoundTrip.CreatedBy, Is.EqualTo(comment.CreatedBy));
+
+                Assert.That(objectRoundTrip.CreatedOn, Is.EqualTo(comment.CreatedOn));
+
+                Assert.That(objectRoundTrip.Quotes, Is.EqualTo(comment.Quotes));
+
+                Assert.That(objectRoundTrip.Replies, Is.EqualTo(comment.Replies));
+
+                Assert.That(objectRoundTrip.TargetElementId, Is.EqualTo(comment.TargetElementId));
+
+                Assert.That(objectRoundTrip.UpdatedBy, Is.EqualTo(comment.UpdatedBy));
+
+                Assert.That(objectRoundTrip.UpdatedOn, Is.EqualTo(comment.UpdatedOn));
+
+                Assert.That(sequenceRoundTrip, Has.Length.EqualTo(2));
+
+                Assert.That(sequenceComment.Id, Is.EqualTo(comment.Id));
+
+                Assert.That(sequenceComment.Content, Is.EqualTo(comment.Content));
+
+                Assert.That(sequenceComment.Replies, Is.EqualTo(comment.Replies));
+
+                Assert.That(sequenceProjectMember.Id, Is.EqualTo(projectMember.Id));
+
+                Assert.That(
+                    sequenceProjectMember.ActiveOwnership,
+                    Is.EqualTo(projectMember.ActiveOwnership));
+
+                Assert.That(sequenceProjectMember.CreatedBy, Is.EqualTo(projectMember.CreatedBy));
+
+                Assert.That(sequenceProjectMember.CreatedOn, Is.EqualTo(projectMember.CreatedOn));
+
+                Assert.That(sequenceProjectMember.IsPartOf, Is.EqualTo(projectMember.IsPartOf));
+
+                Assert.That(sequenceProjectMember.Owns, Is.EqualTo(projectMember.Owns));
+
+                Assert.That(sequenceProjectMember.Role, Is.EqualTo(projectMember.Role));
+
+                Assert.That(sequenceProjectMember.UpdatedBy, Is.EqualTo(projectMember.UpdatedBy));
+
+                Assert.That(sequenceProjectMember.UpdatedOn, Is.EqualTo(projectMember.UpdatedOn));
+
+                Assert.That(sequenceProjectMember.User, Is.EqualTo(projectMember.User));
+
+                Assert.That(objectStream.CanRead, Is.True);
+
+                Assert.That(sequenceStream.CanRead, Is.True);
+            }
+        }
+
         /// <summary>
         /// Verifies representative scalar, nullable, enumeration, collection,
         /// dictionary, reference and inherited-property mappings.
@@ -398,6 +695,11 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         /// Represents an operation that reads a value from a positioned JSON reader.
         /// </summary>
         private delegate T ReaderOperation<out T>(ref Utf8JsonReader reader);
+
+        /// <summary>
+        /// Creates a readable stream containing the supplied JSON text.
+        /// </summary>
+        private static MemoryStream CreateStream(string json) => new(Encoding.UTF8.GetBytes(json));
 
         /// <summary>
         /// Reads one JSON value using the supplied operation.
