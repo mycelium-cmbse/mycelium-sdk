@@ -1,0 +1,90 @@
+if (reader.ValueTextEquals("{{ #String.LowerCaseFirstLetter property.Name }}"u8))
+{
+    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+    {{ #if (Property.QueryIsStringDictionary property) }}
+        dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadStringDictionary(ref reader);
+    {{ else if (Property.QueryIsEnumerable property) }}
+        Utf8JsonReaderHelper.Expect(ref reader, JsonTokenType.StartArray);
+
+        dto.{{ #Property.WritePropertyName property }}.Clear();
+
+        var hasEndArray = false;
+
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonTokenType.EndArray)
+            {
+                hasEndArray = true;
+                break;
+            }
+
+            {{ #if (Property.QueryIsReferenceProperty property) }}
+                dto.{{ #Property.WritePropertyName property }}.Add(Utf8JsonReaderHelper.ReadGuid(ref reader));
+            {{ else if (Property.QueryIsBool property) }}
+                dto.{{ #Property.WritePropertyName property }}.Add(Utf8JsonReaderHelper.ReadBoolean(ref reader));
+            {{ else if (Property.QueryIsEnum property) }}
+                dto.{{ #Property.WritePropertyName property }}.Add({{ #NamedElement.WriteIdentifier property.Type }}DeSerializer.DeSerialize(ref reader));
+            {{ else if (Property.QueryIsNumeric property) }}
+                {{ #if (Property.QueryIsInteger property) }}
+                    dto.{{ #Property.WritePropertyName property }}.Add(Utf8JsonReaderHelper.ReadInt32(ref reader));
+                {{ else if (Property.QueryIsDouble property) }}
+                    dto.{{ #Property.WritePropertyName property }}.Add(Utf8JsonReaderHelper.ReadDouble(ref reader));
+                {{ /if }}
+            {{ else if (Property.QueryIsDateTime property) }}
+                dto.{{ #Property.WritePropertyName property }}.Add(Utf8JsonReaderHelper.ReadDateTime(ref reader));
+            {{ else if (Property.QueryIsString property) }}
+                dto.{{ #Property.WritePropertyName property }}.Add(Utf8JsonReaderHelper.ReadRequiredString(ref reader));
+            {{ else }}
+                dto.{{ #Property.WritePropertyName property }}.Add(Utf8JsonReaderHelper.ReadGuid(ref reader));
+            {{ /if }}
+        }
+
+        if (!hasEndArray)
+        {
+            throw new JsonException("The {{ #String.LowerCaseFirstLetter property.Name }} array is incomplete.");
+        }
+    {{ else if (Property.QueryIsNullable property) }}
+        {{ #if (Property.QueryIsReferenceProperty property) }}
+            dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadGuidOrNull(ref reader);
+        {{ else if (Property.QueryIsBool property) }}
+            dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadBooleanOrNull(ref reader);
+        {{ else if (Property.QueryIsEnum property) }}
+            dto.{{ #Property.WritePropertyName property }} = {{ #NamedElement.WriteIdentifier property.Type }}DeSerializer.DeSerializeOrNull(ref reader);
+        {{ else if (Property.QueryIsNumeric property) }}
+            {{ #if (Property.QueryIsInteger property) }}
+                dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadInt32OrNull(ref reader);
+            {{ else if (Property.QueryIsDouble property) }}
+                dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadDoubleOrNull(ref reader);
+            {{ /if }}
+        {{ else if (Property.QueryIsDateTime property) }}
+            dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadDateTimeOrNull(ref reader);
+        {{ else if (Property.QueryIsString property) }}
+            dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadStringOrNull(ref reader);
+        {{ else }}
+            dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadGuidOrNull(ref reader);
+        {{ /if }}
+    {{ else if (Property.QueryIsScalar property) }}
+        {{ #if (Property.QueryIsReferenceProperty property) }}
+            dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadGuid(ref reader);
+        {{ else if (Property.QueryIsBool property) }}
+            dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadBoolean(ref reader);
+        {{ else if (Property.QueryIsEnum property) }}
+            dto.{{ #Property.WritePropertyName property }} = {{ #NamedElement.WriteIdentifier property.Type }}DeSerializer.DeSerialize(ref reader);
+        {{ else if (Property.QueryIsNumeric property) }}
+            {{ #if (Property.QueryIsInteger property) }}
+                dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadInt32(ref reader);
+            {{ else if (Property.QueryIsDouble property) }}
+                dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadDouble(ref reader);
+            {{ /if }}
+        {{ else if (Property.QueryIsDateTime property) }}
+            dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadDateTime(ref reader);
+        {{ else if (Property.QueryIsString property) }}
+            dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
+        {{ else }}
+            dto.{{ #Property.WritePropertyName property }} = Utf8JsonReaderHelper.ReadGuid(ref reader);
+        {{ /if }}
+    {{ /if }}
+
+    continue;
+}
