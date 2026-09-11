@@ -17,6 +17,9 @@ namespace Mycelium.SDK.Serializer.Json
     using System.CodeDom.Compiler;
     using System.Text.Json;
 
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+
     using Mycelium.SDK.DTO;
     using Mycelium.SDK.Serializer.Json.Utility;
 
@@ -32,6 +35,9 @@ namespace Mycelium.SDK.Serializer.Json
         /// <param name="reader">
         /// The JSON reader positioned on the object-start token.
         /// </param>
+        /// <param name="loggerFactory">
+        /// The optional logger factory used to produce missing-property diagnostics.
+        /// </param>
         /// <returns>
         /// The deserialized DTO.
         /// </returns>
@@ -42,14 +48,26 @@ namespace Mycelium.SDK.Serializer.Json
         /// Thrown when the exact <c>@type</c> discriminator does not identify
         /// <see cref="OrganizationMember" />.
         /// </exception>
-        internal static IThing DeSerialize(ref Utf8JsonReader reader)
+        internal static IThing DeSerialize(ref Utf8JsonReader reader, ILoggerFactory loggerFactory = null)
         {
             Utf8JsonReaderHelper.Expect(ref reader, JsonTokenType.StartObject);
+
+            var logger = loggerFactory == null
+                ? NullLogger.Instance
+                : loggerFactory.CreateLogger("OrganizationMemberDeSerializer");
 
             var dto = new OrganizationMember();
             var hasType = false;
             var hasId = false;
             var hasEndObject = false;
+
+            var hasCreatedBy = false;
+            var hasCreatedOn = false;
+            var hasOrganization = false;
+            var hasRole = false;
+            var hasUpdatedBy = false;
+            var hasUpdatedOn = false;
+            var hasUser = false;
 
             while (reader.Read())
             {
@@ -101,6 +119,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.CreatedBy = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasCreatedBy = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("createdOn"u8))
@@ -109,6 +128,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.CreatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
 
+                    hasCreatedOn = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("organization"u8))
@@ -117,6 +137,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Organization = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasOrganization = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("role"u8))
@@ -125,6 +146,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Role = OrganizationMembershipRoleDeSerializer.DeSerialize(ref reader);
 
+                    hasRole = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("updatedBy"u8))
@@ -133,6 +155,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.UpdatedBy = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasUpdatedBy = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("updatedOn"u8))
@@ -141,6 +164,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.UpdatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
 
+                    hasUpdatedOn = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("user"u8))
@@ -149,6 +173,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.User = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasUser = true;
                     continue;
                 }
 
@@ -169,6 +194,63 @@ namespace Mycelium.SDK.Serializer.Json
             if (!hasId)
             {
                 throw new JsonException("The required @id metadata property is missing.");
+            }
+
+            if (!hasCreatedBy)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "createdBy",
+                    "OrganizationMember",
+                    dto.Id);
+            }
+            if (!hasCreatedOn)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "createdOn",
+                    "OrganizationMember",
+                    dto.Id);
+            }
+            if (!hasOrganization)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "organization",
+                    "OrganizationMember",
+                    dto.Id);
+            }
+            if (!hasRole)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "role",
+                    "OrganizationMember",
+                    dto.Id);
+            }
+            if (!hasUpdatedBy)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "updatedBy",
+                    "OrganizationMember",
+                    dto.Id);
+            }
+            if (!hasUpdatedOn)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "updatedOn",
+                    "OrganizationMember",
+                    dto.Id);
+            }
+            if (!hasUser)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "user",
+                    "OrganizationMember",
+                    dto.Id);
             }
 
             return dto;

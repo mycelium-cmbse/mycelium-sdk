@@ -18,6 +18,8 @@ namespace Mycelium.SDK.Serializer.Json
     using System.Collections.Generic;
     using System.Text.Json;
 
+    using Microsoft.Extensions.Logging;
+
     using Mycelium.SDK.DTO;
 
     /// <summary>
@@ -32,29 +34,34 @@ namespace Mycelium.SDK.Serializer.Json
         /// <param name="reader">
         /// The JSON reader positioned on the object-start token.
         /// </param>
+        /// <param name="loggerFactory">
+        /// The optional logger factory used to produce missing-property diagnostics.
+        /// </param>
         /// <returns>
         /// The deserialized DTO.
         /// </returns>
-        internal delegate IThing DeSerializerAction(ref Utf8JsonReader reader);
+        internal delegate IThing DeSerializerAction(
+            ref Utf8JsonReader reader,
+            ILoggerFactory loggerFactory = null);
 
         /// <summary>
         /// Maps exact UML class names to their generated deserializers.
         /// </summary>
         private static readonly IReadOnlyDictionary<string, DeSerializerAction> DeSerializerActionMap =
-        new Dictionary<string, DeSerializerAction>(StringComparer.Ordinal)
-        {
-            ["BranchProtectionRule"] = BranchProtectionRuleDeSerializer.DeSerialize,
-            ["Comment"] = CommentDeSerializer.DeSerialize,
-            ["FunctionalProject"] = FunctionalProjectDeSerializer.DeSerialize,
-            ["FunctionalProjectPolicy"] = FunctionalProjectPolicyDeSerializer.DeSerialize,
-            ["Organization"] = OrganizationDeSerializer.DeSerialize,
-            ["OrganizationMember"] = OrganizationMemberDeSerializer.DeSerialize,
-            ["OrganizationPolicy"] = OrganizationPolicyDeSerializer.DeSerialize,
-            ["Ownership"] = OwnershipDeSerializer.DeSerialize,
-            ["ProjectMember"] = ProjectMemberDeSerializer.DeSerialize,
-            ["Review"] = ReviewDeSerializer.DeSerialize,
-            ["User"] = UserDeSerializer.DeSerialize,
-        };
+            new Dictionary<string, DeSerializerAction>(StringComparer.Ordinal)
+            {
+                ["BranchProtectionRule"] = BranchProtectionRuleDeSerializer.DeSerialize,
+                ["Comment"] = CommentDeSerializer.DeSerialize,
+                ["FunctionalProject"] = FunctionalProjectDeSerializer.DeSerialize,
+                ["FunctionalProjectPolicy"] = FunctionalProjectPolicyDeSerializer.DeSerialize,
+                ["Organization"] = OrganizationDeSerializer.DeSerialize,
+                ["OrganizationMember"] = OrganizationMemberDeSerializer.DeSerialize,
+                ["OrganizationPolicy"] = OrganizationPolicyDeSerializer.DeSerialize,
+                ["Ownership"] = OwnershipDeSerializer.DeSerialize,
+                ["ProjectMember"] = ProjectMemberDeSerializer.DeSerialize,
+                ["Review"] = ReviewDeSerializer.DeSerialize,
+                ["User"] = UserDeSerializer.DeSerialize,
+            };
 
         /// <summary>
         /// Provides the generated deserializer registered for an exact discriminator.
@@ -84,7 +91,7 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             throw new NotSupportedException(
-            $"JSON discriminator '{typeName}' is not supported by the deserialization provider.");
+                $"JSON discriminator '{typeName}' is not supported by the deserialization provider.");
         }
     }
 }

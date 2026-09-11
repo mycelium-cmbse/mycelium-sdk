@@ -17,6 +17,9 @@ namespace Mycelium.SDK.Serializer.Json
     using System.CodeDom.Compiler;
     using System.Text.Json;
 
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+
     using Mycelium.SDK.DTO;
     using Mycelium.SDK.Serializer.Json.Utility;
 
@@ -32,6 +35,9 @@ namespace Mycelium.SDK.Serializer.Json
         /// <param name="reader">
         /// The JSON reader positioned on the object-start token.
         /// </param>
+        /// <param name="loggerFactory">
+        /// The optional logger factory used to produce missing-property diagnostics.
+        /// </param>
         /// <returns>
         /// The deserialized DTO.
         /// </returns>
@@ -42,14 +48,27 @@ namespace Mycelium.SDK.Serializer.Json
         /// Thrown when the exact <c>@type</c> discriminator does not identify
         /// <see cref="Ownership" />.
         /// </exception>
-        internal static IThing DeSerialize(ref Utf8JsonReader reader)
+        internal static IThing DeSerialize(ref Utf8JsonReader reader, ILoggerFactory loggerFactory = null)
         {
             Utf8JsonReaderHelper.Expect(ref reader, JsonTokenType.StartObject);
+
+            var logger = loggerFactory == null
+                ? NullLogger.Instance
+                : loggerFactory.CreateLogger("OwnershipDeSerializer");
 
             var dto = new Ownership();
             var hasType = false;
             var hasId = false;
             var hasEndObject = false;
+
+            var hasCreatedBy = false;
+            var hasCreatedOn = false;
+            var hasDescription = false;
+            var hasEngineeringMetadataId = false;
+            var hasName = false;
+            var hasShortName = false;
+            var hasUpdatedBy = false;
+            var hasUpdatedOn = false;
 
             while (reader.Read())
             {
@@ -101,6 +120,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.CreatedBy = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasCreatedBy = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("createdOn"u8))
@@ -109,6 +129,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.CreatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
 
+                    hasCreatedOn = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("description"u8))
@@ -117,6 +138,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Description = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
 
+                    hasDescription = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("engineeringMetadataId"u8))
@@ -125,6 +147,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.EngineeringMetadataId = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasEngineeringMetadataId = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("name"u8))
@@ -133,6 +156,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Name = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
 
+                    hasName = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("shortName"u8))
@@ -141,6 +165,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.ShortName = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
 
+                    hasShortName = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("updatedBy"u8))
@@ -149,6 +174,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.UpdatedBy = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasUpdatedBy = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("updatedOn"u8))
@@ -157,6 +183,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.UpdatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
 
+                    hasUpdatedOn = true;
                     continue;
                 }
 
@@ -177,6 +204,71 @@ namespace Mycelium.SDK.Serializer.Json
             if (!hasId)
             {
                 throw new JsonException("The required @id metadata property is missing.");
+            }
+
+            if (!hasCreatedBy)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "createdBy",
+                    "Ownership",
+                    dto.Id);
+            }
+            if (!hasCreatedOn)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "createdOn",
+                    "Ownership",
+                    dto.Id);
+            }
+            if (!hasDescription)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "description",
+                    "Ownership",
+                    dto.Id);
+            }
+            if (!hasEngineeringMetadataId)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "engineeringMetadataId",
+                    "Ownership",
+                    dto.Id);
+            }
+            if (!hasName)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "name",
+                    "Ownership",
+                    dto.Id);
+            }
+            if (!hasShortName)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "shortName",
+                    "Ownership",
+                    dto.Id);
+            }
+            if (!hasUpdatedBy)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "updatedBy",
+                    "Ownership",
+                    dto.Id);
+            }
+            if (!hasUpdatedOn)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "updatedOn",
+                    "Ownership",
+                    dto.Id);
             }
 
             return dto;

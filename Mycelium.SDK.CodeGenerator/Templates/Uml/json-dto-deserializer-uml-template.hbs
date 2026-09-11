@@ -17,6 +17,9 @@ namespace Mycelium.SDK.Serializer.Json
     using System.CodeDom.Compiler;
     using System.Text.Json;
 
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+
     using Mycelium.SDK.DTO;
     using Mycelium.SDK.Serializer.Json.Utility;
 
@@ -32,6 +35,9 @@ namespace Mycelium.SDK.Serializer.Json
         /// <param name="reader">
         /// The JSON reader positioned on the object-start token.
         /// </param>
+        /// <param name="loggerFactory">
+        /// The optional logger factory used to produce missing-property diagnostics.
+        /// </param>
         /// <returns>
         /// The deserialized DTO.
         /// </returns>
@@ -42,14 +48,24 @@ namespace Mycelium.SDK.Serializer.Json
         /// Thrown when the exact <c>@type</c> discriminator does not identify
         /// <see cref="{{ #NamedElement.WriteIdentifier this }}" />.
         /// </exception>
-        internal static IThing DeSerialize(ref Utf8JsonReader reader)
+        internal static IThing DeSerialize(ref Utf8JsonReader reader, ILoggerFactory loggerFactory = null)
         {
             Utf8JsonReaderHelper.Expect(ref reader, JsonTokenType.StartObject);
+
+            var logger = loggerFactory == null
+                ? NullLogger.Instance
+                : loggerFactory.CreateLogger("{{ #NamedElement.WriteIdentifier this }}DeSerializer");
 
             var dto = new {{ #NamedElement.WriteIdentifier this }}();
             var hasType = false;
             var hasId = false;
             var hasEndObject = false;
+
+            {{ #each (Class.QueryDtoImplementationProperties this) as | property | }}
+                {{ #unless (Property.QueryIsIdentifier property) }}
+                    var has{{ #Property.WritePropertyName property }} = false;
+                {{ /unless }}
+            {{ /each }}
 
             while (reader.Read())
             {
@@ -123,6 +139,21 @@ namespace Mycelium.SDK.Serializer.Json
             {
                 throw new JsonException("The required @id metadata property is missing.");
             }
+
+            {{ #with this as | classContext | }}
+                {{ #each (Class.QueryDtoImplementationProperties this) as | property | }}
+                    {{ #unless (Property.QueryIsIdentifier property) }}
+                        if (!has{{ #Property.WritePropertyName property }})
+                        {
+                            logger.LogDebug(
+                                "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                                "{{ #String.LowerCaseFirstLetter property.Name }}",
+                                "{{ classContext.Name }}",
+                                dto.Id);
+                        }
+                    {{ /unless }}
+                {{ /each }}
+            {{ /with }}
 
             return dto;
         }

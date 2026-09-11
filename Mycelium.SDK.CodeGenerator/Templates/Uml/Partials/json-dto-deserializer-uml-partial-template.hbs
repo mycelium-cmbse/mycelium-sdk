@@ -86,5 +86,6 @@ if (reader.ValueTextEquals("{{ #String.LowerCaseFirstLetter property.Name }}"u8)
         {{ /if }}
     {{ /if }}
 
+    has{{ #Property.WritePropertyName property }} = true;
     continue;
 }

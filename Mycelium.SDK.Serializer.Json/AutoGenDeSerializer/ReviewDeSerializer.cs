@@ -17,6 +17,9 @@ namespace Mycelium.SDK.Serializer.Json
     using System.CodeDom.Compiler;
     using System.Text.Json;
 
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+
     using Mycelium.SDK.DTO;
     using Mycelium.SDK.Serializer.Json.Utility;
 
@@ -32,6 +35,9 @@ namespace Mycelium.SDK.Serializer.Json
         /// <param name="reader">
         /// The JSON reader positioned on the object-start token.
         /// </param>
+        /// <param name="loggerFactory">
+        /// The optional logger factory used to produce missing-property diagnostics.
+        /// </param>
         /// <returns>
         /// The deserialized DTO.
         /// </returns>
@@ -42,14 +48,31 @@ namespace Mycelium.SDK.Serializer.Json
         /// Thrown when the exact <c>@type</c> discriminator does not identify
         /// <see cref="Review" />.
         /// </exception>
-        internal static IThing DeSerialize(ref Utf8JsonReader reader)
+        internal static IThing DeSerialize(ref Utf8JsonReader reader, ILoggerFactory loggerFactory = null)
         {
             Utf8JsonReaderHelper.Expect(ref reader, JsonTokenType.StartObject);
+
+            var logger = loggerFactory == null
+                ? NullLogger.Instance
+                : loggerFactory.CreateLogger("ReviewDeSerializer");
 
             var dto = new Review();
             var hasType = false;
             var hasId = false;
             var hasEndObject = false;
+
+            var hasAuthor = false;
+            var hasComments = false;
+            var hasCreatedBy = false;
+            var hasCreatedOn = false;
+            var hasDescription = false;
+            var hasReviewers = false;
+            var hasSourceBranchId = false;
+            var hasStatus = false;
+            var hasTargetBranchId = false;
+            var hasTitle = false;
+            var hasUpdatedBy = false;
+            var hasUpdatedOn = false;
 
             while (reader.Read())
             {
@@ -101,6 +124,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Author = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasAuthor = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("comments"u8))
@@ -129,6 +153,7 @@ namespace Mycelium.SDK.Serializer.Json
                         throw new JsonException("The comments array is incomplete.");
                     }
 
+                    hasComments = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("createdBy"u8))
@@ -137,6 +162,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.CreatedBy = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasCreatedBy = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("createdOn"u8))
@@ -145,6 +171,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.CreatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
 
+                    hasCreatedOn = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("description"u8))
@@ -153,6 +180,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Description = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
 
+                    hasDescription = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("reviewers"u8))
@@ -181,6 +209,7 @@ namespace Mycelium.SDK.Serializer.Json
                         throw new JsonException("The reviewers array is incomplete.");
                     }
 
+                    hasReviewers = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("sourceBranchId"u8))
@@ -189,6 +218,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.SourceBranchId = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasSourceBranchId = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("status"u8))
@@ -197,6 +227,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Status = ReviewStatusDeSerializer.DeSerialize(ref reader);
 
+                    hasStatus = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("targetBranchId"u8))
@@ -205,6 +236,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.TargetBranchId = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasTargetBranchId = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("title"u8))
@@ -213,6 +245,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Title = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
 
+                    hasTitle = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("updatedBy"u8))
@@ -221,6 +254,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.UpdatedBy = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasUpdatedBy = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("updatedOn"u8))
@@ -229,6 +263,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.UpdatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
 
+                    hasUpdatedOn = true;
                     continue;
                 }
 
@@ -249,6 +284,103 @@ namespace Mycelium.SDK.Serializer.Json
             if (!hasId)
             {
                 throw new JsonException("The required @id metadata property is missing.");
+            }
+
+            if (!hasAuthor)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "author",
+                    "Review",
+                    dto.Id);
+            }
+            if (!hasComments)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "comments",
+                    "Review",
+                    dto.Id);
+            }
+            if (!hasCreatedBy)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "createdBy",
+                    "Review",
+                    dto.Id);
+            }
+            if (!hasCreatedOn)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "createdOn",
+                    "Review",
+                    dto.Id);
+            }
+            if (!hasDescription)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "description",
+                    "Review",
+                    dto.Id);
+            }
+            if (!hasReviewers)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "reviewers",
+                    "Review",
+                    dto.Id);
+            }
+            if (!hasSourceBranchId)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "sourceBranchId",
+                    "Review",
+                    dto.Id);
+            }
+            if (!hasStatus)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "status",
+                    "Review",
+                    dto.Id);
+            }
+            if (!hasTargetBranchId)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "targetBranchId",
+                    "Review",
+                    dto.Id);
+            }
+            if (!hasTitle)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "title",
+                    "Review",
+                    dto.Id);
+            }
+            if (!hasUpdatedBy)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "updatedBy",
+                    "Review",
+                    dto.Id);
+            }
+            if (!hasUpdatedOn)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "updatedOn",
+                    "Review",
+                    dto.Id);
             }
 
             return dto;
