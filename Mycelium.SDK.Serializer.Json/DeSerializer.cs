@@ -11,6 +11,9 @@ namespace Mycelium.SDK.Serializer.Json
 {
     using System.Text.Json;
 
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+
     using Mycelium.SDK.DTO;
     using Mycelium.SDK.Serializer.Json.Utility;
 
@@ -23,6 +26,38 @@ namespace Mycelium.SDK.Serializer.Json
         /// The buffer size used to copy an input stream.
         /// </summary>
         private const int StreamCopyBufferSize = 81920;
+
+        /// <summary>
+        /// The logger factory passed to generated DTO deserializers.
+        /// </summary>
+        private readonly ILoggerFactory loggerFactory;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DeSerializer" /> class without externally
+        /// observable logging.
+        /// </summary>
+        public DeSerializer() : this(NullLoggerFactory.Instance)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DeSerializer" /> class.
+        /// </summary>
+        /// <param name="loggerFactory">
+        /// The logger factory passed to generated DTO deserializers.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="loggerFactory" /> is <see langword="null" />.
+        /// </exception>
+        public DeSerializer(ILoggerFactory loggerFactory)
+        {
+            if (loggerFactory == null)
+            {
+                throw new ArgumentNullException(nameof(loggerFactory));
+            }
+
+            this.loggerFactory = loggerFactory;
+        }
 
         /// <summary>
         /// Deserializes one complete JSON object-or-array payload.
@@ -57,7 +92,7 @@ namespace Mycelium.SDK.Serializer.Json
             var payload = payloadStream.GetBuffer()
                 .AsSpan(0, checked((int)payloadStream.Length));
 
-            return DeSerializePayload(payload, CancellationToken.None);
+            return this.DeSerializePayload(payload, CancellationToken.None);
         }
 
         /// <summary>
@@ -103,13 +138,13 @@ namespace Mycelium.SDK.Serializer.Json
             var payload = payloadStream.GetBuffer()
                 .AsSpan(0, checked((int)payloadStream.Length));
 
-            return DeSerializePayload(payload, cancellationToken);
+            return this.DeSerializePayload(payload, cancellationToken);
         }
 
         /// <summary>
         /// Deserializes one complete raw UTF-8 payload.
         /// </summary>
-        private static IEnumerable<IThing> DeSerializePayload(ReadOnlySpan<byte> payload, CancellationToken cancellationToken)
+        private IEnumerable<IThing> DeSerializePayload(ReadOnlySpan<byte> payload, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -127,12 +162,12 @@ namespace Mycelium.SDK.Serializer.Json
                 case JsonTokenType.StartObject:
                     result =
                     [
-                        DeSerializeObject(ref reader),
+                        this.DeSerializeObject(ref reader),
                     ];
 
                     break;
                 case JsonTokenType.StartArray:
-                    result = DeSerializeArray(ref reader, cancellationToken);
+                    result = this.DeSerializeArray(ref reader, cancellationToken);
                     break;
                 default:
                     throw new JsonException("The JSON payload root must be an object or an array.");
@@ -151,7 +186,7 @@ namespace Mycelium.SDK.Serializer.Json
         /// <summary>
         /// Deserializes every DTO object in the current JSON array.
         /// </summary>
-        private static List<IThing> DeSerializeArray(ref Utf8JsonReader reader, CancellationToken cancellationToken)
+        private List<IThing> DeSerializeArray(ref Utf8JsonReader reader, CancellationToken cancellationToken)
         {
             var result = new List<IThing>();
 
@@ -174,19 +209,19 @@ namespace Mycelium.SDK.Serializer.Json
                     throw new JsonException("Every JSON payload array element must be an object.");
                 }
 
-                result.Add(DeSerializeObject(ref reader));
+                result.Add(this.DeSerializeObject(ref reader));
             }
         }
 
         /// <summary>
         /// Deserializes the DTO object on which the reader is positioned.
         /// </summary>
-        private static IThing DeSerializeObject(ref Utf8JsonReader reader)
+        private IThing DeSerializeObject(ref Utf8JsonReader reader)
         {
             var typeName = ReadTypeName(ref reader);
             var operation = DeSerializationProvider.Provide(typeName);
 
-            return operation(ref reader);
+            return operation(ref reader, this.loggerFactory);
         }
 
         /// <summary>

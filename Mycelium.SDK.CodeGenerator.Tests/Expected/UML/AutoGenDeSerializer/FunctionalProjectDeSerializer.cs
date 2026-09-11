@@ -17,6 +17,9 @@ namespace Mycelium.SDK.Serializer.Json
     using System.CodeDom.Compiler;
     using System.Text.Json;
 
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+
     using Mycelium.SDK.DTO;
     using Mycelium.SDK.Serializer.Json.Utility;
 
@@ -32,6 +35,9 @@ namespace Mycelium.SDK.Serializer.Json
         /// <param name="reader">
         /// The JSON reader positioned on the object-start token.
         /// </param>
+        /// <param name="loggerFactory">
+        /// The optional logger factory used to produce missing-property diagnostics.
+        /// </param>
         /// <returns>
         /// The deserialized DTO.
         /// </returns>
@@ -42,14 +48,36 @@ namespace Mycelium.SDK.Serializer.Json
         /// Thrown when the exact <c>@type</c> discriminator does not identify
         /// <see cref="FunctionalProject" />.
         /// </exception>
-        internal static IThing DeSerialize(ref Utf8JsonReader reader)
+        internal static IThing DeSerialize(ref Utf8JsonReader reader, ILoggerFactory loggerFactory = null)
         {
             Utf8JsonReaderHelper.Expect(ref reader, JsonTokenType.StartObject);
+
+            var logger = loggerFactory == null
+                ? NullLogger.Instance
+                : loggerFactory.CreateLogger("FunctionalProjectDeSerializer");
 
             var dto = new FunctionalProject();
             var hasType = false;
             var hasId = false;
             var hasEndObject = false;
+
+            var hasBelongsTo = false;
+            var hasBranchRules = false;
+            var hasCreatedBy = false;
+            var hasCreatedOn = false;
+            var hasCurrentMode = false;
+            var hasDefines = false;
+            var hasDescription = false;
+            var hasEngineeringProjectId = false;
+            var hasInvolves = false;
+            var hasLifecycle = false;
+            var hasName = false;
+            var hasPolicy = false;
+            var hasReviews = false;
+            var hasSharedPreferences = false;
+            var hasUpdatedBy = false;
+            var hasUpdatedOn = false;
+            var hasVisibility = false;
 
             while (reader.Read())
             {
@@ -101,6 +129,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.BelongsTo = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasBelongsTo = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("branchRules"u8))
@@ -129,6 +158,7 @@ namespace Mycelium.SDK.Serializer.Json
                         throw new JsonException("The branchRules array is incomplete.");
                     }
 
+                    hasBranchRules = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("createdBy"u8))
@@ -137,6 +167,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.CreatedBy = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasCreatedBy = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("createdOn"u8))
@@ -145,6 +176,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.CreatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
 
+                    hasCreatedOn = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("currentMode"u8))
@@ -153,6 +185,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.CurrentMode = ProjectModeDeSerializer.DeSerialize(ref reader);
 
+                    hasCurrentMode = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("defines"u8))
@@ -181,6 +214,7 @@ namespace Mycelium.SDK.Serializer.Json
                         throw new JsonException("The defines array is incomplete.");
                     }
 
+                    hasDefines = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("description"u8))
@@ -189,6 +223,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Description = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
 
+                    hasDescription = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("engineeringProjectId"u8))
@@ -197,6 +232,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.EngineeringProjectId = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasEngineeringProjectId = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("involves"u8))
@@ -225,6 +261,7 @@ namespace Mycelium.SDK.Serializer.Json
                         throw new JsonException("The involves array is incomplete.");
                     }
 
+                    hasInvolves = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("lifecycle"u8))
@@ -233,6 +270,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Lifecycle = ProjectLifecycleKindDeSerializer.DeSerialize(ref reader);
 
+                    hasLifecycle = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("name"u8))
@@ -241,6 +279,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Name = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
 
+                    hasName = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("policy"u8))
@@ -249,6 +288,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Policy = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasPolicy = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("reviews"u8))
@@ -277,6 +317,7 @@ namespace Mycelium.SDK.Serializer.Json
                         throw new JsonException("The reviews array is incomplete.");
                     }
 
+                    hasReviews = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("sharedPreferences"u8))
@@ -285,6 +326,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.SharedPreferences = Utf8JsonReaderHelper.ReadStringDictionary(ref reader);
 
+                    hasSharedPreferences = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("updatedBy"u8))
@@ -293,6 +335,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.UpdatedBy = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasUpdatedBy = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("updatedOn"u8))
@@ -301,6 +344,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.UpdatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
 
+                    hasUpdatedOn = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("visibility"u8))
@@ -309,6 +353,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Visibility = ProjectVisibilityDeSerializer.DeSerialize(ref reader);
 
+                    hasVisibility = true;
                     continue;
                 }
 
@@ -329,6 +374,143 @@ namespace Mycelium.SDK.Serializer.Json
             if (!hasId)
             {
                 throw new JsonException("The required @id metadata property is missing.");
+            }
+
+            if (!hasBelongsTo)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "belongsTo",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasBranchRules)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "branchRules",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasCreatedBy)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "createdBy",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasCreatedOn)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "createdOn",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasCurrentMode)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "currentMode",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasDefines)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "defines",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasDescription)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "description",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasEngineeringProjectId)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "engineeringProjectId",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasInvolves)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "involves",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasLifecycle)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "lifecycle",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasName)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "name",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasPolicy)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "policy",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasReviews)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "reviews",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasSharedPreferences)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "sharedPreferences",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasUpdatedBy)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "updatedBy",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasUpdatedOn)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "updatedOn",
+                    "FunctionalProject",
+                    dto.Id);
+            }
+            if (!hasVisibility)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "visibility",
+                    "FunctionalProject",
+                    dto.Id);
             }
 
             return dto;

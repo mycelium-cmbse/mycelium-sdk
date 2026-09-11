@@ -17,6 +17,9 @@ namespace Mycelium.SDK.Serializer.Json
     using System.CodeDom.Compiler;
     using System.Text.Json;
 
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+
     using Mycelium.SDK.DTO;
     using Mycelium.SDK.Serializer.Json.Utility;
 
@@ -32,6 +35,9 @@ namespace Mycelium.SDK.Serializer.Json
         /// <param name="reader">
         /// The JSON reader positioned on the object-start token.
         /// </param>
+        /// <param name="loggerFactory">
+        /// The optional logger factory used to produce missing-property diagnostics.
+        /// </param>
         /// <returns>
         /// The deserialized DTO.
         /// </returns>
@@ -42,14 +48,29 @@ namespace Mycelium.SDK.Serializer.Json
         /// Thrown when the exact <c>@type</c> discriminator does not identify
         /// <see cref="Comment" />.
         /// </exception>
-        internal static IThing DeSerialize(ref Utf8JsonReader reader)
+        internal static IThing DeSerialize(ref Utf8JsonReader reader, ILoggerFactory loggerFactory = null)
         {
             Utf8JsonReaderHelper.Expect(ref reader, JsonTokenType.StartObject);
+
+            var logger = loggerFactory == null
+                ? NullLogger.Instance
+                : loggerFactory.CreateLogger("CommentDeSerializer");
 
             var dto = new Comment();
             var hasType = false;
             var hasId = false;
             var hasEndObject = false;
+
+            var hasAuthor = false;
+            var hasCommentStatus = false;
+            var hasContent = false;
+            var hasCreatedBy = false;
+            var hasCreatedOn = false;
+            var hasQuotes = false;
+            var hasReplies = false;
+            var hasTargetElementId = false;
+            var hasUpdatedBy = false;
+            var hasUpdatedOn = false;
 
             while (reader.Read())
             {
@@ -101,6 +122,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Author = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasAuthor = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("commentStatus"u8))
@@ -109,6 +131,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.CommentStatus = CommentStatusDeSerializer.DeSerialize(ref reader);
 
+                    hasCommentStatus = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("content"u8))
@@ -117,6 +140,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Content = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
 
+                    hasContent = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("createdBy"u8))
@@ -125,6 +149,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.CreatedBy = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasCreatedBy = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("createdOn"u8))
@@ -133,6 +158,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.CreatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
 
+                    hasCreatedOn = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("quotes"u8))
@@ -141,6 +167,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.Quotes = Utf8JsonReaderHelper.ReadGuidOrNull(ref reader);
 
+                    hasQuotes = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("replies"u8))
@@ -169,6 +196,7 @@ namespace Mycelium.SDK.Serializer.Json
                         throw new JsonException("The replies array is incomplete.");
                     }
 
+                    hasReplies = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("targetElementId"u8))
@@ -177,6 +205,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.TargetElementId = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasTargetElementId = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("updatedBy"u8))
@@ -185,6 +214,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.UpdatedBy = Utf8JsonReaderHelper.ReadGuid(ref reader);
 
+                    hasUpdatedBy = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("updatedOn"u8))
@@ -193,6 +223,7 @@ namespace Mycelium.SDK.Serializer.Json
 
                     dto.UpdatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
 
+                    hasUpdatedOn = true;
                     continue;
                 }
 
@@ -213,6 +244,87 @@ namespace Mycelium.SDK.Serializer.Json
             if (!hasId)
             {
                 throw new JsonException("The required @id metadata property is missing.");
+            }
+
+            if (!hasAuthor)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "author",
+                    "Comment",
+                    dto.Id);
+            }
+            if (!hasCommentStatus)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "commentStatus",
+                    "Comment",
+                    dto.Id);
+            }
+            if (!hasContent)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "content",
+                    "Comment",
+                    dto.Id);
+            }
+            if (!hasCreatedBy)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "createdBy",
+                    "Comment",
+                    dto.Id);
+            }
+            if (!hasCreatedOn)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "createdOn",
+                    "Comment",
+                    dto.Id);
+            }
+            if (!hasQuotes)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "quotes",
+                    "Comment",
+                    dto.Id);
+            }
+            if (!hasReplies)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "replies",
+                    "Comment",
+                    dto.Id);
+            }
+            if (!hasTargetElementId)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "targetElementId",
+                    "Comment",
+                    dto.Id);
+            }
+            if (!hasUpdatedBy)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "updatedBy",
+                    "Comment",
+                    dto.Id);
+            }
+            if (!hasUpdatedOn)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "updatedOn",
+                    "Comment",
+                    dto.Id);
             }
 
             return dto;
