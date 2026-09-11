@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="{{ #NamedElement.WriteIdentifier this }}DeSerializer.cs" company="Starion Group S.A.">
+//  <copyright file="OwnershipDeSerializer.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -21,13 +21,13 @@ namespace Mycelium.SDK.Serializer.Json
     using Mycelium.SDK.Serializer.Json.Utility;
 
     /// <summary>
-    /// Deserializes an exact <see cref="{{ #NamedElement.WriteIdentifier this }}" /> DTO.
+    /// Deserializes an exact <see cref="Ownership" /> DTO.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    internal static class {{ #NamedElement.WriteIdentifier this }}DeSerializer
+    internal static class OwnershipDeSerializer
     {
         /// <summary>
-        /// Deserializes an exact <see cref="{{ #NamedElement.WriteIdentifier this }}" /> instance.
+        /// Deserializes an exact <see cref="Ownership" /> instance.
         /// </summary>
         /// <param name="reader">
         /// The JSON reader positioned on the object-start token.
@@ -40,13 +40,13 @@ namespace Mycelium.SDK.Serializer.Json
         /// </exception>
         /// <exception cref="NotSupportedException">
         /// Thrown when the exact <c>@type</c> discriminator does not identify
-        /// <see cref="{{ #NamedElement.WriteIdentifier this }}" />.
+        /// <see cref="Ownership" />.
         /// </exception>
         internal static IThing DeSerialize(ref Utf8JsonReader reader)
         {
             Utf8JsonReaderHelper.Expect(ref reader, JsonTokenType.StartObject);
 
-            var dto = new {{ #NamedElement.WriteIdentifier this }}();
+            var dto = new Ownership();
             var hasType = false;
             var hasId = false;
             var hasEndObject = false;
@@ -72,9 +72,9 @@ namespace Mycelium.SDK.Serializer.Json
 
                     var typeName = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
 
-                    if (!string.Equals(typeName, "{{ this.Name }}", StringComparison.Ordinal))
+                    if (!string.Equals(typeName, "Ownership", StringComparison.Ordinal))
                     {
-                        throw new NotSupportedException($"JSON discriminator '{typeName}' is not supported by {{ #NamedElement.WriteIdentifier this }}DeSerializer.");
+                        throw new NotSupportedException($"JSON discriminator '{typeName}' is not supported by OwnershipDeSerializer.");
                     }
 
                     hasType = true;
@@ -95,15 +95,70 @@ namespace Mycelium.SDK.Serializer.Json
                     continue;
                 }
 
-                {{ #with this as | classContext | }}
-                    {{ #each (Class.QueryDtoImplementationProperties this) as | property | }}
-                        {{ #unless (Property.QueryIsIdentifier property) }}
-                            {{ #withPropertyClassContext property classContext }}
-                                {{> json-dto-deserializer-uml-partial-template this}}
-                            {{ /withPropertyClassContext }}
-                        {{ /unless }}
-                    {{ /each }}
-                {{ /with }}
+                if (reader.ValueTextEquals("createdBy"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.CreatedBy = Utf8JsonReaderHelper.ReadGuid(ref reader);
+
+                    continue;
+                }
+                if (reader.ValueTextEquals("createdOn"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.CreatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
+
+                    continue;
+                }
+                if (reader.ValueTextEquals("description"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.Description = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
+
+                    continue;
+                }
+                if (reader.ValueTextEquals("engineeringMetadataId"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.EngineeringMetadataId = Utf8JsonReaderHelper.ReadGuid(ref reader);
+
+                    continue;
+                }
+                if (reader.ValueTextEquals("name"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.Name = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
+
+                    continue;
+                }
+                if (reader.ValueTextEquals("shortName"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.ShortName = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
+
+                    continue;
+                }
+                if (reader.ValueTextEquals("updatedBy"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.UpdatedBy = Utf8JsonReaderHelper.ReadGuid(ref reader);
+
+                    continue;
+                }
+                if (reader.ValueTextEquals("updatedOn"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.UpdatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
+
+                    continue;
+                }
 
                 Utf8JsonReaderHelper.ReadNext(ref reader);
                 Utf8JsonReaderHelper.SkipValue(ref reader);
