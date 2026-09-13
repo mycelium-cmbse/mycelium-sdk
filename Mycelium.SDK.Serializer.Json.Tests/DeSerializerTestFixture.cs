@@ -169,60 +169,15 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             var sequenceRoundTrip = JsonDeSerializer.DeSerialize(sequenceStream)
                 .ToArray();
 
-            var sequenceComment = (Comment)sequenceRoundTrip[0];
-            var sequenceProjectMember = (ProjectMember)sequenceRoundTrip[1];
-
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(objectRoundTrip.Id, Is.EqualTo(comment.Id));
-
-                Assert.That(objectRoundTrip.Author, Is.EqualTo(comment.Author));
-
-                Assert.That(objectRoundTrip.CommentStatus, Is.EqualTo(comment.CommentStatus));
-
-                Assert.That(objectRoundTrip.Content, Is.EqualTo(comment.Content));
-
-                Assert.That(objectRoundTrip.CreatedBy, Is.EqualTo(comment.CreatedBy));
-
-                Assert.That(objectRoundTrip.CreatedOn, Is.EqualTo(comment.CreatedOn));
-
-                Assert.That(objectRoundTrip.Quotes, Is.EqualTo(comment.Quotes));
-
-                Assert.That(objectRoundTrip.Replies, Is.EqualTo(comment.Replies));
-
-                Assert.That(objectRoundTrip.TargetElementId, Is.EqualTo(comment.TargetElementId));
-
-                Assert.That(objectRoundTrip.UpdatedBy, Is.EqualTo(comment.UpdatedBy));
-
-                Assert.That(objectRoundTrip.UpdatedOn, Is.EqualTo(comment.UpdatedOn));
+                Assert.That(objectRoundTrip, Is.EqualTo(comment).UsingPropertiesComparer());
 
                 Assert.That(sequenceRoundTrip, Has.Length.EqualTo(2));
 
-                Assert.That(sequenceComment.Id, Is.EqualTo(comment.Id));
+                Assert.That(sequenceRoundTrip[0], Is.EqualTo(comment).UsingPropertiesComparer());
 
-                Assert.That(sequenceComment.Content, Is.EqualTo(comment.Content));
-
-                Assert.That(sequenceComment.Replies, Is.EqualTo(comment.Replies));
-
-                Assert.That(sequenceProjectMember.Id, Is.EqualTo(projectMember.Id));
-
-                Assert.That(sequenceProjectMember.ActiveOwnership, Is.EqualTo(projectMember.ActiveOwnership));
-
-                Assert.That(sequenceProjectMember.CreatedBy, Is.EqualTo(projectMember.CreatedBy));
-
-                Assert.That(sequenceProjectMember.CreatedOn, Is.EqualTo(projectMember.CreatedOn));
-
-                Assert.That(sequenceProjectMember.IsPartOf, Is.EqualTo(projectMember.IsPartOf));
-
-                Assert.That(sequenceProjectMember.Owns, Is.EqualTo(projectMember.Owns));
-
-                Assert.That(sequenceProjectMember.Role, Is.EqualTo(projectMember.Role));
-
-                Assert.That(sequenceProjectMember.UpdatedBy, Is.EqualTo(projectMember.UpdatedBy));
-
-                Assert.That(sequenceProjectMember.UpdatedOn, Is.EqualTo(projectMember.UpdatedOn));
-
-                Assert.That(sequenceProjectMember.User, Is.EqualTo(projectMember.User));
+                Assert.That(sequenceRoundTrip[1], Is.EqualTo(projectMember).UsingPropertiesComparer());
 
                 Assert.That(objectStream.CanRead, Is.True);
 
