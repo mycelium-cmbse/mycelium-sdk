@@ -46,14 +46,10 @@ namespace Mycelium.SDK.Serializer.Json
         {
             var value = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
 
-            if (ReviewStatusProvider.TryParse(
-                    value,
-                    out var result)
+            if (ReviewStatusProvider.TryParse(value, out var result)
                 && string.Equals(
                     value,
-                    ReviewStatusProvider
-                        .Format(result)
-                        .ToUpperInvariant(),
+                    ReviewStatusProvider.Format(result).ToUpperInvariant(),
                     StringComparison.Ordinal))
             {
                 return result;
