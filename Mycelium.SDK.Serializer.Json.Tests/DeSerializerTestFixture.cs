@@ -333,7 +333,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             {
                 using var stream = CreateStream(payload);
 
-                Assert.That(() => JsonDeSerializer.DeSerialize(stream), Throws.TypeOf<JsonException>(), payload);
+                Assert.That(() => JsonDeSerializer.DeSerialize(stream), Throws.InstanceOf<JsonException>(), payload);
             }
 
             using var unknownTypeStream = CreateStream("""
