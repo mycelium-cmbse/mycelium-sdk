@@ -144,7 +144,7 @@ namespace Mycelium.SDK.Serializer.Json
         /// <summary>
         /// Deserializes one complete raw UTF-8 payload.
         /// </summary>
-        private IEnumerable<IThing> DeSerializePayload(ReadOnlySpan<byte> payload, CancellationToken cancellationToken)
+        private List<IThing> DeSerializePayload(ReadOnlySpan<byte> payload, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
