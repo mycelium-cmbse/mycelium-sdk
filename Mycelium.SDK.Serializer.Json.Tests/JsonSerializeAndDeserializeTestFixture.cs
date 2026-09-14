@@ -87,7 +87,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 [
                     Guid.Parse("83000000-0000-0000-0000-000000000005"),
                 ],
-                Description = null,
+                Description = "Representative project",
                 EngineeringProjectId = Guid.Parse("83000000-0000-0000-0000-000000000006"),
                 Involves =
                 [
