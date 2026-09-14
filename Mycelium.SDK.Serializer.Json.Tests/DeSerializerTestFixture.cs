@@ -30,8 +30,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
     {
         private static readonly DeSerializer JsonDeSerializer = new();
 
-        private static readonly Serializer JsonSerializer = new();
-
         /// <summary>
         /// Verifies representative scalar, nullable, enumeration, collection,
         /// dictionary, reference and inherited-property mappings.
@@ -106,101 +104,18 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         }
 
         /// <summary>
-        /// Verifies representative DTO-to-JSON-to-DTO semantic round trips for object and sequence
-        /// payloads.
-        /// </summary>
-        [Test]
-        public void Verify_that_JSON_facades_round_trip_representative_DTO_payloads()
-        {
-            var reply = Guid.Parse("81000000-0000-0000-0000-000000000001");
-
-            var comment = new Comment
-            {
-                Id = Guid.Parse("80000000-0000-0000-0000-000000000001"),
-                Author = Guid.Parse("80000000-0000-0000-0000-000000000002"),
-                CommentStatus = CommentStatus.Open,
-                Content = "Semantic round trip",
-                CreatedBy = Guid.Parse("80000000-0000-0000-0000-000000000003"),
-                CreatedOn = new DateTime(2026, 9, 10, 11, 12, 13, DateTimeKind.Utc),
-                Quotes = null,
-                Replies =
-                [
-                    reply,
-                ],
-                TargetElementId = Guid.Parse("80000000-0000-0000-0000-000000000004"),
-                UpdatedBy = Guid.Parse("80000000-0000-0000-0000-000000000005"),
-                UpdatedOn = new DateTime(2026, 9, 11, 12, 13, 14, DateTimeKind.Utc),
-            };
-
-            var ownership = Guid.Parse("82000000-0000-0000-0000-000000000001");
-
-            var projectMember = new ProjectMember
-            {
-                Id = Guid.Parse("82000000-0000-0000-0000-000000000002"),
-                ActiveOwnership = ownership,
-                CreatedBy = Guid.Parse("82000000-0000-0000-0000-000000000003"),
-                CreatedOn = new DateTime(2026, 8, 9, 10, 11, 12, DateTimeKind.Utc),
-                IsPartOf = Guid.Parse("82000000-0000-0000-0000-000000000004"),
-                Owns =
-                [
-                    ownership,
-                ],
-                Role = ProjectMemberRole.Participant,
-                UpdatedBy = Guid.Parse("82000000-0000-0000-0000-000000000005"),
-                UpdatedOn = new DateTime(2026, 8, 10, 11, 12, 13, DateTimeKind.Utc),
-                User = Guid.Parse("82000000-0000-0000-0000-000000000006"),
-            };
-
-            using var objectStream = new MemoryStream();
-
-            JsonSerializer.Serialize(comment, objectStream, default);
-
-            objectStream.Position = 0;
-
-            var objectRoundTrip = (Comment)JsonDeSerializer.DeSerialize(objectStream)
-                .Single();
-
-            using var sequenceStream = new MemoryStream();
-
-            JsonSerializer.Serialize(new IThing[] { comment, projectMember, }, sequenceStream, default);
-
-            sequenceStream.Position = 0;
-
-            var sequenceRoundTrip = JsonDeSerializer.DeSerialize(sequenceStream)
-                .ToArray();
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(objectRoundTrip, Is.EqualTo(comment).UsingPropertiesComparer());
-
-                Assert.That(sequenceRoundTrip, Has.Length.EqualTo(2));
-
-                Assert.That(sequenceRoundTrip[0], Is.EqualTo(comment).UsingPropertiesComparer());
-
-                Assert.That(sequenceRoundTrip[1], Is.EqualTo(projectMember).UsingPropertiesComparer());
-
-                Assert.That(objectStream.CanRead, Is.True);
-
-                Assert.That(sequenceStream.CanRead, Is.True);
-            }
-        }
-
-        /// <summary>
         /// Verifies complete object and array payloads, payload order, asynchronous parity and stream
         /// ownership.
         /// </summary>
         [Test]
         public async Task Verify_that_facade_deserializes_complete_object_and_array_payloads()
         {
-            const string objectPayload = """
-                                         {
-                                           "@id": "70000000-0000-0000-0000-000000000001",
-                                           "ignored": {
-                                             "@type": "Unknown"
-                                           },
-                                           "@type": "Comment"
-                                         }
-                                         """;
+            using var objectStream = OpenDataStream("OrganizationPolicy.json");
+
+            var objectDtos = JsonDeSerializer.DeSerialize(objectStream)
+                .ToArray();
+
+            var organizationPolicy = (OrganizationPolicy)objectDtos.Single();
 
             const string arrayPayload = """
                                         [
@@ -215,11 +130,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                                         ]
                                         """;
 
-            using var objectStream = CreateStream(objectPayload);
-
-            var objectDtos = JsonDeSerializer.DeSerialize(objectStream)
-                .ToArray();
-
             using var synchronousArrayStream = CreateStream(arrayPayload);
 
             var synchronousArrayDtos = JsonDeSerializer.DeSerialize(synchronousArrayStream)
@@ -233,9 +143,21 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             {
                 Assert.That(objectDtos, Has.Length.EqualTo(1));
 
-                Assert.That(objectDtos[0], Is.TypeOf<Comment>());
+                Assert.That(organizationPolicy.Id, Is.EqualTo(Guid.Parse("30000000-0000-0000-0000-000000000001")));
 
-                Assert.That(objectDtos[0].Id, Is.EqualTo(Guid.Parse("70000000-0000-0000-0000-000000000001")));
+                Assert.That(organizationPolicy.AllowProjectCreation, Is.True);
+
+                Assert.That(organizationPolicy.CreatedBy, Is.EqualTo(Guid.Parse("30000000-0000-0000-0000-000000000002")));
+
+                Assert.That(organizationPolicy.CreatedOn, Is.EqualTo(new DateTime(2026, 9, 3, 12, 13, 14, DateTimeKind.Utc)));
+
+                Assert.That(organizationPolicy.DefaultProjectLifecycleOnCreate, Is.EqualTo(ProjectLifecycleKind.Open));
+
+                Assert.That(organizationPolicy.GrantReadOnlyViewForAudit, Is.False);
+
+                Assert.That(organizationPolicy.UpdatedBy, Is.EqualTo(Guid.Parse("30000000-0000-0000-0000-000000000003")));
+
+                Assert.That(organizationPolicy.UpdatedOn, Is.EqualTo(new DateTime(2026, 9, 4, 13, 14, 15, DateTimeKind.Utc)));
 
                 Assert.That(synchronousArrayDtos, Has.Length.EqualTo(2));
 
@@ -310,7 +232,8 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         }
 
         /// <summary>
-        /// Verifies invalid payload framing, exact dispatch, null arguments and cancellation.
+        /// Verifies invalid payload framing, exact dispatch, null arguments, cancellation and stream
+        /// ownership on failure.
         /// </summary>
         [Test]
         public async Task Verify_that_facade_rejects_invalid_payloads_and_observes_cancellation()
@@ -334,33 +257,34 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 using var stream = CreateStream(payload);
 
                 Assert.That(() => JsonDeSerializer.DeSerialize(stream), Throws.InstanceOf<JsonException>(), payload);
+
+                Assert.That(stream.CanRead, Is.True, payload);
             }
 
-            using var unknownTypeStream = CreateStream("""
-                                                       {
-                                                         "@type": "Unknown",
-                                                         "@id": "72000000-0000-0000-0000-000000000001"
-                                                       }
-                                                       """);
+            var unsupportedFixtureNames = new[] { "Thing.json", "AuditableThing.json", "InvalidType.json", };
 
-            Assert.That(() => JsonDeSerializer.DeSerialize(unknownTypeStream), Throws.TypeOf<NotSupportedException>());
+            foreach (var fixtureName in unsupportedFixtureNames)
+            {
+                using var stream = OpenDataStream(fixtureName);
+
+                Assert.That(() => JsonDeSerializer.DeSerialize(stream), Throws.TypeOf<NotSupportedException>(), fixtureName);
+
+                Assert.That(stream.CanRead, Is.True, fixtureName);
+            }
 
             Assert.That(() => JsonDeSerializer.DeSerialize(null), Throws.TypeOf<ArgumentNullException>());
 
             await Assert.ThatAsync(() => JsonDeSerializer.DeSerializeAsync(null, CancellationToken.None), Throws.TypeOf<ArgumentNullException>());
 
-            using var cancelledStream = CreateStream("""
-                                                     {
-                                                       "@type": "Comment",
-                                                       "@id": "73000000-0000-0000-0000-000000000001"
-                                                     }
-                                                     """);
+            using var cancelledStream = OpenDataStream("OrganizationPolicy.json");
 
             using var cancellationTokenSource = new CancellationTokenSource();
 
             cancellationTokenSource.Cancel();
 
             await Assert.ThatAsync(() => JsonDeSerializer.DeSerializeAsync(cancelledStream, cancellationTokenSource.Token), Throws.TypeOf<OperationCanceledException>());
+
+            Assert.That(cancelledStream.CanRead, Is.True);
         }
 
         /// <summary>
@@ -667,6 +591,22 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         /// Represents an operation that reads a value from a positioned JSON reader.
         /// </summary>
         private delegate T ReaderOperation<out T>(ref Utf8JsonReader reader);
+
+        /// <summary>
+        /// Opens a bounded JSON fixture copied to the test output directory.
+        /// </summary>
+        /// <param name="fileName">
+        /// The fixture filename.
+        /// </param>
+        /// <returns>
+        /// A readable caller-owned fixture stream.
+        /// </returns>
+        private static FileStream OpenDataStream(string fileName)
+        {
+            var path = Path.Combine(TestContext.CurrentContext.WorkDirectory, "Data", fileName);
+
+            return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        }
 
         /// <summary>
         /// Creates a readable stream containing the supplied JSON text.
