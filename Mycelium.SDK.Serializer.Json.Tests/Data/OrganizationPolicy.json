@@ -1,0 +1,11 @@
+{
+    "@type": "OrganizationPolicy",
+    "@id": "30000000-0000-0000-0000-000000000001",
+    "allowProjectCreation": true,
+    "createdBy": "30000000-0000-0000-0000-000000000002",
+    "createdOn": "2026-09-03T12:13:14.0000000Z",
+    "defaultProjectLifecycleOnCreate": "OPEN",
+    "grantReadOnlyViewForAudit": false,
+    "updatedBy": "30000000-0000-0000-0000-000000000003",
+    "updatedOn": "2026-09-04T13:14:15.0000000Z"
+}

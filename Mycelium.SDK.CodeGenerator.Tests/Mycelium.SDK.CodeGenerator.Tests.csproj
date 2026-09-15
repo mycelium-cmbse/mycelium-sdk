@@ -94,6 +94,13 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="..\Mycelium.SDK.Serializer.Json\AutoGenDeSerializer\**\*"
+              Link="Committed\Mycelium.SDK.Serializer.Json\AutoGenDeSerializer\%(RecursiveDir)%(Filename)%(Extension)">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
         <Folder Include="Committed\Mycelium.SDK.Extensions\AutoGenEnumProvider\"/>
     </ItemGroup>
 

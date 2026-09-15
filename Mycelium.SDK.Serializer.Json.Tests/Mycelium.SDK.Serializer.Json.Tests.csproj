@@ -40,4 +40,10 @@
         <ProjectReference Include="..\Mycelium.SDK.Serializer.Json\Mycelium.SDK.Serializer.Json.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <None Update="Data\*.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
 </Project>
