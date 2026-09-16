@@ -90,7 +90,7 @@ namespace Mycelium.SDK.Serializer.Json
 
             try
             {
-                var context = new PayloadReaderContext();
+                using var context = new PayloadReaderContext();
                 var readerState = new JsonReaderState();
                 var bufferedByteCount = 0;
                 var isFinalBlock = false;
@@ -163,7 +163,7 @@ namespace Mycelium.SDK.Serializer.Json
 
             try
             {
-                var context = new PayloadReaderContext();
+                using var context = new PayloadReaderContext();
                 var readerState = new JsonReaderState();
                 var bufferedByteCount = 0;
                 var isFinalBlock = false;
@@ -485,17 +485,35 @@ namespace Mycelium.SDK.Serializer.Json
         /// <summary>
         /// Retains parser state, materialized DTOs and at most one raw DTO object.
         /// </summary>
-        private sealed class PayloadReaderContext
+        private sealed class PayloadReaderContext : IDisposable
         {
             /// <summary>
-            /// The raw UTF-8 bytes retained for the current DTO object.
+            /// Whether this context has returned its object buffer to the shared pool.
             /// </summary>
-            private readonly ArrayBufferWriter<byte> objectBuffer = new(InitialReadBufferSize);
+            private bool isDisposed;
+
+            /// <summary>
+            /// The pooled buffer containing raw UTF-8 bytes for the current DTO object.
+            /// </summary>
+            private byte[] objectBuffer;
+
+            /// <summary>
+            /// The number of populated bytes in <see cref="objectBuffer" />.
+            /// </summary>
+            private int objectByteCount;
 
             /// <summary>
             /// The payload's root representation.
             /// </summary>
             private RootKind rootKind;
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="PayloadReaderContext" /> class.
+            /// </summary>
+            internal PayloadReaderContext()
+            {
+                this.objectBuffer = ArrayPool<byte>.Shared.Rent(InitialReadBufferSize);
+            }
 
             /// <summary>
             /// Gets the materialized DTOs in payload order.
@@ -521,6 +539,25 @@ namespace Mycelium.SDK.Serializer.Json
             /// Gets the JSON depth at which the retained DTO object began.
             /// </summary>
             internal int CurrentObjectDepth { get; private set; }
+
+            /// <summary>
+            /// Returns the rented object buffer to the shared pool.
+            /// </summary>
+            public void Dispose()
+            {
+                if (this.isDisposed)
+                {
+                    return;
+                }
+
+                ArrayPool<byte>.Shared.Return(this.objectBuffer);
+
+                this.objectBuffer = Array.Empty<byte>();
+                this.objectByteCount = 0;
+                this.isDisposed = true;
+
+                GC.SuppressFinalize(this);
+            }
 
             /// <summary>
             /// Begins retaining an object-root payload.
@@ -553,7 +590,18 @@ namespace Mycelium.SDK.Serializer.Json
             /// <param name="bytes">
             /// The bytes to append.
             /// </param>
-            internal void AppendObjectBytes(ReadOnlySpan<byte> bytes) => this.objectBuffer.Write(bytes);
+            internal void AppendObjectBytes(ReadOnlySpan<byte> bytes)
+            {
+                if (bytes.IsEmpty)
+                {
+                    return;
+                }
+
+                this.EnsureObjectCapacity(bytes.Length);
+
+                bytes.CopyTo(this.objectBuffer.AsSpan(this.objectByteCount));
+                this.objectByteCount = checked(this.objectByteCount + bytes.Length);
+            }
 
             /// <summary>
             /// Deserializes the retained object and adds it to the materialized results.
@@ -568,12 +616,12 @@ namespace Mycelium.SDK.Serializer.Json
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var result = deSerializer.DeSerializeObjectPayload(this.objectBuffer.WrittenSpan);
+                var result = deSerializer.DeSerializeObjectPayload(this.objectBuffer.AsSpan(0, this.objectByteCount));
 
                 cancellationToken.ThrowIfCancellationRequested();
 
                 this.Results.Add(result);
-                this.objectBuffer.Clear();
+                this.objectByteCount = 0;
                 this.IsCapturingObject = false;
 
                 if (this.rootKind == RootKind.Object)
@@ -618,9 +666,33 @@ namespace Mycelium.SDK.Serializer.Json
             /// </param>
             private void BeginObject(int depth)
             {
-                this.objectBuffer.Clear();
+                this.objectByteCount = 0;
                 this.CurrentObjectDepth = depth;
                 this.IsCapturingObject = true;
+            }
+
+            /// <summary>
+            /// Expands the pooled object buffer when the current DTO exceeds its capacity.
+            /// </summary>
+            /// <param name="additionalByteCount">
+            /// The number of bytes that must be appended.
+            /// </param>
+            private void EnsureObjectCapacity(int additionalByteCount)
+            {
+                var requiredByteCount = checked(this.objectByteCount + additionalByteCount);
+
+                if (requiredByteCount <= this.objectBuffer.Length)
+                {
+                    return;
+                }
+
+                var expandedBuffer = ArrayPool<byte>.Shared.Rent(Math.Max(requiredByteCount, checked(this.objectBuffer.Length * 2)));
+
+                this.objectBuffer.AsSpan(0, this.objectByteCount)
+                    .CopyTo(expandedBuffer);
+
+                ArrayPool<byte>.Shared.Return(this.objectBuffer);
+                this.objectBuffer = expandedBuffer;
             }
         }
     }
