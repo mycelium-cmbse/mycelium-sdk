@@ -18,9 +18,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
     using Mycelium.SDK.DTO;
 
-    /// <summary>
-    /// Verifies incremental public JSON deserialization.
-    /// </summary>
     [TestFixture]
     public class IncrementalDeSerializerTestFixture
     {

@@ -16,9 +16,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
     using Mycelium.SDK.DTO;
 
-    /// <summary>
-    /// Verifies representative semantic round trips through the public JSON facades.
-    /// </summary>
     [TestFixture]
     public class JsonSerializeAndDeserializeTestFixture
     {
@@ -26,10 +23,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
         private static readonly Serializer JsonSerializer = new();
 
-        /// <summary>
-        /// Verifies representative DTO-to-JSON-to-DTO semantic round trips for object and sequence
-        /// payloads.
-        /// </summary>
         [Test]
         public void Verify_that_JSON_facades_round_trip_representative_DTO_payloads()
         {

@@ -23,7 +23,6 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
     using BenchmarkDotNet.Configs;
 
     using Mycelium.SDK.DTO;
-    using Mycelium.SDK.Serializer.Json;
 
     /// <summary>
     /// Configures metrics that supplement BenchmarkDotNet's default timing columns.
@@ -435,20 +434,44 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
     /// </summary>
     internal static class JsonPayloadFactory
     {
+        /// <summary>
+        /// The deterministic creation timestamp written to generated payloads.
+        /// </summary>
         private const string CreatedOn = "2026-01-02T03:04:05.0000000Z";
 
+        /// <summary>
+        /// The deterministic update timestamp written to generated payloads.
+        /// </summary>
         private const string UpdatedOn = "2026-02-03T04:05:06.0000000Z";
 
+        /// <summary>
+        /// The deterministic author identifier written to generated payloads.
+        /// </summary>
         private static readonly Guid Author = Guid.Parse("10000000-0000-0000-0000-000000000001");
 
+        /// <summary>
+        /// The deterministic creator identifier written to generated payloads.
+        /// </summary>
         private static readonly Guid CreatedBy = Guid.Parse("10000000-0000-0000-0000-000000000002");
 
+        /// <summary>
+        /// The first deterministic reply identifier written to generated payloads.
+        /// </summary>
         private static readonly Guid FirstReply = Guid.Parse("10000000-0000-0000-0000-000000000003");
 
+        /// <summary>
+        /// The second deterministic reply identifier written to generated payloads.
+        /// </summary>
         private static readonly Guid SecondReply = Guid.Parse("10000000-0000-0000-0000-000000000004");
 
+        /// <summary>
+        /// The deterministic target-element identifier written to generated payloads.
+        /// </summary>
         private static readonly Guid TargetElementId = Guid.Parse("10000000-0000-0000-0000-000000000005");
 
+        /// <summary>
+        /// The deterministic updater identifier written to generated payloads.
+        /// </summary>
         private static readonly Guid UpdatedBy = Guid.Parse("10000000-0000-0000-0000-000000000006");
 
         /// <summary>

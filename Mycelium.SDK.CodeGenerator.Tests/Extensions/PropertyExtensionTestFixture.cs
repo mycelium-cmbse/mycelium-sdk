@@ -1,9 +1,9 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="PropertyExtensionTestFixture.cs" company="Starion Group S.A.">
-// 
+//
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-// 
+//
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
@@ -29,8 +29,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             var result = XmiLoadingTestFixture.ReadFunctionalData();
             var functionalData = XmiLoadingTestFixture.QueryFunctionalDataPackage(result);
 
-            this.classes = functionalData.PackagedElement
-                .OfType<IClass>()
+            this.classes = functionalData.PackagedElement.OfType<IClass>()
                 .ToArray();
 
             this.roleProperty = this.QueryProperty("ProjectMember", "role");
@@ -72,23 +71,32 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         {
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(this.QueryProperty("ProjectMember", "activeOwnership").QueryPocoTypeName(), Is.EqualTo("IOwnership"));
+                Assert.That(this.QueryProperty("ProjectMember", "activeOwnership")
+                    .QueryPocoTypeName(), Is.EqualTo("IOwnership"));
 
-                Assert.That(this.QueryProperty("ProjectMember", "owns").QueryPocoTypeName(), Is.EqualTo("List<IOwnership>"));
+                Assert.That(this.QueryProperty("ProjectMember", "owns")
+                    .QueryPocoTypeName(), Is.EqualTo("List<IOwnership>"));
 
-                Assert.That(this.QueryProperty("ProjectMember", "role").QueryPocoTypeName(), Is.EqualTo("ProjectMemberRole"));
+                Assert.That(this.QueryProperty("ProjectMember", "role")
+                    .QueryPocoTypeName(), Is.EqualTo("ProjectMemberRole"));
 
-                Assert.That(this.QueryProperty("BranchProtectionRule", "mergeAllowedFor").QueryPocoTypeName(), Is.EqualTo("List<ProjectMemberRole>"));
+                Assert.That(this.QueryProperty("BranchProtectionRule", "mergeAllowedFor")
+                    .QueryPocoTypeName(), Is.EqualTo("List<ProjectMemberRole>"));
 
-                Assert.That(this.QueryProperty("Thing", "id").QueryPocoTypeName(), Is.EqualTo("Guid"));
+                Assert.That(this.QueryProperty("Thing", "id")
+                    .QueryPocoTypeName(), Is.EqualTo("Guid"));
 
-                Assert.That(this.QueryProperty("AuditableThing", "createdOn").QueryPocoTypeName(), Is.EqualTo("DateTime"));
+                Assert.That(this.QueryProperty("AuditableThing", "createdOn")
+                    .QueryPocoTypeName(), Is.EqualTo("DateTime"));
 
-                Assert.That(this.QueryProperty("BranchProtectionRule", "minimumRequiredApproval").QueryPocoTypeName(), Is.EqualTo("int"));
+                Assert.That(this.QueryProperty("BranchProtectionRule", "minimumRequiredApproval")
+                    .QueryPocoTypeName(), Is.EqualTo("int"));
 
-                Assert.That(this.QueryProperty("BranchProtectionRule", "name").QueryPocoTypeName(), Is.EqualTo("string"));
+                Assert.That(this.QueryProperty("BranchProtectionRule", "name")
+                    .QueryPocoTypeName(), Is.EqualTo("string"));
 
-                Assert.That(this.QueryProperty("FunctionalProject", "sharedPreferences").QueryPocoTypeName(), Is.EqualTo("Dictionary<string,string>"));
+                Assert.That(this.QueryProperty("FunctionalProject", "sharedPreferences")
+                    .QueryPocoTypeName(), Is.EqualTo("Dictionary<string,string>"));
             }
         }
 
@@ -121,23 +129,10 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             Assert.That(() => property.QueryPropertyName(), Throws.ArgumentNullException);
         }
 
-        /// <summary>
-        /// Queries a directly owned property from the loaded FunctionalData model.
-        /// </summary>
-        /// <param name="className">
-        /// The owning UML class name.
-        /// </param>
-        /// <param name="propertyName">
-        /// The UML property name.
-        /// </param>
-        /// <returns>
-        /// The matching directly owned UML property.
-        /// </returns>
         private IProperty QueryProperty(string className, string propertyName)
         {
-            return this.classes
-                .Single(umlClass => umlClass.Name == className).OwnedAttribute
-                .Single(property => property.Name == propertyName);
+            return this.classes.Single(umlClass => umlClass.Name == className)
+                .OwnedAttribute.Single(property => property.Name == propertyName);
         }
     }
 }

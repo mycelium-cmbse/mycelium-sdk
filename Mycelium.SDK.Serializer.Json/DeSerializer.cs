@@ -70,6 +70,15 @@ namespace Mycelium.SDK.Serializer.Json
         /// A materialized sequence containing one DTO for an object root or every DTO for an array
         /// root.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="stream" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="JsonException">
+        /// Thrown when the JSON payload is malformed or violates the JSON DTO contract.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when an exact <c>@type</c> discriminator is not supported.
+        /// </exception>
         public IEnumerable<IThing> DeSerialize(Stream stream)
         {
             if (stream == null)
@@ -129,6 +138,18 @@ namespace Mycelium.SDK.Serializer.Json
         /// A task whose result is a materialized sequence containing one DTO for an object root or
         /// every DTO for an array root.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="stream" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="JsonException">
+        /// Thrown when the JSON payload is malformed or violates the JSON DTO contract.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when an exact <c>@type</c> discriminator is not supported.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">
+        /// Thrown when <paramref name="cancellationToken" /> is cancelled.
+        /// </exception>
         public async Task<IEnumerable<IThing>> DeSerializeAsync(Stream stream, CancellationToken cancellationToken)
         {
             if (stream == null)
@@ -184,6 +205,24 @@ namespace Mycelium.SDK.Serializer.Json
         /// <summary>
         /// Processes every complete token currently available in the read buffer.
         /// </summary>
+        /// <param name="buffer">
+        /// The currently buffered UTF-8 JSON input.
+        /// </param>
+        /// <param name="isFinalBlock">
+        /// Whether the buffer contains the final input block.
+        /// </param>
+        /// <param name="readerState">
+        /// The JSON reader state carried between input blocks.
+        /// </param>
+        /// <param name="context">
+        /// The state and results for the current deserialization operation.
+        /// </param>
+        /// <param name="cancellationToken">
+        /// The token used to cancel the operation.
+        /// </param>
+        /// <returns>
+        /// The number of bytes consumed from <paramref name="buffer" />.
+        /// </returns>
         private int ProcessBuffer(ReadOnlySpan<byte> buffer, bool isFinalBlock, ref JsonReaderState readerState, PayloadReaderContext context, CancellationToken cancellationToken)
         {
             var reader = new Utf8JsonReader(buffer, isFinalBlock, readerState);
@@ -262,6 +301,12 @@ namespace Mycelium.SDK.Serializer.Json
         /// <summary>
         /// Deserializes one buffered DTO object through the generated provider.
         /// </summary>
+        /// <param name="payload">
+        /// The complete UTF-8 JSON object payload.
+        /// </param>
+        /// <returns>
+        /// The deserialized DTO.
+        /// </returns>
         private IThing DeSerializeObjectPayload(ReadOnlySpan<byte> payload)
         {
             var reader = new Utf8JsonReader(payload);
@@ -289,6 +334,12 @@ namespace Mycelium.SDK.Serializer.Json
         /// <summary>
         /// Deserializes the DTO object on which the reader is positioned.
         /// </summary>
+        /// <param name="reader">
+        /// The JSON reader positioned on the object's opening token.
+        /// </param>
+        /// <returns>
+        /// The deserialized DTO.
+        /// </returns>
         private IThing DeSerializeObject(ref Utf8JsonReader reader)
         {
             var typeName = ReadTypeName(ref reader);
@@ -300,6 +351,12 @@ namespace Mycelium.SDK.Serializer.Json
         /// <summary>
         /// Reads the unique top-level discriminator without advancing the original reader.
         /// </summary>
+        /// <param name="reader">
+        /// The JSON reader positioned on the object's opening token.
+        /// </param>
+        /// <returns>
+        /// The exact DTO type name from the <c>@type</c> property.
+        /// </returns>
         private static string ReadTypeName(ref Utf8JsonReader reader)
         {
             var discriminatorReader = reader;
@@ -356,6 +413,12 @@ namespace Mycelium.SDK.Serializer.Json
         /// <summary>
         /// Expands the pooled read buffer when an incomplete token occupies the complete buffer.
         /// </summary>
+        /// <param name="readBuffer">
+        /// The pooled buffer to expand when it is full.
+        /// </param>
+        /// <param name="bufferedByteCount">
+        /// The number of populated bytes in <paramref name="readBuffer" />.
+        /// </param>
         private static void EnsureReadCapacity(ref byte[] readBuffer, int bufferedByteCount)
         {
             if (bufferedByteCount < readBuffer.Length)
@@ -374,6 +437,18 @@ namespace Mycelium.SDK.Serializer.Json
         /// <summary>
         /// Moves bytes belonging to an incomplete token to the start of the read buffer.
         /// </summary>
+        /// <param name="readBuffer">
+        /// The pooled input buffer.
+        /// </param>
+        /// <param name="bufferedByteCount">
+        /// The number of populated bytes in <paramref name="readBuffer" />.
+        /// </param>
+        /// <param name="consumedByteCount">
+        /// The number of bytes already consumed by the JSON reader.
+        /// </param>
+        /// <returns>
+        /// The number of bytes retained for the next read.
+        /// </returns>
         private static int MoveRemainingBytes(byte[] readBuffer, int bufferedByteCount, int consumedByteCount)
         {
             var remainingByteCount = bufferedByteCount - consumedByteCount;
@@ -391,8 +466,19 @@ namespace Mycelium.SDK.Serializer.Json
         /// </summary>
         private enum RootKind
         {
+            /// <summary>
+            /// No root token has been read.
+            /// </summary>
             None,
+
+            /// <summary>
+            /// The payload has an object root.
+            /// </summary>
             Object,
+
+            /// <summary>
+            /// The payload has an array root.
+            /// </summary>
             Array,
         }
 
@@ -401,32 +487,83 @@ namespace Mycelium.SDK.Serializer.Json
         /// </summary>
         private sealed class PayloadReaderContext
         {
+            /// <summary>
+            /// The raw UTF-8 bytes retained for the current DTO object.
+            /// </summary>
             private readonly ArrayBufferWriter<byte> objectBuffer = new(InitialReadBufferSize);
 
+            /// <summary>
+            /// The payload's root representation.
+            /// </summary>
             private RootKind rootKind;
 
+            /// <summary>
+            /// Gets the materialized DTOs in payload order.
+            /// </summary>
             internal List<IThing> Results { get; } = [];
 
+            /// <summary>
+            /// Gets whether the payload's opening root token has been read.
+            /// </summary>
             internal bool RootStarted => this.rootKind != RootKind.None;
 
+            /// <summary>
+            /// Gets whether the complete payload root has been read.
+            /// </summary>
             internal bool RootComplete { get; private set; }
 
+            /// <summary>
+            /// Gets whether raw bytes are being retained for a DTO object.
+            /// </summary>
             internal bool IsCapturingObject { get; private set; }
 
+            /// <summary>
+            /// Gets the JSON depth at which the retained DTO object began.
+            /// </summary>
             internal int CurrentObjectDepth { get; private set; }
 
+            /// <summary>
+            /// Begins retaining an object-root payload.
+            /// </summary>
+            /// <param name="depth">
+            /// The JSON depth at which the object began.
+            /// </param>
             internal void BeginObjectRoot(int depth)
             {
                 this.rootKind = RootKind.Object;
                 this.BeginObject(depth);
             }
 
+            /// <summary>
+            /// Records that the payload has an array root.
+            /// </summary>
             internal void BeginArrayRoot() => this.rootKind = RootKind.Array;
 
+            /// <summary>
+            /// Begins retaining an object contained by the array root.
+            /// </summary>
+            /// <param name="depth">
+            /// The JSON depth at which the object began.
+            /// </param>
             internal void BeginArrayObject(int depth) => this.BeginObject(depth);
 
+            /// <summary>
+            /// Appends raw UTF-8 bytes belonging to the current DTO object.
+            /// </summary>
+            /// <param name="bytes">
+            /// The bytes to append.
+            /// </param>
             internal void AppendObjectBytes(ReadOnlySpan<byte> bytes) => this.objectBuffer.Write(bytes);
 
+            /// <summary>
+            /// Deserializes the retained object and adds it to the materialized results.
+            /// </summary>
+            /// <param name="deSerializer">
+            /// The facade used to dispatch the complete object payload.
+            /// </param>
+            /// <param name="cancellationToken">
+            /// The token used to cancel the operation.
+            /// </param>
             internal void CompleteObject(DeSerializer deSerializer, CancellationToken cancellationToken)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -445,8 +582,14 @@ namespace Mycelium.SDK.Serializer.Json
                 }
             }
 
+            /// <summary>
+            /// Records that the complete array root has been read.
+            /// </summary>
             internal void CompleteArray() => this.RootComplete = true;
 
+            /// <summary>
+            /// Verifies that the input ended after one complete object-or-array root.
+            /// </summary>
             internal void ValidateCompleteInput()
             {
                 if (!this.RootStarted)
@@ -467,6 +610,12 @@ namespace Mycelium.SDK.Serializer.Json
                 throw new JsonException("The JSON DTO object is incomplete.");
             }
 
+            /// <summary>
+            /// Resets object retention and records the object's starting depth.
+            /// </summary>
+            /// <param name="depth">
+            /// The JSON depth at which the object began.
+            /// </param>
             private void BeginObject(int depth)
             {
                 this.objectBuffer.Clear();
