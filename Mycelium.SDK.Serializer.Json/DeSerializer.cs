@@ -238,7 +238,9 @@ namespace Mycelium.SDK.Serializer.Json
                     {
                         var objectEnd = checked((int)reader.BytesConsumed);
 
-                        context.CompleteObject(this, buffer.Slice(captureStart, objectEnd - captureStart), cancellationToken);
+                        context.AppendObjectBytes(buffer.Slice(captureStart, objectEnd - captureStart));
+
+                        context.CompleteObject(this, cancellationToken);
                         captureStart = -1;
                     }
 
@@ -602,33 +604,19 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             /// <summary>
-            /// Deserializes a complete object directly from the read buffer or from retained fragments and adds it to the materialized results.
+            /// Deserializes the retained object and adds it to the materialized results.
             /// </summary>
             /// <param name="deSerializer">
             /// The facade used to dispatch the complete object payload.
             /// </param>
-            /// <param name="finalBytes">
-            /// The bytes through the object's closing token in the current read buffer. These contain the complete object when no earlier bytes were retained.
-            /// </param>
             /// <param name="cancellationToken">
             /// The token used to cancel the operation.
             /// </param>
-            internal void CompleteObject(DeSerializer deSerializer, ReadOnlySpan<byte> finalBytes, CancellationToken cancellationToken)
+            internal void CompleteObject(DeSerializer deSerializer, CancellationToken cancellationToken)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                IThing result;
-
-                if (this.objectByteCount == 0)
-                {
-                    result = deSerializer.DeSerializeObjectPayload(finalBytes);
-                }
-                else
-                {
-                    this.AppendObjectBytes(finalBytes);
-
-                    result = deSerializer.DeSerializeObjectPayload(this.objectBuffer.AsSpan(0, this.objectByteCount));
-                }
+                var result = deSerializer.DeSerializeObjectPayload(this.objectBuffer.AsSpan(0, this.objectByteCount));
 
                 cancellationToken.ThrowIfCancellationRequested();
 

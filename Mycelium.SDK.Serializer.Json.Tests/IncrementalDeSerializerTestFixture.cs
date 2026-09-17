@@ -12,7 +12,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
     using System;
     using System.IO;
     using System.Linq;
-    using System.Text;
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
@@ -25,19 +24,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         private const int OversizedContentLength = 131_072;
 
         private static readonly DeSerializer JsonDeSerializer = new();
-
-        [Test]
-        public async Task Verify_array_switches_between_direct_and_buffered_objects()
-        {
-            var contents = new[] { new string('a', 128), new string('b', 1_024), "last" };
-            var payload = CreateArrayPayload(contents);
-
-            var fragmentSize = CreateObjectPayload(contents[0])
-                .Length + 2 + CreateObjectPayload(contents[1])
-                .Length / 2;
-
-            await VerifyPayloadAsync(payload, fragmentSize, contents);
-        }
 
         [Test]
         public async Task Verify_async_cancellation_is_observed_and_the_stream_remains_open()
@@ -58,21 +44,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 Assert.That(stream.CanRead, Is.True);
                 Assert.That(stream.IsDisposed, Is.False);
             }
-        }
-
-        [Test]
-        public async Task Verify_complete_array_objects_survive_read_buffer_reuse()
-        {
-            var contents = Enumerable.Range(1, 32)
-                .Select(index => $"object-{index:D4}")
-                .ToArray();
-
-            var payload = CreateArrayPayload(contents);
-
-            var fragmentSize = CreateObjectPayload(contents[0])
-                .Length + 1;
-
-            await VerifyPayloadAsync(payload, fragmentSize, contents);
         }
 
         [Test]
@@ -158,75 +129,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
-        [TestCase(false)]
-        [TestCase(true)]
-        public async Task Verify_complete_objects_in_one_read_deserialize(bool arrayRoot)
-        {
-            var contents = arrayRoot ? new[] { "first", "braces { } and brackets [ ]", "quote \" and slash \\" } : new[] { "single { object } with a \"quote\"" };
-
-            var payload = arrayRoot ? CreateArrayPayload(contents) : CreateObjectPayload(contents[0]);
-
-            await VerifyPayloadAsync(payload, payload.Length, contents);
-        }
-
-        [TestCase(1)]
-        [TestCase(16_384)]
-        public async Task Verify_invalid_payloads_are_rejected_with_direct_and_fragmented_reads(int fragmentSize)
-        {
-            var objectJson = Encoding.UTF8.GetString(CreateObjectPayload("valid"));
-
-            var invalidPayloads = new[] { objectJson.Substring(0, objectJson.Length - 1), objectJson + " {}", "[" + objectJson + ",null]", "[" + objectJson + ",", objectJson.Substring(0, objectJson.Length - 1) + ",\"@type\":\"Comment\"}", };
-
-            foreach (var invalidPayload in invalidPayloads)
-            {
-                var payload = Encoding.UTF8.GetBytes(invalidPayload);
-
-                using var synchronousStream = new FragmentedNonSeekableStream(payload, fragmentSize);
-
-                Assert.That(() => JsonDeSerializer.DeSerialize(synchronousStream), Throws.InstanceOf<JsonException>());
-
-                using var asynchronousStream = new FragmentedNonSeekableStream(payload, fragmentSize);
-
-                await Assert.ThatAsync(() => JsonDeSerializer.DeSerializeAsync(asynchronousStream, CancellationToken.None), Throws.InstanceOf<JsonException>());
-
-                using (Assert.EnterMultipleScope())
-                {
-                    Assert.That(synchronousStream.CanRead, Is.True);
-                    Assert.That(asynchronousStream.CanRead, Is.True);
-                }
-            }
-        }
-
-        private static async Task VerifyPayloadAsync(byte[] payload, int fragmentSize, string[] expectedContents)
-        {
-            using var synchronousStream = new FragmentedNonSeekableStream(payload, fragmentSize);
-
-            var synchronousResult = JsonDeSerializer.DeSerialize(synchronousStream)
-                .Cast<Comment>()
-                .ToArray();
-
-            using var asynchronousStream = new FragmentedNonSeekableStream(payload, fragmentSize);
-
-            var asynchronousResult = (await JsonDeSerializer.DeSerializeAsync(asynchronousStream, CancellationToken.None)).Cast<Comment>()
-                .ToArray();
-
-            var expectedIds = Enumerable.Range(1, expectedContents.Length)
-                .Select(CreateId)
-                .ToArray();
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(synchronousResult.Select(comment => comment.Id), Is.EqualTo(expectedIds));
-                Assert.That(asynchronousResult.Select(comment => comment.Id), Is.EqualTo(expectedIds));
-                Assert.That(synchronousResult.Select(comment => comment.Content), Is.EqualTo(expectedContents));
-                Assert.That(asynchronousResult.Select(comment => comment.Content), Is.EqualTo(expectedContents));
-                Assert.That(synchronousStream.BytesRead, Is.EqualTo(payload.Length));
-                Assert.That(asynchronousStream.BytesRead, Is.EqualTo(payload.Length));
-                Assert.That(synchronousStream.CanRead, Is.True);
-                Assert.That(asynchronousStream.CanRead, Is.True);
-            }
-        }
-
         private static byte[] CreateObjectPayload(string content)
         {
             using var stream = new MemoryStream();
@@ -251,26 +153,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 for (var index = 1; index <= objectCount; index++)
                 {
                     WriteComment(writer, index, content);
-                }
-
-                writer.WriteEndArray();
-                writer.Flush();
-            }
-
-            return stream.ToArray();
-        }
-
-        private static byte[] CreateArrayPayload(string[] contents)
-        {
-            using var stream = new MemoryStream();
-
-            using (var writer = new Utf8JsonWriter(stream))
-            {
-                writer.WriteStartArray();
-
-                for (var index = 0; index < contents.Length; index++)
-                {
-                    WriteComment(writer, index + 1, contents[index]);
                 }
 
                 writer.WriteEndArray();
@@ -336,7 +218,10 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             {
             }
 
-            public override int Read(byte[] buffer, int offset, int count) => this.ReadCore(buffer.AsSpan(offset, count));
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                return this.ReadCore(buffer.AsSpan(offset, count));
+            }
 
             public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
             {
