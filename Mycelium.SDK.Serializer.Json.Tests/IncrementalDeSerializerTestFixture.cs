@@ -37,7 +37,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
             cancellationTokenSource.Cancel();
 
-            await Assert.ThatAsync(() => operation, Throws.TypeOf<OperationCanceledException>());
+            await Assert.ThatAsync(() => operation, Throws.InstanceOf<OperationCanceledException>());
 
             using (Assert.EnterMultipleScope())
             {
