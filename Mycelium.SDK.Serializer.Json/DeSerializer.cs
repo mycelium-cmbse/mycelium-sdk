@@ -243,6 +243,10 @@ namespace Mycelium.SDK.Serializer.Json
                         context.CompleteObject(this, cancellationToken);
                         captureStart = -1;
                     }
+                    else
+                    {
+                        context.ObserveObjectToken(ref reader, captureStart);
+                    }
 
                     continue;
                 }
@@ -299,15 +303,18 @@ namespace Mycelium.SDK.Serializer.Json
         }
 
         /// <summary>
-        /// Deserializes one buffered DTO object through the generated provider.
+        /// Deserializes one buffered DTO object using the discriminator captured during boundary scanning.
         /// </summary>
         /// <param name="payload">
         /// The complete UTF-8 JSON object payload.
         /// </param>
+        /// <param name="typeName">
+        /// The validated exact discriminator captured for this object.
+        /// </param>
         /// <returns>
         /// The deserialized DTO.
         /// </returns>
-        private IThing DeSerializeObjectPayload(ReadOnlySpan<byte> payload)
+        private IThing DeSerializeObjectPayload(ReadOnlySpan<byte> payload, string typeName)
         {
             var reader = new Utf8JsonReader(payload);
 
@@ -316,7 +323,7 @@ namespace Mycelium.SDK.Serializer.Json
                 throw new JsonException("Every JSON payload array element must be an object.");
             }
 
-            var result = this.DeSerializeObject(ref reader);
+            var result = this.DeSerializeObject(ref reader, typeName);
 
             if (reader.TokenType != JsonTokenType.EndObject)
             {
@@ -332,82 +339,22 @@ namespace Mycelium.SDK.Serializer.Json
         }
 
         /// <summary>
-        /// Deserializes the DTO object on which the reader is positioned.
+        /// Dispatches the DTO object using its already validated discriminator.
         /// </summary>
         /// <param name="reader">
         /// The JSON reader positioned on the object's opening token.
+        /// </param>
+        /// <param name="typeName">
+        /// The validated exact discriminator captured for this object.
         /// </param>
         /// <returns>
         /// The deserialized DTO.
         /// </returns>
-        private IThing DeSerializeObject(ref Utf8JsonReader reader)
+        private IThing DeSerializeObject(ref Utf8JsonReader reader, string typeName)
         {
-            var typeName = ReadTypeName(ref reader);
             var operation = DeSerializationProvider.Provide(typeName);
 
             return operation(ref reader, this.loggerFactory);
-        }
-
-        /// <summary>
-        /// Reads the unique top-level discriminator without advancing the original reader.
-        /// </summary>
-        /// <param name="reader">
-        /// The JSON reader positioned on the object's opening token.
-        /// </param>
-        /// <returns>
-        /// The exact DTO type name from the <c>@type</c> property.
-        /// </returns>
-        private static string ReadTypeName(ref Utf8JsonReader reader)
-        {
-            var discriminatorReader = reader;
-
-            Utf8JsonReaderHelper.Expect(ref discriminatorReader, JsonTokenType.StartObject);
-
-            var hasType = false;
-            var hasEndObject = false;
-            string typeName = null;
-
-            while (discriminatorReader.Read())
-            {
-                if (discriminatorReader.TokenType == JsonTokenType.EndObject)
-                {
-                    hasEndObject = true;
-                    break;
-                }
-
-                Utf8JsonReaderHelper.Expect(ref discriminatorReader, JsonTokenType.PropertyName);
-
-                var isType = discriminatorReader.ValueTextEquals("@type"u8);
-
-                if (isType && hasType)
-                {
-                    throw new JsonException("The @type metadata property occurs more than once.");
-                }
-
-                Utf8JsonReaderHelper.ReadNext(ref discriminatorReader);
-
-                if (isType)
-                {
-                    typeName = Utf8JsonReaderHelper.ReadRequiredString(ref discriminatorReader);
-
-                    hasType = true;
-                    continue;
-                }
-
-                Utf8JsonReaderHelper.SkipValue(ref discriminatorReader);
-            }
-
-            if (!hasEndObject)
-            {
-                throw new JsonException("The JSON DTO object is incomplete.");
-            }
-
-            if (!hasType)
-            {
-                throw new JsonException("The required @type metadata property is missing.");
-            }
-
-            return typeName;
         }
 
         /// <summary>
@@ -488,6 +435,16 @@ namespace Mycelium.SDK.Serializer.Json
         private sealed class PayloadReaderContext : IDisposable
         {
             /// <summary>
+            /// Whether the next token is the value of the first top-level discriminator property.
+            /// </summary>
+            private bool awaitingTypeValue;
+
+            /// <summary>
+            /// Whether another top-level discriminator property was encountered after the first value.
+            /// </summary>
+            private bool hasDuplicateType;
+
+            /// <summary>
             /// Whether this context has returned its object buffer to the shared pool.
             /// </summary>
             private bool isDisposed;
@@ -506,6 +463,16 @@ namespace Mycelium.SDK.Serializer.Json
             /// The payload's root representation.
             /// </summary>
             private RootKind rootKind;
+
+            /// <summary>
+            /// The length of the first discriminator value token in the retained object buffer.
+            /// </summary>
+            private int typeTokenLength;
+
+            /// <summary>
+            /// The offset of the first discriminator value token, or minus one when no value was captured.
+            /// </summary>
+            private int typeTokenOffset;
 
             /// <summary>
             /// Initializes a new instance of the <see cref="PayloadReaderContext" /> class.
@@ -585,6 +552,44 @@ namespace Mycelium.SDK.Serializer.Json
             internal void BeginArrayObject(int depth) => this.BeginObject(depth);
 
             /// <summary>
+            /// Records top-level discriminator token locations without advancing the boundary reader.
+            /// </summary>
+            /// <param name="reader">
+            /// The boundary reader positioned on the current complete token.
+            /// </param>
+            /// <param name="captureStart">
+            /// The offset at which the current object's unretained bytes begin in this read buffer.
+            /// </param>
+            internal void ObserveObjectToken(ref Utf8JsonReader reader, int captureStart)
+            {
+                if (reader.CurrentDepth != this.CurrentObjectDepth + 1)
+                {
+                    return;
+                }
+
+                if (this.awaitingTypeValue)
+                {
+                    this.typeTokenOffset = checked(this.objectByteCount + (int)reader.TokenStartIndex - captureStart);
+                    this.typeTokenLength = checked((int)(reader.BytesConsumed - reader.TokenStartIndex));
+                    this.awaitingTypeValue = false;
+
+                    return;
+                }
+
+                if (reader.TokenType == JsonTokenType.PropertyName && reader.ValueTextEquals("@type"u8))
+                {
+                    if (this.typeTokenOffset >= 0)
+                    {
+                        this.hasDuplicateType = true;
+                    }
+                    else
+                    {
+                        this.awaitingTypeValue = true;
+                    }
+                }
+            }
+
+            /// <summary>
             /// Appends raw UTF-8 bytes belonging to the current DTO object.
             /// </summary>
             /// <param name="bytes">
@@ -616,7 +621,8 @@ namespace Mycelium.SDK.Serializer.Json
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var result = deSerializer.DeSerializeObjectPayload(this.objectBuffer.AsSpan(0, this.objectByteCount));
+                var typeName = this.ReadTypeName();
+                var result = deSerializer.DeSerializeObjectPayload(this.objectBuffer.AsSpan(0, this.objectByteCount), typeName);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -659,16 +665,50 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             /// <summary>
-            /// Resets object retention and records the object's starting depth.
+            /// Resets object retention and discriminator tracking and records the object's starting depth.
             /// </summary>
             /// <param name="depth">
             /// The JSON depth at which the object began.
             /// </param>
             private void BeginObject(int depth)
             {
+                this.awaitingTypeValue = false;
+                this.hasDuplicateType = false;
+                this.typeTokenLength = 0;
+                this.typeTokenOffset = -1;
                 this.objectByteCount = 0;
                 this.CurrentObjectDepth = depth;
                 this.IsCapturingObject = true;
+            }
+
+            /// <summary>
+            /// Decodes the captured discriminator token after the complete object has passed boundary scanning.
+            /// </summary>
+            /// <returns>
+            /// The exact DTO type name from the first top-level discriminator property.
+            /// </returns>
+            /// <exception cref="JsonException">
+            /// Thrown when the discriminator is missing, duplicated, null or not a valid JSON string.
+            /// </exception>
+            private string ReadTypeName()
+            {
+                if (this.typeTokenOffset < 0)
+                {
+                    throw new JsonException("The required @type metadata property is missing.");
+                }
+
+                var reader = new Utf8JsonReader(this.objectBuffer.AsSpan(this.typeTokenOffset, this.typeTokenLength));
+
+                Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                var typeName = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
+
+                if (this.hasDuplicateType)
+                {
+                    throw new JsonException("The @type metadata property occurs more than once.");
+                }
+
+                return typeName;
             }
 
             /// <summary>

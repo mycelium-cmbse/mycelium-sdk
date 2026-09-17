@@ -12,6 +12,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
     using System;
     using System.IO;
     using System.Linq;
+    using System.Text;
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
@@ -129,6 +130,188 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
+        [TestCase(1)]
+        [TestCase(7)]
+        [TestCase(16_384)]
+        public async Task Verify_discriminator_positions_escaping_and_nested_metadata(int fragmentSize)
+        {
+            var jsonPayloads = new[] { """{"@type":"Comment","@id":"$id1","content":"value"}""", """{"content":"value","@type":"Comment","@id":"$id1"}""", """{"@id":"$id1","content":"value","@type":"Comment"}""", """{"@id":"$id1","content":"value","\u0040type":"Comm\u0065nt"}""", """{"unknown":{"@type":"Wrong","items":[{"@type":null}]},"@id":"$id1","content":"value","@type":"Comment"}""", """{"@type":"Comment","@id":"$id1","content":"value","unknown":[{"@type":"Wrong"},{"@type":null}]}""", };
+
+            foreach (var json in jsonPayloads)
+            {
+                await VerifyDiscriminatorPayloadAsync(CreateDiscriminatorPayload(json), fragmentSize, new[] { nameof(Comment) });
+
+                await VerifyDiscriminatorPayloadAsync(CreateDiscriminatorPayload("[" + json + "]"), fragmentSize, new[] { nameof(Comment) });
+            }
+        }
+
+        [TestCase(1)]
+        [TestCase(7)]
+        [TestCase(16_384)]
+        public async Task Verify_discriminator_state_is_reset_between_array_objects(int fragmentSize)
+        {
+            var payload = CreateDiscriminatorPayload("""
+                                                     [
+                                                         {"@type":"Comment","@id":"$id1","content":"value"},
+                                                         {"@id":"$id2","unknown":{"@type":"Comment"},"@type":"Organization"},
+                                                         {"@id":"$id3","content":"value","@type":"Comment"}
+                                                     ]
+                                                     """);
+
+            await VerifyDiscriminatorPayloadAsync(payload, fragmentSize, new[] { nameof(Comment), nameof(Organization), nameof(Comment) });
+        }
+
+        [TestCase(1)]
+        [TestCase(7)]
+        [TestCase(16_384)]
+        public async Task Verify_invalid_discriminators_preserve_validation_order(int fragmentSize)
+        {
+            var missingPayloads = new[] { """{"@id":"$id1"}""", """{"@id":"$id1","@Type":"Comment"}""", """{"@id":"$id1","unknown":{"@type":"Comment"}}""", """[{"@type":"Comment","@id":"$id1","content":"value"},{"@id":"$id2"}]""", };
+
+            foreach (var json in missingPayloads)
+            {
+                await VerifyDiscriminatorFailureAsync<JsonException>(CreateDiscriminatorPayload(json), fragmentSize, "The required @type metadata property is missing.", !json.StartsWith("["));
+            }
+
+            var invalidValuePayloads = new[] { """{"@type":null}""", """{"@type":123}""", """{"@type":true}""", """{"@type":{}}""", """{"@type":[]}""", """{"@type":null,"@type":"Comment"}""", """{"@type":{},"@type":"Comment"}""", };
+
+            foreach (var json in invalidValuePayloads)
+            {
+                await VerifyDiscriminatorFailureAsync<JsonException>(CreateDiscriminatorPayload(json), fragmentSize, "Expected JSON token 'String'");
+            }
+
+            var duplicatePayloads = new[] { """{"@type":"Comment","@type":"Comment"}""", """{"@type":"Comment","\u0040type":"Organization"}""", """{"@type":"Unknown","@type":"Comment"}""", """{"@type":"Comment","content":123,"@type":null}""", """{"@type":"Comment","@type":{}}""", };
+
+            foreach (var json in duplicatePayloads)
+            {
+                await VerifyDiscriminatorFailureAsync<JsonException>(CreateDiscriminatorPayload(json), fragmentSize, "The @type metadata property occurs more than once.");
+            }
+        }
+
+        [TestCase(1)]
+        [TestCase(7)]
+        [TestCase(16_384)]
+        public async Task Verify_unsupported_discriminators_preserve_exact_provider_matching(int fragmentSize)
+        {
+            var typeNames = new[] { "comment", "Unknown", "", "\U0001F600" };
+
+            foreach (var typeName in typeNames)
+            {
+                var json = """{"@id":"$id1","@type":"$type"}""".Replace("$type", typeName);
+
+                await VerifyDiscriminatorFailureAsync<NotSupportedException>(CreateDiscriminatorPayload(json), fragmentSize, $"JSON discriminator '{typeName}' is not supported");
+            }
+        }
+
+        [TestCase(1)]
+        [TestCase(16_384)]
+        public async Task Verify_malformed_json_is_rejected_before_discriminator_validation(int fragmentSize)
+        {
+            var jsonPayloads = new[] { """{"@type":null,"unknown":]}""", """{"@type":"Comment","@type":"Comment","unknown":]}""", """{"@type":"Unknown","unknown":]}""", };
+
+            foreach (var json in jsonPayloads)
+            {
+                await VerifyDiscriminatorFailureAsync<JsonException>(CreateDiscriminatorPayload(json), fragmentSize, "invalid start of a value", false);
+            }
+        }
+
+        [TestCase(257)]
+        [TestCase(16_384)]
+        public async Task Verify_discriminator_offsets_survive_buffer_growth(int fragmentSize)
+        {
+            var content = new string('x', OversizedContentLength);
+
+            var jsonPayloads = new[] { """{"@type":"Comment","@id":"$id1","content":"$content"}""", """{"@id":"$id1","content":"$content","@type":"Comment"}""", };
+
+            foreach (var json in jsonPayloads)
+            {
+                var payload = CreateDiscriminatorPayload(json.Replace("$content", content));
+
+                await VerifyDiscriminatorPayloadAsync(payload, fragmentSize, new[] { nameof(Comment) }, content);
+            }
+
+            var oversizedType = new string('x', OversizedContentLength);
+            var invalidPayload = CreateDiscriminatorPayload("""{"@id":"$id1","@type":"$type"}""".Replace("$type", oversizedType));
+
+            await VerifyDiscriminatorFailureAsync<NotSupportedException>(invalidPayload, fragmentSize, "is not supported by the deserialization provider.");
+        }
+
+        private static byte[] CreateDiscriminatorPayload(string json)
+        {
+            var expandedJson = json.Replace("$id1", CreateId(1)
+                    .ToString("D"))
+                .Replace("$id2", CreateId(2)
+                    .ToString("D"))
+                .Replace("$id3", CreateId(3)
+                    .ToString("D"));
+
+            return Encoding.UTF8.GetBytes(expandedJson);
+        }
+
+        private static async Task VerifyDiscriminatorPayloadAsync(byte[] payload, int fragmentSize, string[] expectedTypeNames, string expectedContent = "value")
+        {
+            using var synchronousStream = new FragmentedNonSeekableStream(payload, fragmentSize);
+
+            var synchronousResult = JsonDeSerializer.DeSerialize(synchronousStream)
+                .ToArray();
+
+            using var asynchronousStream = new FragmentedNonSeekableStream(payload, fragmentSize);
+
+            var asynchronousResult = (await JsonDeSerializer.DeSerializeAsync(asynchronousStream, CancellationToken.None)).ToArray();
+
+            var expectedIds = Enumerable.Range(1, expectedTypeNames.Length)
+                .Select(CreateId)
+                .ToArray();
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(synchronousResult.Select(dto => dto.GetType()
+                    .Name), Is.EqualTo(expectedTypeNames));
+
+                Assert.That(asynchronousResult.Select(dto => dto.GetType()
+                    .Name), Is.EqualTo(expectedTypeNames));
+
+                Assert.That(synchronousResult.Select(dto => dto.Id), Is.EqualTo(expectedIds));
+                Assert.That(asynchronousResult.Select(dto => dto.Id), Is.EqualTo(expectedIds));
+
+                Assert.That(synchronousResult.OfType<Comment>()
+                    .Select(dto => dto.Content), Is.All.EqualTo(expectedContent));
+
+                Assert.That(asynchronousResult.OfType<Comment>()
+                    .Select(dto => dto.Content), Is.All.EqualTo(expectedContent));
+
+                Assert.That(synchronousStream.BytesRead, Is.EqualTo(payload.Length));
+                Assert.That(asynchronousStream.BytesRead, Is.EqualTo(payload.Length));
+                Assert.That(synchronousStream.CanRead, Is.True);
+                Assert.That(asynchronousStream.CanRead, Is.True);
+            }
+        }
+
+        private static async Task VerifyDiscriminatorFailureAsync<TException>(byte[] payload, int fragmentSize, string expectedMessage, bool completePayloadExpected = true) where TException : Exception
+        {
+            using var synchronousStream = new FragmentedNonSeekableStream(payload, fragmentSize);
+
+            Assert.That(() => JsonDeSerializer.DeSerialize(synchronousStream), Throws.InstanceOf<TException>()
+                .With.Message.Contains(expectedMessage));
+
+            using var asynchronousStream = new FragmentedNonSeekableStream(payload, fragmentSize);
+
+            await Assert.ThatAsync(() => JsonDeSerializer.DeSerializeAsync(asynchronousStream, CancellationToken.None), Throws.InstanceOf<TException>()
+                .With.Message.Contains(expectedMessage));
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(synchronousStream.CanRead, Is.True);
+                Assert.That(asynchronousStream.CanRead, Is.True);
+
+                if (completePayloadExpected)
+                {
+                    Assert.That(synchronousStream.BytesRead, Is.EqualTo(payload.Length));
+                    Assert.That(asynchronousStream.BytesRead, Is.EqualTo(payload.Length));
+                }
+            }
+        }
+
         private static byte[] CreateObjectPayload(string content)
         {
             using var stream = new MemoryStream();
@@ -171,10 +354,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             writer.WriteEndObject();
         }
 
-        private static Guid CreateId(int sequenceNumber)
-        {
-            return new Guid(sequenceNumber, 0x1111, 0x2222, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA);
-        }
+        private static Guid CreateId(int sequenceNumber) => new(sequenceNumber, 0x1111, 0x2222, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA);
 
         private sealed class FragmentedNonSeekableStream : Stream
         {
@@ -218,10 +398,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             {
             }
 
-            public override int Read(byte[] buffer, int offset, int count)
-            {
-                return this.ReadCore(buffer.AsSpan(offset, count));
-            }
+            public override int Read(byte[] buffer, int offset, int count) => this.ReadCore(buffer.AsSpan(offset, count));
 
             public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
             {
