@@ -189,10 +189,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             {
                 this.payload = payload ?? throw new ArgumentNullException(nameof(payload));
 
-                if (fragmentSize < 1)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(fragmentSize));
-                }
+                ArgumentOutOfRangeException.ThrowIfLessThan(fragmentSize, 1);
 
                 this.fragmentSize = fragmentSize;
             }
@@ -246,10 +243,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
             private int ReadCore(Span<byte> destination)
             {
-                if (this.isDisposed)
-                {
-                    throw new ObjectDisposedException(nameof(FragmentedNonSeekableStream));
-                }
+                ObjectDisposedException.ThrowIf(this.isDisposed, this);
 
                 if (this.offset == this.payload.Length)
                 {
@@ -301,10 +295,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
             public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
             {
-                if (this.isDisposed)
-                {
-                    throw new ObjectDisposedException(nameof(BlockingReadStream));
-                }
+                ObjectDisposedException.ThrowIf(this.isDisposed, this);
 
                 this.readStarted.TrySetResult(null);
 

@@ -208,15 +208,9 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         /// </param>
         internal DeserializationOperation(byte[] payload, int expectedResultCount, string streamImplementation)
         {
-            if (payload == null)
-            {
-                throw new ArgumentNullException(nameof(payload));
-            }
+            ArgumentNullException.ThrowIfNull(payload);
 
-            if (expectedResultCount < 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(expectedResultCount));
-            }
+            ArgumentOutOfRangeException.ThrowIfLessThan(expectedResultCount, 1);
 
             if (!string.Equals(streamImplementation, nameof(MemoryStream), StringComparison.Ordinal))
             {
@@ -485,10 +479,7 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         /// </returns>
         internal static byte[] CreateObjectPayload(int contentLength)
         {
-            if (contentLength < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(contentLength));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegative(contentLength);
 
             var content = new string('x', contentLength);
 
@@ -517,15 +508,9 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         /// </returns>
         internal static byte[] CreateArrayPayload(int objectCount, int contentLength)
         {
-            if (objectCount < 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(objectCount));
-            }
+            ArgumentOutOfRangeException.ThrowIfLessThan(objectCount, 1);
 
-            if (contentLength < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(contentLength));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegative(contentLength);
 
             var content = new string('x', contentLength);
 
