@@ -15,15 +15,9 @@ namespace Mycelium.SDK.Serializer.Json.Tests.Utility
 
     using Mycelium.SDK.Serializer.Json.Utility;
 
-    /// <summary>
-    /// Verifies the low-level JSON reader operations used by generated deserializers.
-    /// </summary>
     [TestFixture]
     public class Utf8JsonReaderHelperTestFixture
     {
-        /// <summary>
-        /// Verifies identifier and date-time conversions.
-        /// </summary>
         [Test]
         public void Verify_Guid_and_DateTime_reading()
         {
@@ -50,18 +44,12 @@ namespace Mycelium.SDK.Serializer.Json.Tests.Utility
             }
         }
 
-        /// <summary>
-        /// Verifies that one complete nested unknown value can be skipped.
-        /// </summary>
         [Test]
         public void Verify_nested_value_skipping()
         {
             Assert.That(SkipNestedValueAndReadFollowingString(), Is.EqualTo("retained"));
         }
 
-        /// <summary>
-        /// Verifies representative scalar and nullable conversions.
-        /// </summary>
         [Test]
         public void Verify_scalar_and_nullable_value_reading()
         {
@@ -87,9 +75,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests.Utility
             Assert.That(() => Read("\"42\"", Utf8JsonReaderHelper.ReadInt32), Throws.TypeOf<JsonException>());
         }
 
-        /// <summary>
-        /// Verifies exact dictionary parsing and duplicate-key rejection.
-        /// </summary>
         [Test]
         public void Verify_string_dictionary_reading()
         {
@@ -106,9 +91,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests.Utility
             Assert.That(() => Read("{\"key\":\"first\",\"key\":\"second\"}", Utf8JsonReaderHelper.ReadStringDictionary), Throws.TypeOf<JsonException>());
         }
 
-        /// <summary>
-        /// Verifies token advancement and exact token enforcement.
-        /// </summary>
         [Test]
         public void Verify_token_navigation_and_expectation()
         {
@@ -122,14 +104,8 @@ namespace Mycelium.SDK.Serializer.Json.Tests.Utility
             }
         }
 
-        /// <summary>
-        /// Represents an operation that reads a value from a positioned JSON reader.
-        /// </summary>
         private delegate T ReaderOperation<out T>(ref Utf8JsonReader reader);
 
-        /// <summary>
-        /// Reads one JSON value using the supplied helper operation.
-        /// </summary>
         private static T Read<T>(string json, ReaderOperation<T> operation)
         {
             var reader = new Utf8JsonReader(Encoding.UTF8.GetBytes(json));
@@ -142,9 +118,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests.Utility
             return operation(ref reader);
         }
 
-        /// <summary>
-        /// Positions a reader and verifies its first token.
-        /// </summary>
         private static void ExpectToken(string json, JsonTokenType tokenType)
         {
             var reader = new Utf8JsonReader(Encoding.UTF8.GetBytes(json));
@@ -157,9 +130,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests.Utility
             Utf8JsonReaderHelper.Expect(ref reader, tokenType);
         }
 
-        /// <summary>
-        /// Advances from the reader's initial state and reads a string.
-        /// </summary>
         private static string ReadFirstStringUsingReadNext(string json)
         {
             var reader = new Utf8JsonReader(Encoding.UTF8.GetBytes(json));
@@ -169,9 +139,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests.Utility
             return Utf8JsonReaderHelper.ReadRequiredString(ref reader);
         }
 
-        /// <summary>
-        /// Attempts to advance beyond complete input.
-        /// </summary>
         private static void ReadBeyondEnd()
         {
             var reader = new Utf8JsonReader("null"u8);
@@ -180,9 +147,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests.Utility
             Utf8JsonReaderHelper.ReadNext(ref reader);
         }
 
-        /// <summary>
-        /// Skips a nested value and reads the property following it.
-        /// </summary>
         private static string SkipNestedValueAndReadFollowingString()
         {
             var reader = new Utf8JsonReader("""

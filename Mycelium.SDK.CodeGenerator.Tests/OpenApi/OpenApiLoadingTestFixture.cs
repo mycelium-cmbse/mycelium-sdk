@@ -15,9 +15,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.OpenApi
     [TestFixture]
     public class OpenApiLoadingTestFixture
     {
-        /// <summary>
-        /// The OMG Systems Modeling API and Services REST/HTTP platform specific model.
-        /// </summary>
         private const string SystemsModelingApiFileName = "ptc-25-02-30.json";
 
         private static string ResourcesDirectory => Path.Combine(AppContext.BaseDirectory, "Resources");
@@ -44,12 +41,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.OpenApi
             }
         }
 
-        /// <summary>
-        /// Reads the OMG Systems Modeling API and Services document.
-        /// </summary>
-        /// <returns>
-        /// The parsed OpenAPI document.
-        /// </returns>
         internal static async Task<OpenApiDocument> ReadSystemsModelingApiAsync()
         {
             var readResult = await ReadAsync(SystemsModelingApiFileName);
@@ -57,15 +48,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.OpenApi
             return readResult.Document;
         }
 
-        /// <summary>
-        /// Reads an OpenAPI document from the test resources.
-        /// </summary>
-        /// <param name="fileName">
-        /// The name of the resource to read.
-        /// </param>
-        /// <returns>
-        /// The read result, carrying both the document and its diagnostic.
-        /// </returns>
         private static async Task<ReadResult> ReadAsync(string fileName)
         {
             await using var stream = File.OpenRead(Path.Combine(ResourcesDirectory, fileName));
@@ -73,22 +55,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.OpenApi
             return await OpenApiDocument.LoadAsync(stream, "json", CreateReaderSettings());
         }
 
-        /// <summary>
-        /// Creates the reader settings used for every OpenAPI resource.
-        /// </summary>
-        /// <returns>
-        /// The reader settings.
-        /// </returns>
-        /// <remarks>
-        /// The default rule set validates every schema reference, which fails on this document: the OMG
-        /// export gives each schema a <c>$id</c> that the validator tries to resolve as a
-        /// <see cref="Uri"/>, and throws <see cref="UriFormatException"/> when it cannot. Validation of
-        /// the model shape is not what this generator relies on - the generator fails loudly by itself
-        /// on anything it cannot render - so the rule set is emptied.
-        /// </remarks>
-        private static OpenApiReaderSettings CreateReaderSettings()
-        {
-            return new OpenApiReaderSettings { RuleSet = ValidationRuleSet.GetEmptyRuleSet() };
-        }
+        private static OpenApiReaderSettings CreateReaderSettings() => new() { RuleSet = ValidationRuleSet.GetEmptyRuleSet() };
     }
 }
