@@ -1,10 +1,10 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="{{ #NamedElement.WriteIdentifier Class }}MessagePackFormatter.cs" company="Starion Group S.A.">
-    //
-    //    Copyright 2026 Starion Group S.A.
-    //    SPDX-License-Identifier: Apache-2.0
-    //
-    //  </copyright>
+//
+//    Copyright 2026 Starion Group S.A.
+//    SPDX-License-Identifier: Apache-2.0
+//
+//  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
 // ------------------------------------------------------------------------------------------------
@@ -13,108 +13,108 @@
 
 namespace Mycelium.SDK.Serializer.MessagePack
 {
-using System;
-using System.CodeDom.Compiler;
+    using System;
+    using System.CodeDom.Compiler;
 
-using global::MessagePack;
-using global::MessagePack.Formatters;
+    using global::MessagePack;
+    using global::MessagePack.Formatters;
 
-using Mycelium.SDK.DTO;
+    using Mycelium.SDK.DTO;
 
-/// <summary>
+    /// <summary>
     /// Serializes and deserializes an exact
     /// <see cref="{{ #NamedElement.WriteIdentifier Class }}" /> DTO using MessagePack.
     /// </summary>
-[GeneratedCode("Mycelium.SDK", "latest")]
-public sealed partial class {{ #NamedElement.WriteIdentifier Class }}MessagePackFormatter :
-MessagePackFormatterBase,
-IMessagePackFormatter<{{ #NamedElement.WriteIdentifier Class }}>
-{
-/// <summary>
-    /// Serializes an exact <see cref="{{ #NamedElement.WriteIdentifier Class }}" /> DTO.
-    /// </summary>
-/// <param name="writer">
-/// The MessagePack writer that receives the serialized DTO.
-/// </param>
-/// <param name="dto">
-/// The DTO to serialize.
-/// </param>
-/// <param name="options">
-/// The MessagePack serializer options.
-/// </param>
-/// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="dto" /> is <see langword="null" />.
-    /// </exception>
-/// <exception cref="MessagePackSerializationException">
-    /// Thrown when a DTO property contains a value that is invalid for its approved
-    /// MessagePack representation.
-    /// </exception>
-public void Serialize(
-ref MessagePackWriter writer,
-{{ #NamedElement.WriteIdentifier Class }} dto,
-MessagePackSerializerOptions options)
-{
-ArgumentNullException.ThrowIfNull(dto);
+    [GeneratedCode("Mycelium.SDK", "latest")]
+    public sealed partial class {{ #NamedElement.WriteIdentifier Class }}MessagePackFormatter :
+        MessagePackFormatterBase,
+        IMessagePackFormatter<{{ #NamedElement.WriteIdentifier Class }}>
+    {
+        /// <summary>
+        /// Serializes an exact <see cref="{{ #NamedElement.WriteIdentifier Class }}" /> DTO.
+        /// </summary>
+        /// <param name="writer">
+        /// The MessagePack writer that receives the serialized DTO.
+        /// </param>
+        /// <param name="dto">
+        /// The DTO to serialize.
+        /// </param>
+        /// <param name="options">
+        /// The MessagePack serializer options.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="dto" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="MessagePackSerializationException">
+        /// Thrown when a DTO property contains a value that is invalid for its approved
+        /// MessagePack representation.
+        /// </exception>
+        public void Serialize(
+            ref MessagePackWriter writer,
+            {{ #NamedElement.WriteIdentifier Class }} dto,
+            MessagePackSerializerOptions options)
+        {
+            ArgumentNullException.ThrowIfNull(dto);
 
-writer.WriteArrayHeader({{ PropertyCount }});
+            writer.WriteArrayHeader({{ PropertyCount }});
 
-{{ #each Properties as | property | }}
-{{ #Property.WriteMessagePackSerialization property }}
-{{ /each }}
-}
+            {{ #each Properties as | property | }}
+            {{ #Property.WriteMessagePackSerialization property }}
+            {{ /each }}
+        }
 
-/// <summary>
-    /// Deserializes an exact <see cref="{{ #NamedElement.WriteIdentifier Class }}" /> DTO.
-    /// </summary>
-/// <param name="reader">
-/// The MessagePack reader from which the DTO is deserialized.
-/// </param>
-/// <param name="options">
-/// The MessagePack serializer options.
-/// </param>
-/// <returns>
-    /// The deserialized DTO.
-    /// </returns>
-/// <exception cref="MessagePackSerializationException">
-    /// Thrown when the encoded DTO is <c>nil</c>, has an incorrect field count or contains
-    /// a value that is invalid for its approved MessagePack representation.
-    /// </exception>
-public {{ #NamedElement.WriteIdentifier Class }} Deserialize(
-ref MessagePackReader reader,
-MessagePackSerializerOptions options)
-{
-if (reader.TryReadNil())
-{
-throw new MessagePackSerializationException(
-"{{ #NamedElement.WriteIdentifier Class }} may not be nil.");
-}
+        /// <summary>
+        /// Deserializes an exact <see cref="{{ #NamedElement.WriteIdentifier Class }}" /> DTO.
+        /// </summary>
+        /// <param name="reader">
+        /// The MessagePack reader from which the DTO is deserialized.
+        /// </param>
+        /// <param name="options">
+        /// The MessagePack serializer options.
+        /// </param>
+        /// <returns>
+        /// The deserialized DTO.
+        /// </returns>
+        /// <exception cref="MessagePackSerializationException">
+        /// Thrown when the encoded DTO is <c>nil</c>, has an incorrect field count or contains
+        /// a value that is invalid for its approved MessagePack representation.
+        /// </exception>
+        public {{ #NamedElement.WriteIdentifier Class }} Deserialize(
+            ref MessagePackReader reader,
+            MessagePackSerializerOptions options)
+        {
+            if (reader.TryReadNil())
+            {
+                throw new MessagePackSerializationException(
+                    "{{ #NamedElement.WriteIdentifier Class }} may not be nil.");
+            }
 
-options.Security.DepthStep(ref reader);
+            options.Security.DepthStep(ref reader);
 
-try
-{
-var fieldCount = reader.ReadArrayHeader();
+            try
+            {
+                var fieldCount = reader.ReadArrayHeader();
 
-if (fieldCount != {{ PropertyCount }})
-{
-throw new MessagePackSerializationException(
-$"{{ #NamedElement.WriteIdentifier Class }} contains {fieldCount} fields; exactly {{ PropertyCount }} fields are required.");
-}
+                if (fieldCount != {{ PropertyCount }})
+                {
+                    throw new MessagePackSerializationException(
+                        $"{{ #NamedElement.WriteIdentifier Class }} contains {fieldCount} fields; exactly {{ PropertyCount }} fields are required.");
+                }
 
-var dto = new {{ #NamedElement.WriteIdentifier Class }}();
+                var dto = new {{ #NamedElement.WriteIdentifier Class }}();
 
-{{ #each Properties as | property | }}
-{{ #Property.WriteMessagePackDeserialization property }}
-{{ /each }}
+                {{ #each Properties as | property | }}
+                {{ #Property.WriteMessagePackDeserialization property }}
+                {{ /each }}
 
-return dto;
-}
-finally
-{
-reader.Depth--;
-}
-}
-}
+                return dto;
+            }
+            finally
+            {
+                reader.Depth--;
+            }
+        }
+    }
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -9,6 +9,7 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
+    using System.Linq;
     using System.Text;
 
     using HandlebarsDotNet;
@@ -106,23 +107,19 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper(
-                "Property.WriteMessagePackSerialization",
-                (writer, _, arguments) =>
-                {
-                    var property = QueryProperty(arguments, "{{Property.WriteMessagePackSerialization}}");
+            handlebars.RegisterHelper("Property.WriteMessagePackSerialization", (writer, _, arguments) =>
+            {
+                var property = QueryProperty(arguments, "{{Property.WriteMessagePackSerialization}}");
 
-                    writer.WriteSafeString(RenderMessagePackSerialization(property));
-                });
+                writer.WriteSafeString(RenderMessagePackSerialization(property));
+            });
 
-            handlebars.RegisterHelper(
-                "Property.WriteMessagePackDeserialization",
-                (writer, _, arguments) =>
-                {
-                    var property = QueryProperty(arguments, "{{Property.WriteMessagePackDeserialization}}");
+            handlebars.RegisterHelper("Property.WriteMessagePackDeserialization", (writer, _, arguments) =>
+            {
+                var property = QueryProperty(arguments, "{{Property.WriteMessagePackDeserialization}}");
 
-                    writer.WriteSafeString(RenderMessagePackDeserialization(property));
-                });
+                writer.WriteSafeString(RenderMessagePackDeserialization(property));
+            });
         }
 
         /// <summary>
@@ -288,13 +285,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <exception cref="InvalidOperationException">
         /// Thrown when the property has no resolved type or uses a type outside the approved mapping.
         /// </exception>
-        private static void AppendSerializeValue(
-            StringBuilder builder,
-            IProperty property,
-            string valueExpression,
-            bool nullable,
-            string valueDescription,
-            int indentationLevel)
+        private static void AppendSerializeValue(StringBuilder builder, IProperty property, string valueExpression, bool nullable, string valueDescription, int indentationLevel)
         {
             if (property.Type is IClass || property.Type is IPrimitiveType { Name: "Guid" })
             {
@@ -357,8 +348,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     AppendLine(builder, indentationLevel, $"WriteUri(ref writer, {valueExpression}, {nullable.ToString().ToLowerInvariant()}, \"{valueDescription}\");");
                     break;
                 default:
-                    throw new InvalidOperationException(
-                        $"Property '{property.Describe()}' uses unsupported MessagePack primitive '{primitiveType.Name}'.");
+                    throw new InvalidOperationException($"Property '{property.Describe()}' uses unsupported MessagePack primitive '{primitiveType.Name}'.");
             }
         }
 
@@ -392,40 +382,18 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <exception cref="InvalidOperationException">
         /// Thrown when the property has no resolved type or uses a type outside the approved mapping.
         /// </exception>
-        private static void AppendDeserializeValue(
-            StringBuilder builder,
-            IProperty property,
-            string destination,
-            bool addToCollection,
-            bool nullable,
-            string valueDescription,
-            string localName,
-            int indentationLevel)
+        private static void AppendDeserializeValue(StringBuilder builder, IProperty property, string destination, bool addToCollection, bool nullable, string valueDescription, string localName, int indentationLevel)
         {
             if (property.Type is IClass || property.Type is IPrimitiveType { Name: "Guid" })
             {
-                AppendDeserializeNativeValue(
-                    builder,
-                    destination,
-                    addToCollection,
-                    nullable,
-                    "ReadGuidBin16(ref reader)",
-                    indentationLevel);
+                AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "ReadGuidBin16(ref reader)", indentationLevel);
 
                 return;
             }
 
             if (property.Type is IEnumeration enumeration)
             {
-                AppendDeserializeEnumeration(
-                    builder,
-                    enumeration,
-                    destination,
-                    addToCollection,
-                    nullable,
-                    valueDescription,
-                    localName,
-                    indentationLevel);
+                AppendDeserializeEnumeration(builder, enumeration, destination, addToCollection, nullable, valueDescription, localName, indentationLevel);
 
                 return;
             }
@@ -444,12 +412,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "reader.ReadDateTime()", indentationLevel);
                     break;
                 case "Dictionary<string,string>":
-                    AppendAssignment(
-                        builder,
-                        destination,
-                        addToCollection,
-                        $"ReadStringDictionary(ref reader, \"{valueDescription}\")",
-                        indentationLevel);
+                    AppendAssignment(builder, destination, addToCollection, $"ReadStringDictionary(ref reader, \"{valueDescription}\")", indentationLevel);
 
                     break;
                 case "Integer":
@@ -461,27 +424,16 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 case "String":
                 case "UnlimitedNatural":
 
-                    AppendAssignment(
-                        builder,
-                        destination,
-                        addToCollection,
-                        nullable ? "reader.ReadString()" : $"ReadRequiredString(ref reader, \"{valueDescription}\")",
-                        indentationLevel);
+                    AppendAssignment(builder, destination, addToCollection, nullable ? "reader.ReadString()" : $"ReadRequiredString(ref reader, \"{valueDescription}\")", indentationLevel);
 
                     break;
                 case "Uri":
 
-                    AppendAssignment(
-                        builder,
-                        destination,
-                        addToCollection,
-                        $"ReadUri(ref reader, {nullable.ToString().ToLowerInvariant()}, \"{valueDescription}\")",
-                        indentationLevel);
+                    AppendAssignment(builder, destination, addToCollection, $"ReadUri(ref reader, {nullable.ToString().ToLowerInvariant()}, \"{valueDescription}\")", indentationLevel);
 
                     break;
                 default:
-                    throw new InvalidOperationException(
-                        $"Property '{property.Describe()}' uses unsupported MessagePack primitive '{primitiveType.Name}'.");
+                    throw new InvalidOperationException($"Property '{property.Describe()}' uses unsupported MessagePack primitive '{primitiveType.Name}'.");
             }
         }
 
@@ -503,12 +455,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="indentationLevel">
         /// The generated indentation level.
         /// </param>
-        private static void AppendSerializeEnumeration(
-            StringBuilder builder,
-            IEnumeration enumeration,
-            string valueExpression,
-            bool nullable,
-            int indentationLevel)
+        private static void AppendSerializeEnumeration(StringBuilder builder, IEnumeration enumeration, string valueExpression, bool nullable, int indentationLevel)
         {
             var enumerationName = ReservedCSharpNameMapper.Map(enumeration.Name);
             var switchExpression = valueExpression;
@@ -524,16 +471,15 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             AppendLine(builder, indentationLevel, $"writer.Write({switchExpression} switch");
             AppendLine(builder, indentationLevel, "{");
 
-            foreach (var literal in enumeration.OwnedLiteral)
+            foreach (var modeledName in enumeration.OwnedLiteral.Select(static literal => literal.Name))
             {
-                var literalName = ReservedCSharpNameMapper.Map(literal.Name);
-                var wireValue = literal.Name.ToLowerInvariant();
+                var literalName = ReservedCSharpNameMapper.Map(modeledName);
+                var wireValue = modeledName.ToLowerInvariant();
 
                 AppendLine(builder, indentationLevel + 1, $"{enumerationName}.{literalName} => \"{wireValue}\",");
             }
 
-            var exceptionLine =
-                $"_ => throw new MessagePackSerializationException($\"Value '{{{switchExpression}}}' is not valid for {enumerationName}.\"),";
+            var exceptionLine = $"_ => throw new MessagePackSerializationException($\"Value '{{{switchExpression}}}' is not valid for {enumerationName}.\"),";
 
             AppendLine(builder, indentationLevel + 1, exceptionLine);
             AppendLine(builder, indentationLevel, "});");
@@ -576,15 +522,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="indentationLevel">
         /// The generated indentation level.
         /// </param>
-        private static void AppendDeserializeEnumeration(
-            StringBuilder builder,
-            IEnumeration enumeration,
-            string destination,
-            bool addToCollection,
-            bool nullable,
-            string valueDescription,
-            string localName,
-            int indentationLevel)
+        private static void AppendDeserializeEnumeration(StringBuilder builder, IEnumeration enumeration, string destination, bool addToCollection, bool nullable, string valueDescription, string localName, int indentationLevel)
         {
             if (nullable)
             {
@@ -626,13 +564,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="indentationLevel">
         /// The generated indentation level.
         /// </param>
-        private static void AppendEnumerationSwitchAssignment(
-            StringBuilder builder,
-            IEnumeration enumeration,
-            string destination,
-            bool addToCollection,
-            string localName,
-            int indentationLevel)
+        private static void AppendEnumerationSwitchAssignment(StringBuilder builder, IEnumeration enumeration, string destination, bool addToCollection, string localName, int indentationLevel)
         {
             var enumerationName = ReservedCSharpNameMapper.Map(enumeration.Name);
             var assignmentStart = addToCollection ? $"{destination}.Add({localName} switch" : $"{destination} = {localName} switch";
@@ -640,16 +572,15 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             AppendLine(builder, indentationLevel, assignmentStart);
             AppendLine(builder, indentationLevel, "{");
 
-            foreach (var literal in enumeration.OwnedLiteral)
+            foreach (var modeledName in enumeration.OwnedLiteral.Select(static literal => literal.Name))
             {
-                var literalName = ReservedCSharpNameMapper.Map(literal.Name);
-                var wireValue = literal.Name.ToLowerInvariant();
+                var literalName = ReservedCSharpNameMapper.Map(modeledName);
+                var wireValue = modeledName.ToLowerInvariant();
 
                 AppendLine(builder, indentationLevel + 1, $"\"{wireValue}\" => {enumerationName}.{literalName},");
             }
 
-            var exceptionLine =
-                $"_ => throw new MessagePackSerializationException($\"Value '{{{localName}}}' is not valid for {enumerationName}.\"),";
+            var exceptionLine = $"_ => throw new MessagePackSerializationException($\"Value '{{{localName}}}' is not valid for {enumerationName}.\"),";
 
             AppendLine(builder, indentationLevel + 1, exceptionLine);
             AppendLine(builder, indentationLevel, addToCollection ? "});" : "};");
@@ -710,13 +641,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="indentationLevel">
         /// The generated indentation level.
         /// </param>
-        private static void AppendDeserializeNativeValue(
-            StringBuilder builder,
-            string destination,
-            bool addToCollection,
-            bool nullable,
-            string readExpression,
-            int indentationLevel)
+        private static void AppendDeserializeNativeValue(StringBuilder builder, string destination, bool addToCollection, bool nullable, string readExpression, int indentationLevel)
         {
             if (!nullable)
             {
@@ -753,17 +678,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="indentationLevel">
         /// The generated indentation level.
         /// </param>
-        private static void AppendAssignment(
-            StringBuilder builder,
-            string destination,
-            bool addToCollection,
-            string valueExpression,
-            int indentationLevel)
+        private static void AppendAssignment(StringBuilder builder, string destination, bool addToCollection, string valueExpression, int indentationLevel)
         {
-            AppendLine(
-                builder,
-                indentationLevel,
-                addToCollection ? $"{destination}.Add({valueExpression});" : $"{destination} = {valueExpression};");
+            AppendLine(builder, indentationLevel, addToCollection ? $"{destination}.Add({valueExpression});" : $"{destination} = {valueExpression};");
         }
 
         /// <summary>
