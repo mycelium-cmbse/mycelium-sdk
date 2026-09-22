@@ -26,9 +26,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
     /// <see cref="Review" /> DTO using MessagePack.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public sealed partial class ReviewMessagePackFormatter :
-        MessagePackFormatterBase,
-        IMessagePackFormatter<Review>
+    public sealed partial class ReviewMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<Review?>
     {
         /// <summary>
         /// Serializes an exact <see cref="Review" /> DTO.
@@ -49,10 +47,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when a DTO property contains a value that is invalid for its approved
         /// MessagePack representation.
         /// </exception>
-        public void Serialize(
-            ref MessagePackWriter writer,
-            Review dto,
-            MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, Review? dto, MessagePackSerializerOptions options)
         {
             if (dto == null)
             {
@@ -130,14 +125,11 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when the encoded DTO is <c>nil</c>, has an incorrect field count or contains
         /// a value that is invalid for its approved MessagePack representation.
         /// </exception>
-        public Review Deserialize(
-            ref MessagePackReader reader,
-            MessagePackSerializerOptions options)
+        public Review? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
-                throw new MessagePackSerializationException(
-                    "Review may not be nil.");
+                throw new MessagePackSerializationException("Review may not be nil.");
             }
 
             options.Security.DepthStep(ref reader);
@@ -148,8 +140,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 if (fieldCount != 13)
                 {
-                    throw new MessagePackSerializationException(
-                        $"Review contains {fieldCount} fields; exactly 13 fields are required.");
+                    throw new MessagePackSerializationException($"Review contains {fieldCount} fields; exactly 13 fields are required.");
                 }
 
                 var dto = new Review();

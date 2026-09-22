@@ -28,32 +28,20 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// <summary>
         /// Maps each supported exact DTO type to its cached formatter instance.
         /// </summary>
-        private static readonly IReadOnlyDictionary<Type, object> FormatterMap =
-            new Dictionary<Type, object>
-            {
-                [typeof(BranchProtectionRule)] =
-                    new BranchProtectionRuleMessagePackFormatter(),
-                [typeof(Comment)] =
-                    new CommentMessagePackFormatter(),
-                [typeof(FunctionalProject)] =
-                    new FunctionalProjectMessagePackFormatter(),
-                [typeof(FunctionalProjectPolicy)] =
-                    new FunctionalProjectPolicyMessagePackFormatter(),
-                [typeof(Organization)] =
-                    new OrganizationMessagePackFormatter(),
-                [typeof(OrganizationMember)] =
-                    new OrganizationMemberMessagePackFormatter(),
-                [typeof(OrganizationPolicy)] =
-                    new OrganizationPolicyMessagePackFormatter(),
-                [typeof(Ownership)] =
-                    new OwnershipMessagePackFormatter(),
-                [typeof(ProjectMember)] =
-                    new ProjectMemberMessagePackFormatter(),
-                [typeof(Review)] =
-                    new ReviewMessagePackFormatter(),
-                [typeof(User)] =
-                    new UserMessagePackFormatter(),
-            };
+        private static readonly IReadOnlyDictionary<Type, object> FormatterMap = new Dictionary<Type, object>
+        {
+            [typeof(BranchProtectionRule)] = new BranchProtectionRuleMessagePackFormatter(),
+            [typeof(Comment)] = new CommentMessagePackFormatter(),
+            [typeof(FunctionalProject)] = new FunctionalProjectMessagePackFormatter(),
+            [typeof(FunctionalProjectPolicy)] = new FunctionalProjectPolicyMessagePackFormatter(),
+            [typeof(Organization)] = new OrganizationMessagePackFormatter(),
+            [typeof(OrganizationMember)] = new OrganizationMemberMessagePackFormatter(),
+            [typeof(OrganizationPolicy)] = new OrganizationPolicyMessagePackFormatter(),
+            [typeof(Ownership)] = new OwnershipMessagePackFormatter(),
+            [typeof(ProjectMember)] = new ProjectMemberMessagePackFormatter(),
+            [typeof(Review)] = new ReviewMessagePackFormatter(),
+            [typeof(User)] = new UserMessagePackFormatter(),
+        };
 
         /// <summary>
         /// Gets the cached MessagePack formatter registered for an exact DTO type.

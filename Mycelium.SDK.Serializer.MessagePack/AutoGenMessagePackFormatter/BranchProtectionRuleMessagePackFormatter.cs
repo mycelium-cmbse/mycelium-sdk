@@ -26,9 +26,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
     /// <see cref="BranchProtectionRule" /> DTO using MessagePack.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public sealed partial class BranchProtectionRuleMessagePackFormatter :
-        MessagePackFormatterBase,
-        IMessagePackFormatter<BranchProtectionRule>
+    public sealed partial class BranchProtectionRuleMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<BranchProtectionRule?>
     {
         /// <summary>
         /// Serializes an exact <see cref="BranchProtectionRule" /> DTO.
@@ -49,10 +47,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when a DTO property contains a value that is invalid for its approved
         /// MessagePack representation.
         /// </exception>
-        public void Serialize(
-            ref MessagePackWriter writer,
-            BranchProtectionRule dto,
-            MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, BranchProtectionRule? dto, MessagePackSerializerOptions options)
         {
             if (dto == null)
             {
@@ -121,14 +116,11 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when the encoded DTO is <c>nil</c>, has an incorrect field count or contains
         /// a value that is invalid for its approved MessagePack representation.
         /// </exception>
-        public BranchProtectionRule Deserialize(
-            ref MessagePackReader reader,
-            MessagePackSerializerOptions options)
+        public BranchProtectionRule? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
-                throw new MessagePackSerializationException(
-                    "BranchProtectionRule may not be nil.");
+                throw new MessagePackSerializationException("BranchProtectionRule may not be nil.");
             }
 
             options.Security.DepthStep(ref reader);
@@ -139,8 +131,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 if (fieldCount != 11)
                 {
-                    throw new MessagePackSerializationException(
-                        $"BranchProtectionRule contains {fieldCount} fields; exactly 11 fields are required.");
+                    throw new MessagePackSerializationException($"BranchProtectionRule contains {fieldCount} fields; exactly 11 fields are required.");
                 }
 
                 var dto = new BranchProtectionRule();

@@ -26,9 +26,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
     /// <see cref="Ownership" /> DTO using MessagePack.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public sealed partial class OwnershipMessagePackFormatter :
-        MessagePackFormatterBase,
-        IMessagePackFormatter<Ownership>
+    public sealed partial class OwnershipMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<Ownership?>
     {
         /// <summary>
         /// Serializes an exact <see cref="Ownership" /> DTO.
@@ -49,10 +47,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when a DTO property contains a value that is invalid for its approved
         /// MessagePack representation.
         /// </exception>
-        public void Serialize(
-            ref MessagePackWriter writer,
-            Ownership dto,
-            MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, Ownership? dto, MessagePackSerializerOptions options)
         {
             if (dto == null)
             {
@@ -88,14 +83,11 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when the encoded DTO is <c>nil</c>, has an incorrect field count or contains
         /// a value that is invalid for its approved MessagePack representation.
         /// </exception>
-        public Ownership Deserialize(
-            ref MessagePackReader reader,
-            MessagePackSerializerOptions options)
+        public Ownership? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
-                throw new MessagePackSerializationException(
-                    "Ownership may not be nil.");
+                throw new MessagePackSerializationException("Ownership may not be nil.");
             }
 
             options.Security.DepthStep(ref reader);
@@ -106,8 +98,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 if (fieldCount != 9)
                 {
-                    throw new MessagePackSerializationException(
-                        $"Ownership contains {fieldCount} fields; exactly 9 fields are required.");
+                    throw new MessagePackSerializationException($"Ownership contains {fieldCount} fields; exactly 9 fields are required.");
                 }
 
                 var dto = new Ownership();
