@@ -52,7 +52,10 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// </exception>
         internal static object? GetFormatter(Type runtimeType)
         {
-            ArgumentNullException.ThrowIfNull(runtimeType);
+            if (runtimeType == null)
+            {
+                throw new ArgumentNullException(nameof(runtimeType));
+            }
 
             return FormatterMap.TryGetValue(runtimeType, out var formatter) ? formatter : null;
         }
