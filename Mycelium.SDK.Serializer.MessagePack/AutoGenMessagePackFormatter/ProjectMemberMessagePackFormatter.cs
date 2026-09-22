@@ -26,9 +26,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
     /// <see cref="ProjectMember" /> DTO using MessagePack.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public sealed partial class ProjectMemberMessagePackFormatter :
-        MessagePackFormatterBase,
-        IMessagePackFormatter<ProjectMember>
+    public sealed partial class ProjectMemberMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<ProjectMember?>
     {
         /// <summary>
         /// Serializes an exact <see cref="ProjectMember" /> DTO.
@@ -49,10 +47,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when a DTO property contains a value that is invalid for its approved
         /// MessagePack representation.
         /// </exception>
-        public void Serialize(
-            ref MessagePackWriter writer,
-            ProjectMember dto,
-            MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, ProjectMember? dto, MessagePackSerializerOptions options)
         {
             if (dto == null)
             {
@@ -117,14 +112,11 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when the encoded DTO is <c>nil</c>, has an incorrect field count or contains
         /// a value that is invalid for its approved MessagePack representation.
         /// </exception>
-        public ProjectMember Deserialize(
-            ref MessagePackReader reader,
-            MessagePackSerializerOptions options)
+        public ProjectMember? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
-                throw new MessagePackSerializationException(
-                    "ProjectMember may not be nil.");
+                throw new MessagePackSerializationException("ProjectMember may not be nil.");
             }
 
             options.Security.DepthStep(ref reader);
@@ -135,8 +127,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 if (fieldCount != 10)
                 {
-                    throw new MessagePackSerializationException(
-                        $"ProjectMember contains {fieldCount} fields; exactly 10 fields are required.");
+                    throw new MessagePackSerializationException($"ProjectMember contains {fieldCount} fields; exactly 10 fields are required.");
                 }
 
                 var dto = new ProjectMember();

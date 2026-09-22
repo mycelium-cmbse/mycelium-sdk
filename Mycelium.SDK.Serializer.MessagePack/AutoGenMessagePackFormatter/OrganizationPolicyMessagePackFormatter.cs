@@ -26,9 +26,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
     /// <see cref="OrganizationPolicy" /> DTO using MessagePack.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public sealed partial class OrganizationPolicyMessagePackFormatter :
-        MessagePackFormatterBase,
-        IMessagePackFormatter<OrganizationPolicy>
+    public sealed partial class OrganizationPolicyMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<OrganizationPolicy?>
     {
         /// <summary>
         /// Serializes an exact <see cref="OrganizationPolicy" /> DTO.
@@ -49,10 +47,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when a DTO property contains a value that is invalid for its approved
         /// MessagePack representation.
         /// </exception>
-        public void Serialize(
-            ref MessagePackWriter writer,
-            OrganizationPolicy dto,
-            MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, OrganizationPolicy? dto, MessagePackSerializerOptions options)
         {
             if (dto == null)
             {
@@ -94,14 +89,11 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when the encoded DTO is <c>nil</c>, has an incorrect field count or contains
         /// a value that is invalid for its approved MessagePack representation.
         /// </exception>
-        public OrganizationPolicy Deserialize(
-            ref MessagePackReader reader,
-            MessagePackSerializerOptions options)
+        public OrganizationPolicy? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
-                throw new MessagePackSerializationException(
-                    "OrganizationPolicy may not be nil.");
+                throw new MessagePackSerializationException("OrganizationPolicy may not be nil.");
             }
 
             options.Security.DepthStep(ref reader);
@@ -112,8 +104,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 if (fieldCount != 8)
                 {
-                    throw new MessagePackSerializationException(
-                        $"OrganizationPolicy contains {fieldCount} fields; exactly 8 fields are required.");
+                    throw new MessagePackSerializationException($"OrganizationPolicy contains {fieldCount} fields; exactly 8 fields are required.");
                 }
 
                 var dto = new OrganizationPolicy();

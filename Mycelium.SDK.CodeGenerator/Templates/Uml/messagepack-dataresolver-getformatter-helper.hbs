@@ -28,14 +28,12 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// <summary>
         /// Maps each supported exact DTO type to its cached formatter instance.
         /// </summary>
-        private static readonly IReadOnlyDictionary<Type, object> FormatterMap =
-            new Dictionary<Type, object>
-            {
+        private static readonly IReadOnlyDictionary<Type, object> FormatterMap = new Dictionary<Type, object>
+        {
             {{ #each this as | umlClass | }}
-                [typeof({{ #NamedElement.WriteIdentifier umlClass }})] =
-                    new {{ #NamedElement.WriteIdentifier umlClass }}MessagePackFormatter(),
+            [typeof({{ #NamedElement.WriteIdentifier umlClass }})] = new {{ #NamedElement.WriteIdentifier umlClass }}MessagePackFormatter(),
             {{ /each }}
-            };
+        };
 
         /// <summary>
         /// Gets the cached MessagePack formatter registered for an exact DTO type.

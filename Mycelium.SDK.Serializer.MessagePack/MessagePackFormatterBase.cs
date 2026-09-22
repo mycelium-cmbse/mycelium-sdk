@@ -148,10 +148,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// <exception cref="MessagePackSerializationException">
         /// Thrown when the dictionary, a key, or a value is <see langword="null" />.
         /// </exception>
-        protected static void WriteStringDictionary(
-            ref MessagePackWriter writer,
-            IReadOnlyDictionary<string, string>? value,
-            string valueDescription)
+        protected static void WriteStringDictionary(ref MessagePackWriter writer, IReadOnlyDictionary<string, string>? value, string valueDescription)
         {
             if (value == null)
             {
