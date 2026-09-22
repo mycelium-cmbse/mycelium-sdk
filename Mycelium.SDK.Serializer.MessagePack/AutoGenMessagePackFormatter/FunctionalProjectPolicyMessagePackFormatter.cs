@@ -26,9 +26,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
     /// <see cref="FunctionalProjectPolicy" /> DTO using MessagePack.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public sealed partial class FunctionalProjectPolicyMessagePackFormatter :
-        MessagePackFormatterBase,
-        IMessagePackFormatter<FunctionalProjectPolicy>
+    public sealed partial class FunctionalProjectPolicyMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<FunctionalProjectPolicy?>
     {
         /// <summary>
         /// Serializes an exact <see cref="FunctionalProjectPolicy" /> DTO.
@@ -49,10 +47,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when a DTO property contains a value that is invalid for its approved
         /// MessagePack representation.
         /// </exception>
-        public void Serialize(
-            ref MessagePackWriter writer,
-            FunctionalProjectPolicy dto,
-            MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, FunctionalProjectPolicy? dto, MessagePackSerializerOptions options)
         {
             if (dto == null)
             {
@@ -87,14 +82,11 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when the encoded DTO is <c>nil</c>, has an incorrect field count or contains
         /// a value that is invalid for its approved MessagePack representation.
         /// </exception>
-        public FunctionalProjectPolicy Deserialize(
-            ref MessagePackReader reader,
-            MessagePackSerializerOptions options)
+        public FunctionalProjectPolicy? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
-                throw new MessagePackSerializationException(
-                    "FunctionalProjectPolicy may not be nil.");
+                throw new MessagePackSerializationException("FunctionalProjectPolicy may not be nil.");
             }
 
             options.Security.DepthStep(ref reader);
@@ -105,8 +97,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 if (fieldCount != 8)
                 {
-                    throw new MessagePackSerializationException(
-                        $"FunctionalProjectPolicy contains {fieldCount} fields; exactly 8 fields are required.");
+                    throw new MessagePackSerializationException($"FunctionalProjectPolicy contains {fieldCount} fields; exactly 8 fields are required.");
                 }
 
                 var dto = new FunctionalProjectPolicy();
