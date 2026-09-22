@@ -54,7 +54,10 @@ namespace Mycelium.SDK.Serializer.MessagePack
             {{ #NamedElement.WriteIdentifier Class }} dto,
             MessagePackSerializerOptions options)
         {
-            ArgumentNullException.ThrowIfNull(dto);
+            if (dto == null)
+            {
+                throw new ArgumentNullException(nameof(dto));
+            }
 
             writer.WriteArrayHeader({{ PropertyCount }});
 
