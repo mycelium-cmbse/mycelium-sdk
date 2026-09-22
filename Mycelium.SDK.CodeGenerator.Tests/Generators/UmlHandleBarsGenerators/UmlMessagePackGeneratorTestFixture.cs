@@ -12,6 +12,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     using System.Text;
 
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
+    using Mycelium.SDK.CodeGenerator.Tests.Expected;
 
     using uml4net.Extensions;
     using uml4net.StructuredClassifiers;
@@ -19,8 +20,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     [TestFixture]
     public class UmlMessagePackGeneratorTestFixture
     {
-        private const string RepresentativeFormatterFileName = "BranchProtectionRuleMessagePackFormatter.cs";
-
         private const string ResolverFileName = "DataResolverGetFormatterHelper.cs";
 
         private static readonly UTF8Encoding StrictUtf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
@@ -116,7 +115,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 .ToArray();
 
             Assert.That(generatedFiles, Is.Not.Empty, "MessagePack generation produced no C# files.");
-            Assert.That(goldenFiles.Select(file => file.Name), Is.EqualTo(new[] { RepresentativeFormatterFileName, ResolverFileName }));
+            Assert.That(goldenFiles, Is.Not.Empty, "The representative MessagePack golden directory contains no C# files.");
 
             foreach (var sourceFile in generatedFiles.Concat(goldenFiles))
             {
@@ -126,13 +125,68 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
         [Test]
         [Category("Expected")]
-        public async Task Verify_that_representative_formatter_matches_its_golden()
+        public void Verify_that_golden_set_matches_non_abstract_representative_selection_and_the_resolver()
         {
-            var stagedPath = Path.Combine(this.stagingDirectory.FullName, RepresentativeFormatterFileName);
+            var expectedFileNames = new List<string>();
 
-            var expectedPath = Path.Combine(this.expectedDirectory.FullName, RepresentativeFormatterFileName);
+            foreach (var className in new RepresentativeClasses())
+            {
+                if (!this.classes.TryGetValue(className, out var umlClass))
+                {
+                    Assert.Fail($"Representative UML class '{className}' was not found.");
 
-            await AssertOrdinalFilesMatchAsync(stagedPath, expectedPath, "The representative MessagePack formatter", "its reviewed golden");
+                    return;
+                }
+
+                if (!umlClass.IsAbstract)
+                {
+                    expectedFileNames.Add($"{className}MessagePackFormatter.cs");
+                }
+            }
+
+            expectedFileNames.Add(ResolverFileName);
+
+            var orderedExpectedFileNames = expectedFileNames.OrderBy(fileName => fileName, StringComparer.Ordinal)
+                .ToArray();
+
+            var goldenFileNames = QueryCSharpFileNames(this.expectedDirectory);
+
+            Assert.That(
+                goldenFileNames,
+                Is.EqualTo(orderedExpectedFileNames),
+                "The MessagePack golden set must contain exactly the non-abstract representative DTO selection and resolver.");
+        }
+
+        [TestCaseSource(typeof(RepresentativeClasses))]
+        [Category("Expected")]
+        public async Task Verify_that_representative_formatters_match_their_goldens(string className)
+        {
+            if (!this.classes.TryGetValue(className, out var umlClass))
+            {
+                Assert.Fail($"Representative UML class '{className}' was not found.");
+
+                return;
+            }
+
+            var fileName = $"{className}MessagePackFormatter.cs";
+
+            var stagedPath = Path.Combine(this.stagingDirectory.FullName, fileName);
+
+            var expectedPath = Path.Combine(this.expectedDirectory.FullName, fileName);
+
+            if (umlClass.IsAbstract)
+            {
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(File.Exists(stagedPath), Is.False, $"Abstract class '{className}' received a MessagePack formatter.");
+
+                    Assert.That(File.Exists(expectedPath), Is.False, $"Abstract class '{className}' received a MessagePack formatter golden.");
+                }
+
+                return;
+            }
+
+            await AssertOrdinalFilesMatchAsync(stagedPath, expectedPath, $"Generated MessagePack formatter '{fileName}'", "its reviewed golden");
         }
 
         [Test]
