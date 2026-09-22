@@ -1,0 +1,85 @@
+// ------------------------------------------------------------------------------------------------
+//  <copyright file="DataResolverGetFormatterHelper.cs" company="Starion Group S.A.">
+//
+//    Copyright 2026 Starion Group S.A.
+//    SPDX-License-Identifier: Apache-2.0
+//
+//  </copyright>
+//  ------------------------------------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
+namespace Mycelium.SDK.Serializer.MessagePack
+{
+    using System;
+    using System.CodeDom.Compiler;
+    using System.Collections.Generic;
+
+    using Mycelium.SDK.DTO;
+
+    /// <summary>
+    /// Provides the generated exact-type MessagePack formatter lookup.
+    /// </summary>
+    [GeneratedCode("Mycelium.SDK", "latest")]
+    internal static partial class DataResolverGetFormatterHelper
+    {
+        /// <summary>
+        /// Maps each supported exact DTO type to its cached formatter instance.
+        /// </summary>
+        private static readonly IReadOnlyDictionary<Type, object> FormatterMap =
+            new Dictionary<Type, object>
+            {
+                [typeof(BranchProtectionRule)] =
+                    new BranchProtectionRuleMessagePackFormatter(),
+                [typeof(Comment)] =
+                    new CommentMessagePackFormatter(),
+                [typeof(FunctionalProject)] =
+                    new FunctionalProjectMessagePackFormatter(),
+                [typeof(FunctionalProjectPolicy)] =
+                    new FunctionalProjectPolicyMessagePackFormatter(),
+                [typeof(Organization)] =
+                    new OrganizationMessagePackFormatter(),
+                [typeof(OrganizationMember)] =
+                    new OrganizationMemberMessagePackFormatter(),
+                [typeof(OrganizationPolicy)] =
+                    new OrganizationPolicyMessagePackFormatter(),
+                [typeof(Ownership)] =
+                    new OwnershipMessagePackFormatter(),
+                [typeof(ProjectMember)] =
+                    new ProjectMemberMessagePackFormatter(),
+                [typeof(Review)] =
+                    new ReviewMessagePackFormatter(),
+                [typeof(User)] =
+                    new UserMessagePackFormatter(),
+            };
+
+        /// <summary>
+        /// Gets the cached MessagePack formatter registered for an exact DTO type.
+        /// </summary>
+        /// <param name="runtimeType">
+        /// The exact DTO type to resolve.
+        /// </param>
+        /// <returns>
+        /// The cached formatter when <paramref name="runtimeType" /> is registered; otherwise,
+        /// <see langword="null" />.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="runtimeType" /> is <see langword="null" />.
+        /// </exception>
+        internal static object? GetFormatter(Type runtimeType)
+        {
+            if (runtimeType == null)
+            {
+                throw new ArgumentNullException(nameof(runtimeType));
+            }
+
+            return FormatterMap.TryGetValue(runtimeType, out var formatter) ? formatter : null;
+        }
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
