@@ -139,9 +139,19 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
                 reader.Skip();
             }
 
-            Assert.That(reader.ReadMapHeader(), Is.EqualTo(1));
-            Assert.That(reader.ReadString(), Is.EqualTo("theme"));
-            Assert.That(reader.ReadString(), Is.EqualTo("dark"));
+            var entryCount = reader.ReadMapHeader();
+            var entries = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            for (var index = 0; index < entryCount; index++)
+            {
+                entries.Add(reader.ReadString()!, reader.ReadString()!);
+            }
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entryCount, Is.EqualTo(dto.SharedPreferences.Count));
+                Assert.That(entries, Is.EquivalentTo(dto.SharedPreferences));
+            }
         }
 
         [Test]
@@ -173,17 +183,25 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         [Test]
         public void Verify_that_non_lowercase_enumeration_values_are_rejected_during_deserialization()
         {
-            var payload = CreateInvalidCommentStatusPayload();
+            Assert.That(MessagePackSerializer.Deserialize<Comment>(CreateCommentStatusPayload("open"), SerializerOptions), Is.Not.Null);
 
-            Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<Comment>(payload, SerializerOptions));
+            var payload = CreateCommentStatusPayload("OPEN");
+
+            var exception = Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<Comment>(payload, SerializerOptions));
+
+            Assert.That(exception!.ToString(), Does.Contain("Value 'OPEN' is not valid for CommentStatus."));
         }
 
         [Test]
         public void Verify_that_non_bin16_Guid_values_are_rejected()
         {
-            var payload = CreateInvalidGuidPayload();
+            Assert.That(MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(CreateFunctionalProjectPolicyPayload(16), SerializerOptions), Is.Not.Null);
 
-            Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions));
+            var payload = CreateFunctionalProjectPolicyPayload(15);
+
+            var exception = Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions));
+
+            Assert.That(exception!.ToString(), Does.Contain("Expected Guid as 16 bytes, but found 15 bytes."));
         }
 
         [Test]
@@ -198,9 +216,13 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         [Test]
         public void Verify_that_nil_collections_are_rejected_during_deserialization()
         {
-            var payload = CreateNilDefaultReviewersPayload();
+            Assert.That(MessagePackSerializer.Deserialize<BranchProtectionRule>(CreateBranchProtectionRulePayload(nilDefaultReviewers: false), SerializerOptions), Is.Not.Null);
 
-            Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<BranchProtectionRule>(payload, SerializerOptions));
+            var payload = CreateBranchProtectionRulePayload(nilDefaultReviewers: true);
+
+            var exception = Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<BranchProtectionRule>(payload, SerializerOptions));
+
+            Assert.That(exception!.ToString(), Does.Contain("Collection property 'DefaultReviewers' may not be nil."));
         }
 
         [Test]
@@ -215,9 +237,11 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         [TestCase(12)]
         public void Verify_that_incorrect_DTO_field_counts_are_rejected(int fieldCount)
         {
-            var payload = CreateArrayHeaderPayload(fieldCount);
+            var payload = CreateIncorrectFieldCountPayload(fieldCount);
 
-            Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<Comment>(payload, SerializerOptions));
+            var exception = Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<Comment>(payload, SerializerOptions));
+
+            Assert.That(exception!.ToString(), Does.Contain($"Comment contains {fieldCount} fields; exactly 11 fields are required."));
         }
 
         [Test]
@@ -249,6 +273,19 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
                 Assert.That(actual.UpdatedBy, Is.EqualTo(expected.UpdatedBy));
                 Assert.That(actual.UpdatedOn, Is.EqualTo(expected.UpdatedOn));
             }
+        }
+
+        [Test]
+        public void Verify_that_nullable_reference_round_trips_as_nil()
+        {
+            var expected = CreateComment();
+            expected.Quotes = null;
+
+            var payload = MessagePackSerializer.Serialize(expected, SerializerOptions);
+            var actual = MessagePackSerializer.Deserialize<Comment>(payload, SerializerOptions);
+
+            Assert.That(actual, Is.Not.Null);
+            Assert.That(actual?.Quotes, Is.Null);
         }
 
         [Test]
@@ -369,7 +406,9 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
                 Reviews = [Guid.Parse("30000000-0000-0000-0000-000000000009")],
                 SharedPreferences = new Dictionary<string, string>(StringComparer.Ordinal)
                 {
-                    ["theme"] = "dark"
+                    ["z-last"] = "last value",
+                    ["theme"] = "dark",
+                    ["Theme"] = "light"
                 },
                 UpdatedBy = Guid.Parse("30000000-0000-0000-0000-000000000010"),
                 UpdatedOn = new DateTime(2026, 6, 7, 8, 9, 10, DateTimeKind.Utc),
@@ -392,43 +431,90 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             };
         }
 
-        private static byte[] CreateInvalidCommentStatusPayload()
+        private static byte[] CreateCommentStatusPayload(string commentStatus)
         {
+            var dto = CreateComment();
             var buffer = new ArrayBufferWriter<byte>();
             var writer = new MessagePackWriter(buffer);
 
             writer.WriteArrayHeader(11);
-            WriteGuid(ref writer, Guid.Empty);
-            WriteGuid(ref writer, Guid.Empty);
-            writer.Write("OPEN");
+            WriteGuid(ref writer, dto.Id);
+            WriteGuid(ref writer, dto.Author);
+            writer.Write(commentStatus);
+            writer.Write(dto.Content);
+            WriteGuid(ref writer, dto.CreatedBy);
+            writer.Write(dto.CreatedOn);
+            WriteGuid(ref writer, dto.Quotes!.Value);
+            writer.WriteArrayHeader(dto.Replies.Count);
+
+            foreach (var reply in dto.Replies)
+            {
+                WriteGuid(ref writer, reply);
+            }
+
+            WriteGuid(ref writer, dto.TargetElementId);
+            WriteGuid(ref writer, dto.UpdatedBy);
+            writer.Write(dto.UpdatedOn);
             writer.Flush();
 
             return buffer.WrittenMemory.ToArray();
         }
 
-        private static byte[] CreateInvalidGuidPayload()
+        private static byte[] CreateFunctionalProjectPolicyPayload(int idByteCount)
         {
+            var dto = CreateFunctionalProjectPolicy();
             var buffer = new ArrayBufferWriter<byte>();
             var writer = new MessagePackWriter(buffer);
 
             writer.WriteArrayHeader(8);
-            writer.WriteBinHeader(15);
-            writer.WriteRaw(new byte[15]);
+            writer.WriteBinHeader(idByteCount);
+            writer.WriteRaw(dto.Id.ToByteArray().AsSpan(0, idByteCount));
+            writer.Write(dto.AllowAutoNamespaceImport);
+            writer.Write(dto.AllowAutoPublishMode);
+            writer.Write(dto.AllowVersionBranching);
+            WriteGuid(ref writer, dto.CreatedBy);
+            writer.Write(dto.CreatedOn);
+            WriteGuid(ref writer, dto.UpdatedBy);
+            writer.Write(dto.UpdatedOn);
             writer.Flush();
 
             return buffer.WrittenMemory.ToArray();
         }
 
-        private static byte[] CreateNilDefaultReviewersPayload()
+        private static byte[] CreateBranchProtectionRulePayload(bool nilDefaultReviewers)
         {
+            var dto = CreateBranchProtectionRule();
             var buffer = new ArrayBufferWriter<byte>();
             var writer = new MessagePackWriter(buffer);
 
             writer.WriteArrayHeader(11);
-            WriteGuid(ref writer, Guid.Empty);
-            WriteGuid(ref writer, Guid.Empty);
-            writer.Write(DateTime.UnixEpoch);
-            writer.WriteNil();
+            WriteGuid(ref writer, dto.Id);
+            WriteGuid(ref writer, dto.CreatedBy);
+            writer.Write(dto.CreatedOn);
+
+            if (nilDefaultReviewers)
+            {
+                writer.WriteNil();
+            }
+            else
+            {
+                writer.WriteArrayHeader(dto.DefaultReviewers.Count);
+
+                foreach (var reviewer in dto.DefaultReviewers)
+                {
+                    WriteGuid(ref writer, reviewer);
+                }
+            }
+
+            WriteGuid(ref writer, dto.EngineeringBranchId);
+            writer.WriteArrayHeader(dto.MergeAllowedFor.Count);
+            writer.Write("administrator");
+            writer.Write("viewer");
+            writer.Write(dto.MinimumRequiredApproval);
+            writer.Write(dto.Name);
+            writer.Write(dto.ReviewRequired);
+            WriteGuid(ref writer, dto.UpdatedBy);
+            writer.Write(dto.UpdatedOn);
             writer.Flush();
 
             return buffer.WrittenMemory.ToArray();
@@ -449,12 +535,18 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             return buffer.WrittenMemory.ToArray();
         }
 
-        private static byte[] CreateArrayHeaderPayload(int fieldCount)
+        private static byte[] CreateIncorrectFieldCountPayload(int fieldCount)
         {
             var buffer = new ArrayBufferWriter<byte>();
             var writer = new MessagePackWriter(buffer);
 
             writer.WriteArrayHeader(fieldCount);
+
+            for (var index = 0; index < fieldCount; index++)
+            {
+                writer.WriteNil();
+            }
+
             writer.Flush();
 
             return buffer.WrittenMemory.ToArray();
