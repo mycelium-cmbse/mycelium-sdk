@@ -369,7 +369,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// </exception>
         private static void AppendDeserializeValue(StringBuilder builder, IProperty property, DeserializationContext context)
         {
-            var (destination, addToCollection, nullable, valueDescription, localName, indentationLevel) = context;
+            var (destination, addToCollection, nullable, valueDescription, _, indentationLevel) = context;
 
             if (property.Type is IClass || property.Type is IPrimitiveType { Name: "Guid" })
             {
