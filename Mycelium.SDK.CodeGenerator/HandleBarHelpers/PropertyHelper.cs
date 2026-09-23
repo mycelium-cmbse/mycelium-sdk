@@ -233,7 +233,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             if (!property.QueryIsEnumerable())
             {
-                AppendDeserializeValue(builder, property, destination, false, property.QueryIsNullable(), propertyName, localName, 0);
+                AppendDeserializeValue(builder, property, new DeserializationContext(destination, false, property.QueryIsNullable(), propertyName, localName, 0));
 
                 return builder.ToString();
             }
@@ -255,7 +255,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             AppendLine(builder, 0, string.Empty);
             AppendLine(builder, 0, $"for (var i = 0; i < {countName}; i++)");
             AppendLine(builder, 0, "{");
-            AppendDeserializeValue(builder, property, destination, true, false, $"{propertyName} item", localName, 1);
+            AppendDeserializeValue(builder, property, new DeserializationContext(destination, true, false, $"{propertyName} item", localName, 1));
             AppendLine(builder, 0, "}");
 
             return builder.ToString();
@@ -361,29 +361,16 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="property">
         /// The modeled property defining the value representation.
         /// </param>
-        /// <param name="destination">
-        /// The generated DTO property receiving the value.
-        /// </param>
-        /// <param name="addToCollection">
-        /// Whether the value is added to a collection instead of assigned.
-        /// </param>
-        /// <param name="nullable">
-        /// Whether the value may be encoded as <c>nil</c>.
-        /// </param>
-        /// <param name="valueDescription">
-        /// The value description used in generated validation messages.
-        /// </param>
-        /// <param name="localName">
-        /// The unique generated local-variable name.
-        /// </param>
-        /// <param name="indentationLevel">
-        /// The generated indentation level.
+        /// <param name="context">
+        /// The destination, value validation and generated code context.
         /// </param>
         /// <exception cref="InvalidOperationException">
         /// Thrown when the property has no resolved type or uses a type outside the approved mapping.
         /// </exception>
-        private static void AppendDeserializeValue(StringBuilder builder, IProperty property, string destination, bool addToCollection, bool nullable, string valueDescription, string localName, int indentationLevel)
+        private static void AppendDeserializeValue(StringBuilder builder, IProperty property, DeserializationContext context)
         {
+            var (destination, addToCollection, nullable, valueDescription, localName, indentationLevel) = context;
+
             if (property.Type is IClass || property.Type is IPrimitiveType { Name: "Guid" })
             {
                 AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "ReadGuidBin16(ref reader)", indentationLevel);
@@ -393,7 +380,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             if (property.Type is IEnumeration enumeration)
             {
-                AppendDeserializeEnumeration(builder, enumeration, destination, addToCollection, nullable, valueDescription, localName, indentationLevel);
+                AppendDeserializeEnumeration(builder, enumeration, context);
 
                 return;
             }
@@ -504,26 +491,13 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="enumeration">
         /// The modeled enumeration.
         /// </param>
-        /// <param name="destination">
-        /// The generated DTO property receiving the value.
+        /// <param name="context">
+        /// The destination, value validation and generated code context.
         /// </param>
-        /// <param name="addToCollection">
-        /// Whether the value is added to a collection instead of assigned.
-        /// </param>
-        /// <param name="nullable">
-        /// Whether the value may be encoded as <c>nil</c>.
-        /// </param>
-        /// <param name="valueDescription">
-        /// The value description used in generated validation messages.
-        /// </param>
-        /// <param name="localName">
-        /// The unique generated local-variable name.
-        /// </param>
-        /// <param name="indentationLevel">
-        /// The generated indentation level.
-        /// </param>
-        private static void AppendDeserializeEnumeration(StringBuilder builder, IEnumeration enumeration, string destination, bool addToCollection, bool nullable, string valueDescription, string localName, int indentationLevel)
+        private static void AppendDeserializeEnumeration(StringBuilder builder, IEnumeration enumeration, DeserializationContext context)
         {
+            var (destination, addToCollection, nullable, valueDescription, localName, indentationLevel) = context;
+
             if (nullable)
             {
                 AppendLine(builder, indentationLevel, "if (reader.TryReadNil())");
@@ -542,6 +516,11 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             AppendLine(builder, indentationLevel, $"var {localName} = ReadRequiredString(ref reader, \"{valueDescription}\");");
             AppendEnumerationSwitchAssignment(builder, enumeration, destination, addToCollection, localName, indentationLevel);
         }
+
+        /// <summary>
+        /// Groups the generated deserialization destination and value context.
+        /// </summary>
+        private readonly record struct DeserializationContext(string Destination, bool AddToCollection, bool Nullable, string ValueDescription, string LocalName, int IndentationLevel);
 
         /// <summary>
         /// Appends an exact lowercase enumeration switch assignment.
