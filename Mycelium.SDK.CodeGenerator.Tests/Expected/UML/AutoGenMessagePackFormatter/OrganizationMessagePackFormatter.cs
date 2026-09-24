@@ -62,27 +62,31 @@ namespace Mycelium.SDK.Serializer.MessagePack
             WriteRequiredString(ref writer, dto.Description, "Description");
             if (dto.InvolvedUser == null)
             {
-                throw new MessagePackSerializationException("Collection property 'InvolvedUser' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.InvolvedUser.Count);
-
-            for (var i = 0; i < dto.InvolvedUser.Count; i++)
+            else
             {
-                WriteGuidBin16(ref writer, dto.InvolvedUser[i]);
+                writer.WriteArrayHeader(dto.InvolvedUser.Count);
+
+                for (var i = 0; i < dto.InvolvedUser.Count; i++)
+                {
+                    WriteGuidBin16(ref writer, dto.InvolvedUser[i]);
+                }
             }
             WriteRequiredString(ref writer, dto.Name, "Name");
             WriteGuidBin16(ref writer, dto.Policy);
             if (dto.Projects == null)
             {
-                throw new MessagePackSerializationException("Collection property 'Projects' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.Projects.Count);
-
-            for (var i = 0; i < dto.Projects.Count; i++)
+            else
             {
-                WriteGuidBin16(ref writer, dto.Projects[i]);
+                writer.WriteArrayHeader(dto.Projects.Count);
+
+                for (var i = 0; i < dto.Projects.Count; i++)
+                {
+                    WriteGuidBin16(ref writer, dto.Projects[i]);
+                }
             }
             writer.Write(dto.Status switch
             {
@@ -139,39 +143,43 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.Description = ReadRequiredString(ref reader, "Description");
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'InvolvedUser' may not be nil.");
+                    dto.InvolvedUser = null;
                 }
-
-                var messagePackInvolvedUserCount = reader.ReadArrayHeader();
-                dto.InvolvedUser.Clear();
-
-                if (dto.InvolvedUser.Capacity < messagePackInvolvedUserCount)
+                else
                 {
-                    dto.InvolvedUser.Capacity = messagePackInvolvedUserCount;
-                }
+                    var messagePackInvolvedUserCount = reader.ReadArrayHeader();
+                    dto.InvolvedUser.Clear();
 
-                for (var i = 0; i < messagePackInvolvedUserCount; i++)
-                {
-                    dto.InvolvedUser.Add(ReadGuidBin16(ref reader));
+                    if (dto.InvolvedUser.Capacity < messagePackInvolvedUserCount)
+                    {
+                        dto.InvolvedUser.Capacity = messagePackInvolvedUserCount;
+                    }
+
+                    for (var i = 0; i < messagePackInvolvedUserCount; i++)
+                    {
+                        dto.InvolvedUser.Add(ReadGuidBin16(ref reader));
+                    }
                 }
                 dto.Name = ReadRequiredString(ref reader, "Name");
                 dto.Policy = ReadGuidBin16(ref reader);
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'Projects' may not be nil.");
+                    dto.Projects = null;
                 }
-
-                var messagePackProjectsCount = reader.ReadArrayHeader();
-                dto.Projects.Clear();
-
-                if (dto.Projects.Capacity < messagePackProjectsCount)
+                else
                 {
-                    dto.Projects.Capacity = messagePackProjectsCount;
-                }
+                    var messagePackProjectsCount = reader.ReadArrayHeader();
+                    dto.Projects.Clear();
 
-                for (var i = 0; i < messagePackProjectsCount; i++)
-                {
-                    dto.Projects.Add(ReadGuidBin16(ref reader));
+                    if (dto.Projects.Capacity < messagePackProjectsCount)
+                    {
+                        dto.Projects.Capacity = messagePackProjectsCount;
+                    }
+
+                    for (var i = 0; i < messagePackProjectsCount; i++)
+                    {
+                        dto.Projects.Add(ReadGuidBin16(ref reader));
+                    }
                 }
                 var messagePackStatusValue = ReadRequiredString(ref reader, "Status");
                 dto.Status = messagePackStatusValue switch

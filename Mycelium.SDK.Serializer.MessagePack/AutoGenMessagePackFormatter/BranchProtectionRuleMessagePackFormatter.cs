@@ -61,32 +61,36 @@ namespace Mycelium.SDK.Serializer.MessagePack
             writer.Write(dto.CreatedOn);
             if (dto.DefaultReviewers == null)
             {
-                throw new MessagePackSerializationException("Collection property 'DefaultReviewers' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.DefaultReviewers.Count);
-
-            for (var i = 0; i < dto.DefaultReviewers.Count; i++)
+            else
             {
-                WriteGuidBin16(ref writer, dto.DefaultReviewers[i]);
+                writer.WriteArrayHeader(dto.DefaultReviewers.Count);
+
+                for (var i = 0; i < dto.DefaultReviewers.Count; i++)
+                {
+                    WriteGuidBin16(ref writer, dto.DefaultReviewers[i]);
+                }
             }
             WriteGuidBin16(ref writer, dto.EngineeringBranchId);
             if (dto.MergeAllowedFor == null)
             {
-                throw new MessagePackSerializationException("Collection property 'MergeAllowedFor' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.MergeAllowedFor.Count);
-
-            for (var i = 0; i < dto.MergeAllowedFor.Count; i++)
+            else
             {
-                writer.Write(dto.MergeAllowedFor[i] switch
+                writer.WriteArrayHeader(dto.MergeAllowedFor.Count);
+
+                for (var i = 0; i < dto.MergeAllowedFor.Count; i++)
                 {
-                    ProjectMemberRole.Administrator => "administrator",
-                    ProjectMemberRole.Participant => "participant",
-                    ProjectMemberRole.Viewer => "viewer",
-                    _ => throw new MessagePackSerializationException($"Value '{dto.MergeAllowedFor[i]}' is not valid for ProjectMemberRole."),
-                });
+                    writer.Write(dto.MergeAllowedFor[i] switch
+                    {
+                        ProjectMemberRole.Administrator => "administrator",
+                        ProjectMemberRole.Participant => "participant",
+                        ProjectMemberRole.Viewer => "viewer",
+                        _ => throw new MessagePackSerializationException($"Value '{dto.MergeAllowedFor[i]}' is not valid for ProjectMemberRole."),
+                    });
+                }
             }
             writer.Write(dto.MinimumRequiredApproval);
             WriteRequiredString(ref writer, dto.Name, "Name");
@@ -136,45 +140,49 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.CreatedOn = reader.ReadDateTime();
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'DefaultReviewers' may not be nil.");
+                    dto.DefaultReviewers = null;
                 }
-
-                var messagePackDefaultReviewersCount = reader.ReadArrayHeader();
-                dto.DefaultReviewers.Clear();
-
-                if (dto.DefaultReviewers.Capacity < messagePackDefaultReviewersCount)
+                else
                 {
-                    dto.DefaultReviewers.Capacity = messagePackDefaultReviewersCount;
-                }
+                    var messagePackDefaultReviewersCount = reader.ReadArrayHeader();
+                    dto.DefaultReviewers.Clear();
 
-                for (var i = 0; i < messagePackDefaultReviewersCount; i++)
-                {
-                    dto.DefaultReviewers.Add(ReadGuidBin16(ref reader));
+                    if (dto.DefaultReviewers.Capacity < messagePackDefaultReviewersCount)
+                    {
+                        dto.DefaultReviewers.Capacity = messagePackDefaultReviewersCount;
+                    }
+
+                    for (var i = 0; i < messagePackDefaultReviewersCount; i++)
+                    {
+                        dto.DefaultReviewers.Add(ReadGuidBin16(ref reader));
+                    }
                 }
                 dto.EngineeringBranchId = ReadGuidBin16(ref reader);
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'MergeAllowedFor' may not be nil.");
+                    dto.MergeAllowedFor = null;
                 }
-
-                var messagePackMergeAllowedForCount = reader.ReadArrayHeader();
-                dto.MergeAllowedFor.Clear();
-
-                if (dto.MergeAllowedFor.Capacity < messagePackMergeAllowedForCount)
+                else
                 {
-                    dto.MergeAllowedFor.Capacity = messagePackMergeAllowedForCount;
-                }
+                    var messagePackMergeAllowedForCount = reader.ReadArrayHeader();
+                    dto.MergeAllowedFor.Clear();
 
-                for (var i = 0; i < messagePackMergeAllowedForCount; i++)
-                {
-                    var messagePackMergeAllowedForValue = ReadRequiredString(ref reader, "MergeAllowedFor item");
-                    dto.MergeAllowedFor.Add(messagePackMergeAllowedForValue switch
+                    if (dto.MergeAllowedFor.Capacity < messagePackMergeAllowedForCount)
                     {
-                        "administrator" => ProjectMemberRole.Administrator,
-                        "participant" => ProjectMemberRole.Participant,
-                        "viewer" => ProjectMemberRole.Viewer,
-                        _ => throw new MessagePackSerializationException($"Value '{messagePackMergeAllowedForValue}' is not valid for ProjectMemberRole."),
-                    });
+                        dto.MergeAllowedFor.Capacity = messagePackMergeAllowedForCount;
+                    }
+
+                    for (var i = 0; i < messagePackMergeAllowedForCount; i++)
+                    {
+                        var messagePackMergeAllowedForValue = ReadRequiredString(ref reader, "MergeAllowedFor item");
+                        dto.MergeAllowedFor.Add(messagePackMergeAllowedForValue switch
+                        {
+                            "administrator" => ProjectMemberRole.Administrator,
+                            "participant" => ProjectMemberRole.Participant,
+                            "viewer" => ProjectMemberRole.Viewer,
+                            _ => throw new MessagePackSerializationException($"Value '{messagePackMergeAllowedForValue}' is not valid for ProjectMemberRole."),
+                        });
+                    }
                 }
                 dto.MinimumRequiredApproval = reader.ReadInt32();
                 dto.Name = ReadRequiredString(ref reader, "Name");
