@@ -65,11 +65,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 throw new MessagePackSerializationException("Collection property 'InvolvedUser' may not be null.");
             }
 
-            if (dto.InvolvedUser.Count > 1)
-            {
-                dto.InvolvedUser.Sort(static (left, right) => left.CompareTo(right));
-            }
-
             writer.WriteArrayHeader(dto.InvolvedUser.Count);
 
             for (var i = 0; i < dto.InvolvedUser.Count; i++)
@@ -81,11 +76,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
             if (dto.Projects == null)
             {
                 throw new MessagePackSerializationException("Collection property 'Projects' may not be null.");
-            }
-
-            if (dto.Projects.Count > 1)
-            {
-                dto.Projects.Sort(static (left, right) => left.CompareTo(right));
             }
 
             writer.WriteArrayHeader(dto.Projects.Count);

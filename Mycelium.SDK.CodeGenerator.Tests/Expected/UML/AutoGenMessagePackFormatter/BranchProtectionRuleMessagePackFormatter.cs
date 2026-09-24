@@ -64,11 +64,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 throw new MessagePackSerializationException("Collection property 'DefaultReviewers' may not be null.");
             }
 
-            if (dto.DefaultReviewers.Count > 1)
-            {
-                dto.DefaultReviewers.Sort(static (left, right) => left.CompareTo(right));
-            }
-
             writer.WriteArrayHeader(dto.DefaultReviewers.Count);
 
             for (var i = 0; i < dto.DefaultReviewers.Count; i++)

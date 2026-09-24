@@ -63,11 +63,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 throw new MessagePackSerializationException("Collection property 'BranchRules' may not be null.");
             }
 
-            if (dto.BranchRules.Count > 1)
-            {
-                dto.BranchRules.Sort(static (left, right) => left.CompareTo(right));
-            }
-
             writer.WriteArrayHeader(dto.BranchRules.Count);
 
             for (var i = 0; i < dto.BranchRules.Count; i++)
@@ -87,11 +82,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 throw new MessagePackSerializationException("Collection property 'Defines' may not be null.");
             }
 
-            if (dto.Defines.Count > 1)
-            {
-                dto.Defines.Sort(static (left, right) => left.CompareTo(right));
-            }
-
             writer.WriteArrayHeader(dto.Defines.Count);
 
             for (var i = 0; i < dto.Defines.Count; i++)
@@ -103,11 +93,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
             if (dto.Involves == null)
             {
                 throw new MessagePackSerializationException("Collection property 'Involves' may not be null.");
-            }
-
-            if (dto.Involves.Count > 1)
-            {
-                dto.Involves.Sort(static (left, right) => left.CompareTo(right));
             }
 
             writer.WriteArrayHeader(dto.Involves.Count);
@@ -129,11 +114,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
             if (dto.Reviews == null)
             {
                 throw new MessagePackSerializationException("Collection property 'Reviews' may not be null.");
-            }
-
-            if (dto.Reviews.Count > 1)
-            {
-                dto.Reviews.Sort(static (left, right) => left.CompareTo(right));
             }
 
             writer.WriteArrayHeader(dto.Reviews.Count);

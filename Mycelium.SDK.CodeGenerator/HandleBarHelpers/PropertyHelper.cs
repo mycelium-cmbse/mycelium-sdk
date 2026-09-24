@@ -188,15 +188,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             AppendLine(builder, 0, "}");
             AppendLine(builder, 0, string.Empty);
 
-            if (property.Type is IClass && !property.IsOrdered)
-            {
-                AppendLine(builder, 0, $"if ({valueExpression}.Count > 1)");
-                AppendLine(builder, 0, "{");
-                AppendLine(builder, 1, $"{valueExpression}.Sort(static (left, right) => left.CompareTo(right));");
-                AppendLine(builder, 0, "}");
-                AppendLine(builder, 0, string.Empty);
-            }
-
             AppendLine(builder, 0, $"writer.WriteArrayHeader({valueExpression}.Count);");
             AppendLine(builder, 0, string.Empty);
             AppendLine(builder, 0, $"for (var i = 0; i < {valueExpression}.Count; i++)");
