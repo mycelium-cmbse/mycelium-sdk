@@ -28,6 +28,11 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     public static class PropertyHelper
     {
         /// <summary>
+        /// The generated statement that writes a MessagePack nil value.
+        /// </summary>
+        private const string MessagePackWriteNilStatement = "writer.WriteNil();";
+
+        /// <summary>
         /// Registers the DTO property helpers.
         /// </summary>
         /// <param name="handlebars">
@@ -184,7 +189,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             AppendLine(builder, 0, $"if ({valueExpression} == null)");
             AppendLine(builder, 0, "{");
-            AppendLine(builder, 1, "writer.WriteNil();");
+            AppendLine(builder, 1, MessagePackWriteNilStatement);
             AppendLine(builder, 0, "}");
             AppendLine(builder, 0, "else");
             AppendLine(builder, 0, "{");
@@ -291,7 +296,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     AppendLine(builder, indentationLevel, "}");
                     AppendLine(builder, indentationLevel, "else");
                     AppendLine(builder, indentationLevel, "{");
-                    AppendLine(builder, indentationLevel + 1, "writer.WriteNil();");
+                    AppendLine(builder, indentationLevel + 1, MessagePackWriteNilStatement);
                     AppendLine(builder, indentationLevel, "}");
                 }
                 else
@@ -471,7 +476,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 AppendLine(builder, indentationLevel, "}");
                 AppendLine(builder, indentationLevel, "else");
                 AppendLine(builder, indentationLevel, "{");
-                AppendLine(builder, indentationLevel + 1, "writer.WriteNil();");
+                AppendLine(builder, indentationLevel + 1, MessagePackWriteNilStatement);
                 AppendLine(builder, indentationLevel, "}");
             }
         }
@@ -589,7 +594,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             AppendLine(builder, indentationLevel, "}");
             AppendLine(builder, indentationLevel, "else");
             AppendLine(builder, indentationLevel, "{");
-            AppendLine(builder, indentationLevel + 1, "writer.WriteNil();");
+            AppendLine(builder, indentationLevel + 1, MessagePackWriteNilStatement);
             AppendLine(builder, indentationLevel, "}");
         }
 
