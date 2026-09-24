@@ -67,7 +67,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             if (!bytes.HasValue)
             {
-                throw new MessagePackSerializationException("Expected Guid as bin(16), but found nil.");
+                throw new MessagePackSerializationException("Expected Guid as bin(16), bt found nil.");
             }
 
             var sequence = bytes.Value;
@@ -146,13 +146,15 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// The modeled value description used in validation messages.
         /// </param>
         /// <exception cref="MessagePackSerializationException">
-        /// Thrown when the dictionary, a key, or a value is <see langword="null" />.
+        /// Thrown when a dictionary key or value is <see langword="null" />.
         /// </exception>
         protected static void WriteStringDictionary(ref MessagePackWriter writer, IReadOnlyDictionary<string, string>? value, string valueDescription)
         {
             if (value == null)
             {
-                throw new MessagePackSerializationException($"Dictionary value '{valueDescription}' may not be null.");
+                writer.WriteNil();
+
+                return;
             }
 
             writer.WriteMapHeader(value.Count);
@@ -175,7 +177,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         }
 
         /// <summary>
-        /// Reads a required string dictionary from a MessagePack map.
+        /// Reads a nullable string dictionary from a MessagePack map.
         /// </summary>
         /// <param name="reader">
         /// The MessagePack reader from which the map is read.
@@ -184,17 +186,17 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// The modeled value description used in validation messages.
         /// </param>
         /// <returns>
-        /// The decoded ordinal string dictionary.
+        /// The decoded ordinal string dictionary, or <see langword="null" /> for <c>nil</c>.
         /// </returns>
         /// <exception cref="MessagePackSerializationException">
-        /// Thrown when the value is <c>nil</c>, is not a map, contains a null or non-string entry,
+        /// Thrown when the value is not a map, contains a null or non-string entry,
         /// or contains a duplicate key.
         /// </exception>
-        protected static Dictionary<string, string> ReadStringDictionary(ref MessagePackReader reader, string valueDescription)
+        protected static Dictionary<string, string>? ReadStringDictionary(ref MessagePackReader reader, string valueDescription)
         {
             if (reader.TryReadNil())
             {
-                throw new MessagePackSerializationException($"Dictionary value '{valueDescription}' may not be nil.");
+                return null;
             }
 
             var count = reader.ReadMapHeader();

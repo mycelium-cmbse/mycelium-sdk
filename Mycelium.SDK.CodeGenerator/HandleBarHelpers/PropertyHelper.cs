@@ -184,15 +184,16 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             AppendLine(builder, 0, $"if ({valueExpression} == null)");
             AppendLine(builder, 0, "{");
-            AppendLine(builder, 1, $"throw new MessagePackSerializationException(\"Collection property '{propertyName}' may not be null.\");");
+            AppendLine(builder, 1, "writer.WriteNil();");
             AppendLine(builder, 0, "}");
-            AppendLine(builder, 0, string.Empty);
-
-            AppendLine(builder, 0, $"writer.WriteArrayHeader({valueExpression}.Count);");
-            AppendLine(builder, 0, string.Empty);
-            AppendLine(builder, 0, $"for (var i = 0; i < {valueExpression}.Count; i++)");
+            AppendLine(builder, 0, "else");
             AppendLine(builder, 0, "{");
-            AppendSerializeValue(builder, property, $"{valueExpression}[i]", false, $"{propertyName} item", 1);
+            AppendLine(builder, 1, $"writer.WriteArrayHeader({valueExpression}.Count);");
+            AppendLine(builder, 1, string.Empty);
+            AppendLine(builder, 1, $"for (var i = 0; i < {valueExpression}.Count; i++)");
+            AppendLine(builder, 1, "{");
+            AppendSerializeValue(builder, property, $"{valueExpression}[i]", false, $"{propertyName} item", 2);
+            AppendLine(builder, 1, "}");
             AppendLine(builder, 0, "}");
 
             return builder.ToString();
@@ -233,20 +234,22 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             AppendLine(builder, 0, "if (reader.TryReadNil())");
             AppendLine(builder, 0, "{");
-            AppendLine(builder, 1, $"throw new MessagePackSerializationException(\"Collection property '{propertyName}' may not be nil.\");");
+            AppendLine(builder, 1, $"{destination} = null;");
             AppendLine(builder, 0, "}");
-            AppendLine(builder, 0, string.Empty);
-            AppendLine(builder, 0, $"var {countName} = reader.ReadArrayHeader();");
-            AppendLine(builder, 0, $"{destination}.Clear();");
-            AppendLine(builder, 0, string.Empty);
-            AppendLine(builder, 0, $"if ({destination}.Capacity < {countName})");
+            AppendLine(builder, 0, "else");
             AppendLine(builder, 0, "{");
-            AppendLine(builder, 1, $"{destination}.Capacity = {countName};");
-            AppendLine(builder, 0, "}");
-            AppendLine(builder, 0, string.Empty);
-            AppendLine(builder, 0, $"for (var i = 0; i < {countName}; i++)");
-            AppendLine(builder, 0, "{");
-            AppendDeserializeValue(builder, property, new DeserializationContext(destination, true, false, $"{propertyName} item", localName, 1));
+            AppendLine(builder, 1, $"var {countName} = reader.ReadArrayHeader();");
+            AppendLine(builder, 1, $"{destination}.Clear();");
+            AppendLine(builder, 1, string.Empty);
+            AppendLine(builder, 1, $"if ({destination}.Capacity < {countName})");
+            AppendLine(builder, 1, "{");
+            AppendLine(builder, 2, $"{destination}.Capacity = {countName};");
+            AppendLine(builder, 1, "}");
+            AppendLine(builder, 1, string.Empty);
+            AppendLine(builder, 1, $"for (var i = 0; i < {countName}; i++)");
+            AppendLine(builder, 1, "{");
+            AppendDeserializeValue(builder, property, new DeserializationContext(destination, true, false, $"{propertyName} item", localName, 2));
+            AppendLine(builder, 1, "}");
             AppendLine(builder, 0, "}");
 
             return builder.ToString();

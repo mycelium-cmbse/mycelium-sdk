@@ -210,24 +210,109 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         }
 
         [Test]
-        public void Verify_that_null_collections_are_rejected_during_serialization()
+        public void Verify_that_null_collection_serializes_as_nil_and_round_trips()
         {
             var dto = CreateBranchProtectionRule();
             dto.DefaultReviewers = null!;
+            dto.MergeAllowedFor = null!;
 
-            Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Serialize(dto, SerializerOptions));
+            var payload = MessagePackSerializer.Serialize(dto, SerializerOptions);
+            var actual = MessagePackSerializer.Deserialize<BranchProtectionRule>(payload, SerializerOptions);
+            var reader = new MessagePackReader(payload);
+
+            Assert.That(reader.ReadArrayHeader(), Is.EqualTo(11));
+
+            for (var index = 0; index < 3; index++)
+            {
+                reader.Skip();
+            }
+
+            Assert.That(reader.TryReadNil(), Is.True);
+            reader.Skip();
+            Assert.That(reader.TryReadNil(), Is.True);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(actual?.DefaultReviewers, Is.Null);
+                Assert.That(actual?.MergeAllowedFor, Is.Null);
+            }
         }
 
         [Test]
-        public void Verify_that_nil_collections_are_rejected_during_deserialization()
+        public void Verify_that_nil_collection_payload_deserializes_to_null()
         {
             Assert.That(MessagePackSerializer.Deserialize<BranchProtectionRule>(CreateBranchProtectionRulePayload(nilDefaultReviewers: false), SerializerOptions), Is.Not.Null);
 
             var payload = CreateBranchProtectionRulePayload(nilDefaultReviewers: true);
+            var actual = MessagePackSerializer.Deserialize<BranchProtectionRule>(payload, SerializerOptions);
 
-            var exception = Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<BranchProtectionRule>(payload, SerializerOptions));
+            Assert.That(actual?.DefaultReviewers, Is.Null);
+        }
 
-            Assert.That(exception!.ToString(), Does.Contain("Collection property 'DefaultReviewers' may not be nil."));
+        [Test]
+        public void Verify_that_empty_collections_remain_empty_arrays()
+        {
+            var dto = CreateBranchProtectionRule();
+            dto.DefaultReviewers.Clear();
+            dto.MergeAllowedFor.Clear();
+
+            var payload = MessagePackSerializer.Serialize(dto, SerializerOptions);
+            var actual = MessagePackSerializer.Deserialize<BranchProtectionRule>(payload, SerializerOptions);
+            var reader = new MessagePackReader(payload);
+
+            Assert.That(reader.ReadArrayHeader(), Is.EqualTo(11));
+
+            for (var index = 0; index < 3; index++)
+            {
+                reader.Skip();
+            }
+
+            Assert.That(reader.ReadArrayHeader(), Is.Zero);
+            reader.Skip();
+            Assert.That(reader.ReadArrayHeader(), Is.Zero);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(actual?.DefaultReviewers, Is.Empty);
+                Assert.That(actual?.MergeAllowedFor, Is.Empty);
+            }
+        }
+
+        [Test]
+        public void Verify_that_null_and_empty_dictionaries_remain_distinct()
+        {
+            var dto = CreateFunctionalProject();
+            dto.SharedPreferences = null!;
+
+            var nullPayload = MessagePackSerializer.Serialize(dto, SerializerOptions);
+            var nullResult = MessagePackSerializer.Deserialize<FunctionalProject>(nullPayload, SerializerOptions);
+            var nullReader = new MessagePackReader(nullPayload);
+
+            Assert.That(nullReader.ReadArrayHeader(), Is.EqualTo(18));
+
+            for (var index = 0; index < 14; index++)
+            {
+                nullReader.Skip();
+            }
+
+            Assert.That(nullReader.TryReadNil(), Is.True);
+            Assert.That(nullResult?.SharedPreferences, Is.Null);
+
+            dto.SharedPreferences = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            var emptyPayload = MessagePackSerializer.Serialize(dto, SerializerOptions);
+            var emptyResult = MessagePackSerializer.Deserialize<FunctionalProject>(emptyPayload, SerializerOptions);
+            var emptyReader = new MessagePackReader(emptyPayload);
+
+            Assert.That(emptyReader.ReadArrayHeader(), Is.EqualTo(18));
+
+            for (var index = 0; index < 14; index++)
+            {
+                emptyReader.Skip();
+            }
+
+            Assert.That(emptyReader.ReadMapHeader(), Is.Zero);
+            Assert.That(emptyResult?.SharedPreferences, Is.Empty);
         }
 
         [Test]
@@ -585,7 +670,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
                 return ReadUri(ref reader, nullable: false, "Uri");
             }
 
-            public static Dictionary<string, string> DeserializeStringDictionary(byte[] payload)
+            public static Dictionary<string, string>? DeserializeStringDictionary(byte[] payload)
             {
                 var reader = new MessagePackReader(payload);
 
