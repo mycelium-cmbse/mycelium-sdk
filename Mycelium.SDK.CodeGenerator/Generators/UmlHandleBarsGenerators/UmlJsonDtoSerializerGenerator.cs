@@ -9,8 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 {
-    using HandlebarsDotNet.Helpers;
-
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
 
     using uml4net.StructuredClassifiers;
@@ -83,8 +81,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// </remarks>
         protected override void RegisterHelpers()
         {
-            HandlebarsHelpers.Register(this.Handlebars);
-
             this.Handlebars.RegisterDtoClassHelper();
             this.Handlebars.RegisterJsonSerializerPropertyHelper();
             this.Handlebars.RegisterSafeContextHelper();
