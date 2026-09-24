@@ -62,25 +62,29 @@ namespace Mycelium.SDK.Serializer.MessagePack
             WriteRequiredString(ref writer, dto.ExternalIdentifier, "ExternalIdentifier");
             if (dto.IsPartOfOrganizations == null)
             {
-                throw new MessagePackSerializationException("Collection property 'IsPartOfOrganizations' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.IsPartOfOrganizations.Count);
-
-            for (var i = 0; i < dto.IsPartOfOrganizations.Count; i++)
+            else
             {
-                WriteGuidBin16(ref writer, dto.IsPartOfOrganizations[i]);
+                writer.WriteArrayHeader(dto.IsPartOfOrganizations.Count);
+
+                for (var i = 0; i < dto.IsPartOfOrganizations.Count; i++)
+                {
+                    WriteGuidBin16(ref writer, dto.IsPartOfOrganizations[i]);
+                }
             }
             if (dto.IsPartOfProjects == null)
             {
-                throw new MessagePackSerializationException("Collection property 'IsPartOfProjects' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.IsPartOfProjects.Count);
-
-            for (var i = 0; i < dto.IsPartOfProjects.Count; i++)
+            else
             {
-                WriteGuidBin16(ref writer, dto.IsPartOfProjects[i]);
+                writer.WriteArrayHeader(dto.IsPartOfProjects.Count);
+
+                for (var i = 0; i < dto.IsPartOfProjects.Count; i++)
+                {
+                    WriteGuidBin16(ref writer, dto.IsPartOfProjects[i]);
+                }
             }
             WriteRequiredString(ref writer, dto.Mail, "Mail");
             WriteRequiredString(ref writer, dto.Name, "Name");
@@ -140,37 +144,41 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.ExternalIdentifier = ReadRequiredString(ref reader, "ExternalIdentifier");
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'IsPartOfOrganizations' may not be nil.");
+                    dto.IsPartOfOrganizations = null;
                 }
-
-                var messagePackIsPartOfOrganizationsCount = reader.ReadArrayHeader();
-                dto.IsPartOfOrganizations.Clear();
-
-                if (dto.IsPartOfOrganizations.Capacity < messagePackIsPartOfOrganizationsCount)
+                else
                 {
-                    dto.IsPartOfOrganizations.Capacity = messagePackIsPartOfOrganizationsCount;
-                }
+                    var messagePackIsPartOfOrganizationsCount = reader.ReadArrayHeader();
+                    dto.IsPartOfOrganizations.Clear();
 
-                for (var i = 0; i < messagePackIsPartOfOrganizationsCount; i++)
-                {
-                    dto.IsPartOfOrganizations.Add(ReadGuidBin16(ref reader));
+                    if (dto.IsPartOfOrganizations.Capacity < messagePackIsPartOfOrganizationsCount)
+                    {
+                        dto.IsPartOfOrganizations.Capacity = messagePackIsPartOfOrganizationsCount;
+                    }
+
+                    for (var i = 0; i < messagePackIsPartOfOrganizationsCount; i++)
+                    {
+                        dto.IsPartOfOrganizations.Add(ReadGuidBin16(ref reader));
+                    }
                 }
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'IsPartOfProjects' may not be nil.");
+                    dto.IsPartOfProjects = null;
                 }
-
-                var messagePackIsPartOfProjectsCount = reader.ReadArrayHeader();
-                dto.IsPartOfProjects.Clear();
-
-                if (dto.IsPartOfProjects.Capacity < messagePackIsPartOfProjectsCount)
+                else
                 {
-                    dto.IsPartOfProjects.Capacity = messagePackIsPartOfProjectsCount;
-                }
+                    var messagePackIsPartOfProjectsCount = reader.ReadArrayHeader();
+                    dto.IsPartOfProjects.Clear();
 
-                for (var i = 0; i < messagePackIsPartOfProjectsCount; i++)
-                {
-                    dto.IsPartOfProjects.Add(ReadGuidBin16(ref reader));
+                    if (dto.IsPartOfProjects.Capacity < messagePackIsPartOfProjectsCount)
+                    {
+                        dto.IsPartOfProjects.Capacity = messagePackIsPartOfProjectsCount;
+                    }
+
+                    for (var i = 0; i < messagePackIsPartOfProjectsCount; i++)
+                    {
+                        dto.IsPartOfProjects.Add(ReadGuidBin16(ref reader));
+                    }
                 }
                 dto.Mail = ReadRequiredString(ref reader, "Mail");
                 dto.Name = ReadRequiredString(ref reader, "Name");

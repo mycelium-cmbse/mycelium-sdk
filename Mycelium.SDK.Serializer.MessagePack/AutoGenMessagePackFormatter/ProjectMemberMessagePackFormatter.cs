@@ -70,14 +70,16 @@ namespace Mycelium.SDK.Serializer.MessagePack
             WriteGuidBin16(ref writer, dto.IsPartOf);
             if (dto.Owns == null)
             {
-                throw new MessagePackSerializationException("Collection property 'Owns' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.Owns.Count);
-
-            for (var i = 0; i < dto.Owns.Count; i++)
+            else
             {
-                WriteGuidBin16(ref writer, dto.Owns[i]);
+                writer.WriteArrayHeader(dto.Owns.Count);
+
+                for (var i = 0; i < dto.Owns.Count; i++)
+                {
+                    WriteGuidBin16(ref writer, dto.Owns[i]);
+                }
             }
             writer.Write(dto.Role switch
             {
@@ -141,20 +143,22 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.IsPartOf = ReadGuidBin16(ref reader);
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'Owns' may not be nil.");
+                    dto.Owns = null;
                 }
-
-                var messagePackOwnsCount = reader.ReadArrayHeader();
-                dto.Owns.Clear();
-
-                if (dto.Owns.Capacity < messagePackOwnsCount)
+                else
                 {
-                    dto.Owns.Capacity = messagePackOwnsCount;
-                }
+                    var messagePackOwnsCount = reader.ReadArrayHeader();
+                    dto.Owns.Clear();
 
-                for (var i = 0; i < messagePackOwnsCount; i++)
-                {
-                    dto.Owns.Add(ReadGuidBin16(ref reader));
+                    if (dto.Owns.Capacity < messagePackOwnsCount)
+                    {
+                        dto.Owns.Capacity = messagePackOwnsCount;
+                    }
+
+                    for (var i = 0; i < messagePackOwnsCount; i++)
+                    {
+                        dto.Owns.Add(ReadGuidBin16(ref reader));
+                    }
                 }
                 var messagePackRoleValue = ReadRequiredString(ref reader, "Role");
                 dto.Role = messagePackRoleValue switch

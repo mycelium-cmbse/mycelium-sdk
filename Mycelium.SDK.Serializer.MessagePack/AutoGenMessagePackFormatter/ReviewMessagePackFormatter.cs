@@ -60,28 +60,32 @@ namespace Mycelium.SDK.Serializer.MessagePack
             WriteGuidBin16(ref writer, dto.Author);
             if (dto.Comments == null)
             {
-                throw new MessagePackSerializationException("Collection property 'Comments' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.Comments.Count);
-
-            for (var i = 0; i < dto.Comments.Count; i++)
+            else
             {
-                WriteGuidBin16(ref writer, dto.Comments[i]);
+                writer.WriteArrayHeader(dto.Comments.Count);
+
+                for (var i = 0; i < dto.Comments.Count; i++)
+                {
+                    WriteGuidBin16(ref writer, dto.Comments[i]);
+                }
             }
             WriteGuidBin16(ref writer, dto.CreatedBy);
             writer.Write(dto.CreatedOn);
             WriteRequiredString(ref writer, dto.Description, "Description");
             if (dto.Reviewers == null)
             {
-                throw new MessagePackSerializationException("Collection property 'Reviewers' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.Reviewers.Count);
-
-            for (var i = 0; i < dto.Reviewers.Count; i++)
+            else
             {
-                WriteGuidBin16(ref writer, dto.Reviewers[i]);
+                writer.WriteArrayHeader(dto.Reviewers.Count);
+
+                for (var i = 0; i < dto.Reviewers.Count; i++)
+                {
+                    WriteGuidBin16(ref writer, dto.Reviewers[i]);
+                }
             }
             WriteGuidBin16(ref writer, dto.SourceBranchId);
             writer.Write(dto.Status switch
@@ -139,40 +143,44 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.Author = ReadGuidBin16(ref reader);
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'Comments' may not be nil.");
+                    dto.Comments = null;
                 }
-
-                var messagePackCommentsCount = reader.ReadArrayHeader();
-                dto.Comments.Clear();
-
-                if (dto.Comments.Capacity < messagePackCommentsCount)
+                else
                 {
-                    dto.Comments.Capacity = messagePackCommentsCount;
-                }
+                    var messagePackCommentsCount = reader.ReadArrayHeader();
+                    dto.Comments.Clear();
 
-                for (var i = 0; i < messagePackCommentsCount; i++)
-                {
-                    dto.Comments.Add(ReadGuidBin16(ref reader));
+                    if (dto.Comments.Capacity < messagePackCommentsCount)
+                    {
+                        dto.Comments.Capacity = messagePackCommentsCount;
+                    }
+
+                    for (var i = 0; i < messagePackCommentsCount; i++)
+                    {
+                        dto.Comments.Add(ReadGuidBin16(ref reader));
+                    }
                 }
                 dto.CreatedBy = ReadGuidBin16(ref reader);
                 dto.CreatedOn = reader.ReadDateTime();
                 dto.Description = ReadRequiredString(ref reader, "Description");
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'Reviewers' may not be nil.");
+                    dto.Reviewers = null;
                 }
-
-                var messagePackReviewersCount = reader.ReadArrayHeader();
-                dto.Reviewers.Clear();
-
-                if (dto.Reviewers.Capacity < messagePackReviewersCount)
+                else
                 {
-                    dto.Reviewers.Capacity = messagePackReviewersCount;
-                }
+                    var messagePackReviewersCount = reader.ReadArrayHeader();
+                    dto.Reviewers.Clear();
 
-                for (var i = 0; i < messagePackReviewersCount; i++)
-                {
-                    dto.Reviewers.Add(ReadGuidBin16(ref reader));
+                    if (dto.Reviewers.Capacity < messagePackReviewersCount)
+                    {
+                        dto.Reviewers.Capacity = messagePackReviewersCount;
+                    }
+
+                    for (var i = 0; i < messagePackReviewersCount; i++)
+                    {
+                        dto.Reviewers.Add(ReadGuidBin16(ref reader));
+                    }
                 }
                 dto.SourceBranchId = ReadGuidBin16(ref reader);
                 var messagePackStatusValue = ReadRequiredString(ref reader, "Status");

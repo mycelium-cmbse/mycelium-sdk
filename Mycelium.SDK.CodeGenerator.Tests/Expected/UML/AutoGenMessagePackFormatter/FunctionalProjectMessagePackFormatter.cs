@@ -60,14 +60,16 @@ namespace Mycelium.SDK.Serializer.MessagePack
             WriteGuidBin16(ref writer, dto.BelongsTo);
             if (dto.BranchRules == null)
             {
-                throw new MessagePackSerializationException("Collection property 'BranchRules' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.BranchRules.Count);
-
-            for (var i = 0; i < dto.BranchRules.Count; i++)
+            else
             {
-                WriteGuidBin16(ref writer, dto.BranchRules[i]);
+                writer.WriteArrayHeader(dto.BranchRules.Count);
+
+                for (var i = 0; i < dto.BranchRules.Count; i++)
+                {
+                    WriteGuidBin16(ref writer, dto.BranchRules[i]);
+                }
             }
             WriteGuidBin16(ref writer, dto.CreatedBy);
             writer.Write(dto.CreatedOn);
@@ -79,27 +81,31 @@ namespace Mycelium.SDK.Serializer.MessagePack
             });
             if (dto.Defines == null)
             {
-                throw new MessagePackSerializationException("Collection property 'Defines' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.Defines.Count);
-
-            for (var i = 0; i < dto.Defines.Count; i++)
+            else
             {
-                WriteGuidBin16(ref writer, dto.Defines[i]);
+                writer.WriteArrayHeader(dto.Defines.Count);
+
+                for (var i = 0; i < dto.Defines.Count; i++)
+                {
+                    WriteGuidBin16(ref writer, dto.Defines[i]);
+                }
             }
             WriteRequiredString(ref writer, dto.Description, "Description");
             WriteGuidBin16(ref writer, dto.EngineeringProjectId);
             if (dto.Involves == null)
             {
-                throw new MessagePackSerializationException("Collection property 'Involves' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.Involves.Count);
-
-            for (var i = 0; i < dto.Involves.Count; i++)
+            else
             {
-                WriteGuidBin16(ref writer, dto.Involves[i]);
+                writer.WriteArrayHeader(dto.Involves.Count);
+
+                for (var i = 0; i < dto.Involves.Count; i++)
+                {
+                    WriteGuidBin16(ref writer, dto.Involves[i]);
+                }
             }
             writer.Write(dto.Lifecycle switch
             {
@@ -113,14 +119,16 @@ namespace Mycelium.SDK.Serializer.MessagePack
             WriteGuidBin16(ref writer, dto.Policy);
             if (dto.Reviews == null)
             {
-                throw new MessagePackSerializationException("Collection property 'Reviews' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.Reviews.Count);
-
-            for (var i = 0; i < dto.Reviews.Count; i++)
+            else
             {
-                WriteGuidBin16(ref writer, dto.Reviews[i]);
+                writer.WriteArrayHeader(dto.Reviews.Count);
+
+                for (var i = 0; i < dto.Reviews.Count; i++)
+                {
+                    WriteGuidBin16(ref writer, dto.Reviews[i]);
+                }
             }
             WriteStringDictionary(ref writer, dto.SharedPreferences, "SharedPreferences");
             WriteGuidBin16(ref writer, dto.UpdatedBy);
@@ -174,20 +182,22 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.BelongsTo = ReadGuidBin16(ref reader);
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'BranchRules' may not be nil.");
+                    dto.BranchRules = null;
                 }
-
-                var messagePackBranchRulesCount = reader.ReadArrayHeader();
-                dto.BranchRules.Clear();
-
-                if (dto.BranchRules.Capacity < messagePackBranchRulesCount)
+                else
                 {
-                    dto.BranchRules.Capacity = messagePackBranchRulesCount;
-                }
+                    var messagePackBranchRulesCount = reader.ReadArrayHeader();
+                    dto.BranchRules.Clear();
 
-                for (var i = 0; i < messagePackBranchRulesCount; i++)
-                {
-                    dto.BranchRules.Add(ReadGuidBin16(ref reader));
+                    if (dto.BranchRules.Capacity < messagePackBranchRulesCount)
+                    {
+                        dto.BranchRules.Capacity = messagePackBranchRulesCount;
+                    }
+
+                    for (var i = 0; i < messagePackBranchRulesCount; i++)
+                    {
+                        dto.BranchRules.Add(ReadGuidBin16(ref reader));
+                    }
                 }
                 dto.CreatedBy = ReadGuidBin16(ref reader);
                 dto.CreatedOn = reader.ReadDateTime();
@@ -200,39 +210,43 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 };
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'Defines' may not be nil.");
+                    dto.Defines = null;
                 }
-
-                var messagePackDefinesCount = reader.ReadArrayHeader();
-                dto.Defines.Clear();
-
-                if (dto.Defines.Capacity < messagePackDefinesCount)
+                else
                 {
-                    dto.Defines.Capacity = messagePackDefinesCount;
-                }
+                    var messagePackDefinesCount = reader.ReadArrayHeader();
+                    dto.Defines.Clear();
 
-                for (var i = 0; i < messagePackDefinesCount; i++)
-                {
-                    dto.Defines.Add(ReadGuidBin16(ref reader));
+                    if (dto.Defines.Capacity < messagePackDefinesCount)
+                    {
+                        dto.Defines.Capacity = messagePackDefinesCount;
+                    }
+
+                    for (var i = 0; i < messagePackDefinesCount; i++)
+                    {
+                        dto.Defines.Add(ReadGuidBin16(ref reader));
+                    }
                 }
                 dto.Description = ReadRequiredString(ref reader, "Description");
                 dto.EngineeringProjectId = ReadGuidBin16(ref reader);
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'Involves' may not be nil.");
+                    dto.Involves = null;
                 }
-
-                var messagePackInvolvesCount = reader.ReadArrayHeader();
-                dto.Involves.Clear();
-
-                if (dto.Involves.Capacity < messagePackInvolvesCount)
+                else
                 {
-                    dto.Involves.Capacity = messagePackInvolvesCount;
-                }
+                    var messagePackInvolvesCount = reader.ReadArrayHeader();
+                    dto.Involves.Clear();
 
-                for (var i = 0; i < messagePackInvolvesCount; i++)
-                {
-                    dto.Involves.Add(ReadGuidBin16(ref reader));
+                    if (dto.Involves.Capacity < messagePackInvolvesCount)
+                    {
+                        dto.Involves.Capacity = messagePackInvolvesCount;
+                    }
+
+                    for (var i = 0; i < messagePackInvolvesCount; i++)
+                    {
+                        dto.Involves.Add(ReadGuidBin16(ref reader));
+                    }
                 }
                 var messagePackLifecycleValue = ReadRequiredString(ref reader, "Lifecycle");
                 dto.Lifecycle = messagePackLifecycleValue switch
@@ -247,20 +261,22 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.Policy = ReadGuidBin16(ref reader);
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'Reviews' may not be nil.");
+                    dto.Reviews = null;
                 }
-
-                var messagePackReviewsCount = reader.ReadArrayHeader();
-                dto.Reviews.Clear();
-
-                if (dto.Reviews.Capacity < messagePackReviewsCount)
+                else
                 {
-                    dto.Reviews.Capacity = messagePackReviewsCount;
-                }
+                    var messagePackReviewsCount = reader.ReadArrayHeader();
+                    dto.Reviews.Clear();
 
-                for (var i = 0; i < messagePackReviewsCount; i++)
-                {
-                    dto.Reviews.Add(ReadGuidBin16(ref reader));
+                    if (dto.Reviews.Capacity < messagePackReviewsCount)
+                    {
+                        dto.Reviews.Capacity = messagePackReviewsCount;
+                    }
+
+                    for (var i = 0; i < messagePackReviewsCount; i++)
+                    {
+                        dto.Reviews.Add(ReadGuidBin16(ref reader));
+                    }
                 }
                 dto.SharedPreferences = ReadStringDictionary(ref reader, "SharedPreferences");
                 dto.UpdatedBy = ReadGuidBin16(ref reader);

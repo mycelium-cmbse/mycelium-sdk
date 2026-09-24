@@ -77,14 +77,16 @@ namespace Mycelium.SDK.Serializer.MessagePack
             }
             if (dto.Replies == null)
             {
-                throw new MessagePackSerializationException("Collection property 'Replies' may not be null.");
+                writer.WriteNil();
             }
-
-            writer.WriteArrayHeader(dto.Replies.Count);
-
-            for (var i = 0; i < dto.Replies.Count; i++)
+            else
             {
-                WriteGuidBin16(ref writer, dto.Replies[i]);
+                writer.WriteArrayHeader(dto.Replies.Count);
+
+                for (var i = 0; i < dto.Replies.Count; i++)
+                {
+                    WriteGuidBin16(ref writer, dto.Replies[i]);
+                }
             }
             WriteGuidBin16(ref writer, dto.TargetElementId);
             WriteGuidBin16(ref writer, dto.UpdatedBy);
@@ -149,20 +151,22 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 }
                 if (reader.TryReadNil())
                 {
-                    throw new MessagePackSerializationException("Collection property 'Replies' may not be nil.");
+                    dto.Replies = null;
                 }
-
-                var messagePackRepliesCount = reader.ReadArrayHeader();
-                dto.Replies.Clear();
-
-                if (dto.Replies.Capacity < messagePackRepliesCount)
+                else
                 {
-                    dto.Replies.Capacity = messagePackRepliesCount;
-                }
+                    var messagePackRepliesCount = reader.ReadArrayHeader();
+                    dto.Replies.Clear();
 
-                for (var i = 0; i < messagePackRepliesCount; i++)
-                {
-                    dto.Replies.Add(ReadGuidBin16(ref reader));
+                    if (dto.Replies.Capacity < messagePackRepliesCount)
+                    {
+                        dto.Replies.Capacity = messagePackRepliesCount;
+                    }
+
+                    for (var i = 0; i < messagePackRepliesCount; i++)
+                    {
+                        dto.Replies.Add(ReadGuidBin16(ref reader));
+                    }
                 }
                 dto.TargetElementId = ReadGuidBin16(ref reader);
                 dto.UpdatedBy = ReadGuidBin16(ref reader);
