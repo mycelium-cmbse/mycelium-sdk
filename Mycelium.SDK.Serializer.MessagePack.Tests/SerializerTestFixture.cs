@@ -100,8 +100,12 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         public void Verify_that_BranchProtectionRule_uses_integer_boolean_and_enumeration_collection_mappings()
         {
             var dto = CreateBranchProtectionRule();
+            dto.DefaultReviewers.Insert(0, Guid.Parse("10000000-0000-0000-0000-000000000006"));
+            var expectedReviewers = dto.DefaultReviewers.ToArray();
 
             var payload = MessagePackSerializer.Serialize(dto, SerializerOptions);
+
+            Assert.That(dto.DefaultReviewers, Is.EqualTo(expectedReviewers));
 
             var reader = new MessagePackReader(payload);
 
@@ -110,7 +114,8 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             AssertGuid(ref reader, dto.CreatedBy);
             Assert.That(reader.ReadDateTime(), Is.EqualTo(dto.CreatedOn));
             Assert.That(reader.ReadArrayHeader(), Is.EqualTo(dto.DefaultReviewers.Count));
-            AssertGuid(ref reader, dto.DefaultReviewers[0]);
+            AssertGuid(ref reader, expectedReviewers[0]);
+            AssertGuid(ref reader, expectedReviewers[1]);
             AssertGuid(ref reader, dto.EngineeringBranchId);
             Assert.That(reader.ReadArrayHeader(), Is.EqualTo(dto.MergeAllowedFor.Count));
             Assert.That(reader.ReadString(), Is.EqualTo("administrator"));

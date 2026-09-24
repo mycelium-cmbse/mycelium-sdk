@@ -80,11 +80,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 throw new MessagePackSerializationException("Collection property 'Replies' may not be null.");
             }
 
-            if (dto.Replies.Count > 1)
-            {
-                dto.Replies.Sort(static (left, right) => left.CompareTo(right));
-            }
-
             writer.WriteArrayHeader(dto.Replies.Count);
 
             for (var i = 0; i < dto.Replies.Count; i++)

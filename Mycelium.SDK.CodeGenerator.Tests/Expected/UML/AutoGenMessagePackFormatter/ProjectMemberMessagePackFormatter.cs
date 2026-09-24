@@ -73,11 +73,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 throw new MessagePackSerializationException("Collection property 'Owns' may not be null.");
             }
 
-            if (dto.Owns.Count > 1)
-            {
-                dto.Owns.Sort(static (left, right) => left.CompareTo(right));
-            }
-
             writer.WriteArrayHeader(dto.Owns.Count);
 
             for (var i = 0; i < dto.Owns.Count; i++)

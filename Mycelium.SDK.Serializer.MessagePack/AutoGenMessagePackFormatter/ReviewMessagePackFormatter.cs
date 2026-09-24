@@ -63,11 +63,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 throw new MessagePackSerializationException("Collection property 'Comments' may not be null.");
             }
 
-            if (dto.Comments.Count > 1)
-            {
-                dto.Comments.Sort(static (left, right) => left.CompareTo(right));
-            }
-
             writer.WriteArrayHeader(dto.Comments.Count);
 
             for (var i = 0; i < dto.Comments.Count; i++)
@@ -80,11 +75,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
             if (dto.Reviewers == null)
             {
                 throw new MessagePackSerializationException("Collection property 'Reviewers' may not be null.");
-            }
-
-            if (dto.Reviewers.Count > 1)
-            {
-                dto.Reviewers.Sort(static (left, right) => left.CompareTo(right));
             }
 
             writer.WriteArrayHeader(dto.Reviewers.Count);
