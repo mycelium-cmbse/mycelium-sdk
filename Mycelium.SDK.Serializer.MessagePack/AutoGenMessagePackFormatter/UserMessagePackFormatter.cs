@@ -65,11 +65,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 throw new MessagePackSerializationException("Collection property 'IsPartOfOrganizations' may not be null.");
             }
 
-            if (dto.IsPartOfOrganizations.Count > 1)
-            {
-                dto.IsPartOfOrganizations.Sort(static (left, right) => left.CompareTo(right));
-            }
-
             writer.WriteArrayHeader(dto.IsPartOfOrganizations.Count);
 
             for (var i = 0; i < dto.IsPartOfOrganizations.Count; i++)
@@ -79,11 +74,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
             if (dto.IsPartOfProjects == null)
             {
                 throw new MessagePackSerializationException("Collection property 'IsPartOfProjects' may not be null.");
-            }
-
-            if (dto.IsPartOfProjects.Count > 1)
-            {
-                dto.IsPartOfProjects.Sort(static (left, right) => left.CompareTo(right));
             }
 
             writer.WriteArrayHeader(dto.IsPartOfProjects.Count);
