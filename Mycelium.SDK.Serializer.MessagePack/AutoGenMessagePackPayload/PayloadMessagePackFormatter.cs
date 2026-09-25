@@ -224,9 +224,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     Created = reader.ReadDateTime()
                 };
 
-                var BranchProtectionRuleCount = reader.ReadArrayHeader();
+                var branchProtectionRuleCount = reader.ReadArrayHeader();
 
-                for (var index = 0; index < BranchProtectionRuleCount; index++)
+                for (var index = 0; index < branchProtectionRuleCount; index++)
                 {
                     var dataItem = options.Resolver.GetFormatterWithVerify<BranchProtectionRule?>().Deserialize(ref reader, options);
 
@@ -238,9 +238,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     payload.BranchProtectionRule.Add(dataItem);
                 }
 
-                var CommentCount = reader.ReadArrayHeader();
+                var commentCount = reader.ReadArrayHeader();
 
-                for (var index = 0; index < CommentCount; index++)
+                for (var index = 0; index < commentCount; index++)
                 {
                     var dataItem = options.Resolver.GetFormatterWithVerify<Comment?>().Deserialize(ref reader, options);
 
@@ -252,9 +252,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     payload.Comment.Add(dataItem);
                 }
 
-                var FunctionalProjectCount = reader.ReadArrayHeader();
+                var functionalProjectCount = reader.ReadArrayHeader();
 
-                for (var index = 0; index < FunctionalProjectCount; index++)
+                for (var index = 0; index < functionalProjectCount; index++)
                 {
                     var dataItem = options.Resolver.GetFormatterWithVerify<FunctionalProject?>().Deserialize(ref reader, options);
 
@@ -266,9 +266,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     payload.FunctionalProject.Add(dataItem);
                 }
 
-                var FunctionalProjectPolicyCount = reader.ReadArrayHeader();
+                var functionalProjectPolicyCount = reader.ReadArrayHeader();
 
-                for (var index = 0; index < FunctionalProjectPolicyCount; index++)
+                for (var index = 0; index < functionalProjectPolicyCount; index++)
                 {
                     var dataItem = options.Resolver.GetFormatterWithVerify<FunctionalProjectPolicy?>().Deserialize(ref reader, options);
 
@@ -280,9 +280,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     payload.FunctionalProjectPolicy.Add(dataItem);
                 }
 
-                var OrganizationCount = reader.ReadArrayHeader();
+                var organizationCount = reader.ReadArrayHeader();
 
-                for (var index = 0; index < OrganizationCount; index++)
+                for (var index = 0; index < organizationCount; index++)
                 {
                     var dataItem = options.Resolver.GetFormatterWithVerify<Organization?>().Deserialize(ref reader, options);
 
@@ -294,9 +294,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     payload.Organization.Add(dataItem);
                 }
 
-                var OrganizationMemberCount = reader.ReadArrayHeader();
+                var organizationMemberCount = reader.ReadArrayHeader();
 
-                for (var index = 0; index < OrganizationMemberCount; index++)
+                for (var index = 0; index < organizationMemberCount; index++)
                 {
                     var dataItem = options.Resolver.GetFormatterWithVerify<OrganizationMember?>().Deserialize(ref reader, options);
 
@@ -308,9 +308,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     payload.OrganizationMember.Add(dataItem);
                 }
 
-                var OrganizationPolicyCount = reader.ReadArrayHeader();
+                var organizationPolicyCount = reader.ReadArrayHeader();
 
-                for (var index = 0; index < OrganizationPolicyCount; index++)
+                for (var index = 0; index < organizationPolicyCount; index++)
                 {
                     var dataItem = options.Resolver.GetFormatterWithVerify<OrganizationPolicy?>().Deserialize(ref reader, options);
 
@@ -322,9 +322,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     payload.OrganizationPolicy.Add(dataItem);
                 }
 
-                var OwnershipCount = reader.ReadArrayHeader();
+                var ownershipCount = reader.ReadArrayHeader();
 
-                for (var index = 0; index < OwnershipCount; index++)
+                for (var index = 0; index < ownershipCount; index++)
                 {
                     var dataItem = options.Resolver.GetFormatterWithVerify<Ownership?>().Deserialize(ref reader, options);
 
@@ -336,9 +336,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     payload.Ownership.Add(dataItem);
                 }
 
-                var ProjectMemberCount = reader.ReadArrayHeader();
+                var projectMemberCount = reader.ReadArrayHeader();
 
-                for (var index = 0; index < ProjectMemberCount; index++)
+                for (var index = 0; index < projectMemberCount; index++)
                 {
                     var dataItem = options.Resolver.GetFormatterWithVerify<ProjectMember?>().Deserialize(ref reader, options);
 
@@ -350,9 +350,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     payload.ProjectMember.Add(dataItem);
                 }
 
-                var ReviewCount = reader.ReadArrayHeader();
+                var reviewCount = reader.ReadArrayHeader();
 
-                for (var index = 0; index < ReviewCount; index++)
+                for (var index = 0; index < reviewCount; index++)
                 {
                     var dataItem = options.Resolver.GetFormatterWithVerify<Review?>().Deserialize(ref reader, options);
 
@@ -364,9 +364,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     payload.Review.Add(dataItem);
                 }
 
-                var UserCount = reader.ReadArrayHeader();
+                var userCount = reader.ReadArrayHeader();
 
-                for (var index = 0; index < UserCount; index++)
+                for (var index = 0; index < userCount; index++)
                 {
                     var dataItem = options.Resolver.GetFormatterWithVerify<User?>().Deserialize(ref reader, options);
 
