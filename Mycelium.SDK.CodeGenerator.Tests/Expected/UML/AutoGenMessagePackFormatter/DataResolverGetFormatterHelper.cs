@@ -26,10 +26,12 @@ namespace Mycelium.SDK.Serializer.MessagePack
     internal static partial class DataResolverGetFormatterHelper
     {
         /// <summary>
-        /// Maps each supported exact DTO type to its cached formatter instance.
+        /// Maps each supported exact DTO or payload type to its cached formatter instance.
         /// </summary>
         private static readonly IReadOnlyDictionary<Type, object> FormatterMap = new Dictionary<Type, object>
         {
+            [typeof(Payload)] = new PayloadMessagePackFormatter(),
+
             [typeof(BranchProtectionRule)] = new BranchProtectionRuleMessagePackFormatter(),
             [typeof(Comment)] = new CommentMessagePackFormatter(),
             [typeof(FunctionalProject)] = new FunctionalProjectMessagePackFormatter(),
@@ -44,10 +46,10 @@ namespace Mycelium.SDK.Serializer.MessagePack
         };
 
         /// <summary>
-        /// Gets the cached MessagePack formatter registered for an exact DTO type.
+        /// Gets the cached MessagePack formatter registered for an exact generated type.
         /// </summary>
         /// <param name="runtimeType">
-        /// The exact DTO type to resolve.
+        /// The exact DTO or payload type to resolve.
         /// </param>
         /// <returns>
         /// The cached formatter when <paramref name="runtimeType" /> is registered; otherwise,
