@@ -57,6 +57,21 @@
         <None Update="Templates\Uml\Partials\json-dto-deserializer-uml-partial-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="Templates\Uml\dto-messagepackformatter-uml-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Templates\Uml\messagepack-dataresolver-getformatter-helper.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Templates\Uml\messagepack-payload-uml-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Templates\Uml\messagepack-payloadfactory-uml-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Templates\Uml\messagepack-payloadmessagepackformatter-uml-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
         <None Update="Templates\Uml\poco-interface-uml-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>

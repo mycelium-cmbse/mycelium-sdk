@@ -22,18 +22,11 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
     using Mycelium.SDK.DTO;
 
-    /// <summary>
-    /// Verifies the runtime behavior of generated JSON deserializers and the public facade.
-    /// </summary>
     [TestFixture]
     public class DeSerializerTestFixture
     {
         private static readonly DeSerializer JsonDeSerializer = new();
 
-        /// <summary>
-        /// Verifies representative scalar, nullable, enumeration, collection,
-        /// dictionary, reference and inherited-property mappings.
-        /// </summary>
         [Test]
         public void Verify_that_DTO_deserialization_applies_representative_mappings()
         {
@@ -103,10 +96,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
-        /// <summary>
-        /// Verifies complete object and array payloads, payload order, asynchronous parity and stream
-        /// ownership.
-        /// </summary>
         [Test]
         public async Task Verify_that_facade_deserializes_complete_object_and_array_payloads()
         {
@@ -177,10 +166,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
-        /// <summary>
-        /// Verifies that the public facade logs only absent ordinary properties and retains their
-        /// construction defaults.
-        /// </summary>
         [Test]
         public void Verify_that_facade_logs_only_absent_properties()
         {
@@ -231,10 +216,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
-        /// <summary>
-        /// Verifies invalid payload framing, exact dispatch, null arguments, cancellation and stream
-        /// ownership on failure.
-        /// </summary>
         [Test]
         public async Task Verify_that_facade_rejects_invalid_payloads_and_observes_cancellation()
         {
@@ -287,9 +268,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             Assert.That(cancelledStream.CanRead, Is.True);
         }
 
-        /// <summary>
-        /// Verifies mandatory, valid and unique metadata.
-        /// </summary>
         [Test]
         public void Verify_that_invalid_metadata_is_rejected()
         {
@@ -360,9 +338,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
-        /// <summary>
-        /// Verifies representative invalid property and dictionary values.
-        /// </summary>
         [Test]
         public void Verify_that_invalid_property_values_are_rejected()
         {
@@ -459,10 +434,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
-        /// <summary>
-        /// Verifies order-independent reading, case-sensitive property matching,
-        /// ignored unknown properties and construction defaults.
-        /// </summary>
         [Test]
         public void Verify_that_property_reading_is_order_independent_case_sensitive_and_preserves_defaults()
         {
@@ -550,9 +521,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
-        /// <summary>
-        /// Verifies exact provider dispatch and exact-uppercase enumeration parsing.
-        /// </summary>
         [Test]
         public void Verify_that_provider_and_enumeration_matching_is_exact()
         {
@@ -587,20 +555,8 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
-        /// <summary>
-        /// Represents an operation that reads a value from a positioned JSON reader.
-        /// </summary>
         private delegate T ReaderOperation<out T>(ref Utf8JsonReader reader);
 
-        /// <summary>
-        /// Opens a bounded JSON fixture copied to the test output directory.
-        /// </summary>
-        /// <param name="fileName">
-        /// The fixture filename.
-        /// </param>
-        /// <returns>
-        /// A readable caller-owned fixture stream.
-        /// </returns>
         private static FileStream OpenDataStream(string fileName)
         {
             var path = Path.Combine(TestContext.CurrentContext.WorkDirectory, "Data", fileName);
@@ -608,14 +564,8 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
 
-        /// <summary>
-        /// Creates a readable stream containing the supplied JSON text.
-        /// </summary>
         private static MemoryStream CreateStream(string json) => new(Encoding.UTF8.GetBytes(json));
 
-        /// <summary>
-        /// Reads one JSON value using the supplied operation.
-        /// </summary>
         private static T Read<T>(string json, ReaderOperation<T> operation)
         {
             var reader = new Utf8JsonReader(Encoding.UTF8.GetBytes(json));
@@ -628,9 +578,6 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             return operation(ref reader);
         }
 
-        /// <summary>
-        /// Deserializes one complete DTO object using a generated operation.
-        /// </summary>
         private static T DeSerialize<T>(string json, DeSerializationProvider.DeSerializerAction operation) where T : IThing
         {
             var reader = new Utf8JsonReader(Encoding.UTF8.GetBytes(json));
@@ -647,57 +594,39 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             return (T)result;
         }
 
-        /// <summary>
-        /// Captures log entries created by generated DTO deserializers.
-        /// </summary>
         private sealed class RecordingLoggerFactory : ILoggerFactory
         {
             private readonly List<LogEntry> entries = [];
 
-            /// <summary>
-            /// Gets the captured log entries.
-            /// </summary>
             internal IReadOnlyList<LogEntry> Entries => this.entries;
 
-            /// <inheritdoc />
             public void AddProvider(ILoggerProvider provider)
             {
             }
 
-            /// <inheritdoc />
             public ILogger CreateLogger(string categoryName) => new RecordingLogger(categoryName, this.entries);
 
-            /// <inheritdoc />
             public void Dispose()
             {
             }
         }
 
-        /// <summary>
-        /// Captures structured log state.
-        /// </summary>
         private sealed class RecordingLogger : ILogger
         {
             private readonly string categoryName;
 
             private readonly ICollection<LogEntry> entries;
 
-            /// <summary>
-            /// Initializes a new instance of the <see cref="RecordingLogger" /> class.
-            /// </summary>
             internal RecordingLogger(string categoryName, ICollection<LogEntry> entries)
             {
                 this.categoryName = categoryName;
                 this.entries = entries;
             }
 
-            /// <inheritdoc />
             public IDisposable BeginScope<TState>(TState state) where TState : notnull => EmptyScope.Instance;
 
-            /// <inheritdoc />
             public bool IsEnabled(LogLevel logLevel) => logLevel == LogLevel.Debug;
 
-            /// <inheritdoc />
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
             {
                 var properties = state is IEnumerable<KeyValuePair<string, object>> structuredState
@@ -709,22 +638,12 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             }
         }
 
-        /// <summary>
-        /// Represents a captured structured log entry.
-        /// </summary>
         private sealed record LogEntry(string CategoryName, LogLevel Level, IReadOnlyDictionary<string, object> Properties);
 
-        /// <summary>
-        /// Represents an inert logging scope.
-        /// </summary>
         private sealed class EmptyScope : IDisposable
         {
-            /// <summary>
-            /// Gets the shared scope instance.
-            /// </summary>
             internal static EmptyScope Instance { get; } = new();
 
-            /// <inheritdoc />
             public void Dispose()
             {
             }

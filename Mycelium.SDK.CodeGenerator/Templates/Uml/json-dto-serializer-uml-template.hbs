@@ -65,8 +65,8 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteString("@type"u8, "{{ this.Name }}"u8);
             writer.WriteString("@id"u8, dto.Id);
             {{ #with this as | classContext | }}
-                {{ #each (Class.QueryDtoImplementationProperties this) as | property | }}
-                    {{ #unless (Property.QueryIsIdentifier property) }}
+                {{ #each (#Class.QueryDtoImplementationProperties this) as | property | }}
+                    {{ #unless (#Property.QueryIsIdentifier property) }}
                         {{ #withPropertyClassContext property classContext }}
                             {{> json-dto-serializer-uml-partial-template this}}
                         {{ /withPropertyClassContext }}
