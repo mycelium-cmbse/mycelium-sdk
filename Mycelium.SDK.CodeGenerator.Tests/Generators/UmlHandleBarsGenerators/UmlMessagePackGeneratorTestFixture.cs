@@ -22,6 +22,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     {
         private const string ResolverFileName = "DataResolverGetFormatterHelper.cs";
 
+        private static readonly string[] PayloadFileNames =
+        [
+            "Payload.cs",
+            "PayloadFactory.cs",
+            "PayloadMessagePackFormatter.cs"
+        ];
+
         private static readonly UTF8Encoding StrictUtf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         private Dictionary<string, IClass> classes = null!;
@@ -31,6 +38,12 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         private DirectoryInfo expectedDirectory = null!;
 
         private DirectoryInfo stagingDirectory = null!;
+
+        private DirectoryInfo payloadCommittedDirectory = null!;
+
+        private DirectoryInfo payloadExpectedDirectory = null!;
+
+        private DirectoryInfo payloadStagingDirectory = null!;
 
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
@@ -50,6 +63,19 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 this.stagingDirectory.Delete(true);
             }
 
+            this.payloadCommittedDirectory = new DirectoryInfo(Path.Combine(repositoryDirectory.FullName, "Mycelium.SDK.Serializer.MessagePack", "AutoGenMessagePackPayload"));
+
+            this.payloadExpectedDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "Expected", "UML", "AutoGenMessagePackPayload"));
+
+            var payloadStagingPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_Mycelium.SDK.Serializer.MessagePack.AutoGenMessagePackPayload");
+
+            this.payloadStagingDirectory = new DirectoryInfo(payloadStagingPath);
+
+            if (this.payloadStagingDirectory.Exists)
+            {
+                this.payloadStagingDirectory.Delete(true);
+            }
+
             var xmiReaderResult = GeneratorSetupFixture.ReadFunctionalData();
 
             var functionalData = GeneratorSetupFixture.QueryFunctionalDataPackage(xmiReaderResult);
@@ -61,6 +87,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             var generator = new UmlMessagePackGenerator();
 
             await generator.GenerateAsync(xmiReaderResult, this.stagingDirectory);
+            await generator.GeneratePayloadAsync(xmiReaderResult, this.payloadStagingDirectory);
         }
 
         [Test]
@@ -90,6 +117,32 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         [Test]
+        public async Task Verify_that_complete_staged_output_matches_committed_MessagePack_payloads()
+        {
+            Assert.That(this.payloadCommittedDirectory.Exists, Is.True, "The committed MessagePack payload directory is missing.");
+
+            if (!this.payloadCommittedDirectory.Exists)
+            {
+                return;
+            }
+
+            var stagedFileNames = QueryCSharpFileNames(this.payloadStagingDirectory);
+
+            var committedFileNames = QueryCSharpFileNames(this.payloadCommittedDirectory);
+
+            Assert.That(stagedFileNames, Is.EqualTo(committedFileNames), "The staged and committed MessagePack payload filename sets differ.");
+
+            foreach (var fileName in stagedFileNames)
+            {
+                var stagedPath = Path.Combine(this.payloadStagingDirectory.FullName, fileName);
+
+                var committedPath = Path.Combine(this.payloadCommittedDirectory.FullName, fileName);
+
+                await AssertOrdinalFilesMatchAsync(stagedPath, committedPath, $"Staged MessagePack payload '{fileName}'", "the committed production source");
+            }
+        }
+
+        [Test]
         public void Verify_that_full_batch_contains_every_concrete_DTO_and_the_resolver()
         {
             var expectedFileNames = this.classes.Values.Where(umlClass => !umlClass.IsAbstract)
@@ -104,22 +157,43 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         [Test]
+        public void Verify_that_payload_batch_contains_the_complete_generated_family()
+        {
+            var stagedFileNames = QueryCSharpFileNames(this.payloadStagingDirectory);
+
+            Assert.That(stagedFileNames, Is.EqualTo(PayloadFileNames), "The MessagePack payload batch does not contain exactly the three approved sources.");
+        }
+
+        [Test]
         public async Task Verify_that_generated_source_and_goldens_use_the_required_file_format()
         {
-            var generatedFiles = this.stagingDirectory.GetFiles("*.cs", SearchOption.TopDirectoryOnly)
-                .OrderBy(file => file.Name, StringComparer.Ordinal)
-                .ToArray();
-
-            var goldenFiles = this.expectedDirectory.GetFiles("*.cs", SearchOption.TopDirectoryOnly)
-                .OrderBy(file => file.Name, StringComparer.Ordinal)
-                .ToArray();
-
-            Assert.That(generatedFiles, Is.Not.Empty, "MessagePack generation produced no C# files.");
-            Assert.That(goldenFiles, Is.Not.Empty, "The representative MessagePack golden directory contains no C# files.");
-
-            foreach (var sourceFile in generatedFiles.Concat(goldenFiles))
+            var sourceDirectories = new[]
             {
-                await AssertRequiredFileFormatAsync(sourceFile);
+                this.stagingDirectory,
+                this.expectedDirectory,
+                this.payloadStagingDirectory,
+                this.payloadExpectedDirectory
+            };
+
+            foreach (var directory in sourceDirectories)
+            {
+                Assert.That(directory.Exists, Is.True, $"MessagePack source directory '{directory.FullName}' is missing.");
+
+                if (!directory.Exists)
+                {
+                    continue;
+                }
+
+                var sourceFiles = directory.GetFiles("*.cs", SearchOption.TopDirectoryOnly)
+                    .OrderBy(file => file.Name, StringComparer.Ordinal)
+                    .ToArray();
+
+                Assert.That(sourceFiles, Is.Not.Empty, $"MessagePack source directory '{directory.FullName}' contains no C# files.");
+
+                foreach (var sourceFile in sourceFiles)
+                {
+                    await AssertRequiredFileFormatAsync(sourceFile);
+                }
             }
         }
 
@@ -155,6 +229,22 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 goldenFileNames,
                 Is.EqualTo(orderedExpectedFileNames),
                 "The MessagePack golden set must contain exactly the non-abstract representative DTO selection and resolver.");
+        }
+
+        [Test]
+        [Category("Expected")]
+        public void Verify_that_payload_golden_set_contains_the_approved_sources()
+        {
+            Assert.That(this.payloadExpectedDirectory.Exists, Is.True, "The reviewed MessagePack payload golden directory is missing.");
+
+            if (!this.payloadExpectedDirectory.Exists)
+            {
+                return;
+            }
+
+            var goldenFileNames = QueryCSharpFileNames(this.payloadExpectedDirectory);
+
+            Assert.That(goldenFileNames, Is.EqualTo(PayloadFileNames), "The reviewed MessagePack payload golden set differs from the approved sources.");
         }
 
         [TestCaseSource(typeof(RepresentativeClasses))]
@@ -198,6 +288,19 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             var expectedPath = Path.Combine(this.expectedDirectory.FullName, ResolverFileName);
 
             await AssertOrdinalFilesMatchAsync(stagedPath, expectedPath, "The generated MessagePack resolver", "its reviewed golden");
+        }
+
+        [TestCase("Payload.cs")]
+        [TestCase("PayloadFactory.cs")]
+        [TestCase("PayloadMessagePackFormatter.cs")]
+        [Category("Expected")]
+        public async Task Verify_that_payload_sources_match_their_goldens(string fileName)
+        {
+            var stagedPath = Path.Combine(this.payloadStagingDirectory.FullName, fileName);
+
+            var expectedPath = Path.Combine(this.payloadExpectedDirectory.FullName, fileName);
+
+            await AssertOrdinalFilesMatchAsync(stagedPath, expectedPath, $"Generated MessagePack payload '{fileName}'", "its reviewed golden");
         }
 
         private static async Task AssertOrdinalFilesMatchAsync(string actualPath, string expectedPath, string actualDescription, string expectedDescription)

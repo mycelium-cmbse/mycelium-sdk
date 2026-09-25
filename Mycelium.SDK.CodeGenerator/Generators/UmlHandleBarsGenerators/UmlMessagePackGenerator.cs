@@ -69,8 +69,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var concreteClasses = QueryConcreteClasses(xmiReaderResult);
 
-            var generatedFiles = concreteClasses
-                .Select(this.RenderFormatter)
+            var generatedFiles = concreteClasses.Select(this.RenderFormatter)
                 .Append(this.RenderResolver(concreteClasses))
                 .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
                 .ToArray();
@@ -101,11 +100,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var concreteClasses = QueryConcreteClasses(xmiReaderResult);
 
-            var formatterPayload = new
-            {
-                Classes = concreteClasses,
-                GroupCount = concreteClasses.Length + 1
-            };
+            var formatterPayload = new { Classes = concreteClasses, GroupCount = concreteClasses.Length + 1 };
 
             var generatedFiles = new[]
             {
@@ -160,8 +155,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// </returns>
         private static IClass[] QueryConcreteClasses(XmiReaderResult xmiReaderResult)
         {
-            return CreateHandlebarsPayload(xmiReaderResult).Classes
-                .Where(umlClass => !umlClass.IsAbstract)
+            return CreateHandlebarsPayload(xmiReaderResult)
+                .Classes.Where(umlClass => !umlClass.IsAbstract)
                 .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal)
                 .ToArray();
         }
@@ -179,12 +174,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         {
             var properties = umlClass.QueryDtoImplementationProperties();
 
-            var templatePayload = new
-            {
-                Class = umlClass,
-                Properties = properties,
-                PropertyCount = properties.Count
-            };
+            var templatePayload = new { Class = umlClass, Properties = properties, PropertyCount = properties.Count };
 
             var generatedCode = this.Templates[FormatterTemplateName](templatePayload);
 
