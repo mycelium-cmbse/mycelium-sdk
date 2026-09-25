@@ -107,9 +107,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 };
 
                 {{ #each Classes as | umlClass | }}
-                var {{ #NamedElement.WriteIdentifier umlClass }}Count = reader.ReadArrayHeader();
+                var {{ #String.LowerCaseFirstLetter umlClass.Name }}Count = reader.ReadArrayHeader();
 
-                for (var index = 0; index < {{ #NamedElement.WriteIdentifier umlClass }}Count; index++)
+                for (var index = 0; index < {{ #String.LowerCaseFirstLetter umlClass.Name }}Count; index++)
                 {
                     var dataItem = options.Resolver.GetFormatterWithVerify<{{ #NamedElement.WriteIdentifier umlClass }}?>().Deserialize(ref reader, options);
 

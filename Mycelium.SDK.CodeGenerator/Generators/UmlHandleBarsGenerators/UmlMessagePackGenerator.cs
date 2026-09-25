@@ -126,6 +126,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             this.Handlebars.RegisterMessagePackFormatterPropertyHelper();
 
             NamedElementHelper.RegisterNamedElementHelper(this.Handlebars);
+
+            uml4net.HandleBars.StringHelper.RegisterStringHelper(this.Handlebars);
         }
 
         /// <summary>
