@@ -61,8 +61,8 @@ namespace Mycelium.SDK.Serializer.Json
             var hasId = false;
             var hasEndObject = false;
 
-            {{ #each (Class.QueryDtoImplementationProperties this) as | property | }}
-                {{ #unless (Property.QueryIsIdentifier property) }}
+            {{ #each (#Class.QueryDtoImplementationProperties this) as | property | }}
+                {{ #unless (#Property.QueryIsIdentifier property) }}
                     var has{{ #Property.WritePropertyName property }} = false;
                 {{ /unless }}
             {{ /each }}
@@ -112,8 +112,8 @@ namespace Mycelium.SDK.Serializer.Json
                 }
 
                 {{ #with this as | classContext | }}
-                    {{ #each (Class.QueryDtoImplementationProperties this) as | property | }}
-                        {{ #unless (Property.QueryIsIdentifier property) }}
+                    {{ #each (#Class.QueryDtoImplementationProperties this) as | property | }}
+                        {{ #unless (#Property.QueryIsIdentifier property) }}
                             {{ #withPropertyClassContext property classContext }}
                                 {{> json-dto-deserializer-uml-partial-template this}}
                             {{ /withPropertyClassContext }}
@@ -141,8 +141,8 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             {{ #with this as | classContext | }}
-                {{ #each (Class.QueryDtoImplementationProperties this) as | property | }}
-                    {{ #unless (Property.QueryIsIdentifier property) }}
+                {{ #each (#Class.QueryDtoImplementationProperties this) as | property | }}
+                    {{ #unless (#Property.QueryIsIdentifier property) }}
                         if (!has{{ #Property.WritePropertyName property }})
                         {
                             logger.LogDebug(

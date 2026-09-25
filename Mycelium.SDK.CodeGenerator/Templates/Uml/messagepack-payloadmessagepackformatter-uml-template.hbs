@@ -1,0 +1,137 @@
+// ------------------------------------------------------------------------------------------------
+//  <copyright file="PayloadMessagePackFormatter.cs" company="Starion Group S.A.">
+//
+//    Copyright 2026 Starion Group S.A.
+//    SPDX-License-Identifier: Apache-2.0
+//
+//  </copyright>
+//  ------------------------------------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
+namespace Mycelium.SDK.Serializer.MessagePack
+{
+    using System;
+    using System.CodeDom.Compiler;
+
+    using global::MessagePack;
+    using global::MessagePack.Formatters;
+
+    using Mycelium.SDK.DTO;
+
+    /// <summary>
+    /// Serializes and deserializes the positional MessagePack payload envelope.
+    /// </summary>
+    [GeneratedCode("Mycelium.SDK", "latest")]
+    internal sealed partial class PayloadMessagePackFormatter : IMessagePackFormatter<Payload?>
+    {
+        /// <summary>
+        /// Serializes a payload with its timestamp and every concrete-type group.
+        /// </summary>
+        /// <param name="writer">
+        /// The writer that receives the payload.
+        /// </param>
+        /// <param name="payload">
+        /// The payload to serialize.
+        /// </param>
+        /// <param name="options">
+        /// The MessagePack serializer options.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="payload" /> or a group item is <see langword="null" />.
+        /// </exception>
+        public void Serialize(ref MessagePackWriter writer, Payload? payload, MessagePackSerializerOptions options)
+        {
+            if (payload == null)
+            {
+                throw new ArgumentNullException(nameof(payload));
+            }
+
+            writer.WriteArrayHeader({{ GroupCount }});
+            writer.Write(payload.Created);
+
+            {{ #each Classes as | umlClass | }}
+            writer.WriteArrayHeader(payload.{{ #NamedElement.WriteIdentifier umlClass }}.Count);
+
+            foreach (var dataItem in payload.{{ #NamedElement.WriteIdentifier umlClass }})
+            {
+                if (dataItem == null)
+                {
+                    throw new ArgumentNullException(nameof(payload), "A payload group contains a null DTO.");
+                }
+
+                options.Resolver.GetFormatterWithVerify<{{ #NamedElement.WriteIdentifier umlClass }}?>().Serialize(ref writer, dataItem, options);
+            }
+
+            {{ /each }}
+        }
+
+        /// <summary>
+        /// Deserializes a payload with its timestamp and every concrete-type group.
+        /// </summary>
+        /// <param name="reader">
+        /// The reader from which the payload is deserialized.
+        /// </param>
+        /// <param name="options">
+        /// The MessagePack serializer options.
+        /// </param>
+        /// <returns>
+        /// The payload with the received timestamp and DTO groups.
+        /// </returns>
+        /// <exception cref="MessagePackSerializationException">
+        /// Thrown when the envelope is nil, has an incorrect field count or contains a null DTO item.
+        /// </exception>
+        public Payload? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        {
+            if (reader.TryReadNil())
+            {
+                throw new MessagePackSerializationException("The MessagePack payload may not be nil.");
+            }
+
+            options.Security.DepthStep(ref reader);
+
+            try
+            {
+                var fieldCount = reader.ReadArrayHeader();
+
+                if (fieldCount != {{ GroupCount }})
+                {
+                    throw new MessagePackSerializationException($"The payload contains {fieldCount} fields; exactly {{ GroupCount }} fields are required.");
+                }
+
+                var payload = new Payload
+                {
+                    Created = reader.ReadDateTime()
+                };
+
+                {{ #each Classes as | umlClass | }}
+                var {{ #String.LowerCaseFirstLetter umlClass.Name }}Count = reader.ReadArrayHeader();
+
+                for (var index = 0; index < {{ #String.LowerCaseFirstLetter umlClass.Name }}Count; index++)
+                {
+                    var dataItem = options.Resolver.GetFormatterWithVerify<{{ #NamedElement.WriteIdentifier umlClass }}?>().Deserialize(ref reader, options);
+
+                    if (dataItem == null)
+                    {
+                        throw new MessagePackSerializationException("The {{ #NamedElement.WriteIdentifier umlClass }} group contains a null DTO.");
+                    }
+
+                    payload.{{ #NamedElement.WriteIdentifier umlClass }}.Add(dataItem);
+                }
+
+                {{ /each }}
+                return payload;
+            }
+            finally
+            {
+                reader.Depth--;
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
