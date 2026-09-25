@@ -7,16 +7,14 @@
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
+using MessagePackReader = MessagePack.MessagePackReader;
+using MessagePackSerializationException = MessagePack.MessagePackSerializationException;
+using MessagePackSerializer = MessagePack.MessagePackSerializer;
+using MessagePackSerializerOptions = MessagePack.MessagePackSerializerOptions;
+
 namespace Mycelium.SDK.Serializer.MessagePack
 {
-    using System;
     using System.Buffers;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Threading;
-    using System.Threading.Tasks;
-
-    using global::MessagePack;
 
     using Mycelium.SDK.DTO;
     using Mycelium.SDK.Serializer.MessagePack.Helpers;
@@ -50,15 +48,19 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="stream" /> is null.
         /// </exception>
-        /// <exception cref="MessagePackSerializationException">
+        /// <exception cref="global::MessagePack.MessagePackSerializationException">
         /// Thrown when the payload is malformed, contains invalid values or field counts, or has trailing data.
         /// </exception>
         public IEnumerable<IThing> DeSerialize(Stream stream)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(stream);
+#else
             if (stream == null)
             {
                 throw new ArgumentNullException(nameof(stream));
             }
+#endif
 
             using var buffer = new MemoryStream();
             stream.CopyTo(buffer);
@@ -75,13 +77,13 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// <returns>
         /// A materialized sequence of DTOs in payload group order.
         /// </returns>
-        /// <exception cref="MessagePackSerializationException">
+        /// <exception cref="global::MessagePack.MessagePackSerializationException">
         /// Thrown when the payload is malformed, contains invalid values or field counts, or has trailing data.
         /// </exception>
         public IEnumerable<IThing> DeSerialize(ReadOnlySequence<byte> buffer)
         {
             var reader = new MessagePackReader(buffer);
-            var payload = global::MessagePack.MessagePackSerializer.Deserialize<Payload>(ref reader, SerializerOptions);
+            var payload = MessagePackSerializer.Deserialize<Payload>(ref reader, SerializerOptions);
 
             if (!reader.End)
             {
@@ -111,7 +113,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="stream" /> is null.
         /// </exception>
-        /// <exception cref="MessagePackSerializationException">
+        /// <exception cref="global::MessagePack.MessagePackSerializationException">
         /// Thrown when the payload is malformed, contains invalid values or field counts, or has trailing data.
         /// </exception>
         /// <exception cref="OperationCanceledException">
@@ -119,10 +121,14 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// </exception>
         public Task<IEnumerable<IThing>> DeSerializeAsync(Stream stream, CancellationToken cancellationToken)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(stream);
+#else
             if (stream == null)
             {
                 throw new ArgumentNullException(nameof(stream));
             }
+#endif
 
             return this.DeSerializeInternalAsync(stream, cancellationToken);
         }
@@ -142,7 +148,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// <exception cref="OperationCanceledException">
         /// Thrown when <paramref name="cancellationToken" /> is canceled.
         /// </exception>
-        /// <exception cref="MessagePackSerializationException">
+        /// <exception cref="global::MessagePack.MessagePackSerializationException">
         /// Thrown when the payload is malformed, contains invalid values or field counts, or has trailing data.
         /// </exception>
         private async Task<IEnumerable<IThing>> DeSerializeInternalAsync(Stream stream, CancellationToken cancellationToken)
@@ -150,7 +156,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
             cancellationToken.ThrowIfCancellationRequested();
 
             using var buffer = new MemoryStream();
-            await stream.CopyToAsync(buffer, 81920, cancellationToken).ConfigureAwait(false);
+
+            await stream.CopyToAsync(buffer, 81920, cancellationToken)
+                .ConfigureAwait(false);
 
             cancellationToken.ThrowIfCancellationRequested();
 
