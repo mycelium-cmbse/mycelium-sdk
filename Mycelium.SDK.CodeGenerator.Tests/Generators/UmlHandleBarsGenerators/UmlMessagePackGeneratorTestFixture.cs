@@ -157,23 +157,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         [Test]
-        public void Verify_that_payload_batch_contains_the_complete_generated_family()
-        {
-            var stagedFileNames = QueryCSharpFileNames(this.payloadStagingDirectory);
-
-            Assert.That(stagedFileNames, Is.EqualTo(PayloadFileNames), "The MessagePack payload batch does not contain exactly the three approved sources.");
-        }
-
-        [Test]
         public async Task Verify_that_generated_source_and_goldens_use_the_required_file_format()
         {
-            var sourceDirectories = new[]
-            {
-                this.stagingDirectory,
-                this.expectedDirectory,
-                this.payloadStagingDirectory,
-                this.payloadExpectedDirectory
-            };
+            var sourceDirectories = new[] { this.stagingDirectory, this.expectedDirectory, this.payloadStagingDirectory, this.payloadExpectedDirectory };
 
             foreach (var directory in sourceDirectories)
             {
@@ -225,10 +211,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var goldenFileNames = QueryCSharpFileNames(this.expectedDirectory);
 
-            Assert.That(
-                goldenFileNames,
-                Is.EqualTo(orderedExpectedFileNames),
-                "The MessagePack golden set must contain exactly the non-abstract representative DTO selection and resolver.");
+            Assert.That(goldenFileNames, Is.EqualTo(orderedExpectedFileNames), "The MessagePack golden set must contain exactly the non-abstract representative DTO selection and resolver.");
+        }
+
+        [Test]
+        public void Verify_that_payload_batch_contains_the_complete_generated_family()
+        {
+            var stagedFileNames = QueryCSharpFileNames(this.payloadStagingDirectory);
+
+            Assert.That(stagedFileNames, Is.EqualTo(PayloadFileNames), "The MessagePack payload batch does not contain exactly the three approved sources.");
         }
 
         [Test]
@@ -245,6 +236,17 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             var goldenFileNames = QueryCSharpFileNames(this.payloadExpectedDirectory);
 
             Assert.That(goldenFileNames, Is.EqualTo(PayloadFileNames), "The reviewed MessagePack payload golden set differs from the approved sources.");
+        }
+
+        [Test]
+        [Category("Expected")]
+        public async Task Verify_that_resolver_matches_its_golden()
+        {
+            var stagedPath = Path.Combine(this.stagingDirectory.FullName, ResolverFileName);
+
+            var expectedPath = Path.Combine(this.expectedDirectory.FullName, ResolverFileName);
+
+            await AssertOrdinalFilesMatchAsync(stagedPath, expectedPath, "The generated MessagePack resolver", "its reviewed golden");
         }
 
         [TestCaseSource(typeof(RepresentativeClasses))]
@@ -277,17 +279,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
 
             await AssertOrdinalFilesMatchAsync(stagedPath, expectedPath, $"Generated MessagePack formatter '{fileName}'", "its reviewed golden");
-        }
-
-        [Test]
-        [Category("Expected")]
-        public async Task Verify_that_resolver_matches_its_golden()
-        {
-            var stagedPath = Path.Combine(this.stagingDirectory.FullName, ResolverFileName);
-
-            var expectedPath = Path.Combine(this.expectedDirectory.FullName, ResolverFileName);
-
-            await AssertOrdinalFilesMatchAsync(stagedPath, expectedPath, "The generated MessagePack resolver", "its reviewed golden");
         }
 
         [TestCase("Payload.cs")]
