@@ -10,6 +10,14 @@ project                                                     | Nuget
 ------------------------------------------------------------ | ------------
 [Mycelium.SDK](https://www.nuget.org/packages/Mycelium.SDK) | ![NuGet Version](https://img.shields.io/nuget/v/Mycelium.SDK)
 
+## MessagePack compatibility
+
+MessagePack DTO fields and concrete-type payload groups use positional arrays. Their positions are generated from the model. Deterministic ordering does not guarantee compatibility across model revisions.
+
+A change to any DTO field position or count, or payload group position or count, is a breaking wire-format change. Producers and consumers must use matching reader and writer versions for the same model layout; incompatible layouts are unsupported. Exact field-count checks may not detect a changed layout with the same count. Payloads have no in-band schema identifier or automatic version negotiation.
+
+A positional wire-layout change requires a breaking package-version increase. After the first stable MessagePack package release, it requires a major-version increase. Release notes must identify the incompatibility so producers and consumers can coordinate upgrades to matching versions.
+
 ## Build Status
 
 GitHub actions are used to build and test the library
