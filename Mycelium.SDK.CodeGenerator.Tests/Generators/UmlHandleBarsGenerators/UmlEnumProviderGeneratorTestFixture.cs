@@ -19,43 +19,19 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     using uml4net.SimpleClassifiers;
     using uml4net.xmi.Readers;
 
-    /// <summary>
-    /// Verifies generation and runtime behavior of FunctionalData enumeration providers.
-    /// </summary>
     [TestFixture]
     public class UmlEnumProviderGeneratorTestFixture
     {
-        /// <summary>
-        /// Strict UTF-8 encoding without a byte-order mark.
-        /// </summary>
         private static readonly UTF8Encoding StrictUtf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
-        /// <summary>
-        /// The complete committed provider-output directory.
-        /// </summary>
         private DirectoryInfo committedDirectory = null!;
 
-        /// <summary>
-        /// The bounded representative provider-golden directory.
-        /// </summary>
         private DirectoryInfo expectedDirectory = null!;
 
-        /// <summary>
-        /// The isolated provider staging directory.
-        /// </summary>
         private DirectoryInfo stagingDirectory = null!;
 
-        /// <summary>
-        /// The canonically loaded FunctionalData model.
-        /// </summary>
         private XmiReaderResult xmiReaderResult = null!;
 
-        /// <summary>
-        /// Generates the complete provider batch into isolated staging.
-        /// </summary>
-        /// <returns>
-        /// A task representing the asynchronous setup operation.
-        /// </returns>
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
@@ -77,12 +53,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             await generator.GenerateAsync(this.xmiReaderResult, this.stagingDirectory);
         }
 
-        /// <summary>
-        /// Verifies the complete staged provider batch against committed production output.
-        /// </summary>
-        /// <returns>
-        /// A task representing the asynchronous verification.
-        /// </returns>
         [Test]
         public async Task Verify_that_complete_staged_output_matches_committed_providers()
         {
@@ -108,12 +78,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
         }
 
-        /// <summary>
-        /// Verifies provider encoding, line endings, generated marker, and ordinal case-insensitive comparison.
-        /// </summary>
-        /// <returns>
-        /// A task representing the asynchronous verification.
-        /// </returns>
         [Test]
         public async Task Verify_that_generated_providers_use_the_required_file_format()
         {
@@ -150,15 +114,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
         }
 
-        /// <summary>
-        /// Verifies bounded representative providers against their reviewed goldens.
-        /// </summary>
-        /// <param name="enumerationName">
-        /// The representative enumeration name.
-        /// </param>
-        /// <returns>
-        /// A task representing the asynchronous verification.
-        /// </returns>
         [TestCaseSource(typeof(RepresentativeEnumerations))]
         [Category("Expected")]
         public async Task Verify_that_representative_providers_match_reviewed_goldens(string enumerationName)
@@ -193,12 +148,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             Assert.That(stagedSource, Is.EqualTo(expectedSource), $"Generated provider '{fileName}' differs from its reviewed golden.");
         }
 
-        /// <summary>
-        /// Verifies case-insensitive XMI parsing, exact formatting, and invalid-input behavior.
-        /// </summary>
-        /// <param name="enumerationName">
-        /// The representative enumeration name.
-        /// </param>
         [TestCaseSource(typeof(RepresentativeEnumerations))]
         public void Verify_that_representative_providers_preserve_the_Xmi_contract(string enumerationName)
         {
@@ -242,18 +191,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             InvokeProviderContractVerification(enumerationType, providerType, enumeration);
         }
 
-        /// <summary>
-        /// Invokes strongly typed provider verification for a runtime enumeration type.
-        /// </summary>
-        /// <param name="enumerationType">
-        /// The generated enumeration type.
-        /// </param>
-        /// <param name="providerType">
-        /// The generated provider type.
-        /// </param>
-        /// <param name="enumeration">
-        /// The corresponding UML enumeration.
-        /// </param>
         private static void InvokeProviderContractVerification(Type enumerationType, Type providerType, IEnumeration enumeration)
         {
             var verificationMethod = typeof(UmlEnumProviderGeneratorTestFixture).GetMethod(nameof(VerifyProviderContract), BindingFlags.NonPublic | BindingFlags.Static);
@@ -265,35 +202,28 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             try
             {
-                verificationMethod.MakeGenericMethod(enumerationType).Invoke(null, [providerType, enumeration]);
+                verificationMethod.MakeGenericMethod(enumerationType)
+                    .Invoke(null, [providerType, enumeration]);
             }
             catch (TargetInvocationException exception) when (exception.InnerException is not null)
             {
-                ExceptionDispatchInfo.Capture(exception.InnerException).Throw();
+                ExceptionDispatchInfo.Capture(exception.InnerException)
+                    .Throw();
 
                 throw;
             }
         }
 
-        /// <summary>
-        /// Verifies one generated provider against its UML enumeration.
-        /// </summary>
-        /// <typeparam name="TEnum">
-        /// The generated enumeration type.
-        /// </typeparam>
-        /// <param name="providerType">
-        /// The generated provider type.
-        /// </param>
-        /// <param name="enumeration">
-        /// The corresponding UML enumeration.
-        /// </param>
         private static void VerifyProviderContract<TEnum>(Type providerType, IEnumeration enumeration) where TEnum : struct, Enum
         {
-            var parse = QueryRequiredMethod(providerType, "Parse", typeof(ReadOnlySpan<char>)).CreateDelegate<Parser<TEnum>>();
+            var parse = QueryRequiredMethod(providerType, "Parse", typeof(ReadOnlySpan<char>))
+                .CreateDelegate<Parser<TEnum>>();
 
-            var tryParse = QueryRequiredMethod(providerType, "TryParse", typeof(ReadOnlySpan<char>), typeof(TEnum).MakeByRefType()).CreateDelegate<TryParser<TEnum>>();
+            var tryParse = QueryRequiredMethod(providerType, "TryParse", typeof(ReadOnlySpan<char>), typeof(TEnum).MakeByRefType())
+                .CreateDelegate<TryParser<TEnum>>();
 
-            var format = QueryRequiredMethod(providerType, "Format", typeof(TEnum)).CreateDelegate<Func<TEnum, string>>();
+            var format = QueryRequiredMethod(providerType, "Format", typeof(TEnum))
+                .CreateDelegate<Func<TEnum, string>>();
 
             foreach (var literal in enumeration.OwnedLiteral)
             {
@@ -350,56 +280,19 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
         }
 
-        /// <summary>
-        /// Finds a required public static provider method.
-        /// </summary>
-        /// <param name="providerType">
-        /// The generated provider type.
-        /// </param>
-        /// <param name="methodName">
-        /// The method name.
-        /// </param>
-        /// <param name="parameterTypes">
-        /// The method parameter types.
-        /// </param>
-        /// <returns>
-        /// The required method.
-        /// </returns>
         private static MethodInfo QueryRequiredMethod(Type providerType, string methodName, params Type[] parameterTypes)
         {
             return providerType.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static, null, parameterTypes, null) ?? throw new InvalidOperationException($"Provider method '{providerType.FullName}.{methodName}' was not found.");
         }
 
-        /// <summary>
-        /// Queries one representative enumeration from the canonical model.
-        /// </summary>
-        /// <param name="xmiReaderResult">
-        /// The loaded model.
-        /// </param>
-        /// <param name="enumerationName">
-        /// The enumeration name.
-        /// </param>
-        /// <returns>
-        /// The matching UML enumeration.
-        /// </returns>
         private static IEnumeration QueryEnumeration(XmiReaderResult xmiReaderResult, string enumerationName)
         {
             var functionalData = GeneratorSetupFixture.QueryFunctionalDataPackage(xmiReaderResult);
 
-            return functionalData.PackagedElement
-                .OfType<IEnumeration>()
+            return functionalData.PackagedElement.OfType<IEnumeration>()
                 .Single(enumeration => string.Equals(enumeration.Name, enumerationName, StringComparison.Ordinal));
         }
 
-        /// <summary>
-        /// Produces a casing-only variation of an XMI literal.
-        /// </summary>
-        /// <param name="value">
-        /// The exact XMI literal.
-        /// </param>
-        /// <returns>
-        /// The literal with one character's casing changed.
-        /// </returns>
         private static string QueryCasingVariation(string value)
         {
             var characters = value.ToCharArray();
@@ -419,15 +312,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             throw new InvalidOperationException($"XMI literal '{value}' has no character whose casing can be changed.");
         }
 
-        /// <summary>
-        /// Returns deterministically ordered C# filenames from a directory.
-        /// </summary>
-        /// <param name="directory">
-        /// The directory to inspect.
-        /// </param>
-        /// <returns>
-        /// The ordered C# filenames.
-        /// </returns>
         private static string[] QueryCSharpFileNames(DirectoryInfo directory)
         {
             return directory.GetFiles("*.cs", SearchOption.TopDirectoryOnly)
@@ -436,35 +320,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 .ToArray();
         }
 
-        /// <summary>
-        /// Represents a generated provider Parse method.
-        /// </summary>
-        /// <typeparam name="TEnum">
-        /// The generated enumeration type.
-        /// </typeparam>
-        /// <param name="value">
-        /// The XMI literal.
-        /// </param>
-        /// <returns>
-        /// The parsed enumeration value.
-        /// </returns>
         private delegate TEnum Parser<TEnum>(ReadOnlySpan<char> value) where TEnum : struct, Enum;
 
-        /// <summary>
-        /// Represents a generated provider TryParse method.
-        /// </summary>
-        /// <typeparam name="TEnum">
-        /// The generated enumeration type.
-        /// </typeparam>
-        /// <param name="value">
-        /// The XMI literal.
-        /// </param>
-        /// <param name="result">
-        /// The parsed value or the default enumeration value.
-        /// </param>
-        /// <returns>
-        /// Whether parsing succeeded.
-        /// </returns>
         private delegate bool TryParser<TEnum>(ReadOnlySpan<char> value, out TEnum result) where TEnum : struct, Enum;
     }
 }

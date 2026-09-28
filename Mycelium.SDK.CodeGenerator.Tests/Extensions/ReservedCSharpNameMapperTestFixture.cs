@@ -11,9 +11,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
 {
     using Mycelium.SDK.CodeGenerator.Extensions;
 
-    /// <summary>
-    /// Verifies the shared reserved-keyword mapping policy used by generated identifiers.
-    /// </summary>
     [TestFixture]
     public class ReservedCSharpNameMapperTestFixture
     {

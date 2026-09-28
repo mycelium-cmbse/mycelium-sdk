@@ -18,48 +18,21 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
 
-    /// <summary>
-    /// Verifies deterministic JSON DTO deserializer generation.
-    /// </summary>
     [TestFixture]
     public class UmlJsonDtoDeSerializerGeneratorTestFixture
     {
-        /// <summary>
-        /// Strict UTF-8 encoding without a byte-order mark.
-        /// </summary>
-        private static readonly UTF8Encoding StrictUtf8WithoutBom = new(false, true);
+        private static readonly UTF8Encoding StrictUtf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
-        /// <summary>
-        /// Classes from the currently loaded canonical model.
-        /// </summary>
         private Dictionary<string, IClass> classes = null!;
 
-        /// <summary>
-        /// Enumerations from the currently loaded canonical model.
-        /// </summary>
         private IEnumeration[] enumerations = null!;
 
-        /// <summary>
-        /// Complete committed production output copied into the test directory.
-        /// </summary>
         private DirectoryInfo committedDirectory = null!;
 
-        /// <summary>
-        /// Separately reviewed representative golden directory.
-        /// </summary>
         private DirectoryInfo expectedDirectory = null!;
 
-        /// <summary>
-        /// Isolated generated-output staging directory.
-        /// </summary>
         private DirectoryInfo stagingDirectory = null!;
 
-        /// <summary>
-        /// Loads the canonical model and generates the complete deserializer batch.
-        /// </summary>
-        /// <returns>
-        /// A task representing asynchronous setup.
-        /// </returns>
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
@@ -92,13 +65,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             await generator.GenerateAsync(xmiReaderResult, this.stagingDirectory);
         }
 
-        /// <summary>
-        /// Verifies complete staged and committed deserializer filenames and
-        /// contents independently.
-        /// </summary>
-        /// <returns>
-        /// A task representing asynchronous verification.
-        /// </returns>
         [Test]
         public async Task Verify_that_complete_staged_output_matches_committed_deserializers()
         {
@@ -121,15 +87,10 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
         }
 
-        /// <summary>
-        /// Verifies one deserializer per concrete DTO and enumeration, plus
-        /// one provider, with no abstract DTO deserializers.
-        /// </summary>
         [Test]
         public void Verify_that_full_batch_contains_every_concrete_DTO_and_enumeration()
         {
-            var expectedFileNames = this.classes.Values
-                .Where(umlClass => !umlClass.IsAbstract)
+            var expectedFileNames = this.classes.Values.Where(umlClass => !umlClass.IsAbstract)
                 .Select(umlClass => $"{umlClass.Name}DeSerializer.cs")
                 .Concat(this.enumerations.Select(enumeration => $"{enumeration.Name}DeSerializer.cs"))
                 .Append("DeSerializationProvider.cs")
@@ -141,13 +102,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             Assert.That(stagedFileNames, Is.EqualTo(expectedFileNames), "The deserializer batch does not match the current model.");
         }
 
-        /// <summary>
-        /// Verifies strict UTF-8 encoding, CRLF line endings, absence of a BOM
-        /// and the generated-code marker.
-        /// </summary>
-        /// <returns>
-        /// A task representing asynchronous verification.
-        /// </returns>
         [Test]
         public async Task Verify_that_generated_deserializers_use_the_required_file_format()
         {
@@ -182,10 +136,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
         }
 
-        /// <summary>
-        /// Verifies that the golden directory contains exactly the
-        /// non-abstract representative DTO deserializers.
-        /// </summary>
         [Test]
         [Category("Expected")]
         public void Verify_that_golden_set_matches_non_abstract_representative_selection()
@@ -222,16 +172,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             Assert.That(goldenFileNames, Is.EqualTo(orderedExpectedFileNames), "The deserializer golden set must contain exactly the non-abstract representative DTO selection.");
         }
 
-        /// <summary>
-        /// Verifies representative DTO deserializer output using strict UTF-8
-        /// decoding and ordinal string equality.
-        /// </summary>
-        /// <param name="className">
-        /// The representative UML class name.
-        /// </param>
-        /// <returns>
-        /// A task representing asynchronous verification.
-        /// </returns>
         [TestCaseSource(typeof(RepresentativeClasses))]
         [Category("Expected")]
         public async Task Verify_that_representative_deserializers_match_their_goldens(string className)
@@ -264,10 +204,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             await AssertOrdinalFilesMatchAsync(stagedPath, expectedPath, $"Generated deserializer '{fileName}'", "its reviewed golden");
         }
 
-        /// <summary>
-        /// Compares two source files using strict UTF-8 decoding and ordinal
-        /// string equality.
-        /// </summary>
         private static async Task AssertOrdinalFilesMatchAsync(string actualPath, string expectedPath, string actualDescription, string expectedDescription)
         {
             using (Assert.EnterMultipleScope())
@@ -289,9 +225,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             Assert.That(string.Equals(actualSource, expectedSource, StringComparison.Ordinal), Is.True, $"{actualDescription} differs from {expectedDescription}.");
         }
 
-        /// <summary>
-        /// Returns ordinally sorted C# filenames from a directory.
-        /// </summary>
         private static string[] QueryCSharpFileNames(DirectoryInfo directory)
         {
             return directory.GetFiles("*.cs", SearchOption.TopDirectoryOnly)

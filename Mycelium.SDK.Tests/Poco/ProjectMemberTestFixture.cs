@@ -14,10 +14,6 @@ namespace Mycelium.SDK.Tests.Poco
 
     using Mycelium.SDK.POCO;
 
-    /// <summary>
-    /// Verifies the handwritten runtime behavior of the
-    /// <see cref="ProjectMember" /> POCO.
-    /// </summary>
     [TestFixture]
     public class ProjectMemberTestFixture
     {
