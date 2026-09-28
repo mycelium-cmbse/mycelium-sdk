@@ -400,13 +400,19 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
 
             var peakWorkingSetBytes = process.PeakWorkingSet64;
 
-            logger.LogInformation("Metric: Peak process working set bytes (Process.PeakWorkingSet64)");
-            logger.LogInformation("Operation: {Operation}", operationName);
-            logger.LogInformation("Root: Array");
-            logger.LogInformation("Stream implementation: {StreamImplementation}", operation.StreamImplementation);
-            logger.LogInformation("Payload bytes: {PayloadBytes}", operation.PayloadByteCount);
-            logger.LogInformation("Returned DTOs: {ReturnedDtos}", ArrayObjectCount);
-            logger.LogInformation("Peak process working set bytes: {PeakWorkingSetBytes}", peakWorkingSetBytes);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "Metric: Peak process working set bytes (Process.PeakWorkingSet64)\n" +
+                    "Operation: {Operation}\nRoot: Array\nStream implementation: {StreamImplementation}\n" +
+                    "Payload bytes: {PayloadBytes}\nReturned DTOs: {ReturnedDtos}\n" +
+                    "Peak process working set bytes: {PeakWorkingSetBytes}",
+                    operationName,
+                    operation.StreamImplementation,
+                    operation.PayloadByteCount,
+                    ArrayObjectCount,
+                    peakWorkingSetBytes);
+            }
 
             GC.KeepAlive(result);
             GC.KeepAlive(operation);
