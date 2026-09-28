@@ -13,6 +13,8 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
 
     using BenchmarkDotNet.Running;
 
+    using Microsoft.Extensions.Logging;
+
     /// <summary>
     /// Provides the benchmark executable entry point.
     /// </summary>
@@ -31,7 +33,10 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         {
             if (PeakMemoryMeasurement.IsRequested(args))
             {
-                await PeakMemoryMeasurement.RunAsync(args);
+                using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+                var logger = loggerFactory.CreateLogger(nameof(PeakMemoryMeasurement));
+
+                await PeakMemoryMeasurement.RunAsync(args, logger);
                 return;
             }
 

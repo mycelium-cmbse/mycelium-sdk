@@ -12,7 +12,6 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Globalization;
     using System.IO;
     using System.Text.Json;
     using System.Threading;
@@ -21,6 +20,8 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
     using BenchmarkDotNet.Attributes;
     using BenchmarkDotNet.Columns;
     using BenchmarkDotNet.Configs;
+
+    using Microsoft.Extensions.Logging;
 
     using Mycelium.SDK.DTO;
 
@@ -365,11 +366,16 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         /// <param name="arguments">
         /// The peak-memory command and operation selection.
         /// </param>
+        /// <param name="logger">
+        /// The logger used to report the measurement.
+        /// </param>
         /// <returns>
         /// A task representing the measurement.
         /// </returns>
-        internal static async Task RunAsync(IReadOnlyList<string> arguments)
+        internal static async Task RunAsync(IReadOnlyList<string> arguments, ILogger logger)
         {
+            ArgumentNullException.ThrowIfNull(logger);
+
             if (arguments.Count != 2)
             {
                 throw CreateUsageException();
@@ -394,17 +400,13 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
 
             var peakWorkingSetBytes = process.PeakWorkingSet64;
 
-            Console.WriteLine("Metric: Peak process working set bytes (Process.PeakWorkingSet64)");
-
-            Console.WriteLine($"Operation: {operationName}");
-            Console.WriteLine("Root: Array");
-            Console.WriteLine($"Stream implementation: {operation.StreamImplementation}");
-
-            Console.WriteLine($"Payload bytes: " + $"{operation.PayloadByteCount.ToString(CultureInfo.InvariantCulture)}");
-
-            Console.WriteLine($"Returned DTOs: " + $"{ArrayObjectCount.ToString(CultureInfo.InvariantCulture)}");
-
-            Console.WriteLine($"Peak process working set bytes: " + $"{peakWorkingSetBytes.ToString(CultureInfo.InvariantCulture)}");
+            logger.LogInformation("Metric: Peak process working set bytes (Process.PeakWorkingSet64)");
+            logger.LogInformation("Operation: {Operation}", operationName);
+            logger.LogInformation("Root: Array");
+            logger.LogInformation("Stream implementation: {StreamImplementation}", operation.StreamImplementation);
+            logger.LogInformation("Payload bytes: {PayloadBytes}", operation.PayloadByteCount);
+            logger.LogInformation("Returned DTOs: {ReturnedDtos}", ArrayObjectCount);
+            logger.LogInformation("Peak process working set bytes: {PeakWorkingSetBytes}", peakWorkingSetBytes);
 
             GC.KeepAlive(result);
             GC.KeepAlive(operation);
