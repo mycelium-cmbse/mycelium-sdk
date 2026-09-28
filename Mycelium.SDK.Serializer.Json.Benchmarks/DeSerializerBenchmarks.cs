@@ -57,10 +57,9 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         private DeserializationOperation operation;
 
         /// <summary>
-        /// Gets or sets the stream implementation reported with every result.
+        /// Gets or sets the stream implementation used by the benchmark.
         /// </summary>
-        [Params(nameof(MemoryStream))]
-        public string StreamImplementation { get; set; }
+        public string StreamImplementation { get; set; } = nameof(MemoryStream);
 
         /// <summary>
         /// Gets or sets the number of characters in the object's bounded or oversized content
@@ -128,10 +127,9 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         private DeserializationOperation operation;
 
         /// <summary>
-        /// Gets or sets the stream implementation reported with every result.
+        /// Gets or sets the stream implementation used by the benchmark.
         /// </summary>
-        [Params(nameof(MemoryStream))]
-        public string StreamImplementation { get; set; }
+        public string StreamImplementation { get; set; } = nameof(MemoryStream);
 
         /// <summary>
         /// Gets or sets the number of bounded-size objects in the JSON array.
