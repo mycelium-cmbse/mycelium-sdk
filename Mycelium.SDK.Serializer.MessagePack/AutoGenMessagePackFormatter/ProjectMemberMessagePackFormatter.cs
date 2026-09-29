@@ -81,13 +81,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     WriteGuidBin16(ref writer, dto.Owns[i]);
                 }
             }
-            writer.Write(dto.Role switch
-            {
-                ProjectMemberRole.Administrator => "administrator",
-                ProjectMemberRole.Participant => "participant",
-                ProjectMemberRole.Viewer => "viewer",
-                _ => throw new MessagePackSerializationException($"Value '{dto.Role}' is not valid for ProjectMemberRole."),
-            });
+            ProjectMemberRoleMessagePackFormatter.Instance.Serialize(ref writer, dto.Role, options);
             WriteGuidBin16(ref writer, dto.UpdatedBy);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
             WriteGuidBin16(ref writer, dto.User);
@@ -160,14 +154,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                         dto.Owns.Add(ReadGuidBin16(ref reader));
                     }
                 }
-                var messagePackRoleValue = ReadRequiredString(ref reader, "Role");
-                dto.Role = messagePackRoleValue switch
-                {
-                    "administrator" => ProjectMemberRole.Administrator,
-                    "participant" => ProjectMemberRole.Participant,
-                    "viewer" => ProjectMemberRole.Viewer,
-                    _ => throw new MessagePackSerializationException($"Value '{messagePackRoleValue}' is not valid for ProjectMemberRole."),
-                };
+                dto.Role = ProjectMemberRoleMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedBy = ReadGuidBin16(ref reader);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
                 dto.User = ReadGuidBin16(ref reader);

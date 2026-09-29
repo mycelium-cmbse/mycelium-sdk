@@ -446,41 +446,23 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         private static void AppendSerializeEnumeration(StringBuilder builder, IEnumeration enumeration, string valueExpression, bool nullable, int indentationLevel)
         {
             var enumerationName = ReservedCSharpNameMapper.Map(enumeration.Name);
-            var switchExpression = valueExpression;
+            var formatterName = $"{enumerationName}MessagePackFormatter.Instance";
 
             if (nullable)
             {
                 AppendLine(builder, indentationLevel, $"if ({valueExpression}.HasValue)");
                 AppendLine(builder, indentationLevel, "{");
-                indentationLevel++;
-                switchExpression = $"{valueExpression}.Value";
-            }
-
-            AppendLine(builder, indentationLevel, $"writer.Write({switchExpression} switch");
-            AppendLine(builder, indentationLevel, "{");
-
-            foreach (var modeledName in enumeration.OwnedLiteral.Select(static literal => literal.Name))
-            {
-                var literalName = ReservedCSharpNameMapper.Map(modeledName);
-                var wireValue = modeledName.ToLowerInvariant();
-
-                AppendLine(builder, indentationLevel + 1, $"{enumerationName}.{literalName} => \"{wireValue}\",");
-            }
-
-            var exceptionLine = $"_ => throw new MessagePackSerializationException($\"Value '{{{switchExpression}}}' is not valid for {enumerationName}.\"),";
-
-            AppendLine(builder, indentationLevel + 1, exceptionLine);
-            AppendLine(builder, indentationLevel, "});");
-
-            if (nullable)
-            {
-                indentationLevel--;
+                AppendLine(builder, indentationLevel + 1, $"{formatterName}.Serialize(ref writer, {valueExpression}.Value, options);");
                 AppendLine(builder, indentationLevel, "}");
                 AppendLine(builder, indentationLevel, "else");
                 AppendLine(builder, indentationLevel, "{");
                 AppendLine(builder, indentationLevel + 1, MessagePackWriteNilStatement);
                 AppendLine(builder, indentationLevel, "}");
+
+                return;
             }
+
+            AppendLine(builder, indentationLevel, $"{formatterName}.Serialize(ref writer, {valueExpression}, options);");
         }
 
         /// <summary>
@@ -497,7 +479,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// </param>
         private static void AppendDeserializeEnumeration(StringBuilder builder, IEnumeration enumeration, DeserializationContext context)
         {
-            var (destination, addToCollection, nullable, valueDescription, localName, indentationLevel) = context;
+            var (destination, addToCollection, nullable, _, _, indentationLevel) = context;
+            var enumerationName = ReservedCSharpNameMapper.Map(enumeration.Name);
+            var formatterCall = $"{enumerationName}MessagePackFormatter.Instance.Deserialize(ref reader, options)";
 
             if (nullable)
             {
@@ -507,64 +491,19 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 AppendLine(builder, indentationLevel, "}");
                 AppendLine(builder, indentationLevel, "else");
                 AppendLine(builder, indentationLevel, "{");
-                AppendLine(builder, indentationLevel + 1, $"var {localName} = ReadRequiredString(ref reader, \"{valueDescription}\");");
-                AppendEnumerationSwitchAssignment(builder, enumeration, destination, addToCollection, localName, indentationLevel + 1);
+                AppendAssignment(builder, destination, addToCollection, formatterCall, indentationLevel + 1);
                 AppendLine(builder, indentationLevel, "}");
 
                 return;
             }
 
-            AppendLine(builder, indentationLevel, $"var {localName} = ReadRequiredString(ref reader, \"{valueDescription}\");");
-            AppendEnumerationSwitchAssignment(builder, enumeration, destination, addToCollection, localName, indentationLevel);
+            AppendAssignment(builder, destination, addToCollection, formatterCall, indentationLevel);
         }
 
         /// <summary>
         /// Groups the generated deserialization destination and value context.
         /// </summary>
         private readonly record struct DeserializationContext(string Destination, bool AddToCollection, bool Nullable, string ValueDescription, string LocalName, int IndentationLevel);
-
-        /// <summary>
-        /// Appends an exact lowercase enumeration switch assignment.
-        /// </summary>
-        /// <param name="builder">
-        /// The target source builder.
-        /// </param>
-        /// <param name="enumeration">
-        /// The modeled enumeration.
-        /// </param>
-        /// <param name="destination">
-        /// The generated DTO property receiving the value.
-        /// </param>
-        /// <param name="addToCollection">
-        /// Whether the value is added to a collection instead of assigned.
-        /// </param>
-        /// <param name="localName">
-        /// The local variable containing the encoded string.
-        /// </param>
-        /// <param name="indentationLevel">
-        /// The generated indentation level.
-        /// </param>
-        private static void AppendEnumerationSwitchAssignment(StringBuilder builder, IEnumeration enumeration, string destination, bool addToCollection, string localName, int indentationLevel)
-        {
-            var enumerationName = ReservedCSharpNameMapper.Map(enumeration.Name);
-            var assignmentStart = addToCollection ? $"{destination}.Add({localName} switch" : $"{destination} = {localName} switch";
-
-            AppendLine(builder, indentationLevel, assignmentStart);
-            AppendLine(builder, indentationLevel, "{");
-
-            foreach (var modeledName in enumeration.OwnedLiteral.Select(static literal => literal.Name))
-            {
-                var literalName = ReservedCSharpNameMapper.Map(modeledName);
-                var wireValue = modeledName.ToLowerInvariant();
-
-                AppendLine(builder, indentationLevel + 1, $"\"{wireValue}\" => {enumerationName}.{literalName},");
-            }
-
-            var exceptionLine = $"_ => throw new MessagePackSerializationException($\"Value '{{{localName}}}' is not valid for {enumerationName}.\"),";
-
-            AppendLine(builder, indentationLevel + 1, exceptionLine);
-            AppendLine(builder, indentationLevel, addToCollection ? "});" : "};");
-        }
 
         /// <summary>
         /// Appends invariant round-trip date and time serialization with optional <c>nil</c> handling.

@@ -60,6 +60,9 @@
         <None Update="Templates\Uml\dto-messagepackformatter-uml-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="Templates\Uml\enum-messagepackformatter-uml-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
         <None Update="Templates\Uml\messagepack-dataresolver-getformatter-helper.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>

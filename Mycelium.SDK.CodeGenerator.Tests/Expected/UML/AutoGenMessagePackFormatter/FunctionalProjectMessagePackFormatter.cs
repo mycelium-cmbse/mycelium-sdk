@@ -73,12 +73,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             }
             WriteGuidBin16(ref writer, dto.CreatedBy);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
-            writer.Write(dto.CurrentMode switch
-            {
-                ProjectMode.Regular => "regular",
-                ProjectMode.Concurrent => "concurrent",
-                _ => throw new MessagePackSerializationException($"Value '{dto.CurrentMode}' is not valid for ProjectMode."),
-            });
+            ProjectModeMessagePackFormatter.Instance.Serialize(ref writer, dto.CurrentMode, options);
             if (dto.Defines == null)
             {
                 writer.WriteNil();
@@ -107,14 +102,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     WriteGuidBin16(ref writer, dto.Involves[i]);
                 }
             }
-            writer.Write(dto.Lifecycle switch
-            {
-                ProjectLifecycleKind.Preparation => "preparation",
-                ProjectLifecycleKind.Open => "open",
-                ProjectLifecycleKind.Review => "review",
-                ProjectLifecycleKind.Archived => "archived",
-                _ => throw new MessagePackSerializationException($"Value '{dto.Lifecycle}' is not valid for ProjectLifecycleKind."),
-            });
+            ProjectLifecycleKindMessagePackFormatter.Instance.Serialize(ref writer, dto.Lifecycle, options);
             WriteRequiredString(ref writer, dto.Name, "Name");
             WriteGuidBin16(ref writer, dto.Policy);
             if (dto.Reviews == null)
@@ -133,13 +121,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             WriteStringDictionary(ref writer, dto.SharedPreferences, "SharedPreferences");
             WriteGuidBin16(ref writer, dto.UpdatedBy);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
-            writer.Write(dto.Visibility switch
-            {
-                ProjectVisibility.Private => "private",
-                ProjectVisibility.Organization => "organization",
-                ProjectVisibility.Public => "public",
-                _ => throw new MessagePackSerializationException($"Value '{dto.Visibility}' is not valid for ProjectVisibility."),
-            });
+            ProjectVisibilityMessagePackFormatter.Instance.Serialize(ref writer, dto.Visibility, options);
         }
 
         /// <summary>
@@ -201,13 +183,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 }
                 dto.CreatedBy = ReadGuidBin16(ref reader);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
-                var messagePackCurrentModeValue = ReadRequiredString(ref reader, "CurrentMode");
-                dto.CurrentMode = messagePackCurrentModeValue switch
-                {
-                    "regular" => ProjectMode.Regular,
-                    "concurrent" => ProjectMode.Concurrent,
-                    _ => throw new MessagePackSerializationException($"Value '{messagePackCurrentModeValue}' is not valid for ProjectMode."),
-                };
+                dto.CurrentMode = ProjectModeMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 if (reader.TryReadNil())
                 {
                     dto.Defines = null;
@@ -248,15 +224,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                         dto.Involves.Add(ReadGuidBin16(ref reader));
                     }
                 }
-                var messagePackLifecycleValue = ReadRequiredString(ref reader, "Lifecycle");
-                dto.Lifecycle = messagePackLifecycleValue switch
-                {
-                    "preparation" => ProjectLifecycleKind.Preparation,
-                    "open" => ProjectLifecycleKind.Open,
-                    "review" => ProjectLifecycleKind.Review,
-                    "archived" => ProjectLifecycleKind.Archived,
-                    _ => throw new MessagePackSerializationException($"Value '{messagePackLifecycleValue}' is not valid for ProjectLifecycleKind."),
-                };
+                dto.Lifecycle = ProjectLifecycleKindMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.Name = ReadRequiredString(ref reader, "Name");
                 dto.Policy = ReadGuidBin16(ref reader);
                 if (reader.TryReadNil())
@@ -281,14 +249,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.SharedPreferences = ReadStringDictionary(ref reader, "SharedPreferences");
                 dto.UpdatedBy = ReadGuidBin16(ref reader);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
-                var messagePackVisibilityValue = ReadRequiredString(ref reader, "Visibility");
-                dto.Visibility = messagePackVisibilityValue switch
-                {
-                    "private" => ProjectVisibility.Private,
-                    "organization" => ProjectVisibility.Organization,
-                    "public" => ProjectVisibility.Public,
-                    _ => throw new MessagePackSerializationException($"Value '{messagePackVisibilityValue}' is not valid for ProjectVisibility."),
-                };
+                dto.Visibility = ProjectVisibilityMessagePackFormatter.Instance.Deserialize(ref reader, options);
 
                 return dto;
             }

@@ -60,13 +60,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             WriteGuidBin16(ref writer, dto.CreatedBy);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
             WriteGuidBin16(ref writer, dto.Organization);
-            writer.Write(dto.Role switch
-            {
-                OrganizationMembershipRole.Administrator => "administrator",
-                OrganizationMembershipRole.Member => "member",
-                OrganizationMembershipRole.Owner => "owner",
-                _ => throw new MessagePackSerializationException($"Value '{dto.Role}' is not valid for OrganizationMembershipRole."),
-            });
+            OrganizationMembershipRoleMessagePackFormatter.Instance.Serialize(ref writer, dto.Role, options);
             WriteGuidBin16(ref writer, dto.UpdatedBy);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
             WriteGuidBin16(ref writer, dto.User);
@@ -112,14 +106,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.CreatedBy = ReadGuidBin16(ref reader);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
                 dto.Organization = ReadGuidBin16(ref reader);
-                var messagePackRoleValue = ReadRequiredString(ref reader, "Role");
-                dto.Role = messagePackRoleValue switch
-                {
-                    "administrator" => OrganizationMembershipRole.Administrator,
-                    "member" => OrganizationMembershipRole.Member,
-                    "owner" => OrganizationMembershipRole.Owner,
-                    _ => throw new MessagePackSerializationException($"Value '{messagePackRoleValue}' is not valid for OrganizationMembershipRole."),
-                };
+                dto.Role = OrganizationMembershipRoleMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedBy = ReadGuidBin16(ref reader);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
                 dto.User = ReadGuidBin16(ref reader);

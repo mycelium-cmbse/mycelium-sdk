@@ -60,14 +60,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             writer.Write(dto.AllowProjectCreation);
             WriteGuidBin16(ref writer, dto.CreatedBy);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
-            writer.Write(dto.DefaultProjectLifecycleOnCreate switch
-            {
-                ProjectLifecycleKind.Preparation => "preparation",
-                ProjectLifecycleKind.Open => "open",
-                ProjectLifecycleKind.Review => "review",
-                ProjectLifecycleKind.Archived => "archived",
-                _ => throw new MessagePackSerializationException($"Value '{dto.DefaultProjectLifecycleOnCreate}' is not valid for ProjectLifecycleKind."),
-            });
+            ProjectLifecycleKindMessagePackFormatter.Instance.Serialize(ref writer, dto.DefaultProjectLifecycleOnCreate, options);
             writer.Write(dto.GrantReadOnlyViewForAudit);
             WriteGuidBin16(ref writer, dto.UpdatedBy);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
@@ -113,15 +106,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.AllowProjectCreation = reader.ReadBoolean();
                 dto.CreatedBy = ReadGuidBin16(ref reader);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
-                var messagePackDefaultProjectLifecycleOnCreateValue = ReadRequiredString(ref reader, "DefaultProjectLifecycleOnCreate");
-                dto.DefaultProjectLifecycleOnCreate = messagePackDefaultProjectLifecycleOnCreateValue switch
-                {
-                    "preparation" => ProjectLifecycleKind.Preparation,
-                    "open" => ProjectLifecycleKind.Open,
-                    "review" => ProjectLifecycleKind.Review,
-                    "archived" => ProjectLifecycleKind.Archived,
-                    _ => throw new MessagePackSerializationException($"Value '{messagePackDefaultProjectLifecycleOnCreateValue}' is not valid for ProjectLifecycleKind."),
-                };
+                dto.DefaultProjectLifecycleOnCreate = ProjectLifecycleKindMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.GrantReadOnlyViewForAudit = reader.ReadBoolean();
                 dto.UpdatedBy = ReadGuidBin16(ref reader);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
