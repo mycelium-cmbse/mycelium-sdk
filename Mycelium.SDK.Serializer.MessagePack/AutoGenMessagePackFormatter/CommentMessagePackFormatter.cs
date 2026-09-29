@@ -66,7 +66,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             });
             WriteRequiredString(ref writer, dto.Content, "Content");
             WriteGuidBin16(ref writer, dto.CreatedBy);
-            writer.Write(dto.CreatedOn);
+            WriteRoundTripDateTime(ref writer, dto.CreatedOn);
             if (dto.Quotes.HasValue)
             {
                 WriteGuidBin16(ref writer, dto.Quotes.Value);
@@ -90,7 +90,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             }
             WriteGuidBin16(ref writer, dto.TargetElementId);
             WriteGuidBin16(ref writer, dto.UpdatedBy);
-            writer.Write(dto.UpdatedOn);
+            WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 };
                 dto.Content = ReadRequiredString(ref reader, "Content");
                 dto.CreatedBy = ReadGuidBin16(ref reader);
-                dto.CreatedOn = reader.ReadDateTime();
+                dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
                 if (reader.TryReadNil())
                 {
                     dto.Quotes = null;
@@ -170,7 +170,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 }
                 dto.TargetElementId = ReadGuidBin16(ref reader);
                 dto.UpdatedBy = ReadGuidBin16(ref reader);
-                dto.UpdatedOn = reader.ReadDateTime();
+                dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
 
                 return dto;
             }

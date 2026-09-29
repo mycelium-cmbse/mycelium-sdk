@@ -58,7 +58,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             WriteGuidBin16(ref writer, dto.Id);
             WriteGuidBin16(ref writer, dto.CreatedBy);
-            writer.Write(dto.CreatedOn);
+            WriteRoundTripDateTime(ref writer, dto.CreatedOn);
             if (dto.DefaultReviewers == null)
             {
                 writer.WriteNil();
@@ -96,7 +96,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             WriteRequiredString(ref writer, dto.Name, "Name");
             writer.Write(dto.ReviewRequired);
             WriteGuidBin16(ref writer, dto.UpdatedBy);
-            writer.Write(dto.UpdatedOn);
+            WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 dto.Id = ReadGuidBin16(ref reader);
                 dto.CreatedBy = ReadGuidBin16(ref reader);
-                dto.CreatedOn = reader.ReadDateTime();
+                dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
                 if (reader.TryReadNil())
                 {
                     dto.DefaultReviewers = null;
@@ -188,7 +188,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.Name = ReadRequiredString(ref reader, "Name");
                 dto.ReviewRequired = reader.ReadBoolean();
                 dto.UpdatedBy = ReadGuidBin16(ref reader);
-                dto.UpdatedOn = reader.ReadDateTime();
+                dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
 
                 return dto;
             }

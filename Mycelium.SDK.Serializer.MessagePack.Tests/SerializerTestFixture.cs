@@ -12,6 +12,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
     using System;
     using System.Buffers;
     using System.Collections.Generic;
+    using System.Globalization;
 
     using global::MessagePack;
 
@@ -44,7 +45,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         }
 
         [Test]
-        public void Verify_that_FunctionalProjectPolicy_uses_the_approved_positional_native_mapping()
+        public void Verify_that_FunctionalProjectPolicy_uses_the_approved_positional_mapping()
         {
             var dto = CreateFunctionalProjectPolicy();
 
@@ -58,10 +59,66 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.AllowAutoPublishMode));
             Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.AllowVersionBranching));
             AssertGuid(ref reader, dto.CreatedBy);
-            Assert.That(reader.ReadDateTime(), Is.EqualTo(dto.CreatedOn));
+            Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
             AssertGuid(ref reader, dto.UpdatedBy);
-            Assert.That(reader.ReadDateTime(), Is.EqualTo(dto.UpdatedOn));
+            Assert.That(reader.ReadString(), Is.EqualTo(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture)));
             Assert.That(reader.End, Is.True);
+        }
+
+        [TestCase(DateTimeKind.Utc)]
+        [TestCase(DateTimeKind.Local)]
+        [TestCase(DateTimeKind.Unspecified)]
+        public void Verify_that_round_trip_DateTime_strings_preserve_the_value_and_kind(DateTimeKind kind)
+        {
+            var dto = CreateFunctionalProjectPolicy();
+            dto.CreatedOn = new DateTime(2026, 1, 2, 3, 4, 5, kind).AddTicks(1234567);
+
+            var payload = MessagePackSerializer.Serialize(dto, SerializerOptions);
+            var reader = new MessagePackReader(payload);
+
+            Assert.That(reader.ReadArrayHeader(), Is.EqualTo(8));
+
+            for (var index = 0; index < 5; index++)
+            {
+                reader.Skip();
+            }
+
+            Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
+
+            var actual = MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(actual?.CreatedOn, Is.EqualTo(dto.CreatedOn));
+                Assert.That(actual?.CreatedOn.Kind, Is.EqualTo(kind));
+            }
+        }
+
+        [TestCase("invalid")]
+        [TestCase("2026-01-02T03:04:05Z")]
+        public void Verify_that_non_round_trip_DateTime_strings_are_rejected(string value)
+        {
+            var payload = CreateFunctionalProjectPolicyPayload(16, createdOn: value);
+
+            var exception = Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions));
+
+            Assert.That(exception!.ToString(), Does.Contain("DateTime value 'CreatedOn' is not in the invariant round-trip format."));
+        }
+
+        [Test]
+        public void Verify_that_native_timestamp_DateTime_values_are_rejected()
+        {
+            var payload = CreateFunctionalProjectPolicyPayload(16, nativeCreatedOn: true);
+
+            Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions));
+        }
+
+        [Test]
+        public void Verify_that_nil_required_DateTime_values_are_rejected()
+        {
+            var payload = CreateFunctionalProjectPolicyPayload(16, nilCreatedOn: true);
+
+            Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions));
         }
 
         [Test]
@@ -85,14 +142,14 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             Assert.That(reader.ReadString(), Is.EqualTo("open"));
             Assert.That(reader.ReadString(), Is.EqualTo(dto.Content));
             AssertGuid(ref reader, dto.CreatedBy);
-            Assert.That(reader.ReadDateTime(), Is.EqualTo(dto.CreatedOn));
+            Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
             Assert.That(reader.TryReadNil(), Is.True);
             Assert.That(reader.ReadArrayHeader(), Is.EqualTo(2));
             AssertGuid(ref reader, dto.Replies[0]);
             AssertGuid(ref reader, dto.Replies[1]);
             AssertGuid(ref reader, dto.TargetElementId);
             AssertGuid(ref reader, dto.UpdatedBy);
-            Assert.That(reader.ReadDateTime(), Is.EqualTo(dto.UpdatedOn));
+            Assert.That(reader.ReadString(), Is.EqualTo(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture)));
             Assert.That(reader.End, Is.True);
         }
 
@@ -112,7 +169,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             Assert.That(reader.ReadArrayHeader(), Is.EqualTo(11));
             AssertGuid(ref reader, dto.Id);
             AssertGuid(ref reader, dto.CreatedBy);
-            Assert.That(reader.ReadDateTime(), Is.EqualTo(dto.CreatedOn));
+            Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
             Assert.That(reader.ReadArrayHeader(), Is.EqualTo(dto.DefaultReviewers.Count));
             AssertGuid(ref reader, expectedReviewers[0]);
             AssertGuid(ref reader, expectedReviewers[1]);
@@ -124,7 +181,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             Assert.That(reader.ReadString(), Is.EqualTo(dto.Name));
             Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.ReviewRequired));
             AssertGuid(ref reader, dto.UpdatedBy);
-            Assert.That(reader.ReadDateTime(), Is.EqualTo(dto.UpdatedOn));
+            Assert.That(reader.ReadString(), Is.EqualTo(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture)));
             Assert.That(reader.End, Is.True);
         }
 
@@ -533,7 +590,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             writer.Write(commentStatus);
             writer.Write(dto.Content);
             WriteGuid(ref writer, dto.CreatedBy);
-            writer.Write(dto.CreatedOn);
+            writer.Write(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture));
             WriteGuid(ref writer, dto.Quotes!.Value);
             writer.WriteArrayHeader(dto.Replies.Count);
 
@@ -544,13 +601,13 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
 
             WriteGuid(ref writer, dto.TargetElementId);
             WriteGuid(ref writer, dto.UpdatedBy);
-            writer.Write(dto.UpdatedOn);
+            writer.Write(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture));
             writer.Flush();
 
             return buffer.WrittenMemory.ToArray();
         }
 
-        private static byte[] CreateFunctionalProjectPolicyPayload(int idByteCount)
+        private static byte[] CreateFunctionalProjectPolicyPayload(int idByteCount, string? createdOn = null, bool nativeCreatedOn = false, bool nilCreatedOn = false)
         {
             var dto = CreateFunctionalProjectPolicy();
             var buffer = new ArrayBufferWriter<byte>();
@@ -563,9 +620,22 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             writer.Write(dto.AllowAutoPublishMode);
             writer.Write(dto.AllowVersionBranching);
             WriteGuid(ref writer, dto.CreatedBy);
-            writer.Write(dto.CreatedOn);
+
+            if (nilCreatedOn)
+            {
+                writer.WriteNil();
+            }
+            else if (nativeCreatedOn)
+            {
+                writer.Write(dto.CreatedOn);
+            }
+            else
+            {
+                writer.Write(createdOn ?? dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture));
+            }
+
             WriteGuid(ref writer, dto.UpdatedBy);
-            writer.Write(dto.UpdatedOn);
+            writer.Write(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture));
             writer.Flush();
 
             return buffer.WrittenMemory.ToArray();
@@ -580,7 +650,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             writer.WriteArrayHeader(11);
             WriteGuid(ref writer, dto.Id);
             WriteGuid(ref writer, dto.CreatedBy);
-            writer.Write(dto.CreatedOn);
+            writer.Write(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture));
 
             if (nilDefaultReviewers)
             {
@@ -604,7 +674,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             writer.Write(dto.Name);
             writer.Write(dto.ReviewRequired);
             WriteGuid(ref writer, dto.UpdatedBy);
-            writer.Write(dto.UpdatedOn);
+            writer.Write(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture));
             writer.Flush();
 
             return buffer.WrittenMemory.ToArray();

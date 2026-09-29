@@ -61,9 +61,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
             writer.Write(dto.AllowAutoPublishMode);
             writer.Write(dto.AllowVersionBranching);
             WriteGuidBin16(ref writer, dto.CreatedBy);
-            writer.Write(dto.CreatedOn);
+            WriteRoundTripDateTime(ref writer, dto.CreatedOn);
             WriteGuidBin16(ref writer, dto.UpdatedBy);
-            writer.Write(dto.UpdatedOn);
+            WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
         }
 
         /// <summary>
@@ -107,9 +107,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.AllowAutoPublishMode = reader.ReadBoolean();
                 dto.AllowVersionBranching = reader.ReadBoolean();
                 dto.CreatedBy = ReadGuidBin16(ref reader);
-                dto.CreatedOn = reader.ReadDateTime();
+                dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
                 dto.UpdatedBy = ReadGuidBin16(ref reader);
-                dto.UpdatedOn = reader.ReadDateTime();
+                dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
 
                 return dto;
             }

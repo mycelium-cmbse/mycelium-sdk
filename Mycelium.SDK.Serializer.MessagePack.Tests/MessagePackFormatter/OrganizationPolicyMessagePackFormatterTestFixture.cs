@@ -11,6 +11,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests.MessagePackFormatter
 {
     using System;
     using System.Buffers;
+    using System.Globalization;
 
     using global::MessagePack;
 
@@ -36,11 +37,11 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests.MessagePackFormatter
             AssertGuid(ref reader, dto.Id);
             Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.AllowProjectCreation));
             AssertGuid(ref reader, dto.CreatedBy);
-            Assert.That(reader.ReadDateTime(), Is.EqualTo(dto.CreatedOn));
+            Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
             Assert.That(reader.ReadString(), Is.EqualTo("review"));
             Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.GrantReadOnlyViewForAudit));
             AssertGuid(ref reader, dto.UpdatedBy);
-            Assert.That(reader.ReadDateTime(), Is.EqualTo(dto.UpdatedOn));
+            Assert.That(reader.ReadString(), Is.EqualTo(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture)));
             Assert.That(reader.End, Is.True);
         }
 
@@ -99,11 +100,11 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests.MessagePackFormatter
             WriteGuid(ref writer, dto.Id);
             writer.Write(dto.AllowProjectCreation);
             WriteGuid(ref writer, dto.CreatedBy);
-            writer.Write(dto.CreatedOn);
+            writer.Write(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture));
             writer.Write("review");
             writer.Write(dto.GrantReadOnlyViewForAudit);
             WriteGuid(ref writer, dto.UpdatedBy);
-            writer.Write(dto.UpdatedOn);
+            writer.Write(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture));
             writer.Flush();
 
             return buffer.WrittenMemory.ToArray();

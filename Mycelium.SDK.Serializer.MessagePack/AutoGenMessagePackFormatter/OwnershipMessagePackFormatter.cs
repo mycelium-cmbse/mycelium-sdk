@@ -58,13 +58,13 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             WriteGuidBin16(ref writer, dto.Id);
             WriteGuidBin16(ref writer, dto.CreatedBy);
-            writer.Write(dto.CreatedOn);
+            WriteRoundTripDateTime(ref writer, dto.CreatedOn);
             WriteRequiredString(ref writer, dto.Description, "Description");
             WriteGuidBin16(ref writer, dto.EngineeringMetadataId);
             WriteRequiredString(ref writer, dto.Name, "Name");
             WriteRequiredString(ref writer, dto.ShortName, "ShortName");
             WriteGuidBin16(ref writer, dto.UpdatedBy);
-            writer.Write(dto.UpdatedOn);
+            WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
         }
 
         /// <summary>
@@ -105,13 +105,13 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 dto.Id = ReadGuidBin16(ref reader);
                 dto.CreatedBy = ReadGuidBin16(ref reader);
-                dto.CreatedOn = reader.ReadDateTime();
+                dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
                 dto.Description = ReadRequiredString(ref reader, "Description");
                 dto.EngineeringMetadataId = ReadGuidBin16(ref reader);
                 dto.Name = ReadRequiredString(ref reader, "Name");
                 dto.ShortName = ReadRequiredString(ref reader, "ShortName");
                 dto.UpdatedBy = ReadGuidBin16(ref reader);
-                dto.UpdatedOn = reader.ReadDateTime();
+                dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
 
                 return dto;
             }
