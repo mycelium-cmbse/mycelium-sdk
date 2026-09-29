@@ -26,7 +26,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
     /// <see cref="Organization" /> DTO using MessagePack.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public sealed partial class OrganizationMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<Organization?>
+    public sealed partial class OrganizationMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<Organization>
     {
         /// <summary>
         /// Serializes an exact <see cref="Organization" /> DTO.
@@ -47,7 +47,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when a DTO property contains a value that is invalid for its approved
         /// MessagePack representation.
         /// </exception>
-        public void Serialize(ref MessagePackWriter writer, Organization? dto, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, Organization dto, MessagePackSerializerOptions options)
         {
             if (dto == null)
             {
@@ -117,7 +117,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when the encoded DTO is <c>nil</c>, has an incorrect field count or contains
         /// a value that is invalid for its approved MessagePack representation.
         /// </exception>
-        public Organization? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public Organization Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {

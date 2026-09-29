@@ -26,7 +26,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
     /// <see cref="User" /> DTO using MessagePack.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public sealed partial class UserMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<User?>
+    public sealed partial class UserMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<User>
     {
         /// <summary>
         /// Serializes an exact <see cref="User" /> DTO.
@@ -47,7 +47,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when a DTO property contains a value that is invalid for its approved
         /// MessagePack representation.
         /// </exception>
-        public void Serialize(ref MessagePackWriter writer, User? dto, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, User dto, MessagePackSerializerOptions options)
         {
             if (dto == null)
             {
@@ -118,7 +118,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when the encoded DTO is <c>nil</c>, has an incorrect field count or contains
         /// a value that is invalid for its approved MessagePack representation.
         /// </exception>
-        public User? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public User Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {

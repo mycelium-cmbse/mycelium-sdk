@@ -26,7 +26,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
     /// <see cref="FunctionalProject" /> DTO using MessagePack.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public sealed partial class FunctionalProjectMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<FunctionalProject?>
+    public sealed partial class FunctionalProjectMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<FunctionalProject>
     {
         /// <summary>
         /// Serializes an exact <see cref="FunctionalProject" /> DTO.
@@ -47,7 +47,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when a DTO property contains a value that is invalid for its approved
         /// MessagePack representation.
         /// </exception>
-        public void Serialize(ref MessagePackWriter writer, FunctionalProject? dto, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, FunctionalProject dto, MessagePackSerializerOptions options)
         {
             if (dto == null)
             {
@@ -158,7 +158,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when the encoded DTO is <c>nil</c>, has an incorrect field count or contains
         /// a value that is invalid for its approved MessagePack representation.
         /// </exception>
-        public FunctionalProject? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public FunctionalProject Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
