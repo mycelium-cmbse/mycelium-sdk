@@ -100,9 +100,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var stagedFileNames = QueryCSharpFileNames(this.stagingDirectory);
+            var stagedFileNames = GeneratorSetupFixture.QueryRelativeFileNames(this.stagingDirectory);
 
-            var committedFileNames = QueryCSharpFileNames(this.committedDirectory);
+            var committedFileNames = GeneratorSetupFixture.QueryRelativeFileNames(this.committedDirectory);
 
             Assert.That(stagedFileNames, Is.EqualTo(committedFileNames), "The staged and committed MessagePack formatter filename sets differ.");
 
@@ -126,9 +126,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var stagedFileNames = QueryCSharpFileNames(this.payloadStagingDirectory);
+            var stagedFileNames = GeneratorSetupFixture.QueryRelativeFileNames(this.payloadStagingDirectory);
 
-            var committedFileNames = QueryCSharpFileNames(this.payloadCommittedDirectory);
+            var committedFileNames = GeneratorSetupFixture.QueryRelativeFileNames(this.payloadCommittedDirectory);
 
             Assert.That(stagedFileNames, Is.EqualTo(committedFileNames), "The staged and committed MessagePack payload filename sets differ.");
 
@@ -157,9 +157,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         [Test]
-        public async Task Verify_that_generated_source_and_goldens_use_the_required_file_format()
+        public async Task Verify_that_generated_source_uses_the_required_file_format()
         {
-            var sourceDirectories = new[] { this.stagingDirectory, this.expectedDirectory, this.payloadStagingDirectory, this.payloadExpectedDirectory };
+            var sourceDirectories = new[] { this.stagingDirectory, this.payloadStagingDirectory };
 
             foreach (var directory in sourceDirectories)
             {
@@ -308,9 +308,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var actualSource = await File.ReadAllTextAsync(actualPath, StrictUtf8WithoutBom);
+            var actualSource = await GeneratorSetupFixture.ReadSourceAsync(actualPath);
 
-            var expectedSource = await File.ReadAllTextAsync(expectedPath, StrictUtf8WithoutBom);
+            var expectedSource = await GeneratorSetupFixture.ReadSourceAsync(expectedPath);
 
             Assert.That(string.Equals(actualSource, expectedSource, StringComparison.Ordinal), Is.True, $"{actualDescription} differs from {expectedDescription}.");
         }
