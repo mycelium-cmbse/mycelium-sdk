@@ -322,10 +322,12 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             switch (primitiveType.Name)
             {
                 case "Boolean":
-                case "DateTime":
                 case "Integer":
                 case "Real":
                     AppendSerializeNativeValue(builder, valueExpression, nullable, indentationLevel);
+                    break;
+                case "DateTime":
+                    AppendSerializeRoundTripDateTime(builder, valueExpression, nullable, indentationLevel);
                     break;
                 case "Dictionary<string,string>":
                     AppendLine(builder, indentationLevel, $"WriteStringDictionary(ref writer, {valueExpression}, \"{valueDescription}\");");
@@ -395,7 +397,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "reader.ReadBoolean()", indentationLevel);
                     break;
                 case "DateTime":
-                    AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "reader.ReadDateTime()", indentationLevel);
+                    AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, $"ReadRoundTripDateTime(ref reader, \"{valueDescription}\")", indentationLevel);
                     break;
                 case "Dictionary<string,string>":
                     AppendAssignment(builder, destination, addToCollection, $"ReadStringDictionary(ref reader, \"{valueDescription}\")", indentationLevel);
@@ -562,6 +564,40 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             AppendLine(builder, indentationLevel + 1, exceptionLine);
             AppendLine(builder, indentationLevel, addToCollection ? "});" : "};");
+        }
+
+        /// <summary>
+        /// Appends invariant round-trip date and time serialization with optional <c>nil</c> handling.
+        /// </summary>
+        /// <param name="builder">
+        /// The target source builder.
+        /// </param>
+        /// <param name="valueExpression">
+        /// The generated expression supplying the date and time.
+        /// </param>
+        /// <param name="nullable">
+        /// Whether the value may be encoded as <c>nil</c>.
+        /// </param>
+        /// <param name="indentationLevel">
+        /// The generated indentation level.
+        /// </param>
+        private static void AppendSerializeRoundTripDateTime(StringBuilder builder, string valueExpression, bool nullable, int indentationLevel)
+        {
+            if (!nullable)
+            {
+                AppendLine(builder, indentationLevel, $"WriteRoundTripDateTime(ref writer, {valueExpression});");
+
+                return;
+            }
+
+            AppendLine(builder, indentationLevel, $"if ({valueExpression}.HasValue)");
+            AppendLine(builder, indentationLevel, "{");
+            AppendLine(builder, indentationLevel + 1, $"WriteRoundTripDateTime(ref writer, {valueExpression}.Value);");
+            AppendLine(builder, indentationLevel, "}");
+            AppendLine(builder, indentationLevel, "else");
+            AppendLine(builder, indentationLevel, "{");
+            AppendLine(builder, indentationLevel + 1, MessagePackWriteNilStatement);
+            AppendLine(builder, indentationLevel, "}");
         }
 
         /// <summary>

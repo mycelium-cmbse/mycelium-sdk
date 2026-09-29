@@ -72,7 +72,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 }
             }
             WriteGuidBin16(ref writer, dto.CreatedBy);
-            writer.Write(dto.CreatedOn);
+            WriteRoundTripDateTime(ref writer, dto.CreatedOn);
             writer.Write(dto.CurrentMode switch
             {
                 ProjectMode.Regular => "regular",
@@ -132,7 +132,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             }
             WriteStringDictionary(ref writer, dto.SharedPreferences, "SharedPreferences");
             WriteGuidBin16(ref writer, dto.UpdatedBy);
-            writer.Write(dto.UpdatedOn);
+            WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
             writer.Write(dto.Visibility switch
             {
                 ProjectVisibility.Private => "private",
@@ -200,7 +200,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     }
                 }
                 dto.CreatedBy = ReadGuidBin16(ref reader);
-                dto.CreatedOn = reader.ReadDateTime();
+                dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
                 var messagePackCurrentModeValue = ReadRequiredString(ref reader, "CurrentMode");
                 dto.CurrentMode = messagePackCurrentModeValue switch
                 {
@@ -280,7 +280,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 }
                 dto.SharedPreferences = ReadStringDictionary(ref reader, "SharedPreferences");
                 dto.UpdatedBy = ReadGuidBin16(ref reader);
-                dto.UpdatedOn = reader.ReadDateTime();
+                dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
                 var messagePackVisibilityValue = ReadRequiredString(ref reader, "Visibility");
                 dto.Visibility = messagePackVisibilityValue switch
                 {

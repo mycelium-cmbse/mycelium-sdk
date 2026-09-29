@@ -59,7 +59,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             WriteGuidBin16(ref writer, dto.Id);
             writer.Write(dto.AllowProjectCreation);
             WriteGuidBin16(ref writer, dto.CreatedBy);
-            writer.Write(dto.CreatedOn);
+            WriteRoundTripDateTime(ref writer, dto.CreatedOn);
             writer.Write(dto.DefaultProjectLifecycleOnCreate switch
             {
                 ProjectLifecycleKind.Preparation => "preparation",
@@ -70,7 +70,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             });
             writer.Write(dto.GrantReadOnlyViewForAudit);
             WriteGuidBin16(ref writer, dto.UpdatedBy);
-            writer.Write(dto.UpdatedOn);
+            WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.Id = ReadGuidBin16(ref reader);
                 dto.AllowProjectCreation = reader.ReadBoolean();
                 dto.CreatedBy = ReadGuidBin16(ref reader);
-                dto.CreatedOn = reader.ReadDateTime();
+                dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
                 var messagePackDefaultProjectLifecycleOnCreateValue = ReadRequiredString(ref reader, "DefaultProjectLifecycleOnCreate");
                 dto.DefaultProjectLifecycleOnCreate = messagePackDefaultProjectLifecycleOnCreateValue switch
                 {
@@ -124,7 +124,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 };
                 dto.GrantReadOnlyViewForAudit = reader.ReadBoolean();
                 dto.UpdatedBy = ReadGuidBin16(ref reader);
-                dto.UpdatedOn = reader.ReadDateTime();
+                dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
 
                 return dto;
             }

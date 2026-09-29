@@ -58,7 +58,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             WriteGuidBin16(ref writer, dto.Id);
             WriteGuidBin16(ref writer, dto.CreatedBy);
-            writer.Write(dto.CreatedOn);
+            WriteRoundTripDateTime(ref writer, dto.CreatedOn);
             WriteRequiredString(ref writer, dto.Description, "Description");
             if (dto.InvolvedUser == null)
             {
@@ -98,7 +98,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 _ => throw new MessagePackSerializationException($"Value '{dto.Status}' is not valid for ActivationStatus."),
             });
             WriteGuidBin16(ref writer, dto.UpdatedBy);
-            writer.Write(dto.UpdatedOn);
+            WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 dto.Id = ReadGuidBin16(ref reader);
                 dto.CreatedBy = ReadGuidBin16(ref reader);
-                dto.CreatedOn = reader.ReadDateTime();
+                dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
                 dto.Description = ReadRequiredString(ref reader, "Description");
                 if (reader.TryReadNil())
                 {
@@ -192,7 +192,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     _ => throw new MessagePackSerializationException($"Value '{messagePackStatusValue}' is not valid for ActivationStatus."),
                 };
                 dto.UpdatedBy = ReadGuidBin16(ref reader);
-                dto.UpdatedOn = reader.ReadDateTime();
+                dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
 
                 return dto;
             }
