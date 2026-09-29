@@ -59,8 +59,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\Mycelium.SDK\AutoGenDTO\*.cs"
-              Link="Committed\Mycelium.SDK\AutoGenDTO\%(Filename)%(Extension)">
+        <None Include="..\Mycelium.SDK\AutoGenDTO\**\*"
+              Link="Committed\Mycelium.SDK\AutoGenDTO\%(RecursiveDir)%(Filename)%(Extension)">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
@@ -80,8 +80,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\Mycelium.SDK\AutoGenPOCO\*.cs"
-              Link="Committed\Mycelium.SDK\AutoGenPOCO\%(Filename)%(Extension)">
+        <None Include="..\Mycelium.SDK\AutoGenPOCO\**\*"
+              Link="Committed\Mycelium.SDK\AutoGenPOCO\%(RecursiveDir)%(Filename)%(Extension)">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>

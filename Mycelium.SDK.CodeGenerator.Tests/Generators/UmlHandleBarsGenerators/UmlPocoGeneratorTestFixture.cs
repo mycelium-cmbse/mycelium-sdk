@@ -59,8 +59,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var generatedFileNames = QueryCSharpFileNames(this.stagingDirectory);
-            var committedFileNames = QueryCSharpFileNames(this.committedDirectory);
+            var generatedFileNames = GeneratorSetupFixture.QueryRelativeFileNames(this.stagingDirectory);
+            var committedFileNames = GeneratorSetupFixture.QueryRelativeFileNames(this.committedDirectory);
 
             Assert.That(generatedFileNames, Is.EqualTo(committedFileNames), "The generated and committed POCO file sets differ.");
 
