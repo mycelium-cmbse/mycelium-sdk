@@ -193,6 +193,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
                 AssertGuid(ref reader, dto.UpdatedBy);
                 Assert.That(reader.ReadString(), Is.EqualTo(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture)));
                 Assert.That(reader.End, Is.True);
+                Assert.That(MessagePackSerializer.Deserialize<BranchProtectionRule>(payload, SerializerOptions)?.MergeAllowedFor, Is.EqualTo(dto.MergeAllowedFor));
             }
         }
 
@@ -256,16 +257,17 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Serialize(dto, SerializerOptions));
         }
 
-        [Test]
-        public void Verify_that_non_lowercase_enumeration_values_are_rejected_during_deserialization()
+        [TestCase("OPEN")]
+        [TestCase("none")]
+        public void Verify_that_non_lowercase_or_unknown_enumeration_values_are_rejected_during_deserialization(string status)
         {
             Assert.That(MessagePackSerializer.Deserialize<Comment>(CreateCommentStatusPayload("open"), SerializerOptions), Is.Not.Null);
 
-            var payload = CreateCommentStatusPayload("OPEN");
+            var payload = CreateCommentStatusPayload(status);
 
             var exception = Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<Comment>(payload, SerializerOptions));
 
-            Assert.That(exception!.ToString(), Does.Contain("Value 'OPEN' is not valid for CommentStatus."));
+            Assert.That(exception!.ToString(), Does.Contain($"Value '{status}' is not valid for CommentStatus."));
         }
 
         [Test]

@@ -88,15 +88,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 }
             }
             WriteGuidBin16(ref writer, dto.SourceBranchId);
-            writer.Write(dto.Status switch
-            {
-                ReviewStatus.Draft => "draft",
-                ReviewStatus.Ready => "ready",
-                ReviewStatus.Approved => "approved",
-                ReviewStatus.ChangesRequested => "changesrequested",
-                ReviewStatus.Closed => "closed",
-                _ => throw new MessagePackSerializationException($"Value '{dto.Status}' is not valid for ReviewStatus."),
-            });
+            ReviewStatusMessagePackFormatter.Instance.Serialize(ref writer, dto.Status, options);
             WriteGuidBin16(ref writer, dto.TargetBranchId);
             WriteRequiredString(ref writer, dto.Title, "Title");
             WriteGuidBin16(ref writer, dto.UpdatedBy);
@@ -183,16 +175,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     }
                 }
                 dto.SourceBranchId = ReadGuidBin16(ref reader);
-                var messagePackStatusValue = ReadRequiredString(ref reader, "Status");
-                dto.Status = messagePackStatusValue switch
-                {
-                    "draft" => ReviewStatus.Draft,
-                    "ready" => ReviewStatus.Ready,
-                    "approved" => ReviewStatus.Approved,
-                    "changesrequested" => ReviewStatus.ChangesRequested,
-                    "closed" => ReviewStatus.Closed,
-                    _ => throw new MessagePackSerializationException($"Value '{messagePackStatusValue}' is not valid for ReviewStatus."),
-                };
+                dto.Status = ReviewStatusMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.TargetBranchId = ReadGuidBin16(ref reader);
                 dto.Title = ReadRequiredString(ref reader, "Title");
                 dto.UpdatedBy = ReadGuidBin16(ref reader);

@@ -15,6 +15,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
 
     using uml4net.Extensions;
+    using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
 
     [TestFixture]
@@ -25,6 +26,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         private static readonly UTF8Encoding StrictUtf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         private Dictionary<string, IClass> classes = null!;
+
+        private Dictionary<string, IEnumeration> enumerations = null!;
 
         private DirectoryInfo committedDirectory = null!;
 
@@ -58,6 +61,10 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 .SelectMany(package => package.PackagedElement.OfType<IClass>())
                 .ToDictionary(umlClass => umlClass.Name, StringComparer.Ordinal);
 
+            this.enumerations = functionalData.QueryPackages()
+                .SelectMany(package => package.PackagedElement.OfType<IEnumeration>())
+                .ToDictionary(enumeration => enumeration.Name, StringComparer.Ordinal);
+
             var generator = new UmlMessagePackGenerator();
 
             await generator.GenerateAsync(xmiReaderResult, this.stagingDirectory);
@@ -90,17 +97,18 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         [Test]
-        public void Verify_that_full_batch_contains_every_concrete_DTO_and_the_resolver()
+        public void Verify_that_full_batch_contains_every_concrete_DTO_enumeration_and_the_resolver()
         {
             var expectedFileNames = this.classes.Values.Where(umlClass => !umlClass.IsAbstract)
                 .Select(umlClass => $"{umlClass.Name}MessagePackFormatter.cs")
+                .Concat(this.enumerations.Keys.Select(name => $"{name}MessagePackFormatter.cs"))
                 .Append(ResolverFileName)
                 .OrderBy(fileName => fileName, StringComparer.Ordinal)
                 .ToArray();
 
             var stagedFileNames = QueryCSharpFileNames(this.stagingDirectory);
 
-            Assert.That(stagedFileNames, Is.EqualTo(expectedFileNames), "The MessagePack formatter batch does not match the current concrete model classes.");
+            Assert.That(stagedFileNames, Is.EqualTo(expectedFileNames), "The MessagePack formatter batch does not match the current concrete classes and enumerations.");
         }
 
         [Test]
@@ -144,6 +152,18 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 }
             }
 
+            foreach (var enumerationName in new RepresentativeEnumerations())
+            {
+                if (!this.enumerations.ContainsKey(enumerationName))
+                {
+                    Assert.Fail($"Representative UML enumeration '{enumerationName}' was not found.");
+
+                    return;
+                }
+
+                expectedFileNames.Add($"{enumerationName}MessagePackFormatter.cs");
+            }
+
             expectedFileNames.Add(ResolverFileName);
 
             var orderedExpectedFileNames = expectedFileNames.OrderBy(fileName => fileName, StringComparer.Ordinal)
@@ -154,7 +174,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             Assert.That(
                 goldenFileNames,
                 Is.EqualTo(orderedExpectedFileNames),
-                "The MessagePack golden set must contain exactly the non-abstract representative DTO selection and resolver.");
+                "The MessagePack golden set must contain exactly the representative DTO and enumeration selections and resolver.");
         }
 
         [TestCaseSource(typeof(RepresentativeClasses))]
@@ -187,6 +207,19 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
 
             await AssertOrdinalFilesMatchAsync(stagedPath, expectedPath, $"Generated MessagePack formatter '{fileName}'", "its reviewed golden");
+        }
+
+        [TestCaseSource(typeof(RepresentativeEnumerations))]
+        [Category("Expected")]
+        public async Task Verify_that_representative_enumeration_formatters_match_their_goldens(string enumerationName)
+        {
+            Assert.That(this.enumerations.ContainsKey(enumerationName), Is.True, $"Representative UML enumeration '{enumerationName}' was not found.");
+
+            var fileName = $"{enumerationName}MessagePackFormatter.cs";
+            var stagedPath = Path.Combine(this.stagingDirectory.FullName, fileName);
+            var expectedPath = Path.Combine(this.expectedDirectory.FullName, fileName);
+
+            await AssertOrdinalFilesMatchAsync(stagedPath, expectedPath, $"Generated MessagePack enumeration formatter '{fileName}'", "its reviewed golden");
         }
 
         [Test]

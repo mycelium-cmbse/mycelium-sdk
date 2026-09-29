@@ -12,12 +12,13 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
     using Mycelium.SDK.CodeGenerator.Extensions;
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
 
+    using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
     using uml4net.xmi.Readers;
 
     /// <summary>
     /// Generates deterministic MessagePack formatters for concrete FunctionalData DTOs
-    /// and their exact-type formatter lookup.
+    /// and enumerations, together with exact DTO formatter lookup.
     /// </summary>
     public sealed class UmlMessagePackGenerator : UmlHandleBarsGenerator
     {
@@ -25,6 +26,11 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The concrete DTO formatter template name.
         /// </summary>
         private const string FormatterTemplateName = "dto-messagepackformatter-uml-template";
+
+        /// <summary>
+        /// The enumeration formatter template name.
+        /// </summary>
+        private const string EnumerationFormatterTemplateName = "enum-messagepackformatter-uml-template";
 
         /// <summary>
         /// The exact-type formatter lookup template name.
@@ -61,6 +67,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var generatedFiles = concreteClasses
                 .Select(this.RenderFormatter)
+                .Concat(payload.Enumerations.Select(this.RenderEnumerationFormatter))
                 .Append(this.RenderResolver(concreteClasses))
                 .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
                 .ToArray();
@@ -92,6 +99,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         protected override void RegisterTemplates()
         {
             this.RegisterTemplate(FormatterTemplateName);
+            this.RegisterTemplate(EnumerationFormatterTemplateName);
             this.RegisterTemplate(ResolverTemplateName);
         }
 
@@ -120,6 +128,35 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             generatedCode = this.CodeCleanup(generatedCode);
 
             return new GeneratedFile($"{umlClass.Name}MessagePackFormatter.cs", generatedCode);
+        }
+
+        /// <summary>
+        /// Renders one modeled enumeration MessagePack formatter without writing it.
+        /// </summary>
+        /// <param name="enumeration">
+        /// The UML enumeration to render.
+        /// </param>
+        /// <returns>
+        /// The formatter filename and formatted source.
+        /// </returns>
+        private GeneratedFile RenderEnumerationFormatter(IEnumeration enumeration)
+        {
+            var templatePayload = new
+            {
+                Enumeration = enumeration,
+                EnumerationIdentifier = ReservedCSharpNameMapper.Map(enumeration.Name),
+                Literals = enumeration.OwnedLiteral.Select(literal => new
+                {
+                    Identifier = ReservedCSharpNameMapper.Map(literal.Name),
+                    WireValue = literal.Name.ToLowerInvariant()
+                }).ToArray()
+            };
+
+            var generatedCode = this.Templates[EnumerationFormatterTemplateName](templatePayload);
+
+            generatedCode = this.CodeCleanup(generatedCode);
+
+            return new GeneratedFile($"{enumeration.Name}MessagePackFormatter.cs", generatedCode);
         }
 
         /// <summary>

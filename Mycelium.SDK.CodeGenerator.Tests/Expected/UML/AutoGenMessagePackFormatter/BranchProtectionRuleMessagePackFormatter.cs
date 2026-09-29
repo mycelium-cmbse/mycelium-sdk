@@ -83,13 +83,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 for (var i = 0; i < dto.MergeAllowedFor.Count; i++)
                 {
-                    writer.Write(dto.MergeAllowedFor[i] switch
-                    {
-                        ProjectMemberRole.Administrator => "administrator",
-                        ProjectMemberRole.Participant => "participant",
-                        ProjectMemberRole.Viewer => "viewer",
-                        _ => throw new MessagePackSerializationException($"Value '{dto.MergeAllowedFor[i]}' is not valid for ProjectMemberRole."),
-                    });
+                    ProjectMemberRoleMessagePackFormatter.Instance.Serialize(ref writer, dto.MergeAllowedFor[i], options);
                 }
             }
             writer.Write(dto.MinimumRequiredApproval);
@@ -174,14 +168,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                     for (var i = 0; i < messagePackMergeAllowedForCount; i++)
                     {
-                        var messagePackMergeAllowedForValue = ReadRequiredString(ref reader, "MergeAllowedFor item");
-                        dto.MergeAllowedFor.Add(messagePackMergeAllowedForValue switch
-                        {
-                            "administrator" => ProjectMemberRole.Administrator,
-                            "participant" => ProjectMemberRole.Participant,
-                            "viewer" => ProjectMemberRole.Viewer,
-                            _ => throw new MessagePackSerializationException($"Value '{messagePackMergeAllowedForValue}' is not valid for ProjectMemberRole."),
-                        });
+                        dto.MergeAllowedFor.Add(ProjectMemberRoleMessagePackFormatter.Instance.Deserialize(ref reader, options));
                     }
                 }
                 dto.MinimumRequiredApproval = reader.ReadInt32();

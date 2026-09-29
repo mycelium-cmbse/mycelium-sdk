@@ -58,12 +58,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             WriteGuidBin16(ref writer, dto.Id);
             WriteGuidBin16(ref writer, dto.Author);
-            writer.Write(dto.CommentStatus switch
-            {
-                CommentStatus.Open => "open",
-                CommentStatus.Resolved => "resolved",
-                _ => throw new MessagePackSerializationException($"Value '{dto.CommentStatus}' is not valid for CommentStatus."),
-            });
+            CommentStatusMessagePackFormatter.Instance.Serialize(ref writer, dto.CommentStatus, options);
             WriteRequiredString(ref writer, dto.Content, "Content");
             WriteGuidBin16(ref writer, dto.CreatedBy);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
@@ -131,13 +126,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 dto.Id = ReadGuidBin16(ref reader);
                 dto.Author = ReadGuidBin16(ref reader);
-                var messagePackCommentStatusValue = ReadRequiredString(ref reader, "CommentStatus");
-                dto.CommentStatus = messagePackCommentStatusValue switch
-                {
-                    "open" => CommentStatus.Open,
-                    "resolved" => CommentStatus.Resolved,
-                    _ => throw new MessagePackSerializationException($"Value '{messagePackCommentStatusValue}' is not valid for CommentStatus."),
-                };
+                dto.CommentStatus = CommentStatusMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.Content = ReadRequiredString(ref reader, "Content");
                 dto.CreatedBy = ReadGuidBin16(ref reader);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
