@@ -47,9 +47,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var generatedSource = await File.ReadAllTextAsync(generatedPath, StrictUtf8WithoutBom);
+            var generatedSource = await GeneratorSetupFixture.ReadSourceAsync(generatedPath);
 
-            var expectedSource = await File.ReadAllTextAsync(expectedPath, StrictUtf8WithoutBom);
+            var expectedSource = await GeneratorSetupFixture.ReadSourceAsync(expectedPath);
 
             Assert.That(generatedSource, Is.EqualTo(expectedSource), $"{generatedDescription} differs from {expectedDescription}.");
         }
