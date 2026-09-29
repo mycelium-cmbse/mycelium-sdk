@@ -598,31 +598,23 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
 
         private static byte[] CreateCommentStatusPayload(string commentStatus)
         {
-            var dto = CreateComment();
-            var buffer = new ArrayBufferWriter<byte>();
-            var writer = new MessagePackWriter(buffer);
+            var payload = MessagePackSerializer.Serialize(CreateComment(), SerializerOptions);
+            var reader = new MessagePackReader(payload);
 
-            writer.WriteArrayHeader(11);
-            WriteGuid(ref writer, dto.Id);
-            WriteGuid(ref writer, dto.Author);
-            writer.Write(commentStatus);
-            writer.Write(dto.Content);
-            WriteGuid(ref writer, dto.CreatedBy);
-            writer.Write(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture));
-            WriteGuid(ref writer, dto.Quotes!.Value);
-            writer.WriteArrayHeader(dto.Replies.Count);
+            reader.ReadArrayHeader();
+            reader.Skip();
+            reader.Skip();
 
-            foreach (var reply in dto.Replies)
-            {
-                WriteGuid(ref writer, reply);
-            }
+            var statusOffset = checked((int)reader.Consumed);
+            reader.Skip();
+            var statusLength = checked((int)reader.Consumed) - statusOffset;
+            var encodedStatus = MessagePackSerializer.Serialize(commentStatus);
 
-            WriteGuid(ref writer, dto.TargetElementId);
-            WriteGuid(ref writer, dto.UpdatedBy);
-            writer.Write(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture));
-            writer.Flush();
+            Assert.That(encodedStatus.Length, Is.EqualTo(statusLength));
 
-            return buffer.WrittenMemory.ToArray();
+            encodedStatus.AsSpan().CopyTo(payload.AsSpan(statusOffset, statusLength));
+
+            return payload;
         }
 
         private static byte[] CreateFunctionalProjectPolicyPayload(int idByteCount, string createdOn = null, bool nativeCreatedOn = false, bool nilCreatedOn = false)
