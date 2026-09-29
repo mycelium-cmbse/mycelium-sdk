@@ -23,7 +23,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// The thread-local buffer used to encode identifiers without allocating per value.
         /// </summary>
         [ThreadStatic]
-        private static byte[]? guidBuffer;
+        private static byte[] guidBuffer;
 
         /// <summary>
         /// Writes an identifier as a MessagePack binary value containing exactly 16 bytes.
@@ -104,7 +104,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// <exception cref="MessagePackSerializationException">
         /// Thrown when <paramref name="value" /> is <see langword="null" />.
         /// </exception>
-        protected static void WriteRequiredString(ref MessagePackWriter writer, string? value, string valueDescription)
+        protected static void WriteRequiredString(ref MessagePackWriter writer, string value, string valueDescription)
         {
             if (value == null)
             {
@@ -190,7 +190,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// <exception cref="MessagePackSerializationException">
         /// Thrown when a dictionary key or value is <see langword="null" />.
         /// </exception>
-        protected static void WriteStringDictionary(ref MessagePackWriter writer, IReadOnlyDictionary<string, string>? value, string valueDescription)
+        protected static void WriteStringDictionary(ref MessagePackWriter writer, IReadOnlyDictionary<string, string> value, string valueDescription)
         {
             if (value == null)
             {
@@ -234,7 +234,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when the value is not a map, contains a null or non-string entry,
         /// or contains a duplicate key.
         /// </exception>
-        protected static Dictionary<string, string>? ReadStringDictionary(ref MessagePackReader reader, string valueDescription)
+        protected static Dictionary<string, string> ReadStringDictionary(ref MessagePackReader reader, string valueDescription)
         {
             if (reader.TryReadNil())
             {
@@ -277,7 +277,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when <paramref name="value" /> is <see langword="null" /> and
         /// <paramref name="nullable" /> is <see langword="false" />.
         /// </exception>
-        protected static void WriteUri(ref MessagePackWriter writer, Uri? value, bool nullable, string valueDescription)
+        protected static void WriteUri(ref MessagePackWriter writer, Uri value, bool nullable, string valueDescription)
         {
             if (value == null)
             {

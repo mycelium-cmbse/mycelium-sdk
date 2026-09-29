@@ -56,7 +56,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="runtimeType" /> is <see langword="null" />.
         /// </exception>
-        internal static object? GetFormatter(Type runtimeType)
+        internal static object GetFormatter(Type runtimeType)
         {
             if (runtimeType == null)
             {

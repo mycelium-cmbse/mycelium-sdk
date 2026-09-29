@@ -64,7 +64,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Helpers
             /// <summary>
             /// The cached formatter, or <see langword="null" /> when the exact type is unsupported.
             /// </summary>
-            public static readonly IMessagePackFormatter<T>? Formatter = (IMessagePackFormatter<T>?)DataResolverGetFormatterHelper.GetFormatter(typeof(T));
+            public static readonly IMessagePackFormatter<T> Formatter = (IMessagePackFormatter<T>)DataResolverGetFormatterHelper.GetFormatter(typeof(T));
         }
     }
 }
