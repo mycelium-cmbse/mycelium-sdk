@@ -11,7 +11,7 @@
         <RepositoryUrl>https://github.com/mycelium-cmbse/mycelium-sdk.git</RepositoryUrl>
         <RepositoryType>Git</RepositoryType>
         <ImplicitUsings>false</ImplicitUsings>
-        <Nullable>enable</Nullable>
+        <Nullable>disable</Nullable>
         <IsPackable>false</IsPackable>
         <PreserveCompilationContext>true</PreserveCompilationContext>
         <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>

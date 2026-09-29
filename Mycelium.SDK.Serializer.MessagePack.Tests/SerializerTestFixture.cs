@@ -607,7 +607,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             return buffer.WrittenMemory.ToArray();
         }
 
-        private static byte[] CreateFunctionalProjectPolicyPayload(int idByteCount, string? createdOn = null, bool nativeCreatedOn = false, bool nilCreatedOn = false)
+        private static byte[] CreateFunctionalProjectPolicyPayload(int idByteCount, string createdOn = null, bool nativeCreatedOn = false, bool nilCreatedOn = false)
         {
             var dto = CreateFunctionalProjectPolicy();
             var buffer = new ArrayBufferWriter<byte>();
@@ -740,7 +740,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
                 return ReadUri(ref reader, nullable: false, "Uri");
             }
 
-            public static Dictionary<string, string>? DeserializeStringDictionary(byte[] payload)
+            public static Dictionary<string, string> DeserializeStringDictionary(byte[] payload)
             {
                 var reader = new MessagePackReader(payload);
 
