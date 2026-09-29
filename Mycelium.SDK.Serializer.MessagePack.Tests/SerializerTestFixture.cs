@@ -40,8 +40,11 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         [Test]
         public void Verify_that_unsupported_types_are_rejected_without_interface_fallback()
         {
-            Assert.Throws<NotSupportedException>(() => DataFormatterResolver.Instance.GetFormatter<IComment>());
-            Assert.Throws<NotSupportedException>(() => DataFormatterResolver.Instance.GetFormatter<object>());
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.Throws<NotSupportedException>(() => DataFormatterResolver.Instance.GetFormatter<IComment>());
+                Assert.Throws<NotSupportedException>(() => DataFormatterResolver.Instance.GetFormatter<object>());
+            }
         }
 
         [Test]
@@ -53,16 +56,19 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
 
             var reader = new MessagePackReader(payload);
 
-            Assert.That(reader.ReadArrayHeader(), Is.EqualTo(8));
-            AssertGuid(ref reader, dto.Id);
-            Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.AllowAutoNamespaceImport));
-            Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.AllowAutoPublishMode));
-            Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.AllowVersionBranching));
-            AssertGuid(ref reader, dto.CreatedBy);
-            Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
-            AssertGuid(ref reader, dto.UpdatedBy);
-            Assert.That(reader.ReadString(), Is.EqualTo(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture)));
-            Assert.That(reader.End, Is.True);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(reader.ReadArrayHeader(), Is.EqualTo(8));
+                AssertGuid(ref reader, dto.Id);
+                Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.AllowAutoNamespaceImport));
+                Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.AllowAutoPublishMode));
+                Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.AllowVersionBranching));
+                AssertGuid(ref reader, dto.CreatedBy);
+                Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
+                AssertGuid(ref reader, dto.UpdatedBy);
+                Assert.That(reader.ReadString(), Is.EqualTo(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture)));
+                Assert.That(reader.End, Is.True);
+            }
         }
 
         [TestCase(DateTimeKind.Utc)]
@@ -76,19 +82,19 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             var payload = MessagePackSerializer.Serialize(dto, SerializerOptions);
             var reader = new MessagePackReader(payload);
 
-            Assert.That(reader.ReadArrayHeader(), Is.EqualTo(8));
-
-            for (var index = 0; index < 5; index++)
-            {
-                reader.Skip();
-            }
-
-            Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
-
-            var actual = MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions);
-
             using (Assert.EnterMultipleScope())
             {
+                Assert.That(reader.ReadArrayHeader(), Is.EqualTo(8));
+
+                for (var index = 0; index < 5; index++)
+                {
+                    reader.Skip();
+                }
+
+                Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
+
+                var actual = MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions);
+
                 Assert.That(actual?.CreatedOn, Is.EqualTo(dto.CreatedOn));
                 Assert.That(actual?.CreatedOn.Kind, Is.EqualTo(kind));
             }
@@ -136,21 +142,24 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
 
             var reader = new MessagePackReader(payload);
 
-            Assert.That(reader.ReadArrayHeader(), Is.EqualTo(11));
-            AssertGuid(ref reader, dto.Id);
-            AssertGuid(ref reader, dto.Author);
-            Assert.That(reader.ReadString(), Is.EqualTo("open"));
-            Assert.That(reader.ReadString(), Is.EqualTo(dto.Content));
-            AssertGuid(ref reader, dto.CreatedBy);
-            Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
-            Assert.That(reader.TryReadNil(), Is.True);
-            Assert.That(reader.ReadArrayHeader(), Is.EqualTo(2));
-            AssertGuid(ref reader, dto.Replies[0]);
-            AssertGuid(ref reader, dto.Replies[1]);
-            AssertGuid(ref reader, dto.TargetElementId);
-            AssertGuid(ref reader, dto.UpdatedBy);
-            Assert.That(reader.ReadString(), Is.EqualTo(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture)));
-            Assert.That(reader.End, Is.True);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(reader.ReadArrayHeader(), Is.EqualTo(11));
+                AssertGuid(ref reader, dto.Id);
+                AssertGuid(ref reader, dto.Author);
+                Assert.That(reader.ReadString(), Is.EqualTo("open"));
+                Assert.That(reader.ReadString(), Is.EqualTo(dto.Content));
+                AssertGuid(ref reader, dto.CreatedBy);
+                Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
+                Assert.That(reader.TryReadNil(), Is.True);
+                Assert.That(reader.ReadArrayHeader(), Is.EqualTo(2));
+                AssertGuid(ref reader, dto.Replies[0]);
+                AssertGuid(ref reader, dto.Replies[1]);
+                AssertGuid(ref reader, dto.TargetElementId);
+                AssertGuid(ref reader, dto.UpdatedBy);
+                Assert.That(reader.ReadString(), Is.EqualTo(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture)));
+                Assert.That(reader.End, Is.True);
+            }
         }
 
         [Test]
@@ -162,27 +171,29 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
 
             var payload = MessagePackSerializer.Serialize(dto, SerializerOptions);
 
-            Assert.That(dto.DefaultReviewers, Is.EqualTo(expectedReviewers));
-
             var reader = new MessagePackReader(payload);
 
-            Assert.That(reader.ReadArrayHeader(), Is.EqualTo(11));
-            AssertGuid(ref reader, dto.Id);
-            AssertGuid(ref reader, dto.CreatedBy);
-            Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
-            Assert.That(reader.ReadArrayHeader(), Is.EqualTo(dto.DefaultReviewers.Count));
-            AssertGuid(ref reader, expectedReviewers[0]);
-            AssertGuid(ref reader, expectedReviewers[1]);
-            AssertGuid(ref reader, dto.EngineeringBranchId);
-            Assert.That(reader.ReadArrayHeader(), Is.EqualTo(dto.MergeAllowedFor.Count));
-            Assert.That(reader.ReadString(), Is.EqualTo("administrator"));
-            Assert.That(reader.ReadString(), Is.EqualTo("viewer"));
-            Assert.That(reader.ReadInt32(), Is.EqualTo(dto.MinimumRequiredApproval));
-            Assert.That(reader.ReadString(), Is.EqualTo(dto.Name));
-            Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.ReviewRequired));
-            AssertGuid(ref reader, dto.UpdatedBy);
-            Assert.That(reader.ReadString(), Is.EqualTo(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture)));
-            Assert.That(reader.End, Is.True);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(dto.DefaultReviewers, Is.EqualTo(expectedReviewers));
+                Assert.That(reader.ReadArrayHeader(), Is.EqualTo(11));
+                AssertGuid(ref reader, dto.Id);
+                AssertGuid(ref reader, dto.CreatedBy);
+                Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
+                Assert.That(reader.ReadArrayHeader(), Is.EqualTo(dto.DefaultReviewers.Count));
+                AssertGuid(ref reader, expectedReviewers[0]);
+                AssertGuid(ref reader, expectedReviewers[1]);
+                AssertGuid(ref reader, dto.EngineeringBranchId);
+                Assert.That(reader.ReadArrayHeader(), Is.EqualTo(dto.MergeAllowedFor.Count));
+                Assert.That(reader.ReadString(), Is.EqualTo("administrator"));
+                Assert.That(reader.ReadString(), Is.EqualTo("viewer"));
+                Assert.That(reader.ReadInt32(), Is.EqualTo(dto.MinimumRequiredApproval));
+                Assert.That(reader.ReadString(), Is.EqualTo(dto.Name));
+                Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.ReviewRequired));
+                AssertGuid(ref reader, dto.UpdatedBy);
+                Assert.That(reader.ReadString(), Is.EqualTo(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture)));
+                Assert.That(reader.End, Is.True);
+            }
         }
 
         [Test]
@@ -194,23 +205,23 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
 
             var reader = new MessagePackReader(payload);
 
-            Assert.That(reader.ReadArrayHeader(), Is.EqualTo(18));
-
-            for (var index = 0; index < 14; index++)
-            {
-                reader.Skip();
-            }
-
-            var entryCount = reader.ReadMapHeader();
-            var entries = new Dictionary<string, string>(StringComparer.Ordinal);
-
-            for (var index = 0; index < entryCount; index++)
-            {
-                entries.Add(reader.ReadString()!, reader.ReadString()!);
-            }
-
             using (Assert.EnterMultipleScope())
             {
+                Assert.That(reader.ReadArrayHeader(), Is.EqualTo(18));
+
+                for (var index = 0; index < 14; index++)
+                {
+                    reader.Skip();
+                }
+
+                var entryCount = reader.ReadMapHeader();
+                var entries = new Dictionary<string, string>(StringComparer.Ordinal);
+
+                for (var index = 0; index < entryCount; index++)
+                {
+                    entries.Add(reader.ReadString()!, reader.ReadString()!);
+                }
+
                 Assert.That(entryCount, Is.EqualTo(dto.SharedPreferences.Count));
                 Assert.That(entries, Is.EquivalentTo(dto.SharedPreferences));
             }
@@ -225,12 +236,15 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
 
             var reader = new MessagePackReader(payload);
 
-            Assert.That(reader.ReadString(), Is.EqualTo(expected.OriginalString));
-            Assert.That(reader.End, Is.True);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(reader.ReadString(), Is.EqualTo(expected.OriginalString));
+                Assert.That(reader.End, Is.True);
 
-            var actual = MessagePackFormatterProbe.DeserializeUri(payload);
+                var actual = MessagePackFormatterProbe.DeserializeUri(payload);
 
-            Assert.That(actual.OriginalString, Is.EqualTo(expected.OriginalString));
+                Assert.That(actual.OriginalString, Is.EqualTo(expected.OriginalString));
+            }
         }
 
         [Test]
@@ -277,19 +291,18 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             var actual = MessagePackSerializer.Deserialize<BranchProtectionRule>(payload, SerializerOptions);
             var reader = new MessagePackReader(payload);
 
-            Assert.That(reader.ReadArrayHeader(), Is.EqualTo(11));
-
-            for (var index = 0; index < 3; index++)
-            {
-                reader.Skip();
-            }
-
-            Assert.That(reader.TryReadNil(), Is.True);
-            reader.Skip();
-            Assert.That(reader.TryReadNil(), Is.True);
-
             using (Assert.EnterMultipleScope())
             {
+                Assert.That(reader.ReadArrayHeader(), Is.EqualTo(11));
+
+                for (var index = 0; index < 3; index++)
+                {
+                    reader.Skip();
+                }
+
+                Assert.That(reader.TryReadNil(), Is.True);
+                reader.Skip();
+                Assert.That(reader.TryReadNil(), Is.True);
                 Assert.That(actual?.DefaultReviewers, Is.Null);
                 Assert.That(actual?.MergeAllowedFor, Is.Null);
             }
@@ -317,19 +330,18 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             var actual = MessagePackSerializer.Deserialize<BranchProtectionRule>(payload, SerializerOptions);
             var reader = new MessagePackReader(payload);
 
-            Assert.That(reader.ReadArrayHeader(), Is.EqualTo(11));
-
-            for (var index = 0; index < 3; index++)
-            {
-                reader.Skip();
-            }
-
-            Assert.That(reader.ReadArrayHeader(), Is.Zero);
-            reader.Skip();
-            Assert.That(reader.ReadArrayHeader(), Is.Zero);
-
             using (Assert.EnterMultipleScope())
             {
+                Assert.That(reader.ReadArrayHeader(), Is.EqualTo(11));
+
+                for (var index = 0; index < 3; index++)
+                {
+                    reader.Skip();
+                }
+
+                Assert.That(reader.ReadArrayHeader(), Is.Zero);
+                reader.Skip();
+                Assert.That(reader.ReadArrayHeader(), Is.Zero);
                 Assert.That(actual?.DefaultReviewers, Is.Empty);
                 Assert.That(actual?.MergeAllowedFor, Is.Empty);
             }
@@ -345,31 +357,34 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             var nullResult = MessagePackSerializer.Deserialize<FunctionalProject>(nullPayload, SerializerOptions);
             var nullReader = new MessagePackReader(nullPayload);
 
-            Assert.That(nullReader.ReadArrayHeader(), Is.EqualTo(18));
-
-            for (var index = 0; index < 14; index++)
+            using (Assert.EnterMultipleScope())
             {
-                nullReader.Skip();
+                Assert.That(nullReader.ReadArrayHeader(), Is.EqualTo(18));
+
+                for (var index = 0; index < 14; index++)
+                {
+                    nullReader.Skip();
+                }
+
+                Assert.That(nullReader.TryReadNil(), Is.True);
+                Assert.That(nullResult?.SharedPreferences, Is.Null);
+
+                dto.SharedPreferences = new Dictionary<string, string>(StringComparer.Ordinal);
+
+                var emptyPayload = MessagePackSerializer.Serialize(dto, SerializerOptions);
+                var emptyResult = MessagePackSerializer.Deserialize<FunctionalProject>(emptyPayload, SerializerOptions);
+                var emptyReader = new MessagePackReader(emptyPayload);
+
+                Assert.That(emptyReader.ReadArrayHeader(), Is.EqualTo(18));
+
+                for (var index = 0; index < 14; index++)
+                {
+                    emptyReader.Skip();
+                }
+
+                Assert.That(emptyReader.ReadMapHeader(), Is.Zero);
+                Assert.That(emptyResult?.SharedPreferences, Is.Empty);
             }
-
-            Assert.That(nullReader.TryReadNil(), Is.True);
-            Assert.That(nullResult?.SharedPreferences, Is.Null);
-
-            dto.SharedPreferences = new Dictionary<string, string>(StringComparer.Ordinal);
-
-            var emptyPayload = MessagePackSerializer.Serialize(dto, SerializerOptions);
-            var emptyResult = MessagePackSerializer.Deserialize<FunctionalProject>(emptyPayload, SerializerOptions);
-            var emptyReader = new MessagePackReader(emptyPayload);
-
-            Assert.That(emptyReader.ReadArrayHeader(), Is.EqualTo(18));
-
-            for (var index = 0; index < 14; index++)
-            {
-                emptyReader.Skip();
-            }
-
-            Assert.That(emptyReader.ReadMapHeader(), Is.Zero);
-            Assert.That(emptyResult?.SharedPreferences, Is.Empty);
         }
 
         [Test]
@@ -431,8 +446,11 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             var payload = MessagePackSerializer.Serialize(expected, SerializerOptions);
             var actual = MessagePackSerializer.Deserialize<Comment>(payload, SerializerOptions);
 
-            Assert.That(actual, Is.Not.Null);
-            Assert.That(actual?.Quotes, Is.Null);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(actual, Is.Not.Null);
+                Assert.That(actual?.Quotes, Is.Null);
+            }
         }
 
         [Test]
