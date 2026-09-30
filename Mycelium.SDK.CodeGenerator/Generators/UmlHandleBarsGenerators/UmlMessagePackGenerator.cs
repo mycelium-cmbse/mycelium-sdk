@@ -18,7 +18,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
     /// <summary>
     /// Generates deterministic MessagePack formatters for concrete FunctionalData DTOs
-    /// and enumerations, together with exact DTO formatter lookup.
+    /// and enumerations, together with exact formatter lookup and the polymorphic payload family.
     /// </summary>
     public sealed class UmlMessagePackGenerator : UmlHandleBarsGenerator
     {
@@ -36,6 +36,21 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// The exact-type formatter lookup template name.
         /// </summary>
         private const string ResolverTemplateName = "messagepack-dataresolver-getformatter-helper";
+
+        /// <summary>
+        /// The payload envelope template name.
+        /// </summary>
+        private const string PayloadTemplateName = "messagepack-payload-uml-template";
+
+        /// <summary>
+        /// The payload factory template name.
+        /// </summary>
+        private const string PayloadFactoryTemplateName = "messagepack-payloadfactory-uml-template";
+
+        /// <summary>
+        /// The payload formatter template name.
+        /// </summary>
+        private const string PayloadFormatterTemplateName = "messagepack-payloadmessagepackformatter-uml-template";
 
         /// <summary>
         /// Generates the complete MessagePack formatter family from the supplied model.
@@ -60,15 +75,55 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var payload = CreateHandlebarsPayload(xmiReaderResult);
 
-            var concreteClasses = payload.Classes
-                .Where(umlClass => !umlClass.IsAbstract)
-                .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal)
-                .ToArray();
+            var concreteClasses = QueryConcreteClasses(payload.Classes);
 
             var generatedFiles = concreteClasses
                 .Select(this.RenderFormatter)
                 .Concat(payload.Enumerations.Select(this.RenderEnumerationFormatter))
                 .Append(this.RenderResolver(concreteClasses))
+                .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
+                .ToArray();
+
+            await WriteAsync(generatedFiles, outputDirectory);
+        }
+
+        /// <summary>
+        /// Generates the complete polymorphic MessagePack payload family.
+        /// </summary>
+        /// <param name="xmiReaderResult">
+        /// The parsed UML model used for generation.
+        /// </param>
+        /// <param name="outputDirectory">
+        /// The directory to which the payload artifacts are written.
+        /// </param>
+        /// <returns>
+        /// A task representing the asynchronous generation operation.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="xmiReaderResult" /> or <paramref name="outputDirectory" />
+        /// is <see langword="null" />.
+        /// </exception>
+        public async Task GeneratePayloadAsync(XmiReaderResult xmiReaderResult, DirectoryInfo outputDirectory)
+        {
+            ArgumentNullException.ThrowIfNull(xmiReaderResult);
+            ArgumentNullException.ThrowIfNull(outputDirectory);
+
+            var payload = CreateHandlebarsPayload(xmiReaderResult);
+
+            var concreteClasses = QueryConcreteClasses(payload.Classes);
+
+            var formatterPayload = new
+            {
+                Classes = concreteClasses,
+                GroupCount = concreteClasses.Length + 1
+            };
+
+            var generatedFiles = new[]
+            {
+                new GeneratedFile("Payload.cs", this.CodeCleanup(this.Templates[PayloadTemplateName](concreteClasses))),
+                new GeneratedFile("PayloadFactory.cs", this.CodeCleanup(this.Templates[PayloadFactoryTemplateName](concreteClasses))),
+                new GeneratedFile("PayloadMessagePackFormatter.cs", this.CodeCleanup(this.Templates[PayloadFormatterTemplateName](formatterPayload)))
+            }
                 .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
                 .ToArray();
 
@@ -87,6 +142,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             this.Handlebars.RegisterMessagePackFormatterPropertyHelper();
 
             NamedElementHelper.RegisterNamedElementHelper(this.Handlebars);
+
+            uml4net.HandleBars.StringHelper.RegisterStringHelper(this.Handlebars);
         }
 
         /// <summary>
@@ -101,6 +158,26 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             this.RegisterTemplate(FormatterTemplateName);
             this.RegisterTemplate(EnumerationFormatterTemplateName);
             this.RegisterTemplate(ResolverTemplateName);
+            this.RegisterTemplate(PayloadTemplateName);
+            this.RegisterTemplate(PayloadFactoryTemplateName);
+            this.RegisterTemplate(PayloadFormatterTemplateName);
+        }
+
+        /// <summary>
+        /// Selects every concrete FunctionalData class in ordinal type-name order.
+        /// </summary>
+        /// <param name="classes">
+        /// The FunctionalData classes selected from the loaded model.
+        /// </param>
+        /// <returns>
+        /// The deterministically ordered concrete UML classes.
+        /// </returns>
+        private static IClass[] QueryConcreteClasses(IEnumerable<IClass> classes)
+        {
+            return classes
+                .Where(umlClass => !umlClass.IsAbstract)
+                .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal)
+                .ToArray();
         }
 
         /// <summary>
