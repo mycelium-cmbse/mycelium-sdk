@@ -58,6 +58,10 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// </exception>
         public void Serialize(IEnumerable<IThing> dtos, Stream stream)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(dtos);
+            ArgumentNullException.ThrowIfNull(stream);
+#else
             if (dtos == null)
             {
                 throw new ArgumentNullException(nameof(dtos));
@@ -67,6 +71,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             {
                 throw new ArgumentNullException(nameof(stream));
             }
+#endif
 
             var payload = PayloadFactory.ToPayload(dtos);
             global::MessagePack.MessagePackSerializer.Serialize(stream, payload, SerializerOptions);
@@ -98,6 +103,10 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// </exception>
         public void SerializeToBufferWriter(IEnumerable<IThing> dtos, IBufferWriter<byte> writer, CancellationToken cancellationToken = default)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(dtos);
+            ArgumentNullException.ThrowIfNull(writer);
+#else
             if (dtos == null)
             {
                 throw new ArgumentNullException(nameof(dtos));
@@ -107,6 +116,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             {
                 throw new ArgumentNullException(nameof(writer));
             }
+#endif
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -146,6 +156,10 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// </exception>
         public Task SerializeAsync(IEnumerable<IThing> dtos, Stream stream, CancellationToken cancellationToken)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(dtos);
+            ArgumentNullException.ThrowIfNull(stream);
+#else
             if (dtos == null)
             {
                 throw new ArgumentNullException(nameof(dtos));
@@ -155,6 +169,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             {
                 throw new ArgumentNullException(nameof(stream));
             }
+#endif
 
             cancellationToken.ThrowIfCancellationRequested();
 
