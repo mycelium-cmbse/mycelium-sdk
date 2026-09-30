@@ -1,0 +1,52 @@
+// ------------------------------------------------------------------------------------------------
+//  <copyright file="Payload.cs" company="Starion Group S.A.">
+//
+//    Copyright 2026 Starion Group S.A.
+//    SPDX-License-Identifier: Apache-2.0
+//
+//  </copyright>
+//  ------------------------------------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
+namespace Mycelium.SDK.Serializer.MessagePack
+{
+    using System;
+    using System.CodeDom.Compiler;
+    using System.Collections.Generic;
+
+    using Mycelium.SDK.DTO;
+
+    /// <summary>
+    /// Groups concrete DTOs for the positional MessagePack payload envelope.
+    /// </summary>
+    [GeneratedCode("Mycelium.SDK", "latest")]
+    internal sealed partial class Payload
+    {
+        /// <summary>
+        /// Initializes a new payload with empty concrete-type groups.
+        /// </summary>
+        public Payload()
+        {
+        }
+
+        /// <summary>
+        /// Gets or sets the UTC time at which this payload was created.
+        /// </summary>
+        internal DateTime Created { get; set; } = DateTime.UtcNow;
+
+        {{ #each this as | umlClass | }}
+        /// <summary>
+        /// Gets the {{ #NamedElement.WriteIdentifier umlClass }} DTO group.
+        /// </summary>
+        internal List<{{ #NamedElement.WriteIdentifier umlClass }}> {{ #NamedElement.WriteIdentifier umlClass }} { get; } = new();
+
+        {{ /each }}
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

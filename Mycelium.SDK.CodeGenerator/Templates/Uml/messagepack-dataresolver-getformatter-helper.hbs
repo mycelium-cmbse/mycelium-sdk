@@ -26,20 +26,22 @@ namespace Mycelium.SDK.Serializer.MessagePack
     internal static partial class DataResolverGetFormatterHelper
     {
         /// <summary>
-        /// Maps each supported exact DTO type to its cached formatter instance.
+        /// Maps each supported exact DTO or payload type to its cached formatter instance.
         /// </summary>
         private static readonly IReadOnlyDictionary<Type, object> FormatterMap = new Dictionary<Type, object>
         {
+            [typeof(Payload)] = new PayloadMessagePackFormatter(),
+
             {{ #each this as | umlClass | }}
             [typeof({{ #NamedElement.WriteIdentifier umlClass }})] = new {{ #NamedElement.WriteIdentifier umlClass }}MessagePackFormatter(),
             {{ /each }}
         };
 
         /// <summary>
-        /// Gets the cached MessagePack formatter registered for an exact DTO type.
+        /// Gets the cached MessagePack formatter registered for an exact generated type.
         /// </summary>
         /// <param name="runtimeType">
-        /// The exact DTO type to resolve.
+        /// The exact DTO or payload type to resolve.
         /// </param>
         /// <returns>
         /// The cached formatter when <paramref name="runtimeType" /> is registered; otherwise,
