@@ -56,14 +56,14 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             writer.WriteArrayHeader(8);
 
-            WriteGuidBin16(ref writer, dto.Id);
-            WriteGuidBin16(ref writer, dto.CreatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Id, options);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.CreatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
-            WriteGuidBin16(ref writer, dto.Organization);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Organization, options);
             OrganizationMembershipRoleMessagePackFormatter.Instance.Serialize(ref writer, dto.Role, options);
-            WriteGuidBin16(ref writer, dto.UpdatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
-            WriteGuidBin16(ref writer, dto.User);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.User, options);
         }
 
         /// <summary>
@@ -102,14 +102,14 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 var dto = new OrganizationMember();
 
-                dto.Id = ReadGuidBin16(ref reader);
-                dto.CreatedBy = ReadGuidBin16(ref reader);
+                dto.Id = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
+                dto.CreatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
-                dto.Organization = ReadGuidBin16(ref reader);
+                dto.Organization = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.Role = OrganizationMembershipRoleMessagePackFormatter.Instance.Deserialize(ref reader, options);
-                dto.UpdatedBy = ReadGuidBin16(ref reader);
+                dto.UpdatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
-                dto.User = ReadGuidBin16(ref reader);
+                dto.User = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
 
                 return dto;
             }

@@ -56,15 +56,15 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             writer.WriteArrayHeader(11);
 
-            WriteGuidBin16(ref writer, dto.Id);
-            WriteGuidBin16(ref writer, dto.Author);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Id, options);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Author, options);
             CommentStatusMessagePackFormatter.Instance.Serialize(ref writer, dto.CommentStatus, options);
             WriteRequiredString(ref writer, dto.Content, "Content");
-            WriteGuidBin16(ref writer, dto.CreatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.CreatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
             if (dto.Quotes.HasValue)
             {
-                WriteGuidBin16(ref writer, dto.Quotes.Value);
+                GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Quotes.Value, options);
             }
             else
             {
@@ -80,11 +80,11 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 for (var i = 0; i < dto.Replies.Count; i++)
                 {
-                    WriteGuidBin16(ref writer, dto.Replies[i]);
+                    GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Replies[i], options);
                 }
             }
-            WriteGuidBin16(ref writer, dto.TargetElementId);
-            WriteGuidBin16(ref writer, dto.UpdatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.TargetElementId, options);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
         }
 
@@ -124,11 +124,11 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 var dto = new Comment();
 
-                dto.Id = ReadGuidBin16(ref reader);
-                dto.Author = ReadGuidBin16(ref reader);
+                dto.Id = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
+                dto.Author = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CommentStatus = CommentStatusMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.Content = ReadRequiredString(ref reader, "Content");
-                dto.CreatedBy = ReadGuidBin16(ref reader);
+                dto.CreatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
                 if (reader.TryReadNil())
                 {
@@ -136,7 +136,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 }
                 else
                 {
-                    dto.Quotes = ReadGuidBin16(ref reader);
+                    dto.Quotes = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 }
                 if (reader.TryReadNil())
                 {
@@ -154,11 +154,11 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                     for (var i = 0; i < messagePackRepliesCount; i++)
                     {
-                        dto.Replies.Add(ReadGuidBin16(ref reader));
+                        dto.Replies.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
                     }
                 }
-                dto.TargetElementId = ReadGuidBin16(ref reader);
-                dto.UpdatedBy = ReadGuidBin16(ref reader);
+                dto.TargetElementId = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
+                dto.UpdatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
 
                 return dto;

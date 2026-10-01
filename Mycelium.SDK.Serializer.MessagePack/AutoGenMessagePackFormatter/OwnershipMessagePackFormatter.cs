@@ -56,14 +56,14 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             writer.WriteArrayHeader(9);
 
-            WriteGuidBin16(ref writer, dto.Id);
-            WriteGuidBin16(ref writer, dto.CreatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Id, options);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.CreatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
             WriteRequiredString(ref writer, dto.Description, "Description");
-            WriteGuidBin16(ref writer, dto.EngineeringMetadataId);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.EngineeringMetadataId, options);
             WriteRequiredString(ref writer, dto.Name, "Name");
             WriteRequiredString(ref writer, dto.ShortName, "ShortName");
-            WriteGuidBin16(ref writer, dto.UpdatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
         }
 
@@ -103,14 +103,14 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 var dto = new Ownership();
 
-                dto.Id = ReadGuidBin16(ref reader);
-                dto.CreatedBy = ReadGuidBin16(ref reader);
+                dto.Id = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
+                dto.CreatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
                 dto.Description = ReadRequiredString(ref reader, "Description");
-                dto.EngineeringMetadataId = ReadGuidBin16(ref reader);
+                dto.EngineeringMetadataId = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.Name = ReadRequiredString(ref reader, "Name");
                 dto.ShortName = ReadRequiredString(ref reader, "ShortName");
-                dto.UpdatedBy = ReadGuidBin16(ref reader);
+                dto.UpdatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
 
                 return dto;

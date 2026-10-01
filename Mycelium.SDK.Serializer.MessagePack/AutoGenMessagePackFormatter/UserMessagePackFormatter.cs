@@ -56,8 +56,8 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             writer.WriteArrayHeader(12);
 
-            WriteGuidBin16(ref writer, dto.Id);
-            WriteGuidBin16(ref writer, dto.CreatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Id, options);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.CreatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
             WriteRequiredString(ref writer, dto.ExternalIdentifier, "ExternalIdentifier");
             if (dto.IsPartOfOrganizations == null)
@@ -70,7 +70,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 for (var i = 0; i < dto.IsPartOfOrganizations.Count; i++)
                 {
-                    WriteGuidBin16(ref writer, dto.IsPartOfOrganizations[i]);
+                    GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.IsPartOfOrganizations[i], options);
                 }
             }
             if (dto.IsPartOfProjects == null)
@@ -83,15 +83,22 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 for (var i = 0; i < dto.IsPartOfProjects.Count; i++)
                 {
-                    WriteGuidBin16(ref writer, dto.IsPartOfProjects[i]);
+                    GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.IsPartOfProjects[i], options);
                 }
             }
             WriteRequiredString(ref writer, dto.Mail, "Mail");
             WriteRequiredString(ref writer, dto.Name, "Name");
             ActivationStatusMessagePackFormatter.Instance.Serialize(ref writer, dto.Status, options);
-            WriteGuidBin16(ref writer, dto.UpdatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
-            WriteStringDictionary(ref writer, dto.UserPreferences, "UserPreferences");
+            if (dto.UserPreferences == null)
+            {
+                writer.WriteNil();
+            }
+            else
+            {
+                StringDictionaryMessagePackFormatter.Instance.Serialize(ref writer, dto.UserPreferences, options);
+            }
         }
 
         /// <summary>
@@ -130,8 +137,8 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 var dto = new User();
 
-                dto.Id = ReadGuidBin16(ref reader);
-                dto.CreatedBy = ReadGuidBin16(ref reader);
+                dto.Id = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
+                dto.CreatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
                 dto.ExternalIdentifier = ReadRequiredString(ref reader, "ExternalIdentifier");
                 if (reader.TryReadNil())
@@ -150,7 +157,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                     for (var i = 0; i < messagePackIsPartOfOrganizationsCount; i++)
                     {
-                        dto.IsPartOfOrganizations.Add(ReadGuidBin16(ref reader));
+                        dto.IsPartOfOrganizations.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
                     }
                 }
                 if (reader.TryReadNil())
@@ -169,15 +176,22 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                     for (var i = 0; i < messagePackIsPartOfProjectsCount; i++)
                     {
-                        dto.IsPartOfProjects.Add(ReadGuidBin16(ref reader));
+                        dto.IsPartOfProjects.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
                     }
                 }
                 dto.Mail = ReadRequiredString(ref reader, "Mail");
                 dto.Name = ReadRequiredString(ref reader, "Name");
                 dto.Status = ActivationStatusMessagePackFormatter.Instance.Deserialize(ref reader, options);
-                dto.UpdatedBy = ReadGuidBin16(ref reader);
+                dto.UpdatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
-                dto.UserPreferences = ReadStringDictionary(ref reader, "UserPreferences");
+                if (reader.TryReadNil())
+                {
+                    dto.UserPreferences = null;
+                }
+                else
+                {
+                    dto.UserPreferences = StringDictionaryMessagePackFormatter.Instance.Deserialize(ref reader, options);
+                }
 
                 return dto;
             }

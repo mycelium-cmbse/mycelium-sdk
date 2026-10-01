@@ -732,14 +732,14 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             writer.WriteRaw(bytes);
         }
 
-        private sealed class MessagePackFormatterProbe : MessagePackFormatterBase
+        private static class MessagePackFormatterProbe
         {
             public static byte[] SerializeUri(Uri value)
             {
                 var buffer = new ArrayBufferWriter<byte>();
                 var writer = new MessagePackWriter(buffer);
 
-                WriteUri(ref writer, value, nullable: false, "Uri");
+                UriMessagePackFormatter.Instance.Serialize(ref writer, value, MessagePackSerializerOptions.Standard);
                 writer.Flush();
 
                 return buffer.WrittenMemory.ToArray();
@@ -749,14 +749,14 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             {
                 var reader = new MessagePackReader(payload);
 
-                return ReadUri(ref reader, nullable: false, "Uri");
+                return UriMessagePackFormatter.Instance.Deserialize(ref reader, MessagePackSerializerOptions.Standard);
             }
 
             public static Dictionary<string, string> DeserializeStringDictionary(byte[] payload)
             {
                 var reader = new MessagePackReader(payload);
 
-                return ReadStringDictionary(ref reader, "Dictionary");
+                return StringDictionaryMessagePackFormatter.Instance.Deserialize(ref reader, MessagePackSerializerOptions.Standard);
             }
         }
     }

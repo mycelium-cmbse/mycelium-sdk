@@ -56,13 +56,13 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             writer.WriteArrayHeader(8);
 
-            WriteGuidBin16(ref writer, dto.Id);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Id, options);
             writer.Write(dto.AllowAutoNamespaceImport);
             writer.Write(dto.AllowAutoPublishMode);
             writer.Write(dto.AllowVersionBranching);
-            WriteGuidBin16(ref writer, dto.CreatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.CreatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
-            WriteGuidBin16(ref writer, dto.UpdatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
         }
 
@@ -102,13 +102,13 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 var dto = new FunctionalProjectPolicy();
 
-                dto.Id = ReadGuidBin16(ref reader);
+                dto.Id = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.AllowAutoNamespaceImport = reader.ReadBoolean();
                 dto.AllowAutoPublishMode = reader.ReadBoolean();
                 dto.AllowVersionBranching = reader.ReadBoolean();
-                dto.CreatedBy = ReadGuidBin16(ref reader);
+                dto.CreatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
-                dto.UpdatedBy = ReadGuidBin16(ref reader);
+                dto.UpdatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
 
                 return dto;

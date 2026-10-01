@@ -56,8 +56,8 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             writer.WriteArrayHeader(11);
 
-            WriteGuidBin16(ref writer, dto.Id);
-            WriteGuidBin16(ref writer, dto.CreatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Id, options);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.CreatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
             if (dto.DefaultReviewers == null)
             {
@@ -69,10 +69,10 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 for (var i = 0; i < dto.DefaultReviewers.Count; i++)
                 {
-                    WriteGuidBin16(ref writer, dto.DefaultReviewers[i]);
+                    GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.DefaultReviewers[i], options);
                 }
             }
-            WriteGuidBin16(ref writer, dto.EngineeringBranchId);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.EngineeringBranchId, options);
             if (dto.MergeAllowedFor == null)
             {
                 writer.WriteNil();
@@ -89,7 +89,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             writer.Write(dto.MinimumRequiredApproval);
             WriteRequiredString(ref writer, dto.Name, "Name");
             writer.Write(dto.ReviewRequired);
-            WriteGuidBin16(ref writer, dto.UpdatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
         }
 
@@ -129,8 +129,8 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 var dto = new BranchProtectionRule();
 
-                dto.Id = ReadGuidBin16(ref reader);
-                dto.CreatedBy = ReadGuidBin16(ref reader);
+                dto.Id = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
+                dto.CreatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
                 if (reader.TryReadNil())
                 {
@@ -148,10 +148,10 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                     for (var i = 0; i < messagePackDefaultReviewersCount; i++)
                     {
-                        dto.DefaultReviewers.Add(ReadGuidBin16(ref reader));
+                        dto.DefaultReviewers.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
                     }
                 }
-                dto.EngineeringBranchId = ReadGuidBin16(ref reader);
+                dto.EngineeringBranchId = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 if (reader.TryReadNil())
                 {
                     dto.MergeAllowedFor = null;
@@ -174,7 +174,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.MinimumRequiredApproval = reader.ReadInt32();
                 dto.Name = ReadRequiredString(ref reader, "Name");
                 dto.ReviewRequired = reader.ReadBoolean();
-                dto.UpdatedBy = ReadGuidBin16(ref reader);
+                dto.UpdatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
 
                 return dto;

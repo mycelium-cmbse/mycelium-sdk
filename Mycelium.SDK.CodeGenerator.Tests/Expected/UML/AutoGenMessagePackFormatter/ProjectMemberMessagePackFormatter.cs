@@ -56,18 +56,18 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             writer.WriteArrayHeader(10);
 
-            WriteGuidBin16(ref writer, dto.Id);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Id, options);
             if (dto.ActiveOwnership.HasValue)
             {
-                WriteGuidBin16(ref writer, dto.ActiveOwnership.Value);
+                GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.ActiveOwnership.Value, options);
             }
             else
             {
                 writer.WriteNil();
             }
-            WriteGuidBin16(ref writer, dto.CreatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.CreatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
-            WriteGuidBin16(ref writer, dto.IsPartOf);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.IsPartOf, options);
             if (dto.Owns == null)
             {
                 writer.WriteNil();
@@ -78,13 +78,13 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 for (var i = 0; i < dto.Owns.Count; i++)
                 {
-                    WriteGuidBin16(ref writer, dto.Owns[i]);
+                    GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Owns[i], options);
                 }
             }
             ProjectMemberRoleMessagePackFormatter.Instance.Serialize(ref writer, dto.Role, options);
-            WriteGuidBin16(ref writer, dto.UpdatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
-            WriteGuidBin16(ref writer, dto.User);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.User, options);
         }
 
         /// <summary>
@@ -123,18 +123,18 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 var dto = new ProjectMember();
 
-                dto.Id = ReadGuidBin16(ref reader);
+                dto.Id = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 if (reader.TryReadNil())
                 {
                     dto.ActiveOwnership = null;
                 }
                 else
                 {
-                    dto.ActiveOwnership = ReadGuidBin16(ref reader);
+                    dto.ActiveOwnership = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 }
-                dto.CreatedBy = ReadGuidBin16(ref reader);
+                dto.CreatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
-                dto.IsPartOf = ReadGuidBin16(ref reader);
+                dto.IsPartOf = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 if (reader.TryReadNil())
                 {
                     dto.Owns = null;
@@ -151,13 +151,13 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                     for (var i = 0; i < messagePackOwnsCount; i++)
                     {
-                        dto.Owns.Add(ReadGuidBin16(ref reader));
+                        dto.Owns.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
                     }
                 }
                 dto.Role = ProjectMemberRoleMessagePackFormatter.Instance.Deserialize(ref reader, options);
-                dto.UpdatedBy = ReadGuidBin16(ref reader);
+                dto.UpdatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
-                dto.User = ReadGuidBin16(ref reader);
+                dto.User = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
 
                 return dto;
             }
