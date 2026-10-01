@@ -208,6 +208,151 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             Assert.That(renderedContext, Is.EqualTo("role:ProjectMember"));
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Verify_that_uri_scalars_delegate_after_property_specific_null_handling(bool optional)
+        {
+            var property = CreateUriProperty(optional);
+            var expectedSerialization = optional
+                ? """
+                  if (dto.Location == null)
+                  {
+                      writer.WriteNil();
+                  }
+                  else
+                  {
+                      UriMessagePackFormatter.Instance.Serialize(ref writer, dto.Location, options);
+                  }
+                  """
+                : """
+                  if (dto.Location == null)
+                  {
+                      throw new MessagePackSerializationException("URI value 'Location' may not be null.");
+                  }
+                  else
+                  {
+                      UriMessagePackFormatter.Instance.Serialize(ref writer, dto.Location, options);
+                  }
+                  """;
+            var expectedDeserialization = optional
+                ? """
+                  if (reader.TryReadNil())
+                  {
+                      dto.Location = null;
+                  }
+                  else
+                  {
+                      dto.Location = UriMessagePackFormatter.Instance.Deserialize(ref reader, options);
+                  }
+                  """
+                : """
+                  if (reader.TryReadNil())
+                  {
+                      throw new MessagePackSerializationException("URI value 'Location' may not be nil.");
+                  }
+                  else
+                  {
+                      dto.Location = UriMessagePackFormatter.Instance.Deserialize(ref reader, options);
+                  }
+                  """;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Render(property, "Serialization"), Is.EqualTo(expectedSerialization.Replace("<blank>", "    ", StringComparison.Ordinal) + Environment.NewLine));
+                Assert.That(Render(property, "Deserialization"), Is.EqualTo(expectedDeserialization.Replace("<blank>", "    ", StringComparison.Ordinal) + Environment.NewLine));
+            }
+        }
+
+        [Test]
+        public void Verify_that_uri_lists_retain_framing_and_delegate_non_null_items()
+        {
+            var property = CreateUriProperty(false);
+            property.UpperValue.Clear();
+            property.UpperValue.Add(new LiteralUnlimitedNatural { Value = "*" });
+
+            var expectedSerialization = """
+                if (dto.Location == null)
+                {
+                    writer.WriteNil();
+                }
+                else
+                {
+                    writer.WriteArrayHeader(dto.Location.Count);
+                <blank>
+                    for (var i = 0; i < dto.Location.Count; i++)
+                    {
+                        if (dto.Location[i] == null)
+                        {
+                            throw new MessagePackSerializationException("URI value 'Location item' may not be null.");
+                        }
+                        else
+                        {
+                            UriMessagePackFormatter.Instance.Serialize(ref writer, dto.Location[i], options);
+                        }
+                    }
+                }
+                """;
+            var expectedDeserialization = """
+                if (reader.TryReadNil())
+                {
+                    dto.Location = null;
+                }
+                else
+                {
+                    var messagePackLocationCount = reader.ReadArrayHeader();
+                    dto.Location.Clear();
+                <blank>
+                    if (dto.Location.Capacity < messagePackLocationCount)
+                    {
+                        dto.Location.Capacity = messagePackLocationCount;
+                    }
+                <blank>
+                    for (var i = 0; i < messagePackLocationCount; i++)
+                    {
+                        if (reader.TryReadNil())
+                        {
+                            throw new MessagePackSerializationException("URI value 'Location item' may not be nil.");
+                        }
+                        else
+                        {
+                            dto.Location.Add(UriMessagePackFormatter.Instance.Deserialize(ref reader, options));
+                        }
+                    }
+                }
+                """;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Render(property, "Serialization"), Is.EqualTo(expectedSerialization.Replace("<blank>", "    ", StringComparison.Ordinal) + Environment.NewLine));
+                Assert.That(Render(property, "Deserialization"), Is.EqualTo(expectedDeserialization.Replace("<blank>", "    ", StringComparison.Ordinal) + Environment.NewLine));
+            }
+        }
+
+        private static Property CreateUriProperty(bool optional)
+        {
+            var property = new Property
+            {
+                XmiId = "uri-property",
+                Name = "location",
+                Type = new PrimitiveType { XmiId = "uri-type", Name = "Uri" }
+            };
+
+            property.LowerValue.Add(new LiteralInteger { Value = optional ? 0 : 1 });
+            property.UpperValue.Add(new LiteralUnlimitedNatural { Value = "1" });
+
+            return property;
+        }
+
+        private static string Render(Property property, string operation)
+        {
+            var handlebars = Handlebars.CreateSharedEnvironment();
+            handlebars.RegisterMessagePackFormatterPropertyHelper();
+
+            var template = handlebars.Compile("{{ #Property.WriteMessagePack" + operation + " this }}");
+
+            return template(property);
+        }
+
         private string RenderJsonSerializerProperty(string templateText, IProperty property)
         {
             var template = this.jsonSerializerHandlebars.Compile(templateText);
