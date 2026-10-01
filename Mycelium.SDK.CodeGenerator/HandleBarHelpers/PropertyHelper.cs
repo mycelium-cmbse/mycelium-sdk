@@ -292,7 +292,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 {
                     AppendLine(builder, indentationLevel, $"if ({valueExpression}.HasValue)");
                     AppendLine(builder, indentationLevel, "{");
-                    AppendLine(builder, indentationLevel + 1, $"WriteGuidBin16(ref writer, {valueExpression}.Value);");
+                    AppendLine(builder, indentationLevel + 1, $"GuidMessagePackFormatter.Instance.Serialize(ref writer, {valueExpression}.Value, options);");
                     AppendLine(builder, indentationLevel, "}");
                     AppendLine(builder, indentationLevel, "else");
                     AppendLine(builder, indentationLevel, "{");
@@ -301,7 +301,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 }
                 else
                 {
-                    AppendLine(builder, indentationLevel, $"WriteGuidBin16(ref writer, {valueExpression});");
+                    AppendLine(builder, indentationLevel, $"GuidMessagePackFormatter.Instance.Serialize(ref writer, {valueExpression}, options);");
                 }
 
                 return;
@@ -330,7 +330,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     AppendSerializeRoundTripDateTime(builder, valueExpression, nullable, indentationLevel);
                     break;
                 case "Dictionary<string,string>":
-                    AppendLine(builder, indentationLevel, $"WriteStringDictionary(ref writer, {valueExpression}, \"{valueDescription}\");");
+                    AppendSerializeReferenceValue(builder, valueExpression, !property.QueryIsEnumerable(), valueDescription, "StringDictionaryMessagePackFormatter", "Dictionary", indentationLevel);
                     break;
                 case "String":
                 case "UnlimitedNatural":
@@ -346,7 +346,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                     break;
                 case "Uri":
-                    AppendLine(builder, indentationLevel, $"WriteUri(ref writer, {valueExpression}, {nullable.ToString().ToLowerInvariant()}, \"{valueDescription}\");");
+                    AppendSerializeReferenceValue(builder, valueExpression, nullable, valueDescription, "UriMessagePackFormatter", "URI", indentationLevel);
                     break;
                 default:
                     throw new InvalidOperationException($"Property '{property.Describe()}' uses unsupported MessagePack primitive '{primitiveType.Name}'.");
@@ -374,7 +374,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             if (property.Type is IClass || property.Type is IPrimitiveType { Name: "Guid" })
             {
-                AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "ReadGuidBin16(ref reader)", indentationLevel);
+                AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "GuidMessagePackFormatter.Instance.Deserialize(ref reader, options)", indentationLevel);
 
                 return;
             }
@@ -400,7 +400,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, $"ReadRoundTripDateTime(ref reader, \"{valueDescription}\")", indentationLevel);
                     break;
                 case "Dictionary<string,string>":
-                    AppendAssignment(builder, destination, addToCollection, $"ReadStringDictionary(ref reader, \"{valueDescription}\")", indentationLevel);
+                    AppendDeserializeReferenceValue(builder, context, !property.QueryIsEnumerable(), "StringDictionaryMessagePackFormatter", "Dictionary");
 
                     break;
                 case "Integer":
@@ -417,12 +417,74 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     break;
                 case "Uri":
 
-                    AppendAssignment(builder, destination, addToCollection, $"ReadUri(ref reader, {nullable.ToString().ToLowerInvariant()}, \"{valueDescription}\")", indentationLevel);
+                    AppendDeserializeReferenceValue(builder, context, nullable, "UriMessagePackFormatter", "URI");
 
                     break;
                 default:
                     throw new InvalidOperationException($"Property '{property.Describe()}' uses unsupported MessagePack primitive '{primitiveType.Name}'.");
             }
+        }
+
+        /// <summary>
+        /// Appends reference-value delegation after handling null according to the DTO contract.
+        /// </summary>
+        /// <param name="builder">The target source builder.</param>
+        /// <param name="valueExpression">The generated expression supplying the value.</param>
+        /// <param name="nullable">Whether null is permitted.</param>
+        /// <param name="valueDescription">The property or collection item description.</param>
+        /// <param name="formatterName">The dedicated formatter type.</param>
+        /// <param name="typeDescription">The type description used for required-value errors.</param>
+        /// <param name="indentationLevel">The generated indentation level.</param>
+        private static void AppendSerializeReferenceValue(StringBuilder builder, string valueExpression, bool nullable, string valueDescription, string formatterName, string typeDescription, int indentationLevel)
+        {
+            AppendLine(builder, indentationLevel, $"if ({valueExpression} == null)");
+            AppendLine(builder, indentationLevel, "{");
+
+            if (nullable)
+            {
+                AppendLine(builder, indentationLevel + 1, MessagePackWriteNilStatement);
+            }
+            else
+            {
+                AppendLine(builder, indentationLevel + 1, $"throw new MessagePackSerializationException(\"{typeDescription} value '{valueDescription}' may not be null.\");");
+            }
+
+            AppendLine(builder, indentationLevel, "}");
+            AppendLine(builder, indentationLevel, "else");
+            AppendLine(builder, indentationLevel, "{");
+            AppendLine(builder, indentationLevel + 1, $"{formatterName}.Instance.Serialize(ref writer, {valueExpression}, options);");
+            AppendLine(builder, indentationLevel, "}");
+        }
+
+        /// <summary>
+        /// Appends reference-value delegation after handling nil according to the DTO contract.
+        /// </summary>
+        /// <param name="builder">The target source builder.</param>
+        /// <param name="context">The destination and value validation context.</param>
+        /// <param name="nullable">Whether nil is permitted.</param>
+        /// <param name="formatterName">The dedicated formatter type.</param>
+        /// <param name="typeDescription">The type description used for required-value errors.</param>
+        private static void AppendDeserializeReferenceValue(StringBuilder builder, DeserializationContext context, bool nullable, string formatterName, string typeDescription)
+        {
+            var (destination, addToCollection, _, valueDescription, _, indentationLevel) = context;
+
+            AppendLine(builder, indentationLevel, "if (reader.TryReadNil())");
+            AppendLine(builder, indentationLevel, "{");
+
+            if (nullable)
+            {
+                AppendAssignment(builder, destination, addToCollection, "null", indentationLevel + 1);
+            }
+            else
+            {
+                AppendLine(builder, indentationLevel + 1, $"throw new MessagePackSerializationException(\"{typeDescription} value '{valueDescription}' may not be nil.\");");
+            }
+
+            AppendLine(builder, indentationLevel, "}");
+            AppendLine(builder, indentationLevel, "else");
+            AppendLine(builder, indentationLevel, "{");
+            AppendAssignment(builder, destination, addToCollection, $"{formatterName}.Instance.Deserialize(ref reader, options)", indentationLevel + 1);
+            AppendLine(builder, indentationLevel, "}");
         }
 
         /// <summary>

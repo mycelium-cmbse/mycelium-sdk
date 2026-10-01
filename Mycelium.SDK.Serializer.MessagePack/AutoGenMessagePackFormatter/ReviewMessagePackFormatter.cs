@@ -56,8 +56,8 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             writer.WriteArrayHeader(13);
 
-            WriteGuidBin16(ref writer, dto.Id);
-            WriteGuidBin16(ref writer, dto.Author);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Id, options);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Author, options);
             if (dto.Comments == null)
             {
                 writer.WriteNil();
@@ -68,10 +68,10 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 for (var i = 0; i < dto.Comments.Count; i++)
                 {
-                    WriteGuidBin16(ref writer, dto.Comments[i]);
+                    GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Comments[i], options);
                 }
             }
-            WriteGuidBin16(ref writer, dto.CreatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.CreatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
             WriteRequiredString(ref writer, dto.Description, "Description");
             if (dto.Reviewers == null)
@@ -84,14 +84,14 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 for (var i = 0; i < dto.Reviewers.Count; i++)
                 {
-                    WriteGuidBin16(ref writer, dto.Reviewers[i]);
+                    GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Reviewers[i], options);
                 }
             }
-            WriteGuidBin16(ref writer, dto.SourceBranchId);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.SourceBranchId, options);
             ReviewStatusMessagePackFormatter.Instance.Serialize(ref writer, dto.Status, options);
-            WriteGuidBin16(ref writer, dto.TargetBranchId);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.TargetBranchId, options);
             WriteRequiredString(ref writer, dto.Title, "Title");
-            WriteGuidBin16(ref writer, dto.UpdatedBy);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
         }
 
@@ -131,8 +131,8 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                 var dto = new Review();
 
-                dto.Id = ReadGuidBin16(ref reader);
-                dto.Author = ReadGuidBin16(ref reader);
+                dto.Id = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
+                dto.Author = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 if (reader.TryReadNil())
                 {
                     dto.Comments = null;
@@ -149,10 +149,10 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                     for (var i = 0; i < messagePackCommentsCount; i++)
                     {
-                        dto.Comments.Add(ReadGuidBin16(ref reader));
+                        dto.Comments.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
                     }
                 }
-                dto.CreatedBy = ReadGuidBin16(ref reader);
+                dto.CreatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
                 dto.Description = ReadRequiredString(ref reader, "Description");
                 if (reader.TryReadNil())
@@ -171,14 +171,14 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
                     for (var i = 0; i < messagePackReviewersCount; i++)
                     {
-                        dto.Reviewers.Add(ReadGuidBin16(ref reader));
+                        dto.Reviewers.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
                     }
                 }
-                dto.SourceBranchId = ReadGuidBin16(ref reader);
+                dto.SourceBranchId = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.Status = ReviewStatusMessagePackFormatter.Instance.Deserialize(ref reader, options);
-                dto.TargetBranchId = ReadGuidBin16(ref reader);
+                dto.TargetBranchId = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.Title = ReadRequiredString(ref reader, "Title");
-                dto.UpdatedBy = ReadGuidBin16(ref reader);
+                dto.UpdatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
 
                 return dto;
