@@ -30,6 +30,17 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
     {
         private static readonly MessagePackSerializerOptions SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(DataFormatterResolver.Instance);
 
+        private Serializer serializer;
+
+        private DeSerializer deSerializer;
+
+        [SetUp]
+        public void SetUp()
+        {
+            this.serializer = new Serializer();
+            this.deSerializer = new DeSerializer();
+        }
+
         [Test]
         public void Verify_that_resolver_selects_the_cached_payload_formatter()
         {
@@ -328,19 +339,17 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         [TestCase(true)]
         public void Verify_that_sync_stream_facades_round_trip_mixed_and_empty_payloads(bool empty)
         {
-            var serializer = new Serializer();
-            var deSerializer = new DeSerializer();
             var source = CreateTransportItems(empty);
 
             using var stream = new MemoryStream();
 
-            serializer.Serialize(source, stream);
+            this.serializer.Serialize(source, stream);
 
             Assert.That(stream.CanWrite, Is.True);
 
             stream.Position = 0;
 
-            var actual = deSerializer.DeSerialize(stream);
+            var actual = this.deSerializer.DeSerialize(stream);
 
             Assert.That(stream.CanRead, Is.True);
 
@@ -353,13 +362,11 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         [TestCase(true)]
         public void Verify_that_buffer_writer_and_sequence_facades_round_trip_mixed_and_empty_payloads(bool empty)
         {
-            var serializer = new Serializer();
-            var deSerializer = new DeSerializer();
             var writer = new ArrayBufferWriter<byte>();
 
-            serializer.SerializeToBufferWriter(CreateTransportItems(empty), writer);
+            this.serializer.SerializeToBufferWriter(CreateTransportItems(empty), writer);
 
-            var actual = deSerializer.DeSerialize(new ReadOnlySequence<byte>(writer.WrittenMemory));
+            var actual = this.deSerializer.DeSerialize(new ReadOnlySequence<byte>(writer.WrittenMemory));
 
             AssertTransportItems(actual, empty);
         }
@@ -368,18 +375,15 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         [TestCase(true)]
         public async Task Verify_that_async_stream_facades_round_trip_mixed_and_empty_payloads(bool empty)
         {
-            var serializer = new Serializer();
-            var deSerializer = new DeSerializer();
-
             using var stream = new MemoryStream();
 
-            await serializer.SerializeAsync(CreateTransportItems(empty), stream, CancellationToken.None);
+            await this.serializer.SerializeAsync(CreateTransportItems(empty), stream, CancellationToken.None);
 
             Assert.That(stream.CanWrite, Is.True);
 
             stream.Position = 0;
 
-            var actual = await deSerializer.DeSerializeAsync(stream, CancellationToken.None);
+            var actual = await this.deSerializer.DeSerializeAsync(stream, CancellationToken.None);
 
             Assert.That(stream.CanRead, Is.True);
 
@@ -407,7 +411,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             var originalSource = source.ToArray();
             var writer = new ArrayBufferWriter<byte>();
 
-            new Serializer().SerializeToBufferWriter(source, writer);
+            this.serializer.SerializeToBufferWriter(source, writer);
 
             using (Assert.EnterMultipleScope())
             {
@@ -418,7 +422,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
                 Assert.That(empty.Replies, Is.Empty);
             }
 
-            var actual = new DeSerializer().DeSerialize(new ReadOnlySequence<byte>(writer.WrittenMemory)).ToArray();
+            var actual = this.deSerializer.DeSerialize(new ReadOnlySequence<byte>(writer.WrittenMemory)).ToArray();
 
             Assert.That(actual, Has.Length.EqualTo(4));
             Assert.That(actual[3], Is.TypeOf<OrganizationPolicy>());
@@ -438,39 +442,35 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         [Test]
         public void Verify_that_facades_reject_null_arguments_items_and_unsupported_types()
         {
-            var serializer = new Serializer();
-            var deSerializer = new DeSerializer();
             var writer = new ArrayBufferWriter<byte>();
 
             using var stream = new MemoryStream();
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(() => serializer.Serialize(null, stream), Throws.TypeOf<ArgumentNullException>());
-                Assert.That(() => serializer.Serialize([], null), Throws.TypeOf<ArgumentNullException>());
-                Assert.That(() => serializer.Serialize(new IThing[] { null }, stream), Throws.TypeOf<ArgumentNullException>());
-                Assert.That(() => serializer.SerializeToBufferWriter(null, writer), Throws.TypeOf<ArgumentNullException>());
-                Assert.That(() => serializer.SerializeToBufferWriter([], null), Throws.TypeOf<ArgumentNullException>());
-                Assert.That(() => serializer.SerializeToBufferWriter(new IThing[] { null }, writer), Throws.TypeOf<ArgumentNullException>());
-                Assert.That(async () => await serializer.SerializeAsync(null, stream, CancellationToken.None), Throws.TypeOf<ArgumentNullException>());
-                Assert.That(async () => await serializer.SerializeAsync([], null, CancellationToken.None), Throws.TypeOf<ArgumentNullException>());
-                Assert.That(async () => await serializer.SerializeAsync(new IThing[] { null }, stream, CancellationToken.None), Throws.TypeOf<ArgumentNullException>());
-                Assert.That(() => deSerializer.DeSerialize((Stream)null), Throws.TypeOf<ArgumentNullException>());
-                Assert.That(async () => await deSerializer.DeSerializeAsync(null, CancellationToken.None), Throws.TypeOf<ArgumentNullException>());
+                Assert.That(() => this.serializer.Serialize(null, stream), Throws.TypeOf<ArgumentNullException>());
+                Assert.That(() => this.serializer.Serialize([], null), Throws.TypeOf<ArgumentNullException>());
+                Assert.That(() => this.serializer.Serialize(new IThing[] { null }, stream), Throws.TypeOf<ArgumentNullException>());
+                Assert.That(() => this.serializer.SerializeToBufferWriter(null, writer), Throws.TypeOf<ArgumentNullException>());
+                Assert.That(() => this.serializer.SerializeToBufferWriter([], null), Throws.TypeOf<ArgumentNullException>());
+                Assert.That(() => this.serializer.SerializeToBufferWriter(new IThing[] { null }, writer), Throws.TypeOf<ArgumentNullException>());
+                Assert.That(async () => await this.serializer.SerializeAsync(null, stream, CancellationToken.None), Throws.TypeOf<ArgumentNullException>());
+                Assert.That(async () => await this.serializer.SerializeAsync([], null, CancellationToken.None), Throws.TypeOf<ArgumentNullException>());
+                Assert.That(async () => await this.serializer.SerializeAsync(new IThing[] { null }, stream, CancellationToken.None), Throws.TypeOf<ArgumentNullException>());
+                Assert.That(() => this.deSerializer.DeSerialize((Stream)null), Throws.TypeOf<ArgumentNullException>());
+                Assert.That(async () => await this.deSerializer.DeSerializeAsync(null, CancellationToken.None), Throws.TypeOf<ArgumentNullException>());
 
                 var unsupported = new UnsupportedOrganizationPolicy();
 
-                Assert.That(() => serializer.Serialize(new IThing[] { unsupported }, stream), Throws.TypeOf<NotSupportedException>());
-                Assert.That(() => serializer.SerializeToBufferWriter(new IThing[] { unsupported }, writer), Throws.TypeOf<NotSupportedException>());
-                Assert.That(async () => await serializer.SerializeAsync(new IThing[] { unsupported }, stream, CancellationToken.None), Throws.TypeOf<NotSupportedException>());
+                Assert.That(() => this.serializer.Serialize(new IThing[] { unsupported }, stream), Throws.TypeOf<NotSupportedException>());
+                Assert.That(() => this.serializer.SerializeToBufferWriter(new IThing[] { unsupported }, writer), Throws.TypeOf<NotSupportedException>());
+                Assert.That(async () => await this.serializer.SerializeAsync(new IThing[] { unsupported }, stream, CancellationToken.None), Throws.TypeOf<NotSupportedException>());
             }
         }
 
         [Test]
         public void Verify_that_async_stream_facades_observe_cancellation()
         {
-            var serializer = new Serializer();
-            var deSerializer = new DeSerializer();
             var writer = new ArrayBufferWriter<byte>();
 
             using var stream = new MemoryStream();
@@ -480,9 +480,9 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(() => serializer.SerializeToBufferWriter([], writer, cancellationSource.Token), Throws.TypeOf<OperationCanceledException>());
-                Assert.That(async () => await serializer.SerializeAsync([], stream, cancellationSource.Token), Throws.TypeOf<OperationCanceledException>());
-                Assert.That(async () => await deSerializer.DeSerializeAsync(stream, cancellationSource.Token), Throws.TypeOf<OperationCanceledException>());
+                Assert.That(() => this.serializer.SerializeToBufferWriter([], writer, cancellationSource.Token), Throws.TypeOf<OperationCanceledException>());
+                Assert.That(async () => await this.serializer.SerializeAsync([], stream, cancellationSource.Token), Throws.TypeOf<OperationCanceledException>());
+                Assert.That(async () => await this.deSerializer.DeSerializeAsync(stream, cancellationSource.Token), Throws.TypeOf<OperationCanceledException>());
             }
         }
 
@@ -492,17 +492,16 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             var invalid = CreateOrganizationPolicy();
             invalid.DefaultProjectLifecycleOnCreate = (ProjectLifecycleKind)int.MaxValue;
 
-            var serializer = new Serializer();
             var writer = new ArrayBufferWriter<byte>();
 
             using var stream = new MemoryStream();
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(() => serializer.Serialize(new IThing[] { invalid }, stream), Throws.TypeOf<MessagePackSerializationException>());
-                Assert.That(() => serializer.SerializeToBufferWriter(new IThing[] { invalid }, writer), Throws.TypeOf<MessagePackSerializationException>());
+                Assert.That(() => this.serializer.Serialize(new IThing[] { invalid }, stream), Throws.TypeOf<MessagePackSerializationException>());
+                Assert.That(() => this.serializer.SerializeToBufferWriter(new IThing[] { invalid }, writer), Throws.TypeOf<MessagePackSerializationException>());
                 Assert.That(
-                    async () => await serializer.SerializeAsync(new IThing[] { invalid }, stream, CancellationToken.None),
+                    async () => await this.serializer.SerializeAsync(new IThing[] { invalid }, stream, CancellationToken.None),
                     Throws.TypeOf<MessagePackSerializationException>());
             }
         }
@@ -510,19 +509,19 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         [Test]
         public void Verify_that_facades_reject_malformed_invalid_trailing_and_wrong_field_counts()
         {
-            var valid = SerializeEmptyPayload();
+            var valid = this.SerializeEmptyPayload();
 
-            AssertAllTransportsReject(valid[..^1]);
-            AssertAllTransportsReject([0xc0]);
-            AssertAllTransportsReject([0x90]);
-            AssertAllTransportsReject(CreateInvalidCreatedPayload());
-            AssertAllTransportsReject(CreateWrongDtoFieldCountPayload());
+            this.AssertAllTransportsReject(valid[..^1]);
+            this.AssertAllTransportsReject([0xc0]);
+            this.AssertAllTransportsReject([0x90]);
+            this.AssertAllTransportsReject(CreateInvalidCreatedPayload());
+            this.AssertAllTransportsReject(CreateWrongDtoFieldCountPayload());
 
             var trailing = new byte[valid.Length + 1];
             Array.Copy(valid, trailing, valid.Length);
             trailing[^1] = 0xc0;
 
-            AssertAllTransportsReject(trailing);
+            this.AssertAllTransportsReject(trailing);
         }
 
         private static byte[] CreateEmptyEnvelope(string created)
@@ -615,11 +614,11 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             }
         }
 
-        private static byte[] SerializeEmptyPayload()
+        private byte[] SerializeEmptyPayload()
         {
             var writer = new ArrayBufferWriter<byte>();
 
-            new Serializer().SerializeToBufferWriter(Array.Empty<IThing>(), writer);
+            this.serializer.SerializeToBufferWriter(Array.Empty<IThing>(), writer);
 
             return writer.WrittenMemory.ToArray();
         }
@@ -667,21 +666,19 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             return buffer.WrittenMemory.ToArray();
         }
 
-        private static void AssertAllTransportsReject(byte[] bytes)
+        private void AssertAllTransportsReject(byte[] bytes)
         {
-            var deSerializer = new DeSerializer();
-
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(() => deSerializer.DeSerialize(new ReadOnlySequence<byte>(bytes)), Throws.TypeOf<MessagePackSerializationException>());
+                Assert.That(() => this.deSerializer.DeSerialize(new ReadOnlySequence<byte>(bytes)), Throws.TypeOf<MessagePackSerializationException>());
 
                 using var syncStream = new MemoryStream(bytes);
 
-                Assert.That(() => deSerializer.DeSerialize(syncStream), Throws.TypeOf<MessagePackSerializationException>());
+                Assert.That(() => this.deSerializer.DeSerialize(syncStream), Throws.TypeOf<MessagePackSerializationException>());
 
                 using var asyncStream = new MemoryStream(bytes);
 
-                Assert.That(async () => await deSerializer.DeSerializeAsync(asyncStream, CancellationToken.None), Throws.TypeOf<MessagePackSerializationException>());
+                Assert.That(async () => await this.deSerializer.DeSerializeAsync(asyncStream, CancellationToken.None), Throws.TypeOf<MessagePackSerializationException>());
             }
         }
 
