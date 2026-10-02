@@ -20,13 +20,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         public static DirectoryInfo ResourcesDirectory =>
             new(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources"));
 
-        public static XmiReaderResult ReadFunctionalData() => XmiReaderResultExtensions.ReadFunctionalData(ResourcesDirectory);
+        public static XmiReaderResult ReadFunctionalData() => ResourcesDirectory.ReadModel(XmiResources.FunctionalDataFileName, useStrictReading: true);
 
         public static IPackage QueryFunctionalDataPackage(XmiReaderResult xmiReaderResult)
         {
             ArgumentNullException.ThrowIfNull(xmiReaderResult);
 
-            return xmiReaderResult.QueryFunctionalDataPackage();
+            return xmiReaderResult.QueryPackage(XmiResources.FunctionalDataPackageName);
         }
     }
 }

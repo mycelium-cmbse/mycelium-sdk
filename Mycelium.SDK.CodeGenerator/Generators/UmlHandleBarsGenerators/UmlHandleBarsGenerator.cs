@@ -65,7 +65,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             ArgumentNullException.ThrowIfNull(resourcesDirectory);
             ArgumentNullException.ThrowIfNull(outputDirectory);
 
-            var xmiReaderResult = XmiReaderResultExtensions.ReadFunctionalData(resourcesDirectory);
+            var xmiReaderResult = resourcesDirectory.ReadModel(XmiResources.FunctionalDataFileName, useStrictReading: true);
 
             return this.GenerateAsync(xmiReaderResult, outputDirectory);
         }
@@ -113,7 +113,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                 .OrderBy(package => package.Name, StringComparer.Ordinal)
                 .ToArray();
 
-            var rootPackage = xmiReaderResult.QueryFunctionalDataPackage();
+            var rootPackage = xmiReaderResult.QueryPackage(XmiResources.FunctionalDataPackageName);
 
             var generationPackages = rootPackage.QueryPackages()
                 .OrderBy(package => package.Name, StringComparer.Ordinal)

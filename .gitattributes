@@ -11,3 +11,4 @@ Mycelium.SDK.CodeGenerator.Tests/Expected/UML/AutoGenPOCO/*.cs text eol=crlf
 Mycelium.SDK.CodeGenerator.Tests/Expected/UML/AutoGenSerializer/*.cs text eol=crlf
 Mycelium.SDK.CodeGenerator.Tests/Expected/UML/AutoGenDeSerializer/*.cs text eol=crlf
 Mycelium.SDK.CodeGenerator.Tests/Expected/OpenApi/AutoGenModules/*.cs text eol=crlf
+Mycelium.SDK.CodeGenerator.Tests/Expected/Pim/AutoGenServices/*.cs text eol=crlf

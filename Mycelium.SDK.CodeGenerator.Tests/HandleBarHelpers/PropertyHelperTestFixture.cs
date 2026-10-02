@@ -13,7 +13,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
     using HandlebarsDotNet.Helpers;
 
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
-    using Mycelium.SDK.CodeGenerator.Tests.Xmi;
+    using Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators;
 
     using uml4net.Classification;
     using uml4net.SimpleClassifiers;
@@ -30,8 +30,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            var result = XmiLoadingTestFixture.ReadFunctionalData();
-            var functionalData = XmiLoadingTestFixture.QueryFunctionalDataPackage(result);
+            var result = GeneratorSetupFixture.ReadFunctionalData();
+            var functionalData = GeneratorSetupFixture.QueryFunctionalDataPackage(result);
 
             this.classes = functionalData.PackagedElement
                 .OfType<IClass>()

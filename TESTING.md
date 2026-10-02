@@ -10,6 +10,7 @@ Sections 1–4 and 6–7 are **universal**: they bind every test project regardl
 - Attributes in use: `[TestFixture]`, `[Test]`, `[TestCase]`, `[TestCaseSource]`, `[Category]`, `[OneTimeSetUp]`.
 - `NUnit.Framework` is imported globally via `<Using Include="NUnit.Framework"/>` in every test project — do not add a redundant `using NUnit.Framework;`, and carry the `<Using>` into any new project's csproj.
 - `Moq` is referenced by `Mycelium.SDK.Tests`; add it to another project only when a real object genuinely cannot be built. Prefer real objects over mocks whenever the real object is cheap to construct — these suites are almost entirely mock-free by design.
+- **A mock of a service returning `ErrorOr<T>` must use `MockBehavior.Strict`.** `ErrorOr<T>` is a `readonly record struct` whose `IsSuccess` is `_errors is null`, so `default(ErrorOr<T>)` reports **success with a null value**. A loose mock returns exactly that for any un-stubbed method, which silently fabricates a success and — in a module test — a `200`. Strict behaviour turns the missing stub into a failure instead.
 - Coverage is collected by `coverlet` / `dotnet-coverage` in CI (`.github/workflows/CodeQuality.yml`).
 
 ### Adding a new test project
@@ -82,7 +83,8 @@ Fixture classes are named `{SubjectUnderTest}TestFixture` and live in a folder m
 ## 4. Fixture structure
 
 - Expensive shared setup belongs in `[OneTimeSetUp]`, not in a per-test setup — currently that means reading the XMI and running a full batch generation.
-- **Centralise expensive shared loading in one helper fixture and reuse it** rather than building a second loader with its own settings. The current instance is `Mycelium.SDK.CodeGenerator.Tests/Xmi/XmiLoadingTestFixture.cs` (`ReadFunctionalData()`, `QueryFunctionalDataPackage()`). **Model loading is read-only**: a fixture may mutate the in-memory graph it gets back — that is how the negative tests corrupt a property type to exercise the preflight — but no test ever writes to `Resources/`.
+- **Centralise expensive shared loading in one helper and reuse it** rather than building a second loader with its own settings. The current instances are `Mycelium.SDK.CodeGenerator.Tests/Generators/UmlHandleBarsGenerators/GeneratorSetupFixture.cs` (`ReadFunctionalData()`, `QueryFunctionalDataPackage()`), `OpenApi/OpenApiLoadingTestFixture.cs` and `Pim/PimXmiLoader.cs`. A loader is a plain static helper, not a `*TestFixture` with tests of its own — that the model loads at all is already proven by every fixture that generates from it. **Model loading is read-only**: a fixture may mutate the in-memory graph it gets back — that is how the negative tests corrupt a property type to exercise the preflight — but no test ever writes to `Resources/`.
+- **A test that mutates the model reads its own copy.** A `[OneTimeSetUp]`-loaded graph is shared by every test in the fixture, and NUnit does not guarantee execution order, so nulling a name or a type on it corrupts the tests that run after. Load a fresh model inside the mutating test instead.
 - Default to **one `[Test]` per behaviour**, packing the related scenarios into several `Assert.That` calls inside a multiple scope. Do not write one `[Test]` per assertion when the setup is shared.
 - When the same behaviour must be checked across many inputs, fan out with `[TestCaseSource]` over a `static readonly` array — never by copy-pasting a fixture.
 - **Keep expected values in one reviewed inventory type per subject**, not scattered as literal lists across fixtures. Add to the inventory; do not introduce a competing local list. The current instances are `ExpectedClasses`, `ExpectedEnumerations` and `ExpectedAssociations` under `Mycelium.SDK.CodeGenerator.Tests/Expected/`.
@@ -90,6 +92,8 @@ Fixture classes are named `{SubjectUnderTest}TestFixture` and live in a folder m
 ## 5. The four-tier verification model (code-generation pipeline)
 
 **Scope**: this section applies to `Mycelium.SDK.CodeGenerator.Tests` and `Mycelium.SDK.Tests`, which between them verify generated output. A test project covering hand-written code does not need four tiers. But any project that verifies a *generated* artifact should reuse this tiering rather than invent another one.
+
+**`Mycelium.SDK.CodeGenerator.Tests` exists to run generation**, not to unit-test the generator's own internals. A `Query*` predicate or a `Write*` emitter carries no logic worth pinning on its own — its behaviour is already asserted, exactly and in context, by the generated output it produces. Do not add a fixture per extension or per Handlebars helper; add to the golden set instead. The two Fabric-targeted pipelines are the reference shape: generate the batch in `[OneTimeSetUp]`, then compare the manifest and the bytes, check the file format, and prove the all-or-nothing preflight. Three tests, no model introspection.
 
 The generated SDK is verified at four independent levels; a template change — or a new UML export landing in `Resources/` — usually touches several of them, and the agent must know which failure means what. (A model change only ever reaches this repository as a **new export**; `Resources/*.xmi` is read-only. See `CLAUDE.md`.)
 
@@ -103,6 +107,8 @@ The generated SDK is verified at four independent levels; a template change — 
 
 `Mycelium.SDK.CodeGenerator.Tests/Expected/UML/AutoGen{DTO,POCO,Enum}/*.cs` hold a **representative, human-reviewed subset** of the generated output, compared byte-for-byte by the `[Category("Expected")]` tests (`VerifyThatRepresentativeDTOInterfaceMatchesReviewedGoldenFile`, `VerifyThatEveryGeneratedEnumerationMatchesItsGoldenExactly`, …). A companion test asserts that the golden set contains *exactly* the representative files, so a golden file cannot be quietly added or dropped.
 
+The two Fabric-targeted pipelines hold the **complete** output as goldens rather than a subset, because it is small and because there is no committed source in this repository to compare against — `Expected/OpenApi/AutoGenModules/` (9 modules) and `Expected/Pim/AutoGenServices/` (6 service interfaces). Their manifests are compared as ordered lists, so a generated file cannot appear or disappear unnoticed.
+
 *A failure here means the generated contract changed.* It requires human review before the golden files are updated.
 
 ### Tier 3 — Committed-source parity
@@ -110,6 +116,8 @@ The generated SDK is verified at four independent levels; a template change — 
 `VerifyThatCompleteBatchMatchesCommittedSDKDTOs`, `VerifyThatCompleteBatchMatchesCommittedSDKPOCOs` and `VerifyThatCompleteStagedOutputMatchesCommittedAutoGenEnum` compare the **full** generated batch against the real shipped sources in `Mycelium.SDK/AutoGen*`, which `Mycelium.SDK.CodeGenerator.Tests.csproj` links into the test output as `Committed/Mycelium.SDK/AutoGen*`.
 
 *A failure here means the committed SDK and the generator have drifted apart.* This is the gate for the regeneration loop described in `CLAUDE.md`; it must be green before the work is considered done.
+
+This tier does not apply to the OpenAPI and PIM pipelines: their committed destination is the `mycelium-fabric` repository, so tier 2 is their final gate here and compilation is proven downstream.
 
 ### Tier 4 — Runtime contract
 

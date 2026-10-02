@@ -35,15 +35,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             handlebars.RegisterHelper("NamedElement.WriteIdentifier", (writer, _, arguments) =>
             {
-                if (arguments.Length != 1)
-                {
-                    throw new HandlebarsException("{{NamedElement.WriteIdentifier}} requires exactly one argument.");
-                }
-
-                if (arguments.Single() is not INamedElement namedElement)
-                {
-                    throw new HandlebarsException("{{NamedElement.WriteIdentifier}} requires an INamedElement argument.");
-                }
+                var namedElement = arguments.QuerySingle<INamedElement>("{{NamedElement.WriteIdentifier}}");
 
                 writer.WriteSafeString(ReservedCSharpNameMapper.Map(namedElement.Name));
             });

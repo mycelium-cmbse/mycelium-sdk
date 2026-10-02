@@ -37,14 +37,14 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             handlebars.RegisterHelper("Property.WriteDtoInterfaceDeclaration", (writer, _, arguments) =>
             {
-                var property = QueryProperty(arguments, "{{Property.WriteDtoInterfaceDeclaration}}");
+                var property = arguments.QuerySingle<IProperty>("{{Property.WriteDtoInterfaceDeclaration}}");
 
                 writer.WriteSafeString($"{property.QueryDtoTypeName()} " + $"{property.QueryPropertyName()} {QueryAccessors(property)}");
             });
 
             handlebars.RegisterHelper("Property.WriteDtoImplementationDeclaration", (writer, _, arguments) =>
             {
-                var property = QueryProperty(arguments, "{{Property.WriteDtoImplementationDeclaration}}");
+                var property = arguments.QuerySingle<IProperty>("{{Property.WriteDtoImplementationDeclaration}}");
                 var propertyTypeName = property.QueryDtoTypeName();
                 var collectionInitializer = QueryCollectionInitializer(property, propertyTypeName);
 
@@ -68,21 +68,21 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             handlebars.RegisterHelper("Property.QueryIsIdentifier", (_, arguments) =>
             {
-                var property = QueryProperty(arguments, "{{Property.QueryIsIdentifier}}");
+                var property = arguments.QuerySingle<IProperty>("{{Property.QueryIsIdentifier}}");
 
                 return string.Equals(property.Name, "id", StringComparison.Ordinal) && string.Equals(property.QueryDtoTypeName(), "Guid", StringComparison.Ordinal);
             });
 
             handlebars.RegisterHelper("Property.QueryIsStringDictionary", (_, arguments) =>
             {
-                var property = QueryProperty(arguments, "{{Property.QueryIsStringDictionary}}");
+                var property = arguments.QuerySingle<IProperty>("{{Property.QueryIsStringDictionary}}");
 
                 return string.Equals(property.QueryDtoTypeName(), "Dictionary<string,string>", StringComparison.Ordinal);
             });
 
             handlebars.RegisterHelper("Property.WritePropertyName", (writer, _, arguments) =>
             {
-                var property = QueryProperty(arguments, "{{Property.WritePropertyName}}");
+                var property = arguments.QuerySingle<IProperty>("{{Property.WritePropertyName}}");
 
                 writer.WriteSafeString(property.QueryPropertyName());
             });
@@ -103,14 +103,14 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             handlebars.RegisterHelper("Property.WritePocoInterfaceDeclaration", (writer, _, arguments) =>
             {
-                var property = QueryProperty(arguments, "{{Property.WritePocoInterfaceDeclaration}}");
+                var property = arguments.QuerySingle<IProperty>("{{Property.WritePocoInterfaceDeclaration}}");
 
                 writer.WriteSafeString($"{property.QueryPocoTypeName()} " + $"{property.QueryPropertyName()} {QueryAccessors(property)}");
             });
 
             handlebars.RegisterHelper("Property.WritePocoImplementationDeclaration", (writer, _, arguments) =>
             {
-                var property = QueryProperty(arguments, "{{Property.WritePocoImplementationDeclaration}}");
+                var property = arguments.QuerySingle<IProperty>("{{Property.WritePocoImplementationDeclaration}}");
                 var propertyTypeName = property.QueryPocoTypeName();
                 var propertyName = property.QueryPropertyName();
 
@@ -182,36 +182,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         private static string QueryCollectionInitializer(IProperty property, string propertyTypeName)
         {
             return property.QueryIsEnumerable() || propertyTypeName.StartsWith("Dictionary<", StringComparison.Ordinal) ? " = [];" : string.Empty;
-        }
-
-        /// <summary>
-        /// Queries the single UML property supplied to a Handlebars helper.
-        /// </summary>
-        /// <param name="arguments">
-        /// The Handlebars helper arguments.
-        /// </param>
-        /// <param name="helperName">
-        /// The helper name used in validation messages.
-        /// </param>
-        /// <returns>
-        /// The supplied UML property.
-        /// </returns>
-        /// <exception cref="HandlebarsException">
-        /// Thrown when exactly one <see cref="IProperty" /> argument was not supplied.
-        /// </exception>
-        private static IProperty QueryProperty(Arguments arguments, string helperName)
-        {
-            if (arguments.Length != 1)
-            {
-                throw new HandlebarsException($"{helperName} requires exactly one argument.");
-            }
-
-            if (arguments.Single() is not IProperty property)
-            {
-                throw new HandlebarsException($"{helperName} requires an IProperty argument.");
-            }
-
-            return property;
         }
     }
 }

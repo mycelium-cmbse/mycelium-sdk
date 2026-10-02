@@ -35,15 +35,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             handlebars.RegisterHelper("EnumerationLiteral.Write", (writer, _, arguments) =>
             {
-                if (arguments.Length != 1)
-                {
-                    throw new HandlebarsException("{{EnumerationLiteral.Write}} requires exactly one argument.");
-                }
-
-                if (arguments.Single() is not IEnumerationLiteral literal)
-                {
-                    throw new HandlebarsException("{{EnumerationLiteral.Write}} requires an IEnumerationLiteral argument.");
-                }
+                var literal = arguments.QuerySingle<IEnumerationLiteral>("{{EnumerationLiteral.Write}}");
 
                 writer.WriteSafeString(ReservedCSharpNameMapper.Map(literal.Name));
             });
