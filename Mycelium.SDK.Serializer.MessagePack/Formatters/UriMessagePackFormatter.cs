@@ -22,11 +22,28 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// </summary>
         internal static readonly UriMessagePackFormatter Instance = new();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UriMessagePackFormatter" /> class.
+        /// </summary>
         internal UriMessagePackFormatter()
         {
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Writes a non-null relative or absolute URI using its original string.
+        /// </summary>
+        /// <param name="writer">
+        /// The MessagePack writer that receives the encoded value.
+        /// </param>
+        /// <param name="value">
+        /// The non-null URI to write.
+        /// </param>
+        /// <param name="options">
+        /// The serializer options supplied for the operation.
+        /// </param>
+        /// <exception cref="MessagePackSerializationException">
+        /// Thrown when <paramref name="value" /> is <see langword="null" />.
+        /// </exception>
         public void Serialize(ref MessagePackWriter writer, Uri value, MessagePackSerializerOptions options)
         {
             if (value == null)
@@ -37,7 +54,21 @@ namespace Mycelium.SDK.Serializer.MessagePack
             writer.Write(value.OriginalString);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Reads a non-null relative or absolute URI from its original string.
+        /// </summary>
+        /// <param name="reader">
+        /// The MessagePack reader from which the encoded value is read.
+        /// </param>
+        /// <param name="options">
+        /// The serializer options supplied for the operation.
+        /// </param>
+        /// <returns>
+        /// The decoded URI, preserving the encoded string in its original form.
+        /// </returns>
+        /// <exception cref="MessagePackSerializationException">
+        /// Thrown when the value is <c>nil</c>, is not a string, or is not a valid relative or absolute URI.
+        /// </exception>
         public Uri Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             var value = ReadRequiredString(ref reader, "URI");

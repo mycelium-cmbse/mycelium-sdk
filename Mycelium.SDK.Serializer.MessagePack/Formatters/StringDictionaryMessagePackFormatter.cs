@@ -13,7 +13,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
     using global::MessagePack.Formatters;
 
     /// <summary>
-    /// Encodes non-null string dictionaries as maps with ordinal, unique string keys.
+    /// Encodes non-null string dictionaries as maps and reads keys using ordinal comparison.
     /// </summary>
     internal sealed class StringDictionaryMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<Dictionary<string, string>>
     {
@@ -22,11 +22,28 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// </summary>
         internal static readonly StringDictionaryMessagePackFormatter Instance = new();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StringDictionaryMessagePackFormatter" /> class.
+        /// </summary>
         internal StringDictionaryMessagePackFormatter()
         {
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Writes a non-null string dictionary as a map in its existing enumeration order.
+        /// </summary>
+        /// <param name="writer">
+        /// The MessagePack writer that receives the encoded value.
+        /// </param>
+        /// <param name="value">
+        /// The non-null dictionary whose keys and values are written.
+        /// </param>
+        /// <param name="options">
+        /// The serializer options supplied for the operation.
+        /// </param>
+        /// <exception cref="MessagePackSerializationException">
+        /// Thrown when <paramref name="value" /> or an entry's key or value is <see langword="null" />.
+        /// </exception>
         public void Serialize(ref MessagePackWriter writer, Dictionary<string, string> value, MessagePackSerializerOptions options)
         {
             if (value == null)
@@ -43,7 +60,21 @@ namespace Mycelium.SDK.Serializer.MessagePack
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Reads a non-null string dictionary from a map with unique, non-null string keys and values.
+        /// </summary>
+        /// <param name="reader">
+        /// The MessagePack reader from which the encoded value is read.
+        /// </param>
+        /// <param name="options">
+        /// The serializer options supplied for the operation.
+        /// </param>
+        /// <returns>
+        /// The decoded dictionary using ordinal key comparison.
+        /// </returns>
+        /// <exception cref="MessagePackSerializationException">
+        /// Thrown when the value is <c>nil</c>, is not a map, contains non-string or <c>nil</c> entries, or contains duplicate keys.
+        /// </exception>
         public Dictionary<string, string> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())

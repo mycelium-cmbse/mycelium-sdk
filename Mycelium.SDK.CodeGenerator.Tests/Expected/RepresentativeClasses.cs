@@ -11,14 +11,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
 {
     using System.Collections;
 
-    /// <summary>
-    /// Provides the representative UML class selection used by class-based golden tests.
-    /// </summary>
     public sealed class RepresentativeClasses : IEnumerable<string>
     {
-        /// <summary>
-        /// The class names from the current INTERESTING CLASSES section of the model-inspector report.
-        /// </summary>
         private static readonly string[] Names =
         [
             "AuditableThing",
@@ -30,20 +24,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
             "ProjectMember"
         ];
 
-        /// <summary>
-        /// Returns the representative UML class names.
-        /// </summary>
-        /// <returns>
-        /// The representative UML class-name enumerator.
-        /// </returns>
         public IEnumerator<string> GetEnumerator() => ((IEnumerable<string>)Names).GetEnumerator();
 
-        /// <summary>
-        /// Returns the representative UML class names.
-        /// </summary>
-        /// <returns>
-        /// The representative UML class-name enumerator.
-        /// </returns>
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
     }
 }
