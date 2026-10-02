@@ -54,14 +54,14 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             {
                 Assert.That(payload.Created.Kind, Is.EqualTo(DateTimeKind.Utc));
                 Assert.That(payload.Created, Is.InRange(before, after));
-            }
 
-            foreach (var group in QueryGroupProperties())
-            {
-                var items = group.GetValue(payload);
+                foreach (var group in QueryGroupProperties())
+                {
+                    var items = group.GetValue(payload);
 
-                Assert.That(items, Is.InstanceOf<ICollection>(), group.Name);
-                Assert.That(((ICollection)items).Count, Is.Zero, group.Name);
+                    Assert.That(items, Is.InstanceOf<ICollection>(), group.Name);
+                    Assert.That(((ICollection)items).Count, Is.Zero, group.Name);
+                }
             }
         }
 
@@ -580,9 +580,16 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
                 return;
             }
 
-            Assert.That(actual, Has.Length.EqualTo(2));
-            Assert.That(actual[0], Is.TypeOf<FunctionalProjectPolicy>());
-            Assert.That(actual[1], Is.TypeOf<OrganizationPolicy>());
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(actual, Has.Length.EqualTo(2));
+
+                if (actual.Length == 2)
+                {
+                    Assert.That(actual[0], Is.TypeOf<FunctionalProjectPolicy>());
+                    Assert.That(actual[1], Is.TypeOf<OrganizationPolicy>());
+                }
+            }
 
             var functionalProjectPolicy = (FunctionalProjectPolicy)actual[0];
             var organizationPolicy = (OrganizationPolicy)actual[1];
