@@ -570,6 +570,24 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <summary>
         /// Groups the generated deserialization destination and value context.
         /// </summary>
+        /// <param name="Destination">
+        /// The generated expression identifying the assignment destination or target collection.
+        /// </param>
+        /// <param name="AddToCollection">
+        /// Whether to add the decoded value to a collection instead of assigning it.
+        /// </param>
+        /// <param name="Nullable">
+        /// Whether the decoded value may be <see langword="null" />.
+        /// </param>
+        /// <param name="ValueDescription">
+        /// The modeled value description used in validation messages.
+        /// </param>
+        /// <param name="LocalName">
+        /// The identifier used for a generated local variable.
+        /// </param>
+        /// <param name="IndentationLevel">
+        /// The indentation level of the generated statements.
+        /// </param>
         private readonly record struct DeserializationContext(string Destination, bool AddToCollection, bool Nullable, string ValueDescription, string LocalName, int IndentationLevel);
 
         /// <summary>

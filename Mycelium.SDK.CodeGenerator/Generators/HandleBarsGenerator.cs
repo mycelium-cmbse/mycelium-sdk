@@ -69,6 +69,12 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// <param name="name">
         /// The case-sensitive template name.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="name" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="name" /> is empty.
+        /// </exception>
         protected void RegisterTemplate(string name)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(name);
@@ -87,6 +93,12 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// <param name="name">
         /// The case-sensitive partial-template name.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="name" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="name" /> is empty.
+        /// </exception>
         protected void RegisterPartialTemplate(string name)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(name);

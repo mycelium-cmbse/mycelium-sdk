@@ -30,11 +30,28 @@ namespace Mycelium.SDK.Serializer.MessagePack
         [ThreadStatic]
         private static byte[] guidBuffer;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GuidMessagePackFormatter" /> class.
+        /// </summary>
         internal GuidMessagePackFormatter()
         {
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Writes an identifier as a 16-byte binary value in the default .NET Guid byte layout.
+        /// </summary>
+        /// <param name="writer">
+        /// The MessagePack writer that receives the encoded value.
+        /// </param>
+        /// <param name="value">
+        /// The identifier to write.
+        /// </param>
+        /// <param name="options">
+        /// The serializer options supplied for the operation.
+        /// </param>
+        /// <exception cref="MessagePackSerializationException">
+        /// Thrown when the identifier cannot be written as a 16-byte binary value.
+        /// </exception>
         public void Serialize(ref MessagePackWriter writer, Guid value, MessagePackSerializerOptions options)
         {
             var buffer = GetGuidBuffer();
@@ -48,7 +65,21 @@ namespace Mycelium.SDK.Serializer.MessagePack
             writer.WriteRaw(buffer);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Reads an identifier from a 16-byte binary value in the default .NET Guid byte layout.
+        /// </summary>
+        /// <param name="reader">
+        /// The MessagePack reader from which the encoded value is read.
+        /// </param>
+        /// <param name="options">
+        /// The serializer options supplied for the operation.
+        /// </param>
+        /// <returns>
+        /// The decoded identifier.
+        /// </returns>
+        /// <exception cref="MessagePackSerializationException">
+        /// Thrown when the value is <c>nil</c>, is not binary, or does not contain exactly 16 bytes.
+        /// </exception>
         public Guid Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             var bytes = reader.ReadBytes();
