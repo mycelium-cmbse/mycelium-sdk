@@ -35,54 +35,24 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             handlebars.RegisterHelper("Operation.WriteHttpMethodName", (writer, _, arguments) =>
             {
-                var searchResult = QueryOperation(arguments, "{{Operation.WriteHttpMethodName}}");
+                var searchResult = arguments.QuerySingle<SearchResult>("{{Operation.WriteHttpMethodName}}");
 
                 writer.WriteSafeString(searchResult.QueryHttpMethodName());
             });
 
             handlebars.RegisterHelper("Operation.WriteRouteTemplate", (writer, _, arguments) =>
             {
-                var searchResult = QueryOperation(arguments, "{{Operation.WriteRouteTemplate}}");
+                var searchResult = arguments.QuerySingle<SearchResult>("{{Operation.WriteRouteTemplate}}");
 
                 writer.WriteSafeString(searchResult.QueryRouteTemplate());
             });
 
             handlebars.RegisterHelper("Operation.WriteHandlerName", (writer, _, arguments) =>
             {
-                var searchResult = QueryOperation(arguments, "{{Operation.WriteHandlerName}}");
+                var searchResult = arguments.QuerySingle<SearchResult>("{{Operation.WriteHandlerName}}");
 
                 writer.WriteSafeString(searchResult.QueryHandlerName());
             });
-        }
-
-        /// <summary>
-        /// Queries the single operation supplied to a Handlebars helper.
-        /// </summary>
-        /// <param name="arguments">
-        /// The Handlebars helper arguments.
-        /// </param>
-        /// <param name="helperName">
-        /// The helper name used in validation messages.
-        /// </param>
-        /// <returns>
-        /// The supplied operation.
-        /// </returns>
-        /// <exception cref="HandlebarsException">
-        /// Thrown when exactly one <see cref="SearchResult" /> argument was not supplied.
-        /// </exception>
-        private static SearchResult QueryOperation(Arguments arguments, string helperName)
-        {
-            if (arguments.Length != 1)
-            {
-                throw new HandlebarsException($"{helperName} requires exactly one argument.");
-            }
-
-            if (arguments.Single() is not SearchResult searchResult)
-            {
-                throw new HandlebarsException($"{helperName} requires a SearchResult argument.");
-            }
-
-            return searchResult;
         }
     }
 }

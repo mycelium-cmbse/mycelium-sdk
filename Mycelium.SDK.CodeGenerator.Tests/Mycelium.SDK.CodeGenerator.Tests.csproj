@@ -56,6 +56,12 @@
         <None Include="Expected\OpenApi\**\*.cs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+
+        <Compile Remove="Expected\Pim\**\*.cs"/>
+
+        <None Include="Expected\Pim\**\*.cs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <ItemGroup>

@@ -36,15 +36,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             handlebars.RegisterHelper("Enumeration.WriteDtoUsing", (writer, _, arguments) =>
             {
-                if (arguments.Length != 1)
-                {
-                    throw new HandlebarsException("{{Enumeration.WriteDtoUsing}} requires exactly one argument.");
-                }
-
-                if (arguments.Single() is not IEnumeration enumeration)
-                {
-                    throw new HandlebarsException("{{Enumeration.WriteDtoUsing}} requires an IEnumeration argument.");
-                }
+                var enumeration = arguments.QuerySingle<IEnumeration>("{{Enumeration.WriteDtoUsing}}");
 
                 if (RequiresDtoNamespace(enumeration))
                 {

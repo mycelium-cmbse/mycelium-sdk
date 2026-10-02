@@ -33,20 +33,20 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper("Class.QueryDtoInterfaceProperties", (_, arguments) => QueryClass(arguments, "{{Class.QueryDtoInterfaceProperties}}").QueryDtoInterfaceProperties());
+            handlebars.RegisterHelper("Class.QueryDtoInterfaceProperties", (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryDtoInterfaceProperties}}").QueryDtoInterfaceProperties());
 
-            handlebars.RegisterHelper("Class.QueryDtoImplementationProperties", (_, arguments) => QueryClass(arguments, "{{Class.QueryDtoImplementationProperties}}").QueryDtoImplementationProperties());
+            handlebars.RegisterHelper("Class.QueryDtoImplementationProperties", (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryDtoImplementationProperties}}").QueryDtoImplementationProperties());
 
             handlebars.RegisterHelper("Class.WriteDtoInterfaceIdentifier", (writer, _, arguments) =>
             {
-                var umlClass = QueryClass(arguments, "{{Class.WriteDtoInterfaceIdentifier}}");
+                var umlClass = arguments.QuerySingle<IClass>("{{Class.WriteDtoInterfaceIdentifier}}");
 
                 writer.WriteSafeString(QueryGeneratedInterfaceIdentifier(umlClass));
             });
 
             handlebars.RegisterHelper("Class.WriteDtoInterfaceGeneralizations", (writer, _, arguments) =>
             {
-                var umlClass = QueryClass(arguments, "{{Class.WriteDtoInterfaceGeneralizations}}");
+                var umlClass = arguments.QuerySingle<IClass>("{{Class.WriteDtoInterfaceGeneralizations}}");
                 var inheritance = string.Join(", ", umlClass.QueryGeneralizations()
                     .Select(QueryGeneratedInterfaceIdentifier));
 
@@ -70,19 +70,19 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper("Class.QueryPocoInterfaceProperties", (_, arguments) => QueryClass(arguments, "{{Class.QueryPocoInterfaceProperties}}").QueryPocoInterfaceProperties());
+            handlebars.RegisterHelper("Class.QueryPocoInterfaceProperties", (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryPocoInterfaceProperties}}").QueryPocoInterfaceProperties());
 
-            handlebars.RegisterHelper("Class.QueryPocoImplementationProperties", (_, arguments) => QueryClass(arguments, "{{Class.QueryPocoImplementationProperties}}").QueryPocoImplementationProperties());
+            handlebars.RegisterHelper("Class.QueryPocoImplementationProperties", (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryPocoImplementationProperties}}").QueryPocoImplementationProperties());
 
             handlebars.RegisterHelper("Class.WritePocoInterfaceIdentifier", (writer, _, arguments) =>
             {
-                var umlClass = QueryClass(arguments, "{{Class.WritePocoInterfaceIdentifier}}");
+                var umlClass = arguments.QuerySingle<IClass>("{{Class.WritePocoInterfaceIdentifier}}");
                 writer.WriteSafeString(QueryGeneratedInterfaceIdentifier(umlClass));
             });
 
             handlebars.RegisterHelper("Class.WritePocoInterfaceGeneralizations", (writer, _, arguments) =>
             {
-                var umlClass = QueryClass(arguments, "{{Class.WritePocoInterfaceGeneralizations}}");
+                var umlClass = arguments.QuerySingle<IClass>("{{Class.WritePocoInterfaceGeneralizations}}");
 
                 var inheritance = string.Join(", ", umlClass.QueryGeneralizations()
                     .Select(QueryGeneratedInterfaceIdentifier));
@@ -92,36 +92,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     writer.WriteSafeString($" : {inheritance}");
                 }
             });
-        }
-
-        /// <summary>
-        /// Queries the single UML class supplied to a Handlebars helper.
-        /// </summary>
-        /// <param name="arguments">
-        /// The Handlebars helper arguments.
-        /// </param>
-        /// <param name="helperName">
-        /// The helper name used in validation messages.
-        /// </param>
-        /// <returns>
-        /// The supplied UML class.
-        /// </returns>
-        /// <exception cref="HandlebarsException">
-        /// Thrown when exactly one <see cref="IClass" /> argument was not supplied.
-        /// </exception>
-        private static IClass QueryClass(Arguments arguments, string helperName)
-        {
-            if (arguments.Length != 1)
-            {
-                throw new HandlebarsException($"{helperName} requires exactly one argument.");
-            }
-
-            if (arguments.Single() is not IClass umlClass)
-            {
-                throw new HandlebarsException($"{helperName} requires an IClass argument.");
-            }
-
-            return umlClass;
         }
 
         /// <summary>
