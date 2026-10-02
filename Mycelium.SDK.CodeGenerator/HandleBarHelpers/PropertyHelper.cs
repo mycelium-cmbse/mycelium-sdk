@@ -33,6 +33,11 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         private const string MessagePackWriteNilStatement = "writer.WriteNil();";
 
         /// <summary>
+        /// The generated condition that reads a MessagePack nil value.
+        /// </summary>
+        private const string MessagePackTryReadNilCondition = "if (reader.TryReadNil())";
+
+        /// <summary>
         /// Registers the DTO property helpers.
         /// </summary>
         /// <param name="handlebars">
@@ -237,7 +242,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             var countName = $"messagePack{propertyName.TrimStart('@')}Count";
 
-            AppendLine(builder, 0, "if (reader.TryReadNil())");
+            AppendLine(builder, 0, MessagePackTryReadNilCondition);
             AppendLine(builder, 0, "{");
             AppendLine(builder, 1, $"{destination} = null;");
             AppendLine(builder, 0, "}");
@@ -468,7 +473,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             var (destination, addToCollection, _, valueDescription, _, indentationLevel) = context;
 
-            AppendLine(builder, indentationLevel, "if (reader.TryReadNil())");
+            AppendLine(builder, indentationLevel, MessagePackTryReadNilCondition);
             AppendLine(builder, indentationLevel, "{");
 
             if (nullable)
@@ -547,7 +552,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             if (nullable)
             {
-                AppendLine(builder, indentationLevel, "if (reader.TryReadNil())");
+                AppendLine(builder, indentationLevel, MessagePackTryReadNilCondition);
                 AppendLine(builder, indentationLevel, "{");
                 AppendAssignment(builder, destination, addToCollection, "null", indentationLevel + 1);
                 AppendLine(builder, indentationLevel, "}");
@@ -665,7 +670,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 return;
             }
 
-            AppendLine(builder, indentationLevel, "if (reader.TryReadNil())");
+            AppendLine(builder, indentationLevel, MessagePackTryReadNilCondition);
             AppendLine(builder, indentationLevel, "{");
             AppendAssignment(builder, destination, addToCollection, "null", indentationLevel + 1);
             AppendLine(builder, indentationLevel, "}");
