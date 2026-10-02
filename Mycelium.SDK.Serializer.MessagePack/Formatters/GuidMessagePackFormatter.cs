@@ -37,7 +37,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// <inheritdoc />
         public void Serialize(ref MessagePackWriter writer, Guid value, MessagePackSerializerOptions options)
         {
-            var buffer = guidBuffer ??= new byte[16];
+            var buffer = GetGuidBuffer();
 
             if (!value.TryWriteBytes(buffer))
             {
@@ -75,5 +75,13 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
             return new Guid(buffer);
         }
+
+        /// <summary>
+        /// Gets the reusable 16-byte buffer for the current thread, initializing it when needed.
+        /// </summary>
+        /// <returns>
+        /// The reusable buffer for the current thread.
+        /// </returns>
+        private static byte[] GetGuidBuffer() => guidBuffer ??= new byte[16];
     }
 }
