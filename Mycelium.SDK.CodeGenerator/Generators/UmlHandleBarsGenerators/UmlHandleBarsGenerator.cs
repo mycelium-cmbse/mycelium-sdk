@@ -144,6 +144,23 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
+        /// Selects every concrete FunctionalData class in ordinal type-name order.
+        /// </summary>
+        /// <param name="classes">
+        /// The FunctionalData classes selected from the loaded model.
+        /// </param>
+        /// <returns>
+        /// The deterministically ordered concrete UML classes.
+        /// </returns>
+        protected static IClass[] QueryConcreteClasses(IEnumerable<IClass> classes)
+        {
+            return classes
+                .Where(umlClass => !umlClass.IsAbstract)
+                .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal)
+                .ToArray();
+        }
+
+        /// <summary>
         /// Configures documentation symbols from the current model payload.
         /// </summary>
         /// <param name="payload">

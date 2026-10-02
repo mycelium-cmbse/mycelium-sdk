@@ -58,10 +58,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var payload = CreateHandlebarsPayload(xmiReaderResult);
 
-            var concreteClasses = payload.Classes
-                .Where(umlClass => !umlClass.IsAbstract)
-                .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal)
-                .ToArray();
+            var concreteClasses = QueryConcreteClasses(payload.Classes);
 
             var generatedFiles = concreteClasses
                 .Select(this.RenderSerializer)
