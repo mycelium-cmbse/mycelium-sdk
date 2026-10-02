@@ -42,8 +42,8 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         {
             using (Assert.EnterMultipleScope())
             {
-                Assert.Throws<NotSupportedException>(() => DataFormatterResolver.Instance.GetFormatter<IComment>());
-                Assert.Throws<NotSupportedException>(() => DataFormatterResolver.Instance.GetFormatter<object>());
+                Assert.That(() => DataFormatterResolver.Instance.GetFormatter<IComment>(), Throws.TypeOf<NotSupportedException>());
+                Assert.That(() => DataFormatterResolver.Instance.GetFormatter<object>(), Throws.TypeOf<NotSupportedException>());
             }
         }
 
@@ -106,9 +106,11 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         {
             var payload = CreateFunctionalProjectPolicyPayload(16, createdOn: value);
 
-            var exception = Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions));
-
-            Assert.That(exception!.ToString(), Does.Contain("DateTime value 'CreatedOn' is not in the invariant round-trip format."));
+            Assert.That(
+                () => MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions),
+                Throws.TypeOf<MessagePackSerializationException>()
+                    .And.Matches<MessagePackSerializationException>(exception =>
+                        exception.ToString().Contains("DateTime value 'CreatedOn' is not in the invariant round-trip format.", StringComparison.Ordinal)));
         }
 
         [Test]
@@ -116,7 +118,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         {
             var payload = CreateFunctionalProjectPolicyPayload(16, nativeCreatedOn: true);
 
-            Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions));
+            Assert.That(() => MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions), Throws.TypeOf<MessagePackSerializationException>());
         }
 
         [Test]
@@ -124,7 +126,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         {
             var payload = CreateFunctionalProjectPolicyPayload(16, nilCreatedOn: true);
 
-            Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions));
+            Assert.That(() => MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions), Throws.TypeOf<MessagePackSerializationException>());
         }
 
         [Test]
@@ -254,7 +256,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             var dto = CreateComment();
             dto.CommentStatus = (CommentStatus)int.MaxValue;
 
-            Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Serialize(dto, SerializerOptions));
+            Assert.That(() => MessagePackSerializer.Serialize(dto, SerializerOptions), Throws.TypeOf<MessagePackSerializationException>());
         }
 
         [TestCase("OPEN")]
@@ -265,9 +267,11 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
 
             var payload = CreateCommentStatusPayload(status);
 
-            var exception = Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<Comment>(payload, SerializerOptions));
-
-            Assert.That(exception!.ToString(), Does.Contain($"Value '{status}' is not valid for CommentStatus."));
+            Assert.That(
+                () => MessagePackSerializer.Deserialize<Comment>(payload, SerializerOptions),
+                Throws.TypeOf<MessagePackSerializationException>()
+                    .And.Matches<MessagePackSerializationException>(exception =>
+                        exception.ToString().Contains($"Value '{status}' is not valid for CommentStatus.", StringComparison.Ordinal)));
         }
 
         [Test]
@@ -277,9 +281,11 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
 
             var payload = CreateFunctionalProjectPolicyPayload(15);
 
-            var exception = Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions));
-
-            Assert.That(exception!.ToString(), Does.Contain("Expected Guid as 16 bytes, but found 15 bytes."));
+            Assert.That(
+                () => MessagePackSerializer.Deserialize<FunctionalProjectPolicy>(payload, SerializerOptions),
+                Throws.TypeOf<MessagePackSerializationException>()
+                    .And.Matches<MessagePackSerializationException>(exception =>
+                        exception.ToString().Contains("Expected Guid as 16 bytes, but found 15 bytes.", StringComparison.Ordinal)));
         }
 
         [Test]
@@ -394,7 +400,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         {
             var payload = CreateDuplicateDictionaryPayload();
 
-            Assert.Throws<MessagePackSerializationException>(() => MessagePackFormatterProbe.DeserializeStringDictionary(payload));
+            Assert.That(() => MessagePackFormatterProbe.DeserializeStringDictionary(payload), Throws.TypeOf<MessagePackSerializationException>());
         }
 
         [TestCase(10)]
@@ -403,9 +409,11 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         {
             var payload = CreateIncorrectFieldCountPayload(fieldCount);
 
-            var exception = Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<Comment>(payload, SerializerOptions));
-
-            Assert.That(exception!.ToString(), Does.Contain($"Comment contains {fieldCount} fields; exactly 11 fields are required."));
+            Assert.That(
+                () => MessagePackSerializer.Deserialize<Comment>(payload, SerializerOptions),
+                Throws.TypeOf<MessagePackSerializationException>()
+                    .And.Matches<MessagePackSerializationException>(exception =>
+                        exception.ToString().Contains($"Comment contains {fieldCount} fields; exactly 11 fields are required.", StringComparison.Ordinal)));
         }
 
         [Test]
