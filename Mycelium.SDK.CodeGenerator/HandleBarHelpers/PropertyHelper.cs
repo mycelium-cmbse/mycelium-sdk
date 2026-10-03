@@ -119,14 +119,14 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             handlebars.RegisterHelper("Property.WriteMessagePackSerialization", (writer, _, arguments) =>
             {
-                var property = QueryProperty(arguments, "{{Property.WriteMessagePackSerialization}}");
+                var property = arguments.QuerySingle<IProperty>("{{Property.WriteMessagePackSerialization}}");
 
                 writer.WriteSafeString(RenderMessagePackSerialization(property));
             });
 
             handlebars.RegisterHelper("Property.WriteMessagePackDeserialization", (writer, _, arguments) =>
             {
-                var property = QueryProperty(arguments, "{{Property.WriteMessagePackDeserialization}}");
+                var property = arguments.QuerySingle<IProperty>("{{Property.WriteMessagePackDeserialization}}");
 
                 writer.WriteSafeString(RenderMessagePackDeserialization(property));
             });
