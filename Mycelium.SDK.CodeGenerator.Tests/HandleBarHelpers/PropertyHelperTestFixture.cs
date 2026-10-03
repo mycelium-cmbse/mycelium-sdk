@@ -328,6 +328,90 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             }
         }
 
+        [Test]
+        public void Verify_that_nullable_DateTime_MessagePack_code_handles_null_and_non_null_values()
+        {
+            var property = new Property
+            {
+                XmiId = "optional-date-time",
+                Name = "optionalDateTime",
+                Type = new PrimitiveType { XmiId = "date-time-type", Name = "DateTime" }
+            };
+
+            property.LowerValue.Add(new LiteralInteger { Value = 0 });
+            property.UpperValue.Add(new LiteralUnlimitedNatural { Value = "1" });
+
+            var expectedSerialization = """
+                if (dto.OptionalDateTime.HasValue)
+                {
+                    WriteRoundTripDateTime(ref writer, dto.OptionalDateTime.Value);
+                }
+                else
+                {
+                    writer.WriteNil();
+                }
+                """;
+            var expectedDeserialization = """
+                if (reader.TryReadNil())
+                {
+                    dto.OptionalDateTime = null;
+                }
+                else
+                {
+                    dto.OptionalDateTime = ReadRoundTripDateTime(ref reader, "OptionalDateTime");
+                }
+                """;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Render(property, "Serialization"), Is.EqualTo(expectedSerialization + Environment.NewLine));
+
+                Assert.That(Render(property, "Deserialization"), Is.EqualTo(expectedDeserialization + Environment.NewLine));
+            }
+        }
+
+        [Test]
+        public void Verify_that_nullable_enumeration_MessagePack_code_handles_null_and_delegates_non_null_values()
+        {
+            var property = new Property
+            {
+                XmiId = "optional-enumeration",
+                Name = "optionalEnumeration",
+                Type = new Enumeration { XmiId = "enumeration-type", Name = "OptionalKind" }
+            };
+
+            property.LowerValue.Add(new LiteralInteger { Value = 0 });
+            property.UpperValue.Add(new LiteralUnlimitedNatural { Value = "1" });
+
+            var expectedSerialization = """
+                if (dto.OptionalEnumeration.HasValue)
+                {
+                    OptionalKindMessagePackFormatter.Instance.Serialize(ref writer, dto.OptionalEnumeration.Value, options);
+                }
+                else
+                {
+                    writer.WriteNil();
+                }
+                """;
+            var expectedDeserialization = """
+                if (reader.TryReadNil())
+                {
+                    dto.OptionalEnumeration = null;
+                }
+                else
+                {
+                    dto.OptionalEnumeration = OptionalKindMessagePackFormatter.Instance.Deserialize(ref reader, options);
+                }
+                """;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Render(property, "Serialization"), Is.EqualTo(expectedSerialization + Environment.NewLine));
+
+                Assert.That(Render(property, "Deserialization"), Is.EqualTo(expectedDeserialization + Environment.NewLine));
+            }
+        }
+
         private static Property CreateUriProperty(bool optional)
         {
             var property = new Property
