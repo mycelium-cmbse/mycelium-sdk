@@ -10,7 +10,6 @@
 namespace Mycelium.SDK.POCO
 {
     using System;
-    using System.Linq;
 
     /// <summary>
     /// Provides handwritten behavior for a project membership.
@@ -27,7 +26,8 @@ namespace Mycelium.SDK.POCO
         /// </returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown when the object graph lacks the required user, project,
-        /// owning organization, or organization-membership collection.
+        /// owning organization, or organization-membership collection, or when a membership
+        /// entry or its required organization is null.
         /// </exception>
         private bool ComputeIsOutsideCollaborator()
         {
@@ -39,7 +39,21 @@ namespace Mycelium.SDK.POCO
 
             var organizationMemberships = user.IsPartOfOrganizations ?? throw new InvalidOperationException("A user must provide its organization memberships.");
 
-            return organizationMemberships.All(membership => membership?.Organization?.Id != owningOrganization.Id);
+            var hasMatchingMembership = false;
+
+            foreach (var membership in organizationMemberships)
+            {
+                if (membership == null)
+                {
+                    throw new InvalidOperationException("An organization-membership entry must not be null.");
+                }
+
+                var organization = membership.Organization ?? throw new InvalidOperationException("An organization membership must reference an organization.");
+
+                hasMatchingMembership |= organization.Id == owningOrganization.Id;
+            }
+
+            return !hasMatchingMembership;
         }
     }
 }

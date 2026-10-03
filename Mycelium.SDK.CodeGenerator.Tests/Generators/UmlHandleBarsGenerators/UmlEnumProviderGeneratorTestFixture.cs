@@ -63,16 +63,16 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var stagedFileNames = QueryCSharpFileNames(this.stagingDirectory);
-            var committedFileNames = QueryCSharpFileNames(this.committedDirectory);
+            var stagedFileNames = GeneratorSetupFixture.QueryRelativeFileNames(this.stagingDirectory);
+            var committedFileNames = GeneratorSetupFixture.QueryRelativeFileNames(this.committedDirectory);
 
             Assert.That(stagedFileNames, Is.EqualTo(committedFileNames), "The staged and committed provider file sets differ.");
 
             foreach (var fileName in stagedFileNames)
             {
-                var stagedSource = await File.ReadAllTextAsync(Path.Combine(this.stagingDirectory.FullName, fileName), StrictUtf8WithoutBom);
+                var stagedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
 
-                var committedSource = await File.ReadAllTextAsync(Path.Combine(this.committedDirectory.FullName, fileName), StrictUtf8WithoutBom);
+                var committedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.committedDirectory.FullName, fileName));
 
                 Assert.That(stagedSource, Is.EqualTo(committedSource), $"Staged provider '{fileName}' differs from committed output.");
             }
@@ -141,9 +141,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var expectedSource = await File.ReadAllTextAsync(expectedPath, StrictUtf8WithoutBom);
+            var expectedSource = await GeneratorSetupFixture.ReadSourceAsync(expectedPath);
 
-            var stagedSource = await File.ReadAllTextAsync(stagedPath, StrictUtf8WithoutBom);
+            var stagedSource = await GeneratorSetupFixture.ReadSourceAsync(stagedPath);
 
             Assert.That(stagedSource, Is.EqualTo(expectedSource), $"Generated provider '{fileName}' differs from its reviewed golden.");
         }

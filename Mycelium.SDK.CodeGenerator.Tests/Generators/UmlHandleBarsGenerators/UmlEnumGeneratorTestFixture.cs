@@ -95,11 +95,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             foreach (var fileName in stagedFileNames)
             {
-                var stagedBytes = await File.ReadAllBytesAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
+                var stagedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
 
-                var committedBytes = await File.ReadAllBytesAsync(Path.Combine(this.committedDirectory.FullName, fileName));
+                var committedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.committedDirectory.FullName, fileName));
 
-                Assert.That(stagedBytes, Is.EqualTo(committedBytes), $"Staged enum '{fileName}' differs byte-for-byte from the committed SDK source.");
+                Assert.That(stagedSource, Is.EqualTo(committedSource), $"Staged enum '{fileName}' differs from the committed SDK source.");
             }
         }
 
@@ -143,11 +143,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         {
             var fileName = $"{enumerationName}.cs";
 
-            var expectedBytes = await File.ReadAllBytesAsync(Path.Combine(this.expectedDirectory.FullName, fileName));
+            var expectedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.expectedDirectory.FullName, fileName));
 
-            var generatedBytes = await File.ReadAllBytesAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
+            var generatedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
 
-            Assert.That(generatedBytes, Is.EqualTo(expectedBytes), $"Generated '{fileName}' differs byte-for-byte from its approved golden.");
+            Assert.That(generatedSource, Is.EqualTo(expectedSource), $"Generated '{fileName}' differs from its approved golden.");
         }
 
         private static Enumeration CreateEnumeration(string enumerationName, params string[] literalNames)

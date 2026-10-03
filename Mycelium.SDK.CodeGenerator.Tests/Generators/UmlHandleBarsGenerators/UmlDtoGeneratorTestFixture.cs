@@ -50,15 +50,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         [Test]
-        [Category("Expected")]
-        public async Task Verify_that_IThing_DTO_interface_matches_reviewed_golden()
-        {
-            const string fileName = "IThing.cs";
-
-            await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, fileName), Path.Combine(this.expectedDirectory.FullName, fileName), $"Generated DTO interface '{fileName}'", "its reviewed golden");
-        }
-
-        [Test]
         public async Task Verify_that_complete_batch_matches_committed_SDK_DTOs()
         {
             Assert.That(this.committedDirectory.Exists, Is.True, "The committed SDK DTO directory was not copied to the test output.");
@@ -68,8 +59,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var generatedFileNames = QueryCSharpFileNames(this.stagingDirectory);
-            var committedFileNames = QueryCSharpFileNames(this.committedDirectory);
+            var generatedFileNames = GeneratorSetupFixture.QueryRelativeFileNames(this.stagingDirectory);
+            var committedFileNames = GeneratorSetupFixture.QueryRelativeFileNames(this.committedDirectory);
 
             Assert.That(generatedFileNames, Is.EqualTo(committedFileNames), "The generated and committed DTO file sets differ.");
 

@@ -165,6 +165,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <returns>
         /// The corresponding POCO element type.
         /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the property's UML type is unresolved, unnamed, or unsupported.
+        /// </exception>
         private static string QueryPocoElementTypeName(this IProperty property)
         {
             if (property.Type is null)
@@ -193,6 +196,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <returns>
         /// The legal generated interface identifier.
         /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when <paramref name="umlClass" /> has no name.
+        /// </exception>
         private static string QueryPocoInterfaceTypeName(IClass umlClass, IProperty property)
         {
             if (string.IsNullOrWhiteSpace(umlClass.Name))
@@ -215,6 +221,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <returns>
         /// The corresponding C# primitive or custom primitive representation.
         /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when <paramref name="primitiveType" /> has no C# type name.
+        /// </exception>
         private static string QueryPrimitiveTypeName(IPrimitiveType primitiveType, IProperty property)
         {
             var typeName = primitiveType.QueryCSharpTypeName();

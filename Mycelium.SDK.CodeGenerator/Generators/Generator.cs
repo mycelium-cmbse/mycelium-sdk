@@ -124,7 +124,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
 
             var filePath = Path.Combine(outputDirectory.FullName, fileName);
 
-            await File.WriteAllTextAsync(filePath, generatedCode, Utf8WithoutBom);
+            await File.WriteAllTextAsync(filePath, generatedCode.ReplaceLineEndings("\r\n"), Utf8WithoutBom);
         }
 
         /// <summary>

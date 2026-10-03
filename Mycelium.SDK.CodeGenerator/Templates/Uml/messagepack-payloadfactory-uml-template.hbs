@@ -1,0 +1,115 @@
+// ------------------------------------------------------------------------------------------------
+//  <copyright file="PayloadFactory.cs" company="Starion Group S.A.">
+//
+//    Copyright 2026 Starion Group S.A.
+//    SPDX-License-Identifier: Apache-2.0
+//
+//  </copyright>
+//  ------------------------------------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
+namespace Mycelium.SDK.Serializer.MessagePack
+{
+    using System;
+    using System.CodeDom.Compiler;
+    using System.Collections.Generic;
+
+    using Mycelium.SDK.DTO;
+
+    /// <summary>
+    /// Converts between DTO sequences and the grouped MessagePack payload.
+    /// </summary>
+    [GeneratedCode("Mycelium.SDK", "latest")]
+    internal static partial class PayloadFactory
+    {
+        /// <summary>
+        /// Creates a payload from concrete DTOs using exact runtime types.
+        /// </summary>
+        /// <param name="dataItems">
+        /// The DTOs to group.
+        /// </param>
+        /// <returns>
+        /// A new payload containing every supplied DTO in its concrete-type group.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="dataItems" /> or one of its items is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when an item has no generated concrete DTO group.
+        /// </exception>
+        internal static Payload ToPayload(this IEnumerable<IThing> dataItems)
+        {
+            if (dataItems == null)
+            {
+                throw new ArgumentNullException(nameof(dataItems));
+            }
+
+            var payload = new Payload();
+
+            foreach (var dataItem in dataItems)
+            {
+                if (dataItem == null)
+                {
+                    throw new ArgumentNullException(nameof(dataItems), "The DTO sequence contains a null item.");
+                }
+
+                var runtimeType = dataItem.GetType();
+
+                {{ #each this as | umlClass | }}
+                if (runtimeType == typeof({{ #NamedElement.WriteIdentifier umlClass }}))
+                {
+                    payload.{{ #NamedElement.WriteIdentifier umlClass }}.Add(({{ #NamedElement.WriteIdentifier umlClass }})dataItem);
+                    continue;
+                }
+
+                {{ /each }}
+                throw new NotSupportedException($"No MessagePack payload group is registered for exact type '{runtimeType.FullName}'.");
+            }
+
+            return payload;
+        }
+
+        /// <summary>
+        /// Materializes the DTOs from each concrete-type group in envelope order.
+        /// </summary>
+        /// <param name="payload">
+        /// The payload whose DTOs are returned.
+        /// </param>
+        /// <returns>
+        /// A materialized list of the payload's DTOs.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="payload" /> or one of its group items is <see langword="null" />.
+        /// </exception>
+        internal static IReadOnlyList<IThing> ToDataItems(this Payload payload)
+        {
+            if (payload == null)
+            {
+                throw new ArgumentNullException(nameof(payload));
+            }
+
+            var dataItems = new List<IThing>();
+
+            {{ #each this as | umlClass | }}
+            foreach (var dataItem in payload.{{ #NamedElement.WriteIdentifier umlClass }})
+            {
+                if (dataItem == null)
+                {
+                    throw new ArgumentNullException(nameof(payload), "A payload group contains a null DTO.");
+                }
+
+                dataItems.Add(dataItem);
+            }
+
+            {{ /each }}
+            return dataItems;
+        }
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

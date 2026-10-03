@@ -70,8 +70,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var generatedFiles = payload.Classes
                 .Select(this.RenderInterface)
-                .Concat(payload.Classes
-                .Where(umlClass => !umlClass.IsAbstract)
+                .Concat(QueryConcreteClasses(payload.Classes)
                 .Select(this.RenderClass))
                 .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
                 .ToArray();

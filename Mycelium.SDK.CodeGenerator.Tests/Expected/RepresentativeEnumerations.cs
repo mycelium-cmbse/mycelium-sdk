@@ -11,14 +11,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
 {
     using System.Collections;
 
-    /// <summary>
-    /// Provides the bounded representative enumeration selection used by golden tests.
-    /// </summary>
     public sealed class RepresentativeEnumerations : IEnumerable<string>
     {
-        /// <summary>
-        /// The representative enumeration names and their distinct coverage reasons.
-        /// </summary>
         private static readonly string[] Names =
         [
             // Plain enumeration and literal-documentation baseline without documentation references.
@@ -31,20 +25,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
             "ProjectMemberRole"
         ];
 
-        /// <summary>
-        /// Returns the representative enumeration names.
-        /// </summary>
-        /// <returns>
-        /// The representative enumeration-name enumerator.
-        /// </returns>
         public IEnumerator<string> GetEnumerator() => ((IEnumerable<string>)Names).GetEnumerator();
 
-        /// <summary>
-        /// Returns the representative enumeration names.
-        /// </summary>
-        /// <returns>
-        /// The representative enumeration-name enumerator.
-        /// </returns>
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
     }
 }

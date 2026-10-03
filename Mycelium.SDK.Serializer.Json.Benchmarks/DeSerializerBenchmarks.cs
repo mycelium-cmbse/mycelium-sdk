@@ -71,6 +71,9 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         /// <summary>
         /// Generates the object payload outside the measured operation.
         /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when an oversized object payload does not exceed the stream-copy buffer.
+        /// </exception>
         [GlobalSetup]
         public void GlobalSetup()
         {
@@ -205,6 +208,15 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         /// <param name="streamImplementation">
         /// The requested stream implementation.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="payload" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="expectedResultCount" /> is less than one.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="streamImplementation" /> does not specify <see cref="MemoryStream" />.
+        /// </exception>
         internal DeserializationOperation(byte[] payload, int expectedResultCount, string streamImplementation)
         {
             ArgumentNullException.ThrowIfNull(payload);
@@ -242,6 +254,9 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         /// <returns>
         /// The validated materialized result.
         /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when deserialization fails the result or input-stream validation.
+        /// </exception>
         internal object DeSerialize()
         {
             this.PrepareInvocation();
@@ -257,6 +272,9 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         /// <returns>
         /// A task whose result is the validated materialized sequence.
         /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when deserialization fails the result or input-stream validation.
+        /// </exception>
         internal async Task<object> DeSerializeAsync()
         {
             this.PrepareInvocation();
@@ -280,6 +298,9 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         /// <returns>
         /// The validated sequence.
         /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the result or a DTO is null, the DTO count differs from the expected count, or the input stream was closed or not fully consumed.
+        /// </exception>
         private IEnumerable<IThing> ValidateResult(IEnumerable<IThing> result)
         {
             if (result == null)
@@ -370,6 +391,15 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         /// <returns>
         /// A task representing the measurement.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="logger" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="arguments" /> does not contain exactly two values or selects an unsupported operation.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when deserialization fails the result or input-stream validation.
+        /// </exception>
         internal static async Task RunAsync(IReadOnlyList<string> arguments, ILogger logger)
         {
             ArgumentNullException.ThrowIfNull(logger);
@@ -483,6 +513,9 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         /// <returns>
         /// The complete UTF-8 JSON payload.
         /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="contentLength" /> is negative.
+        /// </exception>
         internal static byte[] CreateObjectPayload(int contentLength)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(contentLength);
@@ -512,6 +545,9 @@ namespace Mycelium.SDK.Serializer.Json.Benchmarks
         /// <returns>
         /// The complete UTF-8 JSON payload.
         /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="objectCount" /> is less than one or <paramref name="contentLength" /> is negative.
+        /// </exception>
         internal static byte[] CreateArrayPayload(int objectCount, int contentLength)
         {
             ArgumentOutOfRangeException.ThrowIfLessThan(objectCount, 1);
