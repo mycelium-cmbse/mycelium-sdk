@@ -69,6 +69,32 @@ namespace Mycelium.SDK.Tests.Poco
             Assert.That(() => { _ = projectMember.IsOutsideCollaborator; }, Throws.TypeOf<InvalidOperationException>());
         }
 
+        [TestCase(false, false)]
+        [TestCase(false, true)]
+        [TestCase(true, false)]
+        [TestCase(true, true)]
+        public void VerifyThatIsOutsideCollaboratorThrowsForIncompleteMembershipData(bool nullMembership, bool matchingMembershipFirst)
+        {
+            var owningOrganization = new Organization { Id = Guid.Parse("11111111-1111-1111-1111-111111111111") };
+
+            var memberships = new List<IOrganizationMember>();
+
+            if (matchingMembershipFirst)
+            {
+                memberships.Add(new OrganizationMember { Organization = owningOrganization });
+            }
+
+            memberships.Add(nullMembership ? null : new OrganizationMember());
+
+            var projectMember = new ProjectMember
+            {
+                User = new User { IsPartOfOrganizations = memberships },
+                IsPartOf = new FunctionalProject { BelongsTo = owningOrganization }
+            };
+
+            Assert.That(() => { _ = projectMember.IsOutsideCollaborator; }, Throws.TypeOf<InvalidOperationException>());
+        }
+
         private static IEnumerable<TestCaseData> ProjectMembersWithMissingRequiredGraphData()
         {
             yield return new TestCaseData(new ProjectMember { IsPartOf = new FunctionalProject { BelongsTo = new Organization() } }).SetName("Missing user");

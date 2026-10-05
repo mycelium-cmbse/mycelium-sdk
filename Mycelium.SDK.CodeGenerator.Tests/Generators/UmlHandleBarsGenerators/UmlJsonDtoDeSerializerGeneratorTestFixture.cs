@@ -75,9 +75,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var stagedFileNames = QueryCSharpFileNames(this.stagingDirectory);
+            var stagedFileNames = GeneratorSetupFixture.QueryRelativeFileNames(this.stagingDirectory);
 
-            var committedFileNames = QueryCSharpFileNames(this.committedDirectory);
+            var committedFileNames = GeneratorSetupFixture.QueryRelativeFileNames(this.committedDirectory);
 
             Assert.That(stagedFileNames, Is.EqualTo(committedFileNames), "The staged and committed deserializer filename sets differ.");
 
@@ -218,9 +218,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var actualSource = await File.ReadAllTextAsync(actualPath, StrictUtf8WithoutBom);
+            var actualSource = await GeneratorSetupFixture.ReadSourceAsync(actualPath);
 
-            var expectedSource = await File.ReadAllTextAsync(expectedPath, StrictUtf8WithoutBom);
+            var expectedSource = await GeneratorSetupFixture.ReadSourceAsync(expectedPath);
 
             Assert.That(string.Equals(actualSource, expectedSource, StringComparison.Ordinal), Is.True, $"{actualDescription} differs from {expectedDescription}.");
         }

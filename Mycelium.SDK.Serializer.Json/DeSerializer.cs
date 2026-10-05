@@ -223,6 +223,15 @@ namespace Mycelium.SDK.Serializer.Json
         /// <returns>
         /// The number of bytes consumed from <paramref name="buffer" />.
         /// </returns>
+        /// <exception cref="JsonException">
+        /// Thrown when the JSON payload is malformed or violates the JSON DTO contract.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when an exact <c>@type</c> discriminator is not supported.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">
+        /// Thrown when <paramref name="cancellationToken" /> is cancelled.
+        /// </exception>
         private int ProcessBuffer(ReadOnlySpan<byte> buffer, bool isFinalBlock, ref JsonReaderState readerState, PayloadReaderContext context, CancellationToken cancellationToken)
         {
             var reader = new Utf8JsonReader(buffer, isFinalBlock, readerState);
@@ -307,6 +316,12 @@ namespace Mycelium.SDK.Serializer.Json
         /// <returns>
         /// The deserialized DTO.
         /// </returns>
+        /// <exception cref="JsonException">
+        /// Thrown when the JSON payload is malformed or violates the JSON DTO contract.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when an exact <c>@type</c> discriminator is not supported.
+        /// </exception>
         private IThing DeSerializeObjectPayload(ReadOnlySpan<byte> payload)
         {
             var reader = new Utf8JsonReader(payload);
@@ -340,6 +355,12 @@ namespace Mycelium.SDK.Serializer.Json
         /// <returns>
         /// The deserialized DTO.
         /// </returns>
+        /// <exception cref="JsonException">
+        /// Thrown when the JSON payload is malformed or violates the JSON DTO contract.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when an exact <c>@type</c> discriminator is not supported.
+        /// </exception>
         private IThing DeSerializeObject(ref Utf8JsonReader reader)
         {
             var typeName = ReadTypeName(ref reader);
@@ -357,6 +378,9 @@ namespace Mycelium.SDK.Serializer.Json
         /// <returns>
         /// The exact DTO type name from the <c>@type</c> property.
         /// </returns>
+        /// <exception cref="JsonException">
+        /// Thrown when the object is malformed or incomplete, or its top-level <c>@type</c> discriminator is missing, duplicated, or not a non-null string.
+        /// </exception>
         private static string ReadTypeName(ref Utf8JsonReader reader)
         {
             var discriminatorReader = reader;
@@ -612,6 +636,15 @@ namespace Mycelium.SDK.Serializer.Json
             /// <param name="cancellationToken">
             /// The token used to cancel the operation.
             /// </param>
+            /// <exception cref="JsonException">
+            /// Thrown when the JSON payload is malformed or violates the JSON DTO contract.
+            /// </exception>
+            /// <exception cref="NotSupportedException">
+            /// Thrown when an exact <c>@type</c> discriminator is not supported.
+            /// </exception>
+            /// <exception cref="OperationCanceledException">
+            /// Thrown when <paramref name="cancellationToken" /> is cancelled.
+            /// </exception>
             internal void CompleteObject(DeSerializer deSerializer, CancellationToken cancellationToken)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -638,6 +671,9 @@ namespace Mycelium.SDK.Serializer.Json
             /// <summary>
             /// Verifies that the input ended after one complete object-or-array root.
             /// </summary>
+            /// <exception cref="JsonException">
+            /// Thrown when the payload is empty or its object-or-array root is incomplete.
+            /// </exception>
             internal void ValidateCompleteInput()
             {
                 if (!this.RootStarted)

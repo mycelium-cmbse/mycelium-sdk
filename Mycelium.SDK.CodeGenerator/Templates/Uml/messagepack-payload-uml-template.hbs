@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="IThing.cs" company="Starion Group S.A.">
+//  <copyright file="Payload.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -11,22 +11,39 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.DTO
+namespace Mycelium.SDK.Serializer.MessagePack
 {
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
 
+    using Mycelium.SDK.DTO;
+
     /// <summary>
-    /// Base class of any entities defined in the Functional Data model.
+    /// Groups concrete DTOs for the positional MessagePack payload envelope.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial interface IThing
+    internal sealed partial class Payload
     {
         /// <summary>
-        /// Represents the unique identifier that allow entity identification.
+        /// Initializes a new payload with empty concrete-type groups.
         /// </summary>
-        Guid Id { get; set; }
+        public Payload()
+        {
+        }
+
+        /// <summary>
+        /// Gets or sets the UTC time at which this payload was created.
+        /// </summary>
+        internal DateTime Created { get; set; } = DateTime.UtcNow;
+
+        {{ #each this as | umlClass | }}
+        /// <summary>
+        /// Gets the {{ #NamedElement.WriteIdentifier umlClass }} DTO group.
+        /// </summary>
+        internal List<{{ #NamedElement.WriteIdentifier umlClass }}> {{ #NamedElement.WriteIdentifier umlClass }} { get; } = new();
+
+        {{ /each }}
     }
 }
 
