@@ -32,11 +32,6 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         public const string FunctionalDataPackageName = "FunctionalData";
 
         /// <summary>
-        /// The canonical URI used by the FunctionalData model to reference the standard UML primitive types.
-        /// </summary>
-        private const string PrimitiveTypesUri = "http://www.omg.org/spec/UML/20161101/PrimitiveTypes.xmi";
-
-        /// <summary>
         /// The XMI resource file names required for canonical offline FunctionalData loading.
         /// </summary>
         private static readonly string[] RequiredResourceFileNames =
@@ -53,7 +48,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// The directory containing the FunctionalData XMI resources.
         /// </param>
         /// <returns>
-        /// Reader settings that resolve every FunctionalData XMI dependency locally.
+        /// Reader settings with empty path maps that resolve FunctionalData dependencies without network access.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="resourcesDirectory" /> is <see langword="null" />.
@@ -65,10 +60,6 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             return new DefaultSettings
             {
                 LocalReferenceBasePath = resourcesDirectory.FullName,
-                PathMaps =
-                {
-                    [PrimitiveTypesUri] = Path.Combine(resourcesDirectory.FullName, "PrimitiveTypes.xmi")
-                },
                 UseStrictReading = true
             };
         }
