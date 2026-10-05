@@ -55,8 +55,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// The generated C# source.
         /// </param>
         /// <returns>
-        /// Formatted C# using CRLF line endings, or normalized rendered source when formatting
-        /// cannot process it.
+        /// Formatted C# whose line endings are uniformly those of the platform, or normalized rendered
+        /// source when formatting cannot process it.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="generatedCode" /> is <see langword="null" />.
@@ -78,19 +78,19 @@ namespace Mycelium.SDK.CodeGenerator.Generators
 
                 var formattedRoot = Formatter.Format(syntaxTree.GetRoot(), workspace);
 
-                return formattedRoot.SyntaxTree.GetText().ToString().ReplaceLineEndings("\r\n");
+                return formattedRoot.SyntaxTree.GetText().ToString().ReplaceLineEndings();
             }
             catch (ArgumentException)
             {
-                return renderedCode.ReplaceLineEndings("\r\n");
+                return renderedCode.ReplaceLineEndings();
             }
             catch (InvalidOperationException)
             {
-                return renderedCode.ReplaceLineEndings("\r\n");
+                return renderedCode.ReplaceLineEndings();
             }
             catch (NotSupportedException)
             {
-                return renderedCode.ReplaceLineEndings("\r\n");
+                return renderedCode.ReplaceLineEndings();
             }
         }
 
@@ -124,7 +124,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
 
             var filePath = Path.Combine(outputDirectory.FullName, fileName);
 
-            await File.WriteAllTextAsync(filePath, generatedCode.ReplaceLineEndings("\r\n"), Utf8WithoutBom);
+            await File.WriteAllTextAsync(filePath, generatedCode.ReplaceLineEndings(), Utf8WithoutBom);
         }
 
         /// <summary>

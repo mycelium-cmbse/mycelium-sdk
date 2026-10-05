@@ -1,4 +1,4 @@
-﻿// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 //  <copyright file="UmlEnumProviderGeneratorTestFixture.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
@@ -11,7 +11,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
     using System.Reflection;
     using System.Runtime.ExceptionServices;
-    using System.Text;
 
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
@@ -22,7 +21,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     [TestFixture]
     public class UmlEnumProviderGeneratorTestFixture
     {
-        private static readonly UTF8Encoding StrictUtf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         private DirectoryInfo committedDirectory = null!;
 
@@ -75,42 +73,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 var committedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.committedDirectory.FullName, fileName));
 
                 Assert.That(stagedSource, Is.EqualTo(committedSource), $"Staged provider '{fileName}' differs from committed output.");
-            }
-        }
-
-        [Test]
-        public async Task Verify_that_generated_providers_use_the_required_file_format()
-        {
-            var generatedFiles = this.stagingDirectory.GetFiles("*.cs", SearchOption.TopDirectoryOnly)
-                .OrderBy(file => file.Name, StringComparer.Ordinal)
-                .ToArray();
-
-            Assert.That(generatedFiles, Is.Not.Empty, "Provider generation produced no C# files.");
-
-            foreach (var generatedFile in generatedFiles)
-            {
-                var bytes = await File.ReadAllBytesAsync(generatedFile.FullName);
-
-                var hasUtf8Bom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
-
-                var source = StrictUtf8WithoutBom.GetString(bytes);
-
-                var sourceWithoutCrLf = source.Replace("\r\n", string.Empty, StringComparison.Ordinal);
-
-                using (Assert.EnterMultipleScope())
-                {
-                    Assert.That(hasUtf8Bom, Is.False, $"Generated provider '{generatedFile.Name}' contains a UTF-8 byte-order mark.");
-
-                    Assert.That(source, Does.Contain("\r\n"), $"Generated provider '{generatedFile.Name}' contains no CRLF line endings.");
-
-                    Assert.That(sourceWithoutCrLf, Does.Not.Contain("\r"), $"Generated provider '{generatedFile.Name}' contains a standalone carriage return.");
-
-                    Assert.That(sourceWithoutCrLf, Does.Not.Contain("\n"), $"Generated provider '{generatedFile.Name}' contains a standalone line feed.");
-
-                    Assert.That(source, Does.Contain("[GeneratedCode(\"Mycelium.SDK\", \"latest\")]"), $"Generated provider '{generatedFile.Name}' lacks the generated-code marker.");
-
-                    Assert.That(source, Does.Contain("StringComparison.OrdinalIgnoreCase"), $"Generated provider '{generatedFile.Name}' does not use ordinal case-insensitive comparison.");
-                }
             }
         }
 

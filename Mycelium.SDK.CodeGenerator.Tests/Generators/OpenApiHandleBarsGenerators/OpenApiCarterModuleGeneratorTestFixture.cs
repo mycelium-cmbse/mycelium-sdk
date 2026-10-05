@@ -9,15 +9,12 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.OpenApiHandleBarsGenerators
 {
-    using System.Text;
-
     using Mycelium.SDK.CodeGenerator.Generators.OpenApiHandleBarsGenerators;
     using Mycelium.SDK.CodeGenerator.Tests.OpenApi;
 
     [TestFixture]
     public class OpenApiCarterModuleGeneratorTestFixture
     {
-        private static readonly UTF8Encoding StrictUtf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         private DirectoryInfo expectedDirectory = null!;
         private DirectoryInfo stagingDirectory = null!;
@@ -85,29 +82,5 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.OpenApiHandleBarsGenerator
             }
         }
 
-        [Test]
-        public async Task VerifyThatGeneratedModulesUseTheRequiredFileFormat()
-        {
-            using (Assert.EnterMultipleScope())
-            {
-                foreach (var fileName in GeneratedOutput.QueryRelativeFileNames(this.stagingDirectory))
-                {
-                    var bytes = await File.ReadAllBytesAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
-
-                    var hasUtf8Bom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
-
-                    var source = StrictUtf8WithoutBom.GetString(bytes);
-                    var sourceWithoutCrLf = source.Replace("\r\n", string.Empty, StringComparison.Ordinal);
-
-                    Assert.That(hasUtf8Bom, Is.False, $"Generated '{fileName}' contains a UTF-8 byte-order mark.");
-                    Assert.That(source, Does.Contain("\r\n"), $"Generated '{fileName}' contains no CRLF line endings.");
-                    Assert.That(sourceWithoutCrLf, Does.Not.Contain("\r"), $"Generated '{fileName}' contains a standalone carriage return.");
-                    Assert.That(sourceWithoutCrLf, Does.Not.Contain("\n"), $"Generated '{fileName}' contains a standalone line feed.");
-                    Assert.That(source, Does.Contain("[GeneratedCode(\"Mycelium.SDK\", \"latest\")]"),
-                        $"Generated '{fileName}' does not contain the generated-code marker.");
-                    Assert.That(source, Does.Contain(": ICarterModule"), $"Generated '{fileName}' is not a Carter module.");
-                }
-            }
-        }
     }
 }

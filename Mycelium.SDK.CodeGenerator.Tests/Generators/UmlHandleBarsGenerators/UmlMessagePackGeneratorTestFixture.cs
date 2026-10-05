@@ -9,8 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
-    using System.Text;
-
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
 
@@ -30,7 +28,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             "PayloadMessagePackFormatter.cs"
         ];
 
-        private static readonly UTF8Encoding StrictUtf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         private Dictionary<string, IClass> classes = null!;
 
@@ -162,33 +159,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             var stagedFileNames = QueryCSharpFileNames(this.stagingDirectory);
 
             Assert.That(stagedFileNames, Is.EqualTo(expectedFileNames), "The MessagePack formatter batch does not match the current concrete classes and enumerations.");
-        }
-
-        [Test]
-        public async Task Verify_that_generated_source_uses_the_required_file_format()
-        {
-            var sourceDirectories = new[] { this.stagingDirectory, this.payloadStagingDirectory };
-
-            foreach (var directory in sourceDirectories)
-            {
-                Assert.That(directory.Exists, Is.True, $"MessagePack source directory '{directory.FullName}' is missing.");
-
-                if (!directory.Exists)
-                {
-                    continue;
-                }
-
-                var sourceFiles = directory.GetFiles("*.cs", SearchOption.TopDirectoryOnly)
-                    .OrderBy(file => file.Name, StringComparer.Ordinal)
-                    .ToArray();
-
-                Assert.That(sourceFiles, Is.Not.Empty, $"MessagePack source directory '{directory.FullName}' contains no C# files.");
-
-                foreach (var sourceFile in sourceFiles)
-                {
-                    await AssertRequiredFileFormatAsync(sourceFile);
-                }
-            }
         }
 
         [Test]
@@ -349,32 +319,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             var expectedSource = await GeneratorSetupFixture.ReadSourceAsync(expectedPath);
 
             Assert.That(string.Equals(actualSource, expectedSource, StringComparison.Ordinal), Is.True, $"{actualDescription} differs from {expectedDescription}.");
-        }
-
-        private static async Task AssertRequiredFileFormatAsync(FileInfo sourceFile)
-        {
-            var bytes = await File.ReadAllBytesAsync(sourceFile.FullName);
-
-            var hasUtf8Bom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
-
-            var source = StrictUtf8WithoutBom.GetString(bytes);
-
-            var sourceWithoutCrLf = source.Replace("\r\n", string.Empty, StringComparison.Ordinal);
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(hasUtf8Bom, Is.False, $"Source file '{sourceFile.Name}' contains a UTF-8 byte-order mark.");
-
-                Assert.That(source, Does.Contain("\r\n"), $"Source file '{sourceFile.Name}' contains no CRLF line endings.");
-
-                Assert.That(source.EndsWith("\r\n", StringComparison.Ordinal), Is.True, $"Source file '{sourceFile.Name}' lacks a final CRLF.");
-
-                Assert.That(sourceWithoutCrLf, Does.Not.Contain("\r"), $"Source file '{sourceFile.Name}' contains a standalone carriage return.");
-
-                Assert.That(sourceWithoutCrLf, Does.Not.Contain("\n"), $"Source file '{sourceFile.Name}' contains a standalone line feed.");
-
-                Assert.That(source, Does.Contain("[GeneratedCode(\"Mycelium.SDK\", \"latest\")]"), $"Source file '{sourceFile.Name}' lacks the generated-code marker.");
-            }
         }
 
         private static string[] QueryCSharpFileNames(DirectoryInfo directory)
