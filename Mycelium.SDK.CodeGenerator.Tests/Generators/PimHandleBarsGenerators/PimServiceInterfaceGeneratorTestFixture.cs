@@ -72,8 +72,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.PimHandleBarsGenerators
         [Test]
         public async Task VerifyThatGeneratedInterfacesMatchTheirGoldenFiles()
         {
-            var stagedFileNames = QueryRelativeFileNames(this.stagingDirectory);
-            var goldenFileNames = QueryRelativeFileNames(this.expectedDirectory);
+            var stagedFileNames = GeneratedOutput.QueryRelativeFileNames(this.stagingDirectory);
+            var goldenFileNames = GeneratedOutput.QueryRelativeFileNames(this.expectedDirectory);
 
             using (Assert.EnterMultipleScope())
             {
@@ -94,7 +94,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.PimHandleBarsGenerators
         {
             using (Assert.EnterMultipleScope())
             {
-                foreach (var fileName in QueryRelativeFileNames(this.stagingDirectory))
+                foreach (var fileName in GeneratedOutput.QueryRelativeFileNames(this.stagingDirectory))
                 {
                     var bytes = await File.ReadAllBytesAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
 
@@ -113,14 +113,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.PimHandleBarsGenerators
                         $"Generated '{fileName}' is not declared in the Fabric services namespace.");
                 }
             }
-        }
-
-        private static string[] QueryRelativeFileNames(DirectoryInfo directory)
-        {
-            return directory.GetFiles("*", SearchOption.AllDirectories)
-                .Select(file => Path.GetRelativePath(directory.FullName, file.FullName))
-                .OrderBy(fileName => fileName, StringComparer.Ordinal)
-                .ToArray();
         }
     }
 }

@@ -88,8 +88,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var stagedFileNames = QueryRelativeFileNames(this.stagingDirectory);
-            var committedFileNames = QueryRelativeFileNames(this.committedDirectory);
+            var stagedFileNames = GeneratedOutput.QueryRelativeFileNames(this.stagingDirectory);
+            var committedFileNames = GeneratedOutput.QueryRelativeFileNames(this.committedDirectory);
 
             Assert.That(stagedFileNames, Is.EqualTo(committedFileNames), "The staged and committed enum manifests differ.");
 
@@ -115,7 +115,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(QueryRelativeFileNames(outputDirectory), Is.EqualTo(ExpectedKeywordFileNames));
+                Assert.That(GeneratedOutput.QueryRelativeFileNames(outputDirectory), Is.EqualTo(ExpectedKeywordFileNames));
 
                 Assert.That(source, Does.Contain("enum @class"));
                 Assert.That(source, Does.Contain("@event,"));
@@ -132,7 +132,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 .OrderBy(fileName => fileName, StringComparer.Ordinal)
                 .ToArray();
 
-            var goldenFileNames = QueryRelativeFileNames(this.expectedDirectory);
+            var goldenFileNames = GeneratedOutput.QueryRelativeFileNames(this.expectedDirectory);
 
             Assert.That(goldenFileNames, Is.EqualTo(representativeFileNames), "The reviewed enum golden set must contain exactly the bounded representative selection.");
         }
@@ -160,14 +160,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
 
             return enumeration;
-        }
-
-        private static string[] QueryRelativeFileNames(DirectoryInfo directory)
-        {
-            return directory.GetFiles("*", SearchOption.AllDirectories)
-                .Select(file => Path.GetRelativePath(directory.FullName, file.FullName))
-                .OrderBy(fileName => fileName, StringComparer.Ordinal)
-                .ToArray();
         }
 
         private static DirectoryInfo QueryFreshOutputDirectory(string directoryName)

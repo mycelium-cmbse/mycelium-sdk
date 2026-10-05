@@ -87,6 +87,9 @@
         <None Update="Templates\Pim\service-interface-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="Templates\Pim\repository-interface-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

@@ -30,7 +30,7 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
     /// Defines the {{ Service.QueryName this }} of the OMG Systems Modeling API and Services specification, §{{ Pim.WriteMappedName this "ProjectService" "7.2.1" "ElementNavigationService" "7.2.2" "ProjectDataVersioningService" "7.2.3" "QueryService" "7.2.4" "ExternalRelationshipService" "7.2.5" "ProjectUsageService" "7.2.6" }}.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public interface {{ Service.WriteInterfaceName this }} : IBaseService
+    public partial interface {{ Service.WriteInterfaceName this }} : IBaseService
     {
         {{ #each (Service.QueryOperations this) as | operation | ~}}
             {{ Documentation ~}}
