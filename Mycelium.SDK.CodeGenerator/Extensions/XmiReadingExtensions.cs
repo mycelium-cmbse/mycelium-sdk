@@ -32,10 +32,11 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             /// Creates the canonical offline XMI reader settings.
             /// </summary>
             /// <param name="useStrictReading">
-            /// <see langword="true" /> to fail on a reference that cannot be resolved.
+            /// <see langword="true" /> to throw when an unknown XMI element or attribute is encountered;
+            /// <see langword="false" /> to ignore it and log a warning.
             /// </param>
             /// <returns>
-            /// Reader settings that resolve every resolvable XMI dependency locally.
+            /// Reader settings with empty path maps that resolve XMI dependencies from local files or embedded resources.
             /// </returns>
             /// <exception cref="ArgumentNullException">
             /// Thrown when the resources directory is <see langword="null" />.
@@ -47,10 +48,6 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 return new DefaultSettings
                 {
                     LocalReferenceBasePath = resourcesDirectory.FullName,
-                    PathMaps =
-                    {
-                        [XmiResources.PrimitiveTypesUri] = Path.Combine(resourcesDirectory.FullName, XmiResources.PrimitiveTypesFileName)
-                    },
                     UseStrictReading = useStrictReading
                 };
             }
@@ -62,9 +59,8 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             /// The file name of the export to read, relative to the resources directory.
             /// </param>
             /// <param name="useStrictReading">
-            /// <see langword="true" /> to fail on a reference that cannot be resolved. The Systems Modeling
-            /// API and Services PIM requires <see langword="false" />, because it types four results by
-            /// <c>href</c> into a companion export that OMG does not publish.
+            /// <see langword="true" /> to throw when an unknown XMI element or attribute is encountered;
+            /// <see langword="false" /> to ignore it and log a warning.
             /// </param>
             /// <returns>
             /// The loaded XMI reader result.
@@ -79,7 +75,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             /// Thrown when the resources directory does not exist.
             /// </exception>
             /// <exception cref="FileNotFoundException">
-            /// Thrown when the export does not exist.
+            /// Thrown when the export or a required FunctionalData primitive resource does not exist.
             /// </exception>
             public XmiReaderResult ReadModel(string fileName, bool useStrictReading)
             {
@@ -93,9 +89,18 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
                 var resourcePath = Path.Combine(resourcesDirectory.FullName, fileName);
 
-                if (!File.Exists(resourcePath))
+                string[] requiredFileNames = string.Equals(fileName, XmiResources.FunctionalDataFileName, StringComparison.Ordinal)
+                    ? [fileName, XmiResources.CSharpPrimitivesFileName, XmiResources.PrimitiveTypesFileName]
+                    : [fileName];
+
+                foreach (var requiredFileName in requiredFileNames)
                 {
-                    throw new FileNotFoundException($"Required resource '{fileName}' was not found.", resourcePath);
+                    var requiredResourcePath = Path.Combine(resourcesDirectory.FullName, requiredFileName);
+
+                    if (!File.Exists(requiredResourcePath))
+                    {
+                        throw new FileNotFoundException($"Required resource '{requiredFileName}' was not found.", requiredResourcePath);
+                    }
                 }
 
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
