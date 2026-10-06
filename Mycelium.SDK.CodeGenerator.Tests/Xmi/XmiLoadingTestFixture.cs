@@ -49,48 +49,63 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Xmi
             }
         }
 
-        [TestCase(XmiResources.PrimitiveTypesFileName, true)]
-        [TestCase(XmiResources.CSharpPrimitivesFileName, false)]
-        public void Verify_that_primitive_inventories_are_loaded_without_path_maps(string resourceFileName, bool isEmbeddedResource)
+        [TestCase(true)]
+        [TestCase(false)]
+        public void Verify_that_primitive_inventories_are_loaded_without_path_maps(bool isEmbeddedResource)
         {
             var result = GeneratorSetupFixture.ReadFunctionalData();
-            var resourceDocument = XDocument.Load(Path.Combine(ResourcesDirectory.FullName, resourceFileName));
-            var xmiNamespace = resourceDocument.Root.GetNamespaceOfPrefix("xmi");
-            var resourcePackage = resourceDocument.Root.Elements()
-                .Single(element => (string)element.Attribute(xmiNamespace + "type") == "uml:Package");
-            var expectedPrimitives = resourcePackage.Elements()
-                .Where(element => (string)element.Attribute(xmiNamespace + "type") == "uml:PrimitiveType")
-                .Select(element => (Id: (string)element.Attribute(xmiNamespace + "id"), Name: (string)element.Attribute("name")))
-                .ToArray();
-            var package = result.QueryRoot(null, (string)resourcePackage.Attribute("name"));
-            var actualPrimitives = package.PackagedElement
-                .OfType<IPrimitiveType>()
-                .Select(primitive => (Id: primitive.XmiId, Name: primitive.Name))
-                .ToArray();
-            var localResult = ResourcesDirectory.ReadModel(resourceFileName, useStrictReading: true);
-            var localPackage = localResult.QueryPackage((string)resourcePackage.Attribute("name"));
-            var localPrimitives = localPackage.PackagedElement
-                .OfType<IPrimitiveType>()
-                .Select(primitive => (Id: primitive.XmiId, Name: primitive.Name))
-                .ToArray();
+            var package = result.Packages
+                .Where(candidate => candidate.PackagedElement.Any(element => element is IPrimitiveType))
+                .Single(candidate => isEmbeddedResource
+                    ? !string.Equals(candidate.DocumentName, XmiResources.CSharpPrimitivesFileName, StringComparison.Ordinal)
+                    : string.Equals(candidate.DocumentName, XmiResources.CSharpPrimitivesFileName, StringComparison.Ordinal));
             var resourceLoader = new ResourceLoader();
             var isKnownResource = resourceLoader.TryLoadKnownResource(package.DocumentName, out var embeddedStream);
 
             using (embeddedStream)
-            using (Assert.EnterMultipleScope())
             {
-                Assert.That(expectedPrimitives, Is.Not.Empty);
-                Assert.That(actualPrimitives, Is.EquivalentTo(expectedPrimitives));
-                Assert.That(localPrimitives, Is.EquivalentTo(expectedPrimitives));
-                Assert.That(isKnownResource, Is.EqualTo(isEmbeddedResource));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(isKnownResource, Is.EqualTo(isEmbeddedResource));
 
-                if (isEmbeddedResource)
-                {
-                    Assert.That(embeddedStream, Is.Not.Null);
+                    if (isEmbeddedResource)
+                    {
+                        Assert.That(embeddedStream, Is.Not.Null);
+                    }
                 }
-                else
+
+                var resourceDocument = isEmbeddedResource
+                    ? XDocument.Load(embeddedStream)
+                    : XDocument.Load(Path.Combine(ResourcesDirectory.FullName, XmiResources.CSharpPrimitivesFileName));
+                var xmiNamespace = resourceDocument.Root.GetNamespaceOfPrefix("xmi");
+                var resourcePackage = resourceDocument.Root.Elements()
+                    .Single(element => (string)element.Attribute(xmiNamespace + "type") == "uml:Package");
+                var expectedPrimitives = resourcePackage.Elements()
+                    .Where(element => (string)element.Attribute(xmiNamespace + "type") == "uml:PrimitiveType")
+                    .Select(element => (Id: (string)element.Attribute(xmiNamespace + "id"), Name: (string)element.Attribute("name")))
+                    .ToArray();
+                var actualPrimitives = package.PackagedElement
+                    .OfType<IPrimitiveType>()
+                    .Select(primitive => (Id: primitive.XmiId, Name: primitive.Name))
+                    .ToArray();
+
+                using (Assert.EnterMultipleScope())
                 {
-                    Assert.That(package.DocumentName, Is.EqualTo(resourceFileName));
+                    Assert.That(expectedPrimitives, Is.Not.Empty);
+                    Assert.That(package.Name, Is.EqualTo((string)resourcePackage.Attribute("name")));
+                    Assert.That(actualPrimitives, Is.EquivalentTo(expectedPrimitives));
+                }
+
+                if (!isEmbeddedResource)
+                {
+                    var localResult = ResourcesDirectory.ReadModel(XmiResources.CSharpPrimitivesFileName, useStrictReading: true);
+                    var localPackage = localResult.QueryPackage((string)resourcePackage.Attribute("name"));
+                    var localPrimitives = localPackage.PackagedElement
+                        .OfType<IPrimitiveType>()
+                        .Select(primitive => (Id: primitive.XmiId, Name: primitive.Name))
+                        .ToArray();
+
+                    Assert.That(localPrimitives, Is.EquivalentTo(expectedPrimitives));
                 }
             }
         }

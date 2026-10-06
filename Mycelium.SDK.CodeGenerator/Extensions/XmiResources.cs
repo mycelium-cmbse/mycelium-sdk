@@ -20,11 +20,6 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         public const string CSharpPrimitivesFileName = "CSharp_Primitives.xmi";
 
         /// <summary>
-        /// The file name of the required local standard UML primitive resource.
-        /// </summary>
-        public const string PrimitiveTypesFileName = "PrimitiveTypes.xmi";
-
-        /// <summary>
         /// The file name of the FunctionalData export.
         /// </summary>
         public const string FunctionalDataFileName = "FunctionalData.xmi";
