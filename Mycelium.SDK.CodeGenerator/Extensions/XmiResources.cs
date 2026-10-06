@@ -15,14 +15,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     public static class XmiResources
     {
         /// <summary>
-        /// The canonical URI by which a model references the standard UML primitive types.
+        /// The file name of the custom C# primitive types resolved through the local reference base path.
         /// </summary>
-        public const string PrimitiveTypesUri = "http://www.omg.org/spec/UML/20161101/PrimitiveTypes.xmi";
-
-        /// <summary>
-        /// The file name under which the standard UML primitive types are resolved locally.
-        /// </summary>
-        public const string PrimitiveTypesFileName = "PrimitiveTypes.xmi";
+        public const string CSharpPrimitivesFileName = "CSharp_Primitives.xmi";
 
         /// <summary>
         /// The file name of the FunctionalData export.
