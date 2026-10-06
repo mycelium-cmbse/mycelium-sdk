@@ -75,7 +75,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             /// Thrown when the resources directory does not exist.
             /// </exception>
             /// <exception cref="FileNotFoundException">
-            /// Thrown when the export or a required FunctionalData primitive resource does not exist.
+            /// Thrown when the requested export does not exist.
             /// </exception>
             public XmiReaderResult ReadModel(string fileName, bool useStrictReading)
             {
@@ -89,18 +89,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
                 var resourcePath = Path.Combine(resourcesDirectory.FullName, fileName);
 
-                string[] requiredFileNames = string.Equals(fileName, XmiResources.FunctionalDataFileName, StringComparison.Ordinal)
-                    ? [fileName, XmiResources.CSharpPrimitivesFileName, XmiResources.PrimitiveTypesFileName]
-                    : [fileName];
-
-                foreach (var requiredFileName in requiredFileNames)
+                if (!File.Exists(resourcePath))
                 {
-                    var requiredResourcePath = Path.Combine(resourcesDirectory.FullName, requiredFileName);
-
-                    if (!File.Exists(requiredResourcePath))
-                    {
-                        throw new FileNotFoundException($"Required resource '{requiredFileName}' was not found.", requiredResourcePath);
-                    }
+                    throw new FileNotFoundException($"Required resource '{fileName}' was not found.", resourcePath);
                 }
 
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
