@@ -335,7 +335,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             {
                 XmiId = "optional-date-time",
                 Name = "optionalDateTime",
-                Type = new PrimitiveType { XmiId = "date-time-type", Name = "DateTime" }
+                Type = new DataType { XmiId = "date-time-type", Name = "DateTime" }
             };
 
             property.LowerValue.Add(new LiteralInteger { Value = 0 });
@@ -412,13 +412,54 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             }
         }
 
+        [Test]
+        public void VerifyThatNullableUuidDataTypesDelegateNonNullValuesToTheGuidFormatter()
+        {
+            var property = new Property
+            {
+                XmiId = "optional-uuid",
+                Name = "optionalUuid",
+                Type = new DataType { XmiId = "uuid-type", Name = "UUID" }
+            };
+
+            property.LowerValue.Add(new LiteralInteger { Value = 0 });
+            property.UpperValue.Add(new LiteralUnlimitedNatural { Value = "1" });
+
+            var expectedSerialization = """
+                if (dto.OptionalUuid.HasValue)
+                {
+                    GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.OptionalUuid.Value, options);
+                }
+                else
+                {
+                    writer.WriteNil();
+                }
+                """;
+            var expectedDeserialization = """
+                if (reader.TryReadNil())
+                {
+                    dto.OptionalUuid = null;
+                }
+                else
+                {
+                    dto.OptionalUuid = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
+                }
+                """;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Render(property, "Serialization"), Is.EqualTo(expectedSerialization + Environment.NewLine));
+                Assert.That(Render(property, "Deserialization"), Is.EqualTo(expectedDeserialization + Environment.NewLine));
+            }
+        }
+
         private static Property CreateUriProperty(bool optional)
         {
             var property = new Property
             {
                 XmiId = "uri-property",
                 Name = "location",
-                Type = new PrimitiveType { XmiId = "uri-type", Name = "Uri" }
+                Type = new DataType { XmiId = "uri-type", Name = "URI" }
             };
 
             property.LowerValue.Add(new LiteralInteger { Value = optional ? 0 : 1 });

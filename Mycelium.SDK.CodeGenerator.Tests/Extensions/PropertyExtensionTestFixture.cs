@@ -118,6 +118,42 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             Assert.That(exception.Message, Is.EqualTo("Property 'unsupported' has unsupported UML type 'UnsupportedType'."));
         }
 
+        [TestCase("UUID", "Guid", "Guid?")]
+        [TestCase("URI", "Uri", "Uri")]
+        [TestCase("DateTime", "DateTime", "DateTime?")]
+        [TestCase("Dictionary<string,string>", "Dictionary<string,string>", "Dictionary<string,string>")]
+        public void VerifyThatCustomDataTypesPreserveScalarNullabilityAndCollections(string modelTypeName, string elementTypeName, string optionalTypeName)
+        {
+            var property = new Property { XmiId = "custom-value", Name = "customValue", Type = new DataType { XmiId = "custom-type", Name = modelTypeName } };
+
+            property.LowerValue.Add(new LiteralInteger { Value = 1 });
+            property.UpperValue.Add(new LiteralUnlimitedNatural { Value = "1" });
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(property.QueryDtoTypeName(), Is.EqualTo(elementTypeName));
+                Assert.That(property.QueryPocoTypeName(), Is.EqualTo(elementTypeName));
+            }
+
+            property.LowerValue.Clear();
+            property.LowerValue.Add(new LiteralInteger { Value = 0 });
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(property.QueryDtoTypeName(), Is.EqualTo(optionalTypeName));
+                Assert.That(property.QueryPocoTypeName(), Is.EqualTo(optionalTypeName));
+            }
+
+            property.UpperValue.Clear();
+            property.UpperValue.Add(new LiteralUnlimitedNatural { Value = "*" });
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(property.QueryDtoTypeName(), Is.EqualTo($"List<{elementTypeName}>"));
+                Assert.That(property.QueryPocoTypeName(), Is.EqualTo($"List<{elementTypeName}>"));
+            }
+        }
+
         [Test]
         public void Verify_that_QueryPropertyName_preserves_the_FunctionalData_contract() => Assert.That(this.roleProperty.QueryPropertyName(), Is.EqualTo("Role"));
 

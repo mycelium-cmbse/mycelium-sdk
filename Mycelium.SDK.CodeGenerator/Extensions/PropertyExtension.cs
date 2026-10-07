@@ -1,15 +1,16 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="PropertyExtension.cs" company="Starion Group S.A.">
-// 
+//
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-// 
+//
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
 namespace Mycelium.SDK.CodeGenerator.Extensions
 {
     using uml4net.Classification;
+    using uml4net.CommonStructure;
     using uml4net.Extensions;
     using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
@@ -81,12 +82,26 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 return $"List<{elementTypeName}>";
             }
 
-            if (property.QueryIsNullableAndNotString())
+            if (property.QueryIsNullableAndNotString() && elementTypeName is not ("Uri" or "Dictionary<string,string>"))
             {
                 return $"{elementTypeName}?";
             }
 
             return elementTypeName;
+        }
+
+        /// <summary>
+        /// Determines whether a UML type is a primitive or an approved custom value DataType.
+        /// </summary>
+        /// <param name="type">
+        /// The UML type to examine.
+        /// </param>
+        /// <returns>
+        /// <see langword="true" /> for a primitive or a custom value DataType approved by the SDK mapping contract.
+        /// </returns>
+        internal static bool QueryIsSupportedValueType(this IType type)
+        {
+            return type is IPrimitiveType || type is IDataType and not IEnumeration && type.Name is "UUID" or "URI" or "DateTime" or "Dictionary<string,string>";
         }
 
         /// <summary>
@@ -152,6 +167,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 IClass => "Guid",
                 IEnumeration enumeration => MapNamedType(enumeration.Name, property),
                 IPrimitiveType primitiveType => primitiveType.QueryCSharpTypeName(),
+                IDataType dataType when dataType.QueryIsSupportedValueType() => dataType.QueryCSharpTypeName(),
                 _ => throw new InvalidOperationException($"Property '{property.Describe()}' has unsupported UML type " + $"'{property.Type.Name}'.")
             };
         }
@@ -180,6 +196,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 IClass umlClass => QueryPocoInterfaceTypeName(umlClass, property),
                 IEnumeration enumeration => MapNamedType(enumeration.Name, property),
                 IPrimitiveType primitiveType => QueryPrimitiveTypeName(primitiveType, property),
+                IDataType dataType when dataType.QueryIsSupportedValueType() => QueryPrimitiveTypeName(dataType, property),
                 _ => throw new InvalidOperationException($"Property '{property.Describe()}' has unsupported UML type " + $"'{property.Type.Name}'.")
             };
         }
@@ -210,10 +227,10 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         }
 
         /// <summary>
-        /// Preserves the uml4net C# representation of a modeled primitive type.
+        /// Preserves the uml4net C# representation of a primitive or approved custom value DataType.
         /// </summary>
         /// <param name="primitiveType">
-        /// The modeled primitive type.
+        /// The modeled primitive or approved custom value DataType.
         /// </param>
         /// <param name="property">
         /// The property using the primitive type.
@@ -224,7 +241,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// <exception cref="InvalidOperationException">
         /// Thrown when <paramref name="primitiveType" /> has no C# type name.
         /// </exception>
-        private static string QueryPrimitiveTypeName(IPrimitiveType primitiveType, IProperty property)
+        private static string QueryPrimitiveTypeName(IDataType primitiveType, IProperty property)
         {
             var typeName = primitiveType.QueryCSharpTypeName();
 
@@ -255,7 +272,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 return true;
             }
 
-            return property.Type is IPrimitiveType && elementTypeName is "bool" or "byte" or "sbyte" or "short" or "ushort" or "int" or "uint" or "long" or "ulong" or "nint" or "nuint" or "char" or "float" or "double" or "decimal" or "DateTime" or "DateTimeOffset" or "Guid" or "TimeSpan";
+            return property.Type.QueryIsSupportedValueType() && elementTypeName is
+                "bool" or "byte" or "sbyte" or "short" or "ushort" or "int" or "uint" or "long" or "ulong" or "nint" or "nuint" or "char" or
+                "float" or "double" or "decimal" or "DateTime" or "DateTimeOffset" or "Guid" or "TimeSpan";
         }
 
         /// <summary>

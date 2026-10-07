@@ -291,7 +291,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// </exception>
         private static void AppendSerializeValue(StringBuilder builder, IProperty property, string valueExpression, bool nullable, string valueDescription, int indentationLevel)
         {
-            if (property.Type is IClass || property.Type is IPrimitiveType { Name: "Guid" })
+            if (property.Type is IClass || property.Type.QueryIsSupportedValueType() && property.Type.QueryCSharpTypeName() == "Guid")
             {
                 if (nullable)
                 {
@@ -319,16 +319,16 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 return;
             }
 
-            if (property.Type is not IPrimitiveType primitiveType)
+            if (!property.Type.QueryIsSupportedValueType())
             {
                 throw new InvalidOperationException($"Property '{property.Describe()}' has no supported MessagePack type.");
             }
 
-            switch (primitiveType.Name)
+            switch (property.Type.QueryCSharpTypeName())
             {
-                case "Boolean":
-                case "Integer":
-                case "Real":
+                case "bool":
+                case "int":
+                case "double":
                     AppendSerializeNativeValue(builder, valueExpression, nullable, indentationLevel);
                     break;
                 case "DateTime":
@@ -337,8 +337,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 case "Dictionary<string,string>":
                     AppendSerializeReferenceValue(builder, valueExpression, !property.QueryIsEnumerable(), valueDescription, "StringDictionaryMessagePackFormatter", "Dictionary", indentationLevel);
                     break;
-                case "String":
-                case "UnlimitedNatural":
+                case "string":
 
                     if (nullable)
                     {
@@ -354,7 +353,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     AppendSerializeReferenceValue(builder, valueExpression, nullable, valueDescription, "UriMessagePackFormatter", "URI", indentationLevel);
                     break;
                 default:
-                    throw new InvalidOperationException($"Property '{property.Describe()}' uses unsupported MessagePack primitive '{primitiveType.Name}'.");
+                    throw new InvalidOperationException($"Property '{property.Describe()}' uses unsupported MessagePack primitive '{property.Type.Name}'.");
             }
         }
 
@@ -377,7 +376,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             var (destination, addToCollection, nullable, valueDescription, _, indentationLevel) = context;
 
-            if (property.Type is IClass || property.Type is IPrimitiveType { Name: "Guid" })
+            if (property.Type is IClass || property.Type.QueryIsSupportedValueType() && property.Type.QueryCSharpTypeName() == "Guid")
             {
                 AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "GuidMessagePackFormatter.Instance.Deserialize(ref reader, options)", indentationLevel);
 
@@ -391,14 +390,14 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 return;
             }
 
-            if (property.Type is not IPrimitiveType primitiveType)
+            if (!property.Type.QueryIsSupportedValueType())
             {
                 throw new InvalidOperationException($"Property '{property.Describe()}' has no supported MessagePack type.");
             }
 
-            switch (primitiveType.Name)
+            switch (property.Type.QueryCSharpTypeName())
             {
-                case "Boolean":
+                case "bool":
                     AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "reader.ReadBoolean()", indentationLevel);
                     break;
                 case "DateTime":
@@ -408,14 +407,13 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     AppendDeserializeReferenceValue(builder, context, !property.QueryIsEnumerable(), "StringDictionaryMessagePackFormatter", "Dictionary");
 
                     break;
-                case "Integer":
+                case "int":
                     AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "reader.ReadInt32()", indentationLevel);
                     break;
-                case "Real":
+                case "double":
                     AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "reader.ReadDouble()", indentationLevel);
                     break;
-                case "String":
-                case "UnlimitedNatural":
+                case "string":
 
                     AppendAssignment(builder, destination, addToCollection, nullable ? "reader.ReadString()" : $"ReadRequiredString(ref reader, \"{valueDescription}\")", indentationLevel);
 
@@ -426,7 +424,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                     break;
                 default:
-                    throw new InvalidOperationException($"Property '{property.Describe()}' uses unsupported MessagePack primitive '{primitiveType.Name}'.");
+                    throw new InvalidOperationException($"Property '{property.Describe()}' uses unsupported MessagePack primitive '{property.Type.Name}'.");
             }
         }
 
