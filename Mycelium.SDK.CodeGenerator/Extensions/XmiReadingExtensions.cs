@@ -26,6 +26,14 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     /// </summary>
     public static class XmiReadingExtensions
     {
+        /// <summary>
+        /// Registers the shared C# mappings for the model's UUID and URI value types.
+        /// </summary>
+        static XmiReadingExtensions()
+        {
+            TypeExtensions.AddOrOverwriteCSharpTypeMappings(("UUID", "Guid"), ("URI", "Uri"));
+        }
+
         extension(DirectoryInfo resourcesDirectory)
         {
             /// <summary>
