@@ -39,7 +39,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests.MessagePackFormatter
         [Test]
         public void Verify_that_null_serialization_input_is_rejected()
         {
-            Assert.Throws<MessagePackSerializationException>(() => Serialize(null));
+            Assert.That(() => Serialize(null), Throws.TypeOf<MessagePackSerializationException>());
         }
 
         [TestCase("C0")]
@@ -48,7 +48,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests.MessagePackFormatter
         [TestCase("90")]
         public void Verify_that_nil_and_non_string_input_are_rejected(string hex)
         {
-            Assert.Throws<MessagePackSerializationException>(() => Deserialize(Convert.FromHexString(hex)));
+            Assert.That(() => Deserialize(Convert.FromHexString(hex)), Throws.TypeOf<MessagePackSerializationException>());
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests.MessagePackFormatter
         {
             var payload = MessagePackSerializer.Serialize("http://[invalid");
 
-            Assert.Throws<MessagePackSerializationException>(() => Deserialize(payload));
+            Assert.That(() => Deserialize(payload), Throws.TypeOf<MessagePackSerializationException>());
         }
 
         private static byte[] Serialize(Uri value)

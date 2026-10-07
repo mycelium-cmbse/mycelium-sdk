@@ -33,18 +33,18 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         public void Verify_that_EnumerationLiteral_Write_requires_an_IEnumerationLiteral_argument()
         {
             var template = this.handlebars.Compile("{{ #EnumerationLiteral.Write this }}");
-            var exception = Assert.Throws<HandlebarsException>(() => template(new object()));
 
-            Assert.That(exception.Message, Is.EqualTo("{{EnumerationLiteral.Write}} requires an IEnumerationLiteral argument."));
+            Assert.That(() => template(new object()), Throws.TypeOf<HandlebarsException>()
+                .With.Message.EqualTo("{{EnumerationLiteral.Write}} requires an IEnumerationLiteral argument."));
         }
 
         [Test]
         public void Verify_that_EnumerationLiteral_Write_requires_exactly_one_argument()
         {
             var template = this.handlebars.Compile("{{ #EnumerationLiteral.Write this this }}");
-            var exception = Assert.Throws<HandlebarsException>(() => template(new object()));
 
-            Assert.That(exception.Message, Is.EqualTo("{{EnumerationLiteral.Write}} requires exactly one argument."));
+            Assert.That(() => template(new object()), Throws.TypeOf<HandlebarsException>()
+                .With.Message.EqualTo("{{EnumerationLiteral.Write}} requires exactly one argument."));
         }
 
         [Test]

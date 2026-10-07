@@ -113,9 +113,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         {
             var property = new Property { XmiId = "property-id", Name = "unsupported", Type = new DataType { XmiId = "unsupported-type", Name = "UnsupportedType" } };
 
-            var exception = Assert.Throws<InvalidOperationException>(() => property.QueryPocoTypeName());
-
-            Assert.That(exception.Message, Is.EqualTo("Property 'unsupported' has unsupported UML type 'UnsupportedType'."));
+            Assert.That(() => property.QueryPocoTypeName(), Throws.TypeOf<InvalidOperationException>()
+                .With.Message.EqualTo("Property 'unsupported' has unsupported UML type 'UnsupportedType'."));
         }
 
         [Test]
