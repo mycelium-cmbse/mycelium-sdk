@@ -53,11 +53,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             {
                 ArgumentNullException.ThrowIfNull(resourcesDirectory);
 
-                return new DefaultSettings
-                {
-                    LocalReferenceBasePath = resourcesDirectory.FullName,
-                    UseStrictReading = useStrictReading
-                };
+                return new DefaultSettings { LocalReferenceBasePath = resourcesDirectory.FullName, UseStrictReading = useStrictReading };
             }
 
             /// <summary>
@@ -141,8 +137,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 ArgumentNullException.ThrowIfNull(xmiReaderResult);
                 ArgumentException.ThrowIfNullOrEmpty(packageName);
 
-                return xmiReaderResult.Packages
-                    .SelectMany(package => package.QueryPackages())
+                return xmiReaderResult.Packages.SelectMany(package => package.QueryPackages())
                     .Single(package => string.Equals(package.Name, packageName, StringComparison.Ordinal));
             }
         }

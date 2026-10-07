@@ -91,20 +91,6 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         }
 
         /// <summary>
-        /// Determines whether a UML type is a primitive or an approved custom value DataType.
-        /// </summary>
-        /// <param name="type">
-        /// The UML type to examine.
-        /// </param>
-        /// <returns>
-        /// <see langword="true" /> for a primitive or a custom value DataType approved by the SDK mapping contract.
-        /// </returns>
-        internal static bool QueryIsSupportedValueType(this IType type)
-        {
-            return type is IPrimitiveType || type is IDataType and not IEnumeration && type.Name is "UUID" or "URI" or "DateTime" or "Dictionary<string,string>";
-        }
-
-        /// <summary>
         /// Queries the complete POCO property type, including interface references, collections, and
         /// value-type nullability.
         /// </summary>
@@ -140,6 +126,20 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             return elementTypeName;
+        }
+
+        /// <summary>
+        /// Determines whether a UML type is a primitive or an approved custom value DataType.
+        /// </summary>
+        /// <param name="type">
+        /// The UML type to examine.
+        /// </param>
+        /// <returns>
+        /// <see langword="true" /> for a primitive or a custom value DataType approved by the SDK mapping contract.
+        /// </returns>
+        internal static bool QueryIsSupportedValueType(this IType type)
+        {
+            return type is IPrimitiveType || type is IDataType and not IEnumeration && type.Name is "UUID" or "URI" or "DateTime" or "Dictionary<string,string>";
         }
 
         /// <summary>

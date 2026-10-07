@@ -9,7 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
-    using System.Linq;
     using System.Text;
 
     using HandlebarsDotNet;
@@ -291,7 +290,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// </exception>
         private static void AppendSerializeValue(StringBuilder builder, IProperty property, string valueExpression, bool nullable, string valueDescription, int indentationLevel)
         {
-            if (property.Type is IClass || property.Type.QueryIsSupportedValueType() && property.Type.QueryCSharpTypeName() == "Guid")
+            if (property.Type is IClass || (property.Type.QueryIsSupportedValueType() && property.Type.QueryCSharpTypeName() == "Guid"))
             {
                 if (nullable)
                 {
@@ -376,7 +375,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             var (destination, addToCollection, nullable, valueDescription, _, indentationLevel) = context;
 
-            if (property.Type is IClass || property.Type.QueryIsSupportedValueType() && property.Type.QueryCSharpTypeName() == "Guid")
+            if (property.Type is IClass || (property.Type.QueryIsSupportedValueType() && property.Type.QueryCSharpTypeName() == "Guid"))
             {
                 AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "GuidMessagePackFormatter.Instance.Deserialize(ref reader, options)", indentationLevel);
 
@@ -566,29 +565,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         }
 
         /// <summary>
-        /// Groups the generated deserialization destination and value context.
-        /// </summary>
-        /// <param name="Destination">
-        /// The generated expression identifying the assignment destination or target collection.
-        /// </param>
-        /// <param name="AddToCollection">
-        /// Whether to add the decoded value to a collection instead of assigning it.
-        /// </param>
-        /// <param name="Nullable">
-        /// Whether the decoded value may be <see langword="null" />.
-        /// </param>
-        /// <param name="ValueDescription">
-        /// The modeled value description used in validation messages.
-        /// </param>
-        /// <param name="LocalName">
-        /// The identifier used for a generated local variable.
-        /// </param>
-        /// <param name="IndentationLevel">
-        /// The indentation level of the generated statements.
-        /// </param>
-        private readonly record struct DeserializationContext(string Destination, bool AddToCollection, bool Nullable, string ValueDescription, string LocalName, int IndentationLevel);
-
-        /// <summary>
         /// Appends invariant round-trip date and time serialization with optional <c>nil</c> handling.
         /// </summary>
         /// <param name="builder">
@@ -714,10 +690,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="indentationLevel">
         /// The generated indentation level.
         /// </param>
-        private static void AppendAssignment(StringBuilder builder, string destination, bool addToCollection, string valueExpression, int indentationLevel)
-        {
-            AppendLine(builder, indentationLevel, addToCollection ? $"{destination}.Add({valueExpression});" : $"{destination} = {valueExpression};");
-        }
+        private static void AppendAssignment(StringBuilder builder, string destination, bool addToCollection, string valueExpression, int indentationLevel) => AppendLine(builder, indentationLevel, addToCollection ? $"{destination}.Add({valueExpression});" : $"{destination} = {valueExpression};");
 
         /// <summary>
         /// Appends one deterministically indented generated source line.
@@ -798,9 +771,29 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// An empty collection initializer when required; otherwise, an empty string.
         /// </returns>
-        private static string QueryCollectionInitializer(IProperty property, string propertyTypeName)
-        {
-            return property.QueryIsEnumerable() || propertyTypeName.StartsWith("Dictionary<", StringComparison.Ordinal) ? " = [];" : string.Empty;
-        }
+        private static string QueryCollectionInitializer(IProperty property, string propertyTypeName) => property.QueryIsEnumerable() || propertyTypeName.StartsWith("Dictionary<", StringComparison.Ordinal) ? " = [];" : string.Empty;
+
+        /// <summary>
+        /// Groups the generated deserialization destination and value context.
+        /// </summary>
+        /// <param name="Destination">
+        /// The generated expression identifying the assignment destination or target collection.
+        /// </param>
+        /// <param name="AddToCollection">
+        /// Whether to add the decoded value to a collection instead of assigning it.
+        /// </param>
+        /// <param name="Nullable">
+        /// Whether the decoded value may be <see langword="null" />.
+        /// </param>
+        /// <param name="ValueDescription">
+        /// The modeled value description used in validation messages.
+        /// </param>
+        /// <param name="LocalName">
+        /// The identifier used for a generated local variable.
+        /// </param>
+        /// <param name="IndentationLevel">
+        /// The indentation level of the generated statements.
+        /// </param>
+        private readonly record struct DeserializationContext(string Destination, bool AddToCollection, bool Nullable, string ValueDescription, string LocalName, int IndentationLevel);
     }
 }

@@ -107,8 +107,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         {
             ArgumentNullException.ThrowIfNull(xmiReaderResult);
 
-            var allPackages = xmiReaderResult.Packages
-                .SelectMany(package => package.QueryPackages())
+            var allPackages = xmiReaderResult.Packages.SelectMany(package => package.QueryPackages())
                 .Distinct<IPackage>(ReferenceEqualityComparer.Instance)
                 .OrderBy(package => package.Name, StringComparer.Ordinal)
                 .ToArray();
@@ -119,25 +118,20 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                 .OrderBy(package => package.Name, StringComparer.Ordinal)
                 .ToArray();
 
-            var enumerations = generationPackages
-                .SelectMany(package => package.PackagedElement.OfType<IEnumeration>())
+            var enumerations = generationPackages.SelectMany(package => package.PackagedElement.OfType<IEnumeration>())
                 .OrderBy(enumeration => enumeration.Name, StringComparer.Ordinal);
 
-            var primitiveTypes = allPackages
-                .SelectMany(package => package.PackagedElement.OfType<IPrimitiveType>())
+            var primitiveTypes = allPackages.SelectMany(package => package.PackagedElement.OfType<IPrimitiveType>())
                 .OrderBy(primitiveType => primitiveType.Name, StringComparer.Ordinal);
 
-            var dataTypes = generationPackages
-                .SelectMany(package => package.PackagedElement.OfType<IDataType>())
+            var dataTypes = generationPackages.SelectMany(package => package.PackagedElement.OfType<IDataType>())
                 .Where(dataType => dataType is not IEnumeration && dataType is not IPrimitiveType)
                 .OrderBy(dataType => dataType.Name, StringComparer.Ordinal);
 
-            var classes = generationPackages
-                .SelectMany(package => package.PackagedElement.OfType<IClass>())
+            var classes = generationPackages.SelectMany(package => package.PackagedElement.OfType<IClass>())
                 .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal);
 
-            var interfaces = generationPackages
-                .SelectMany(package => package.PackagedElement.OfType<IInterface>())
+            var interfaces = generationPackages.SelectMany(package => package.PackagedElement.OfType<IInterface>())
                 .OrderBy(umlInterface => umlInterface.Name, StringComparer.Ordinal);
 
             return new HandlebarsPayload(rootPackage, allPackages, enumerations, primitiveTypes, dataTypes, classes, interfaces);
@@ -154,8 +148,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// </returns>
         protected static IClass[] QueryConcreteClasses(IEnumerable<IClass> classes)
         {
-            return classes
-                .Where(umlClass => !umlClass.IsAbstract)
+            return classes.Where(umlClass => !umlClass.IsAbstract)
                 .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal)
                 .ToArray();
         }
@@ -237,10 +230,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <summary>
         /// Clears the current model-derived documentation symbols.
         /// </summary>
-        protected void ClearDocumentationSymbols()
-        {
-            this.documentationSymbols = new Dictionary<string, string>(StringComparer.Ordinal);
-        }
+        protected void ClearDocumentationSymbols() => this.documentationSymbols = new Dictionary<string, string>(StringComparer.Ordinal);
 
         /// <summary>
         /// Resolves a UML documentation reference to its generated CLR symbol.
@@ -251,9 +241,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <returns>
         /// The generated CLR symbol, or <see langword="null" /> when no valid unambiguous symbol exists.
         /// </returns>
-        protected string ResolveDocumentationCref(string cref)
-        {
-            return cref is not null && this.documentationSymbols.TryGetValue(cref, out var generatedSymbol) ? generatedSymbol : null;
-        }
+        protected string ResolveDocumentationCref(string cref) => cref is not null && this.documentationSymbols.TryGetValue(cref, out var generatedSymbol) ? generatedSymbol : null;
     }
 }

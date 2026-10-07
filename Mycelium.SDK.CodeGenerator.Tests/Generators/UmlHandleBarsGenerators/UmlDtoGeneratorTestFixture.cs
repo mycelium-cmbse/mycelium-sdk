@@ -41,8 +41,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var functionalData = GeneratorSetupFixture.QueryFunctionalDataPackage(xmiReaderResult);
 
-            this.classes = functionalData.PackagedElement
-                .OfType<IClass>()
+            this.classes = functionalData.PackagedElement.OfType<IClass>()
                 .ToDictionary(umlClass => umlClass.Name, StringComparer.Ordinal);
 
             var generator = new UmlDtoGenerator();

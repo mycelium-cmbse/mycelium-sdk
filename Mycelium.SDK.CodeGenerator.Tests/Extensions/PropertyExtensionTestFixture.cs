@@ -118,6 +118,17 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             Assert.That(exception.Message, Is.EqualTo("Property 'unsupported' has unsupported UML type 'UnsupportedType'."));
         }
 
+        [Test]
+        public void Verify_that_QueryPropertyName_preserves_the_FunctionalData_contract() => Assert.That(this.roleProperty.QueryPropertyName(), Is.EqualTo("Role"));
+
+        [Test]
+        public void Verify_that_QueryPropertyName_rejects_a_null_property()
+        {
+            IProperty property = null;
+
+            Assert.That(() => property.QueryPropertyName(), Throws.ArgumentNullException);
+        }
+
         [TestCase("UUID", "Guid", "Guid?")]
         [TestCase("URI", "Uri", "Uri")]
         [TestCase("DateTime", "DateTime", "DateTime?")]
@@ -152,17 +163,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                 Assert.That(property.QueryDtoTypeName(), Is.EqualTo($"List<{elementTypeName}>"));
                 Assert.That(property.QueryPocoTypeName(), Is.EqualTo($"List<{elementTypeName}>"));
             }
-        }
-
-        [Test]
-        public void Verify_that_QueryPropertyName_preserves_the_FunctionalData_contract() => Assert.That(this.roleProperty.QueryPropertyName(), Is.EqualTo("Role"));
-
-        [Test]
-        public void Verify_that_QueryPropertyName_rejects_a_null_property()
-        {
-            IProperty property = null;
-
-            Assert.That(() => property.QueryPropertyName(), Throws.ArgumentNullException);
         }
 
         private IProperty QueryProperty(string className, string propertyName)
