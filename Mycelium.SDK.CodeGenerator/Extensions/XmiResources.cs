@@ -15,19 +15,19 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     public static class XmiResources
     {
         /// <summary>
-        /// The file name of the custom C# primitive types resolved through the local reference base path.
+        /// The file name of the packaged common value DataTypes resolved through the local reference base path.
         /// </summary>
-        public const string CSharpPrimitivesFileName = "CSharp_Primitives.xmi";
+        public const string CSharpPrimitivesFileName = "mycelium-commonprimitives.xmi";
 
         /// <summary>
-        /// The file name of the FunctionalData export.
+        /// The file name of the packaged Fabric export used by the existing FunctionalData loading entry points.
         /// </summary>
-        public const string FunctionalDataFileName = "FunctionalData.xmi";
+        public const string FunctionalDataFileName = "mycelium-fabric.xmi";
 
         /// <summary>
-        /// The exact name of the package carrying the FunctionalData model.
+        /// The exact name of the package carrying the Fabric SDK model.
         /// </summary>
-        public const string FunctionalDataPackageName = "FunctionalData";
+        public const string FunctionalDataPackageName = "Fabric";
 
         /// <summary>
         /// The file name of the Systems Modeling API and Services PIM export.

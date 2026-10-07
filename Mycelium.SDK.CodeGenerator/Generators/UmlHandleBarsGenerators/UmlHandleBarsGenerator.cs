@@ -1,9 +1,9 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="UmlHandleBarsGenerator.cs" company="Starion Group S.A.">
-// 
+//
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-// 
+//
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
@@ -18,7 +18,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
     using uml4net.xmi.Readers;
 
     /// <summary>
-    /// Base class for UML Handlebars generators targeting FunctionalData.
+    /// Base class for UML Handlebars generators targeting the packaged Fabric model.
     /// </summary>
     public abstract class UmlHandleBarsGenerator : HandleBarsGenerator
     {
@@ -36,10 +36,10 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
-        /// Loads and generates from the canonical FunctionalData resources.
+        /// Loads and generates from the canonical packaged Fabric resources.
         /// </summary>
         /// <param name="resourcesDirectory">
-        /// The directory containing the FunctionalData XMI resources.
+        /// The output directory containing the package-supplied Fabric XMI resources.
         /// </param>
         /// <param name="outputDirectory">
         /// The generated-output destination.
@@ -55,10 +55,10 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// Thrown when <paramref name="resourcesDirectory" /> does not exist.
         /// </exception>
         /// <exception cref="FileNotFoundException">
-        /// Thrown when a required FunctionalData resource is missing.
+        /// Thrown when a required Fabric resource is missing.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the loaded model does not contain exactly one FunctionalData package.
+        /// Thrown when the loaded model does not contain exactly one Fabric package.
         /// </exception>
         public Task GenerateAsync(DirectoryInfo resourcesDirectory, DirectoryInfo outputDirectory)
         {
@@ -89,19 +89,19 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         public abstract Task GenerateAsync(XmiReaderResult xmiReaderResult, DirectoryInfo outputDirectory);
 
         /// <summary>
-        /// Creates a deterministic payload for the FunctionalData package.
+        /// Creates a deterministic payload for the Fabric package.
         /// </summary>
         /// <param name="xmiReaderResult">
         /// The parsed UML model from which the payload is created.
         /// </param>
         /// <returns>
-        /// A deterministic Handlebars payload for the FunctionalData package.
+        /// A deterministic Handlebars payload for the Fabric package.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="xmiReaderResult" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the model does not contain exactly one FunctionalData package.
+        /// Thrown when the model does not contain exactly one Fabric package.
         /// </exception>
         protected static HandlebarsPayload CreateHandlebarsPayload(XmiReaderResult xmiReaderResult)
         {
@@ -144,10 +144,10 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
-        /// Selects every concrete FunctionalData class in ordinal type-name order.
+        /// Selects every concrete Fabric class in ordinal type-name order.
         /// </summary>
         /// <param name="classes">
-        /// The FunctionalData classes selected from the loaded model.
+        /// The Fabric classes selected from the loaded model.
         /// </param>
         /// <returns>
         /// The deterministically ordered concrete UML classes.
@@ -177,7 +177,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var ambiguousNames = new HashSet<string>(StringComparer.Ordinal);
 
-            void AddSymbol(string umlName, string generatedName)
+            void AddSymbol(string umlName, string generatedName, bool isValueType = false)
             {
                 if (string.IsNullOrWhiteSpace(umlName) || ambiguousNames.Contains(umlName))
                 {
@@ -188,7 +188,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
                 try
                 {
-                    generatedIdentifier = ReservedCSharpNameMapper.Map(generatedName);
+                    generatedIdentifier = isValueType ? generatedName.Replace('<', '{').Replace('>', '}') : ReservedCSharpNameMapper.Map(generatedName);
                 }
                 catch (ArgumentException)
                 {
@@ -196,6 +196,11 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                 }
 
                 if (symbols.TryAdd(umlName, generatedIdentifier))
+                {
+                    return;
+                }
+
+                if (isValueType && string.Equals(symbols[umlName], generatedIdentifier, StringComparison.Ordinal))
                 {
                     return;
                 }
@@ -214,9 +219,16 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                 AddSymbol(enumerationName, enumerationName);
             }
 
-            foreach (var primitiveTypeName in payload.PrimitiveTypes.Select(primitiveType => primitiveType.Name))
+            var valueTypes = payload.PrimitiveTypes.Cast<IDataType>()
+                .Concat(payload.Packages.SelectMany(package => package.PackagedElement.OfType<IDataType>()))
+                .Where(dataType => dataType.QueryIsSupportedValueType());
+
+            foreach (var valueType in valueTypes)
             {
-                AddSymbol(primitiveTypeName, primitiveTypeName);
+                var cSharpTypeName = valueType.QueryCSharpTypeName();
+
+                AddSymbol(valueType.Name, cSharpTypeName, isValueType: true);
+                AddSymbol(cSharpTypeName, cSharpTypeName, isValueType: true);
             }
 
             this.documentationSymbols = symbols;
