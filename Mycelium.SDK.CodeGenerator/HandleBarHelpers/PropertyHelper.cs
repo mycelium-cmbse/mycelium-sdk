@@ -334,7 +334,10 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     AppendSerializeRoundTripDateTime(builder, valueExpression, nullable, indentationLevel);
                     break;
                 case "Dictionary<string,string>":
-                    AppendSerializeReferenceValue(builder, valueExpression, !property.QueryIsEnumerable(), valueDescription, "StringDictionaryMessagePackFormatter", "Dictionary", indentationLevel);
+
+                    AppendSerializeReferenceValue(builder, valueExpression, !property.QueryIsEnumerable(), valueDescription,
+                        "StringDictionaryMessagePackFormatter", "Dictionary", indentationLevel);
+
                     break;
                 case "string":
 
@@ -377,7 +380,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             if (property.Type is IClass || (property.Type.QueryIsSupportedValueType() && property.Type.QueryCSharpTypeName() == "Guid"))
             {
-                AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "GuidMessagePackFormatter.Instance.Deserialize(ref reader, options)", indentationLevel);
+                AppendDeserializeNativeValue(builder, destination, addToCollection, nullable,
+                    "GuidMessagePackFormatter.Instance.Deserialize(ref reader, options)", indentationLevel);
 
                 return;
             }
@@ -414,7 +418,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     break;
                 case "string":
 
-                    AppendAssignment(builder, destination, addToCollection, nullable ? "reader.ReadString()" : $"ReadRequiredString(ref reader, \"{valueDescription}\")", indentationLevel);
+                    AppendAssignment(builder, destination, addToCollection,
+                        nullable ? "reader.ReadString()" : $"ReadRequiredString(ref reader, \"{valueDescription}\")", indentationLevel);
 
                     break;
                 case "Uri":
@@ -437,7 +442,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="formatterName">The dedicated formatter type.</param>
         /// <param name="typeDescription">The type description used for required-value errors.</param>
         /// <param name="indentationLevel">The generated indentation level.</param>
-        private static void AppendSerializeReferenceValue(StringBuilder builder, string valueExpression, bool nullable, string valueDescription, string formatterName, string typeDescription, int indentationLevel)
+        private static void AppendSerializeReferenceValue(StringBuilder builder, string valueExpression, bool nullable, string valueDescription,
+            string formatterName, string typeDescription, int indentationLevel)
         {
             AppendLine(builder, indentationLevel, $"if ({valueExpression} == null)");
             AppendLine(builder, indentationLevel, "{");
@@ -653,7 +659,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="indentationLevel">
         /// The generated indentation level.
         /// </param>
-        private static void AppendDeserializeNativeValue(StringBuilder builder, string destination, bool addToCollection, bool nullable, string readExpression, int indentationLevel)
+        private static void AppendDeserializeNativeValue(StringBuilder builder, string destination, bool addToCollection, bool nullable,
+            string readExpression, int indentationLevel)
         {
             if (!nullable)
             {
@@ -690,7 +697,10 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="indentationLevel">
         /// The generated indentation level.
         /// </param>
-        private static void AppendAssignment(StringBuilder builder, string destination, bool addToCollection, string valueExpression, int indentationLevel) => AppendLine(builder, indentationLevel, addToCollection ? $"{destination}.Add({valueExpression});" : $"{destination} = {valueExpression};");
+        private static void AppendAssignment(StringBuilder builder, string destination, bool addToCollection, string valueExpression, int indentationLevel)
+        {
+            AppendLine(builder, indentationLevel, addToCollection ? $"{destination}.Add({valueExpression});" : $"{destination} = {valueExpression};");
+        }
 
         /// <summary>
         /// Appends one deterministically indented generated source line.
@@ -771,7 +781,10 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// An empty collection initializer when required; otherwise, an empty string.
         /// </returns>
-        private static string QueryCollectionInitializer(IProperty property, string propertyTypeName) => property.QueryIsEnumerable() || propertyTypeName.StartsWith("Dictionary<", StringComparison.Ordinal) ? " = [];" : string.Empty;
+        private static string QueryCollectionInitializer(IProperty property, string propertyTypeName)
+        {
+            return property.QueryIsEnumerable() || propertyTypeName.StartsWith("Dictionary<", StringComparison.Ordinal) ? " = [];" : string.Empty;
+        }
 
         /// <summary>
         /// Groups the generated deserialization destination and value context.
@@ -794,6 +807,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="IndentationLevel">
         /// The indentation level of the generated statements.
         /// </param>
-        private readonly record struct DeserializationContext(string Destination, bool AddToCollection, bool Nullable, string ValueDescription, string LocalName, int IndentationLevel);
+        private readonly record struct DeserializationContext(string Destination, bool AddToCollection, bool Nullable, string ValueDescription,
+            string LocalName, int IndentationLevel);
     }
 }

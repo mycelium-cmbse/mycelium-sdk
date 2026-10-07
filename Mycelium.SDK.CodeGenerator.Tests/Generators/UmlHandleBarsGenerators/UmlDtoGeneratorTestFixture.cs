@@ -66,7 +66,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             foreach (var fileName in generatedFileNames)
             {
-                await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, fileName), Path.Combine(this.committedDirectory.FullName, fileName), $"Generated DTO '{fileName}'", "the committed SDK source");
+                await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, fileName),
+                    Path.Combine(this.committedDirectory.FullName, fileName), $"Generated DTO '{fileName}'", "the committed SDK source");
             }
         }
 
@@ -84,7 +85,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var interfaceFileName = $"I{className}.cs";
 
-            await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, interfaceFileName), Path.Combine(this.expectedDirectory.FullName, interfaceFileName), $"Generated DTO interface '{interfaceFileName}'", "its reviewed golden");
+            await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, interfaceFileName),
+                Path.Combine(this.expectedDirectory.FullName, interfaceFileName), $"Generated DTO interface '{interfaceFileName}'", "its reviewed golden");
 
             if (umlClass.IsAbstract)
             {
@@ -93,7 +95,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var classFileName = $"{className}.cs";
 
-            await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, classFileName), Path.Combine(this.expectedDirectory.FullName, classFileName), $"Generated DTO class '{classFileName}'", "its reviewed golden");
+            await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, classFileName),
+                Path.Combine(this.expectedDirectory.FullName, classFileName), $"Generated DTO class '{classFileName}'", "its reviewed golden");
         }
 
         [TestCase("UUID", "Guid")]
