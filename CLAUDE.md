@@ -50,7 +50,7 @@ must never be edited directly. Change the **template or the helper** instead —
 
 The pipeline:
 
-1. **Input** (read-only): `Resources/FunctionalData.xmi` — a UML/XMI export produced by Enterprise Architect, and the **single source of truth** for every generated DTO, POCO and enumeration. It is resolved against `Resources/PrimitiveTypes.xmi` (the OMG standard primitives: `Boolean`, `Integer`, `Real`, `String`, `UnlimitedNatural`) and `Resources/CSharp_Primitives.xmi` (the platform primitives: `DateTime`, `Guid`, `Uri`, `Dictionary<string,string>`). All three are external artifacts.
+1. **Input** (read-only): `mycelium-fabric.xmi` from `Mycelium.Model.Fabric` 0.2.0 is the source of truth for SDK generation. Its `Fabric` package uses `mycelium-commonprimitives.xmi` from the package's `Mycelium.Model.CommonPrimitives` 0.3.0 dependency. The generator project copies both files unchanged into build/test output `Resources/` using the package-exported MSBuild paths. Standard UML primitives resolve offline through UML4Net's embedded resource. The approved custom DataTypes map `UUID` to `Guid`, `URI` to `Uri`, and retain `DateTime` and `Dictionary<string,string>`; code generation and documentation use the same UML4Net C# mappings. Runtime projects do not depend on these model packages.
 2. **Generator**: `Mycelium.SDK.CodeGenerator` reads the XMI via `uml4net.xmi` (with the Enterprise Architect extender) and renders Handlebars templates from `Mycelium.SDK.CodeGenerator/Templates/Uml/*.hbs`.
 3. **Output**: `Mycelium.SDK/AutoGenDTO/`, `Mycelium.SDK/AutoGenPOCO/`, `Mycelium.SDK/AutoGenEnum/`.
 
@@ -66,7 +66,7 @@ Generator classes in `Mycelium.SDK.CodeGenerator/Generators/UmlHandleBarsGenerat
 
 They sit on the shared bases `UmlClassHandleBarsGenerator` → `UmlHandleBarsGenerator` → `Generator`. Supporting code: Handlebars helpers in `Mycelium.SDK.CodeGenerator/HandleBarHelpers/`, UML queries in `Mycelium.SDK.CodeGenerator/Extensions/`.
 
-XMI loading is centralised in `Mycelium.SDK.CodeGenerator.Tests/Generators/UmlHandleBarsGenerators/GeneratorSetupFixture.cs` (`ResourcesDirectory`, `ReadFunctionalData()`, `QueryFunctionalDataPackage()`). Reuse those helpers — do not hand-roll another `XmiReaderBuilder` with its own settings and path maps.
+Production XMI loading is centralised in `Mycelium.SDK.CodeGenerator/Extensions/XmiReadingExtensions.cs`. Tests delegate to it through `Mycelium.SDK.CodeGenerator.Tests/Generators/UmlHandleBarsGenerators/GeneratorSetupFixture.cs` (`ResourcesDirectory`, `ReadFunctionalData()`, `QueryFunctionalDataPackage()`). Those test helper names are retained while their input is the packaged Fabric model. Reuse the canonical loading path rather than constructing another reader with independent settings or path maps.
 
 **Every model under `Resources/` is read through one pair of extension methods.** `Extensions/XmiReadingExtensions.cs` provides `DirectoryInfo.ReadModel(fileName, useStrictReading)` and `XmiReaderResult.QueryPackage(packageName)`; the file and package names are constants in `Extensions/XmiResources.cs`. Strict reading is the only setting that varies between pipelines, so a new model is one call, not a new loader class. The Enterprise Architect extender is applied unconditionally — it activates only on EA extension content, and the PIM goldens are byte-identical with it in place.
 

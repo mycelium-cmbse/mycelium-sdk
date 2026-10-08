@@ -13,6 +13,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
 
     using uml4net.StructuredClassifiers;
+    using uml4net.xmi.Readers;
 
     [TestFixture]
     public class UmlDtoGeneratorTestFixture : UmlClassGeneratorTestFixtureBase
@@ -40,8 +41,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var functionalData = GeneratorSetupFixture.QueryFunctionalDataPackage(xmiReaderResult);
 
-            this.classes = functionalData.PackagedElement
-                .OfType<IClass>()
+            this.classes = functionalData.PackagedElement.OfType<IClass>()
                 .ToDictionary(umlClass => umlClass.Name, StringComparer.Ordinal);
 
             var generator = new UmlDtoGenerator();
@@ -66,7 +66,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             foreach (var fileName in generatedFileNames)
             {
-                await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, fileName), Path.Combine(this.committedDirectory.FullName, fileName), $"Generated DTO '{fileName}'", "the committed SDK source");
+                await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, fileName),
+                    Path.Combine(this.committedDirectory.FullName, fileName), $"Generated DTO '{fileName}'", "the committed SDK source");
             }
         }
 
@@ -84,7 +85,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var interfaceFileName = $"I{className}.cs";
 
-            await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, interfaceFileName), Path.Combine(this.expectedDirectory.FullName, interfaceFileName), $"Generated DTO interface '{interfaceFileName}'", "its reviewed golden");
+            await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, interfaceFileName),
+                Path.Combine(this.expectedDirectory.FullName, interfaceFileName), $"Generated DTO interface '{interfaceFileName}'", "its reviewed golden");
 
             if (umlClass.IsAbstract)
             {
@@ -93,7 +95,43 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var classFileName = $"{className}.cs";
 
-            await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, classFileName), Path.Combine(this.expectedDirectory.FullName, classFileName), $"Generated DTO class '{classFileName}'", "its reviewed golden");
+            await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, classFileName),
+                Path.Combine(this.expectedDirectory.FullName, classFileName), $"Generated DTO class '{classFileName}'", "its reviewed golden");
+        }
+
+        [TestCase("UUID", "Guid")]
+        [TestCase("Guid", "Guid")]
+        [TestCase("URI", "Uri")]
+        [TestCase("Uri", "Uri")]
+        [TestCase("DateTime", "DateTime")]
+        [TestCase("Dictionary<string,string>", "Dictionary{string,string}")]
+        [TestCase("Integer", "int")]
+        public void VerifyThatDocumentationReferencesUseTheSharedValueMappings(string reference, string expectedSymbol)
+        {
+            var generator = new DocumentationSymbolGenerator();
+            var result = GeneratorSetupFixture.ReadFunctionalData();
+
+            Assert.That(generator.Resolve(result, reference), Is.EqualTo(expectedSymbol));
+        }
+
+        private sealed class DocumentationSymbolGenerator : UmlHandleBarsGenerator
+        {
+            public string Resolve(XmiReaderResult result, string reference)
+            {
+                this.ConfigureDocumentationSymbols(CreateHandlebarsPayload(result));
+
+                return this.ResolveDocumentationCref(reference);
+            }
+
+            public override Task GenerateAsync(XmiReaderResult xmiReaderResult, DirectoryInfo outputDirectory) => Task.CompletedTask;
+
+            protected override void RegisterHelpers()
+            {
+            }
+
+            protected override void RegisterTemplates()
+            {
+            }
         }
     }
 }

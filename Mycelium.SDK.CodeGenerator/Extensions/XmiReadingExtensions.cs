@@ -26,6 +26,14 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     /// </summary>
     public static class XmiReadingExtensions
     {
+        /// <summary>
+        /// Registers the shared C# mappings for the model's UUID and URI value types.
+        /// </summary>
+        static XmiReadingExtensions()
+        {
+            TypeExtensions.AddOrOverwriteCSharpTypeMappings(("UUID", "Guid"), ("URI", "Uri"));
+        }
+
         extension(DirectoryInfo resourcesDirectory)
         {
             /// <summary>
@@ -45,11 +53,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             {
                 ArgumentNullException.ThrowIfNull(resourcesDirectory);
 
-                return new DefaultSettings
-                {
-                    LocalReferenceBasePath = resourcesDirectory.FullName,
-                    UseStrictReading = useStrictReading
-                };
+                return new DefaultSettings { LocalReferenceBasePath = resourcesDirectory.FullName, UseStrictReading = useStrictReading };
             }
 
             /// <summary>
@@ -133,8 +137,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 ArgumentNullException.ThrowIfNull(xmiReaderResult);
                 ArgumentException.ThrowIfNullOrEmpty(packageName);
 
-                return xmiReaderResult.Packages
-                    .SelectMany(package => package.QueryPackages())
+                return xmiReaderResult.Packages.SelectMany(package => package.QueryPackages())
                     .Single(package => string.Equals(package.Name, packageName, StringComparison.Ordinal));
             }
         }

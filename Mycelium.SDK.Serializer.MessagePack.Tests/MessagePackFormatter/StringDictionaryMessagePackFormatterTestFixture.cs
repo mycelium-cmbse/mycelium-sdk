@@ -54,8 +54,15 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests.MessagePackFormatter
 
             foreach (var entry in originalEntries)
             {
-                Assert.That(reader.ReadString(), Is.EqualTo(entry.Key));
-                Assert.That(reader.ReadString(), Is.EqualTo(entry.Value));
+                var actualKey = reader.ReadString();
+                var actualValue = reader.ReadString();
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(actualKey, Is.EqualTo(entry.Key));
+
+                    Assert.That(actualValue, Is.EqualTo(entry.Value));
+                }
             }
 
             var actual = Deserialize(payload);
@@ -76,8 +83,8 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests.MessagePackFormatter
         {
             using (Assert.EnterMultipleScope())
             {
-                Assert.Throws<MessagePackSerializationException>(() => Serialize(null));
-                Assert.Throws<MessagePackSerializationException>(() => Serialize(new Dictionary<string, string> { ["key"] = null }));
+                Assert.That(() => Serialize(null), Throws.TypeOf<MessagePackSerializationException>());
+                Assert.That(() => Serialize(new Dictionary<string, string> { ["key"] = null }), Throws.TypeOf<MessagePackSerializationException>());
             }
         }
 
@@ -92,7 +99,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests.MessagePackFormatter
         [TestCase("82A16BA161A16BA162")]
         public void Verify_that_nil_non_maps_invalid_entries_and_duplicate_keys_are_rejected(string hex)
         {
-            Assert.Throws<MessagePackSerializationException>(() => Deserialize(Convert.FromHexString(hex)));
+            Assert.That(() => Deserialize(Convert.FromHexString(hex)), Throws.TypeOf<MessagePackSerializationException>());
         }
 
         private static byte[] Serialize(Dictionary<string, string> value)

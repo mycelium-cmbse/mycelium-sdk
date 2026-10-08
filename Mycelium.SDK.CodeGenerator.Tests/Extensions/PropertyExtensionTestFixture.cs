@@ -113,9 +113,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         {
             var property = new Property { XmiId = "property-id", Name = "unsupported", Type = new DataType { XmiId = "unsupported-type", Name = "UnsupportedType" } };
 
-            var exception = Assert.Throws<InvalidOperationException>(() => property.QueryPocoTypeName());
-
-            Assert.That(exception.Message, Is.EqualTo("Property 'unsupported' has unsupported UML type 'UnsupportedType'."));
+            Assert.That(() => property.QueryPocoTypeName(), Throws.TypeOf<InvalidOperationException>()
+                .With.Message.EqualTo("Property 'unsupported' has unsupported UML type 'UnsupportedType'."));
         }
 
         [Test]
@@ -127,6 +126,46 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             IProperty property = null;
 
             Assert.That(() => property.QueryPropertyName(), Throws.ArgumentNullException);
+        }
+
+        [TestCase("UUID", "Guid", "Guid?")]
+        [TestCase("URI", "Uri", "Uri")]
+        [TestCase("DateTime", "DateTime", "DateTime?")]
+        [TestCase("Dictionary<string,string>", "Dictionary<string,string>", "Dictionary<string,string>")]
+        public void VerifyThatCustomPrimitivesPreserveScalarNullabilityAndCollections(string modelTypeName, string elementTypeName, string optionalTypeName)
+        {
+            var property = new Property { XmiId = "custom-value", Name = "customValue", Type = new PrimitiveType { XmiId = "custom-type", Name = modelTypeName } };
+
+            property.LowerValue.Add(new LiteralInteger { Value = 1 });
+            property.UpperValue.Add(new LiteralUnlimitedNatural { Value = "1" });
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(property.QueryDtoTypeName(), Is.EqualTo(elementTypeName));
+
+                if (modelTypeName == "URI")
+                {
+                    Assert.That(property.QueryPocoTypeName(), Is.EqualTo(elementTypeName));
+                }
+            }
+
+            property.LowerValue.Clear();
+            property.LowerValue.Add(new LiteralInteger { Value = 0 });
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(property.QueryDtoTypeName(), Is.EqualTo(optionalTypeName));
+                Assert.That(property.QueryPocoTypeName(), Is.EqualTo(optionalTypeName));
+            }
+
+            property.UpperValue.Clear();
+            property.UpperValue.Add(new LiteralUnlimitedNatural { Value = "*" });
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(property.QueryDtoTypeName(), Is.EqualTo($"List<{elementTypeName}>"));
+                Assert.That(property.QueryPocoTypeName(), Is.EqualTo($"List<{elementTypeName}>"));
+            }
         }
 
         private IProperty QueryProperty(string className, string propertyName)

@@ -1,9 +1,9 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="PropertyExtension.cs" company="Starion Group S.A.">
-// 
+//
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-// 
+//
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
@@ -81,7 +81,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 return $"List<{elementTypeName}>";
             }
 
-            if (property.QueryIsNullableAndNotString())
+            if (property.QueryIsNullableAndNotString() && elementTypeName is not ("Uri" or "Dictionary<string,string>"))
             {
                 return $"{elementTypeName}?";
             }
@@ -210,10 +210,10 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         }
 
         /// <summary>
-        /// Preserves the uml4net C# representation of a modeled primitive type.
+        /// Preserves the uml4net C# representation of a standard or custom primitive.
         /// </summary>
         /// <param name="primitiveType">
-        /// The modeled primitive type.
+        /// The modeled standard or custom primitive.
         /// </param>
         /// <param name="property">
         /// The property using the primitive type.
@@ -255,7 +255,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 return true;
             }
 
-            return property.Type is IPrimitiveType && elementTypeName is "bool" or "byte" or "sbyte" or "short" or "ushort" or "int" or "uint" or "long" or "ulong" or "nint" or "nuint" or "char" or "float" or "double" or "decimal" or "DateTime" or "DateTimeOffset" or "Guid" or "TimeSpan";
+            return property.Type is IPrimitiveType && elementTypeName is
+                "bool" or "byte" or "sbyte" or "short" or "ushort" or "int" or "uint" or "long" or "ulong" or "nint" or "nuint" or "char" or
+                "float" or "double" or "decimal" or "DateTime" or "DateTimeOffset" or "Guid" or "TimeSpan";
         }
 
         /// <summary>

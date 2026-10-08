@@ -9,7 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
-    using System.Linq;
     using System.Text;
 
     using HandlebarsDotNet;
@@ -291,7 +290,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// </exception>
         private static void AppendSerializeValue(StringBuilder builder, IProperty property, string valueExpression, bool nullable, string valueDescription, int indentationLevel)
         {
-            if (property.Type is IClass || property.Type is IPrimitiveType { Name: "Guid" })
+            if (property.Type is IClass || (property.Type is IPrimitiveType && property.Type.QueryCSharpTypeName() == "Guid"))
             {
                 if (nullable)
                 {
@@ -319,26 +318,28 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 return;
             }
 
-            if (property.Type is not IPrimitiveType primitiveType)
+            if (property.Type is not IPrimitiveType)
             {
                 throw new InvalidOperationException($"Property '{property.Describe()}' has no supported MessagePack type.");
             }
 
-            switch (primitiveType.Name)
+            switch (property.Type.QueryCSharpTypeName())
             {
-                case "Boolean":
-                case "Integer":
-                case "Real":
+                case "bool":
+                case "int":
+                case "double":
                     AppendSerializeNativeValue(builder, valueExpression, nullable, indentationLevel);
                     break;
                 case "DateTime":
                     AppendSerializeRoundTripDateTime(builder, valueExpression, nullable, indentationLevel);
                     break;
                 case "Dictionary<string,string>":
-                    AppendSerializeReferenceValue(builder, valueExpression, !property.QueryIsEnumerable(), valueDescription, "StringDictionaryMessagePackFormatter", "Dictionary", indentationLevel);
+
+                    AppendSerializeReferenceValue(builder, valueExpression, !property.QueryIsEnumerable(), valueDescription,
+                        "StringDictionaryMessagePackFormatter", "Dictionary", indentationLevel);
+
                     break;
-                case "String":
-                case "UnlimitedNatural":
+                case "string":
 
                     if (nullable)
                     {
@@ -354,7 +355,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     AppendSerializeReferenceValue(builder, valueExpression, nullable, valueDescription, "UriMessagePackFormatter", "URI", indentationLevel);
                     break;
                 default:
-                    throw new InvalidOperationException($"Property '{property.Describe()}' uses unsupported MessagePack primitive '{primitiveType.Name}'.");
+                    throw new InvalidOperationException($"Property '{property.Describe()}' uses unsupported MessagePack primitive '{property.Type.Name}'.");
             }
         }
 
@@ -377,9 +378,10 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             var (destination, addToCollection, nullable, valueDescription, _, indentationLevel) = context;
 
-            if (property.Type is IClass || property.Type is IPrimitiveType { Name: "Guid" })
+            if (property.Type is IClass || (property.Type is IPrimitiveType && property.Type.QueryCSharpTypeName() == "Guid"))
             {
-                AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "GuidMessagePackFormatter.Instance.Deserialize(ref reader, options)", indentationLevel);
+                AppendDeserializeNativeValue(builder, destination, addToCollection, nullable,
+                    "GuidMessagePackFormatter.Instance.Deserialize(ref reader, options)", indentationLevel);
 
                 return;
             }
@@ -391,14 +393,14 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 return;
             }
 
-            if (property.Type is not IPrimitiveType primitiveType)
+            if (property.Type is not IPrimitiveType)
             {
                 throw new InvalidOperationException($"Property '{property.Describe()}' has no supported MessagePack type.");
             }
 
-            switch (primitiveType.Name)
+            switch (property.Type.QueryCSharpTypeName())
             {
-                case "Boolean":
+                case "bool":
                     AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "reader.ReadBoolean()", indentationLevel);
                     break;
                 case "DateTime":
@@ -408,16 +410,16 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     AppendDeserializeReferenceValue(builder, context, !property.QueryIsEnumerable(), "StringDictionaryMessagePackFormatter", "Dictionary");
 
                     break;
-                case "Integer":
+                case "int":
                     AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "reader.ReadInt32()", indentationLevel);
                     break;
-                case "Real":
+                case "double":
                     AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, "reader.ReadDouble()", indentationLevel);
                     break;
-                case "String":
-                case "UnlimitedNatural":
+                case "string":
 
-                    AppendAssignment(builder, destination, addToCollection, nullable ? "reader.ReadString()" : $"ReadRequiredString(ref reader, \"{valueDescription}\")", indentationLevel);
+                    AppendAssignment(builder, destination, addToCollection,
+                        nullable ? "reader.ReadString()" : $"ReadRequiredString(ref reader, \"{valueDescription}\")", indentationLevel);
 
                     break;
                 case "Uri":
@@ -426,7 +428,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                     break;
                 default:
-                    throw new InvalidOperationException($"Property '{property.Describe()}' uses unsupported MessagePack primitive '{primitiveType.Name}'.");
+                    throw new InvalidOperationException($"Property '{property.Describe()}' uses unsupported MessagePack primitive '{property.Type.Name}'.");
             }
         }
 
@@ -440,7 +442,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="formatterName">The dedicated formatter type.</param>
         /// <param name="typeDescription">The type description used for required-value errors.</param>
         /// <param name="indentationLevel">The generated indentation level.</param>
-        private static void AppendSerializeReferenceValue(StringBuilder builder, string valueExpression, bool nullable, string valueDescription, string formatterName, string typeDescription, int indentationLevel)
+        private static void AppendSerializeReferenceValue(StringBuilder builder, string valueExpression, bool nullable, string valueDescription,
+            string formatterName, string typeDescription, int indentationLevel)
         {
             AppendLine(builder, indentationLevel, $"if ({valueExpression} == null)");
             AppendLine(builder, indentationLevel, "{");
@@ -568,29 +571,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         }
 
         /// <summary>
-        /// Groups the generated deserialization destination and value context.
-        /// </summary>
-        /// <param name="Destination">
-        /// The generated expression identifying the assignment destination or target collection.
-        /// </param>
-        /// <param name="AddToCollection">
-        /// Whether to add the decoded value to a collection instead of assigning it.
-        /// </param>
-        /// <param name="Nullable">
-        /// Whether the decoded value may be <see langword="null" />.
-        /// </param>
-        /// <param name="ValueDescription">
-        /// The modeled value description used in validation messages.
-        /// </param>
-        /// <param name="LocalName">
-        /// The identifier used for a generated local variable.
-        /// </param>
-        /// <param name="IndentationLevel">
-        /// The indentation level of the generated statements.
-        /// </param>
-        private readonly record struct DeserializationContext(string Destination, bool AddToCollection, bool Nullable, string ValueDescription, string LocalName, int IndentationLevel);
-
-        /// <summary>
         /// Appends invariant round-trip date and time serialization with optional <c>nil</c> handling.
         /// </summary>
         /// <param name="builder">
@@ -679,7 +659,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="indentationLevel">
         /// The generated indentation level.
         /// </param>
-        private static void AppendDeserializeNativeValue(StringBuilder builder, string destination, bool addToCollection, bool nullable, string readExpression, int indentationLevel)
+        private static void AppendDeserializeNativeValue(StringBuilder builder, string destination, bool addToCollection, bool nullable,
+            string readExpression, int indentationLevel)
         {
             if (!nullable)
             {
@@ -804,5 +785,29 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             return property.QueryIsEnumerable() || propertyTypeName.StartsWith("Dictionary<", StringComparison.Ordinal) ? " = [];" : string.Empty;
         }
+
+        /// <summary>
+        /// Groups the generated deserialization destination and value context.
+        /// </summary>
+        /// <param name="Destination">
+        /// The generated expression identifying the assignment destination or target collection.
+        /// </param>
+        /// <param name="AddToCollection">
+        /// Whether to add the decoded value to a collection instead of assigning it.
+        /// </param>
+        /// <param name="Nullable">
+        /// Whether the decoded value may be <see langword="null" />.
+        /// </param>
+        /// <param name="ValueDescription">
+        /// The modeled value description used in validation messages.
+        /// </param>
+        /// <param name="LocalName">
+        /// The identifier used for a generated local variable.
+        /// </param>
+        /// <param name="IndentationLevel">
+        /// The indentation level of the generated statements.
+        /// </param>
+        private readonly record struct DeserializationContext(string Destination, bool AddToCollection, bool Nullable, string ValueDescription,
+            string LocalName, int IndentationLevel);
     }
 }

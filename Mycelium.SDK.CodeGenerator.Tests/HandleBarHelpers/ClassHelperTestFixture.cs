@@ -61,9 +61,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         public void Verify_that_Poco_class_helpers_reject_multiple_arguments()
         {
             var template = this.pocoHandlebars.Compile("{{ #Class.WritePocoInterfaceIdentifier this this }}");
-            var exception = Assert.Throws<HandlebarsException>(() => template(new object()));
 
-            Assert.That(exception.Message, Is.EqualTo("{{Class.WritePocoInterfaceIdentifier}} requires exactly one argument."));
+            Assert.That(() => template(new object()), Throws.TypeOf<HandlebarsException>()
+                .With.Message.EqualTo("{{Class.WritePocoInterfaceIdentifier}} requires exactly one argument."));
         }
 
         [Test]
@@ -71,9 +71,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         {
             var template = this.pocoHandlebars.Compile("{{ #Class.WritePocoInterfaceIdentifier this }}");
 
-            var exception = Assert.Throws<HandlebarsException>(() => template(new object()));
-
-            Assert.That(exception.Message, Is.EqualTo("{{Class.WritePocoInterfaceIdentifier}} requires an IClass argument."));
+            Assert.That(() => template(new object()), Throws.TypeOf<HandlebarsException>()
+                .With.Message.EqualTo("{{Class.WritePocoInterfaceIdentifier}} requires an IClass argument."));
         }
 
         [Test]
