@@ -1,4 +1,4 @@
-﻿// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 //  <copyright file="UmlClassGeneratorTestFixtureBase.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
@@ -9,11 +9,9 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
-    using System.Text;
 
     public abstract class UmlClassGeneratorTestFixtureBase
     {
-        protected static UTF8Encoding StrictUtf8WithoutBom { get; } = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         protected static async Task AssertFilesMatchAsync(string generatedPath, string expectedPath, string generatedDescription, string expectedDescription)
         {

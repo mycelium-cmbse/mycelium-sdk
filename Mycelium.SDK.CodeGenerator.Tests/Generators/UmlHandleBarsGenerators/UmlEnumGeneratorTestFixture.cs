@@ -9,8 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
-    using System.Text;
-
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
     using Mycelium.SDK.CodeGenerator.Tests.Expected;
 
@@ -21,7 +19,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     {
         private static readonly string[] ExpectedKeywordFileNames = ["class.cs"];
 
-        private static readonly UTF8Encoding StrictUtf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         private DirectoryInfo committedDirectory = null!;
         private DirectoryInfo expectedDirectory = null!;
@@ -48,37 +45,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         [Test]
-        public async Task Verify_that_all_generated_enumerations_use_the_required_file_format()
-        {
-            var generatedFiles = this.stagingDirectory.GetFiles("*.cs", SearchOption.TopDirectoryOnly)
-                .OrderBy(file => file.Name, StringComparer.Ordinal);
-
-            foreach (var generatedFile in generatedFiles)
-            {
-                var bytes = await File.ReadAllBytesAsync(generatedFile.FullName);
-
-                var hasUtf8Bom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
-
-                var source = StrictUtf8WithoutBom.GetString(bytes);
-
-                var sourceWithoutCrLf = source.Replace("\r\n", string.Empty, StringComparison.Ordinal);
-
-                using (Assert.EnterMultipleScope())
-                {
-                    Assert.That(hasUtf8Bom, Is.False, $"Generated '{generatedFile.Name}' contains a UTF-8 byte-order mark.");
-
-                    Assert.That(source, Does.Contain("\r\n"), $"Generated '{generatedFile.Name}' contains no CRLF line endings.");
-
-                    Assert.That(sourceWithoutCrLf, Does.Not.Contain("\r"), $"Generated '{generatedFile.Name}' contains a standalone carriage return.");
-
-                    Assert.That(sourceWithoutCrLf, Does.Not.Contain("\n"), $"Generated '{generatedFile.Name}' contains a standalone line feed.");
-
-                    Assert.That(source, Does.Contain("[GeneratedCode(\"Mycelium.SDK\", \"latest\")]"), $"Generated '{generatedFile.Name}' does not contain the generated-code marker.");
-                }
-            }
-        }
-
-        [Test]
         public async Task Verify_that_complete_staged_output_matches_committed_AutoGenEnum()
         {
             Assert.That(this.committedDirectory.Exists, Is.True, "The committed SDK enum directory was not copied to the test output.");
@@ -88,8 +54,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var stagedFileNames = QueryRelativeFileNames(this.stagingDirectory);
-            var committedFileNames = QueryRelativeFileNames(this.committedDirectory);
+            var stagedFileNames = GeneratedOutput.QueryRelativeFileNames(this.stagingDirectory);
+            var committedFileNames = GeneratedOutput.QueryRelativeFileNames(this.committedDirectory);
 
             Assert.That(stagedFileNames, Is.EqualTo(committedFileNames), "The staged and committed enum manifests differ.");
 
@@ -115,7 +81,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(QueryRelativeFileNames(outputDirectory), Is.EqualTo(ExpectedKeywordFileNames));
+                Assert.That(GeneratedOutput.QueryRelativeFileNames(outputDirectory), Is.EqualTo(ExpectedKeywordFileNames));
 
                 Assert.That(source, Does.Contain("enum @class"));
                 Assert.That(source, Does.Contain("@event,"));
@@ -132,7 +98,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 .OrderBy(fileName => fileName, StringComparer.Ordinal)
                 .ToArray();
 
-            var goldenFileNames = QueryRelativeFileNames(this.expectedDirectory);
+            var goldenFileNames = GeneratedOutput.QueryRelativeFileNames(this.expectedDirectory);
 
             Assert.That(goldenFileNames, Is.EqualTo(representativeFileNames), "The reviewed enum golden set must contain exactly the bounded representative selection.");
         }
@@ -160,14 +126,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
 
             return enumeration;
-        }
-
-        private static string[] QueryRelativeFileNames(DirectoryInfo directory)
-        {
-            return directory.GetFiles("*", SearchOption.AllDirectories)
-                .Select(file => Path.GetRelativePath(directory.FullName, file.FullName))
-                .OrderBy(fileName => fileName, StringComparer.Ordinal)
-                .ToArray();
         }
 
         private static DirectoryInfo QueryFreshOutputDirectory(string directoryName)

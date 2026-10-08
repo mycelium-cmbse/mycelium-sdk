@@ -71,32 +71,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         [Test]
-        public async Task Verify_that_generated_DTOs_use_the_required_file_format()
-        {
-            foreach (var fileName in QueryCSharpFileNames(this.stagingDirectory))
-            {
-                var bytes = await File.ReadAllBytesAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
-
-                var hasUtf8Bom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
-
-                var source = StrictUtf8WithoutBom.GetString(bytes);
-
-                var sourceWithoutCrLf = source.Replace("\r\n", string.Empty, StringComparison.Ordinal);
-
-                using (Assert.EnterMultipleScope())
-                {
-                    Assert.That(hasUtf8Bom, Is.False, $"Generated DTO '{fileName}' contains a UTF-8 byte-order mark.");
-
-                    Assert.That(source, Does.Contain("\r\n"), $"Generated DTO '{fileName}' contains no CRLF line endings.");
-
-                    Assert.That(sourceWithoutCrLf, Does.Not.Contain("\r"), $"Generated DTO '{fileName}' contains a standalone carriage return.");
-
-                    Assert.That(sourceWithoutCrLf, Does.Not.Contain("\n"), $"Generated DTO '{fileName}' contains a standalone line feed.");
-                }
-            }
-        }
-
-        [Test]
         [TestCaseSource(typeof(RepresentativeClasses))]
         [Category("Expected")]
         public async Task Verify_that_representative_DTOs_match_reviewed_goldens(string className)

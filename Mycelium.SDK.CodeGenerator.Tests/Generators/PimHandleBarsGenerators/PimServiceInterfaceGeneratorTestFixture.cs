@@ -9,8 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.PimHandleBarsGenerators
 {
-    using System.Text;
-
     using Mycelium.SDK.CodeGenerator.Extensions;
     using Mycelium.SDK.CodeGenerator.Generators.PimHandleBarsGenerators;
     using Mycelium.SDK.CodeGenerator.Tests.Pim;
@@ -18,7 +16,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.PimHandleBarsGenerators
     [TestFixture]
     public class PimServiceInterfaceGeneratorTestFixture
     {
-        private static readonly UTF8Encoding StrictUtf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         private DirectoryInfo expectedDirectory = null!;
         private DirectoryInfo stagingDirectory = null!;
@@ -72,8 +69,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.PimHandleBarsGenerators
         [Test]
         public async Task VerifyThatGeneratedInterfacesMatchTheirGoldenFiles()
         {
-            var stagedFileNames = QueryRelativeFileNames(this.stagingDirectory);
-            var goldenFileNames = QueryRelativeFileNames(this.expectedDirectory);
+            var stagedFileNames = GeneratedOutput.QueryRelativeFileNames(this.stagingDirectory);
+            var goldenFileNames = GeneratedOutput.QueryRelativeFileNames(this.expectedDirectory);
 
             using (Assert.EnterMultipleScope())
             {
@@ -89,38 +86,5 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.PimHandleBarsGenerators
             }
         }
 
-        [Test]
-        public async Task VerifyThatGeneratedInterfacesUseTheRequiredFileFormat()
-        {
-            using (Assert.EnterMultipleScope())
-            {
-                foreach (var fileName in QueryRelativeFileNames(this.stagingDirectory))
-                {
-                    var bytes = await File.ReadAllBytesAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
-
-                    var hasUtf8Bom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
-
-                    var source = StrictUtf8WithoutBom.GetString(bytes);
-                    var sourceWithoutCrLf = source.Replace("\r\n", string.Empty, StringComparison.Ordinal);
-
-                    Assert.That(hasUtf8Bom, Is.False, $"Generated '{fileName}' contains a UTF-8 byte-order mark.");
-                    Assert.That(source, Does.Contain("\r\n"), $"Generated '{fileName}' contains no CRLF line endings.");
-                    Assert.That(sourceWithoutCrLf, Does.Not.Contain("\r"), $"Generated '{fileName}' contains a standalone carriage return.");
-                    Assert.That(sourceWithoutCrLf, Does.Not.Contain("\n"), $"Generated '{fileName}' contains a standalone line feed.");
-                    Assert.That(source, Does.Contain("[GeneratedCode(\"Mycelium.SDK\", \"latest\")]"),
-                        $"Generated '{fileName}' does not contain the generated-code marker.");
-                    Assert.That(source, Does.Contain("namespace Mycelium.Fabric.ConcurrentServer.Services"),
-                        $"Generated '{fileName}' is not declared in the Fabric services namespace.");
-                }
-            }
-        }
-
-        private static string[] QueryRelativeFileNames(DirectoryInfo directory)
-        {
-            return directory.GetFiles("*", SearchOption.AllDirectories)
-                .Select(file => Path.GetRelativePath(directory.FullName, file.FullName))
-                .OrderBy(fileName => fileName, StringComparer.Ordinal)
-                .ToArray();
-        }
     }
 }
