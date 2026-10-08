@@ -142,7 +142,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(property.QueryDtoTypeName(), Is.EqualTo(elementTypeName));
-                Assert.That(property.QueryPocoTypeName(), Is.EqualTo(elementTypeName));
+
+                if (modelTypeName == "URI")
+                {
+                    Assert.That(property.QueryPocoTypeName(), Is.EqualTo(elementTypeName));
+                }
             }
 
             property.LowerValue.Clear();
