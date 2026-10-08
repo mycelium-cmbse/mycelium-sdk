@@ -290,7 +290,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// </exception>
         private static void AppendSerializeValue(StringBuilder builder, IProperty property, string valueExpression, bool nullable, string valueDescription, int indentationLevel)
         {
-            if (property.Type is IClass || (property.Type.QueryIsSupportedValueType() && property.Type.QueryCSharpTypeName() == "Guid"))
+            if (property.Type is IClass || (property.Type is IPrimitiveType && property.Type.QueryCSharpTypeName() == "Guid"))
             {
                 if (nullable)
                 {
@@ -318,7 +318,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 return;
             }
 
-            if (!property.Type.QueryIsSupportedValueType())
+            if (property.Type is not IPrimitiveType)
             {
                 throw new InvalidOperationException($"Property '{property.Describe()}' has no supported MessagePack type.");
             }
@@ -378,7 +378,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             var (destination, addToCollection, nullable, valueDescription, _, indentationLevel) = context;
 
-            if (property.Type is IClass || (property.Type.QueryIsSupportedValueType() && property.Type.QueryCSharpTypeName() == "Guid"))
+            if (property.Type is IClass || (property.Type is IPrimitiveType && property.Type.QueryCSharpTypeName() == "Guid"))
             {
                 AppendDeserializeNativeValue(builder, destination, addToCollection, nullable,
                     "GuidMessagePackFormatter.Instance.Deserialize(ref reader, options)", indentationLevel);
@@ -393,7 +393,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 return;
             }
 
-            if (!property.Type.QueryIsSupportedValueType())
+            if (property.Type is not IPrimitiveType)
             {
                 throw new InvalidOperationException($"Property '{property.Describe()}' has no supported MessagePack type.");
             }

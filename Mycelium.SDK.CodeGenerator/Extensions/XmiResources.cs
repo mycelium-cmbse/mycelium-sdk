@@ -15,7 +15,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     public static class XmiResources
     {
         /// <summary>
-        /// The file name of the packaged common value DataTypes resolved through the local reference base path.
+        /// The file name of the packaged common primitives resolved through the local reference base path.
         /// </summary>
         public const string CSharpPrimitivesFileName = "mycelium-commonprimitives.xmi";
 

@@ -132,9 +132,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         [TestCase("URI", "Uri", "Uri")]
         [TestCase("DateTime", "DateTime", "DateTime?")]
         [TestCase("Dictionary<string,string>", "Dictionary<string,string>", "Dictionary<string,string>")]
-        public void VerifyThatCustomDataTypesPreserveScalarNullabilityAndCollections(string modelTypeName, string elementTypeName, string optionalTypeName)
+        public void VerifyThatCustomPrimitivesPreserveScalarNullabilityAndCollections(string modelTypeName, string elementTypeName, string optionalTypeName)
         {
-            var property = new Property { XmiId = "custom-value", Name = "customValue", Type = new DataType { XmiId = "custom-type", Name = modelTypeName } };
+            var property = new Property { XmiId = "custom-value", Name = "customValue", Type = new PrimitiveType { XmiId = "custom-type", Name = modelTypeName } };
 
             property.LowerValue.Add(new LiteralInteger { Value = 1 });
             property.UpperValue.Add(new LiteralUnlimitedNatural { Value = "1" });

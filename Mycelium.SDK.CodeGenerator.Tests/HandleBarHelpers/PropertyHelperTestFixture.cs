@@ -341,7 +341,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             {
                 XmiId = "optional-date-time",
                 Name = "optionalDateTime",
-                Type = new DataType { XmiId = "date-time-type", Name = "DateTime" }
+                Type = new PrimitiveType { XmiId = "date-time-type", Name = "DateTime" }
             };
 
             property.LowerValue.Add(new LiteralInteger { Value = 0 });
@@ -419,13 +419,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         }
 
         [Test]
-        public void VerifyThatNullableUuidDataTypesDelegateNonNullValuesToTheGuidFormatter()
+        public void VerifyThatNullableUuidPrimitivesDelegateNonNullValuesToTheGuidFormatter()
         {
             var property = new Property
             {
                 XmiId = "optional-uuid",
                 Name = "optionalUuid",
-                Type = new DataType { XmiId = "uuid-type", Name = "UUID" }
+                Type = new PrimitiveType { XmiId = "uuid-type", Name = "UUID" }
             };
 
             property.LowerValue.Add(new LiteralInteger { Value = 0 });
@@ -465,7 +465,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             {
                 XmiId = "uri-property",
                 Name = "location",
-                Type = new DataType { XmiId = "uri-type", Name = "URI" }
+                Type = new PrimitiveType { XmiId = "uri-type", Name = "URI" }
             };
 
             property.LowerValue.Add(new LiteralInteger { Value = optional ? 0 : 1 });

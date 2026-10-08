@@ -212,15 +212,11 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
                 AddSymbol(enumerationName, enumerationName);
             }
 
-            var valueTypes = payload.PrimitiveTypes.Cast<IDataType>()
-                .Concat(payload.Packages.SelectMany(package => package.PackagedElement.OfType<IDataType>()))
-                .Where(dataType => dataType.QueryIsSupportedValueType());
-
-            foreach (var valueType in valueTypes)
+            foreach (var primitiveType in payload.PrimitiveTypes)
             {
-                var cSharpTypeName = valueType.QueryCSharpTypeName();
+                var cSharpTypeName = primitiveType.QueryCSharpTypeName();
 
-                AddSymbol(valueType.Name, cSharpTypeName, isValueType: true);
+                AddSymbol(primitiveType.Name, cSharpTypeName, isValueType: true);
                 AddSymbol(cSharpTypeName, cSharpTypeName, isValueType: true);
             }
 
