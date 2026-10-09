@@ -112,7 +112,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         [Test]
         public void Verify_that_Poco_derived_union_declarations_delegate_to_computation()
         {
-            var property = new Property { XmiId = "derived-union", Name = "derivedUnion", IsDerivedUnion = true, Type = new PrimitiveType { XmiId = "boolean-type", Name = "Boolean" } };
+            var property = new Property
+            {
+                XmiId = "derived-union",
+                Name = "derivedUnion",
+                IsDerivedUnion = true,
+                Type = new PrimitiveType { XmiId = "boolean-type", Name = "Boolean" }
+            };
 
             property.LowerValue.Add(new LiteralInteger { Value = 1 });
 
@@ -457,6 +463,87 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
                 Assert.That(Render(property, "Serialization"), Is.EqualTo(expectedSerialization + Environment.NewLine));
                 Assert.That(Render(property, "Deserialization"), Is.EqualTo(expectedDeserialization + Environment.NewLine));
             }
+        }
+
+        [Test]
+        public void VerifyThatFiniteCollectionValidationCountsNullAsZero()
+        {
+            var expected = """
+                this.RuleFor(dto => dto.Value).Must(value => (value?.Count ?? 0) >= 2);
+                this.RuleFor(dto => dto.Value).Must(value => (value?.Count ?? 0) <= 3);
+                """;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(RenderDtoValidationRules(CreateValidationProperty("Integer", 2, "3")), Is.EqualTo(expected + Environment.NewLine));
+
+                Assert.That(RenderDtoValidationRules(CreateValidationProperty("Integer", 0, "3")),
+                    Is.EqualTo("this.RuleFor(dto => dto.Value).Must(value => (value?.Count ?? 0) <= 3);" + Environment.NewLine));
+            }
+        }
+
+        [Test]
+        public void VerifyThatValidationUsesMappedStringRulesForScalarsAndItems()
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(RenderDtoValidationRules(CreateValidationProperty("UnlimitedNatural", 1, "1")),
+                    Is.EqualTo("this.RuleFor(dto => dto.Value).Must(value => !string.IsNullOrWhiteSpace(value));" + Environment.NewLine));
+
+                Assert.That(RenderDtoValidationRules(CreateValidationProperty("UnlimitedNatural", 0, "1")),
+                    Is.EqualTo("this.RuleFor(dto => dto.Value).Must(value => value == null || !string.IsNullOrWhiteSpace(value));" + Environment.NewLine));
+
+                Assert.That(RenderDtoValidationRules(CreateValidationProperty("UnlimitedNatural", 0, "*")),
+                    Is.EqualTo("this.RuleForEach(dto => dto.Value).Must(value => !string.IsNullOrWhiteSpace(value));" + Environment.NewLine));
+            }
+        }
+
+        [Test]
+        public void VerifyThatReferencePrimitiveValidationChecksPresence()
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(RenderDtoValidationRules(CreateValidationProperty("URI", 1, "1")),
+                    Is.EqualTo("this.RuleFor(dto => dto.Value).NotNull();" + Environment.NewLine));
+
+                Assert.That(RenderDtoValidationRules(CreateValidationProperty("URI", 0, "1")), Is.Empty);
+
+                Assert.That(RenderDtoValidationRules(CreateValidationProperty("URI", 0, "*")),
+                    Is.EqualTo("this.RuleForEach(dto => dto.Value).NotNull();" + Environment.NewLine));
+            }
+        }
+
+        [Test]
+        public void VerifyThatZeroUpperBoundValidationRequiresAnAbsentScalar()
+        {
+            var property = CreateValidationProperty("Integer", 0, "0");
+
+            Assert.That(RenderDtoValidationRules(property), Is.EqualTo("this.RuleFor(dto => dto.Value).Null();" + Environment.NewLine));
+        }
+
+        private static Property CreateValidationProperty(string primitiveTypeName, int lower, string upper)
+        {
+            var property = new Property
+            {
+                XmiId = "validation-value",
+                Name = "value",
+                Type = new PrimitiveType { XmiId = "validation-primitive", Name = primitiveTypeName }
+            };
+
+            property.LowerValue.Add(new LiteralInteger { Value = lower });
+            property.UpperValue.Add(new LiteralUnlimitedNatural { Value = upper });
+
+            return property;
+        }
+
+        private static string RenderDtoValidationRules(IProperty property)
+        {
+            var handlebars = Handlebars.CreateSharedEnvironment();
+            handlebars.RegisterDtoValidatorPropertyHelper();
+
+            var template = handlebars.Compile("{{ #Property.WriteDtoValidationRules this }}");
+
+            return template(property);
         }
 
         private static Property CreateUriProperty(bool optional)

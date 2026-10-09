@@ -9,6 +9,7 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
+    using System.Globalization;
     using System.Text;
 
     using HandlebarsDotNet;
@@ -22,10 +23,15 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
     /// <summary>
     /// Provides Handlebars support for UML properties used to generate DTOs, POCOs,
-    /// JSON serializers, and MessagePack formatters.
+    /// JSON serializers, MessagePack formatters, and DTO validators.
     /// </summary>
     public static class PropertyHelper
     {
+        /// <summary>
+        /// The mapped C# type name of a dictionary with string keys and values.
+        /// </summary>
+        private const string StringDictionaryTypeName = "Dictionary<string,string>";
+
         /// <summary>
         /// The generated statement that writes a MessagePack nil value.
         /// </summary>
@@ -91,7 +97,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             {
                 var property = arguments.QuerySingle<IProperty>("{{Property.QueryIsStringDictionary}}");
 
-                return string.Equals(property.QueryDtoTypeName(), "Dictionary<string,string>", StringComparison.Ordinal);
+                return string.Equals(property.QueryDtoTypeName(), StringDictionaryTypeName, StringComparison.Ordinal);
             });
 
             handlebars.RegisterHelper("Property.WritePropertyName", (writer, _, arguments) =>
@@ -132,6 +138,27 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         }
 
         /// <summary>
+        /// Registers DTO validation rule rendering independently of the other property helpers.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the DTO validation helper is registered.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
+        /// </exception>
+        public static void RegisterDtoValidatorPropertyHelper(this IHandlebars handlebars)
+        {
+            ArgumentNullException.ThrowIfNull(handlebars);
+
+            handlebars.RegisterHelper("Property.WriteDtoValidationRules", (writer, _, arguments) =>
+            {
+                var property = arguments.QuerySingle<IProperty>("{{Property.WriteDtoValidationRules}}");
+
+                writer.WriteSafeString(RenderDtoValidationRules(property));
+            });
+        }
+
+        /// <summary>
         /// Registers the POCO property helpers independently of the DTO property helpers.
         /// </summary>
         /// <param name="handlebars">
@@ -159,6 +186,94 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                 writer.WriteSafeString($"public {propertyTypeName} {propertyName} " + QueryPocoImplementationSuffix(property, propertyName, propertyTypeName));
             });
+        }
+
+        /// <summary>
+        /// Renders local DTO data-validation rules for one modeled property.
+        /// </summary>
+        /// <param name="property">
+        /// The property whose multiplicity and represented values are validated.
+        /// </param>
+        /// <returns>
+        /// The generated FluentValidation statements, or an empty string when no rule is required.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="property" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the property has no name or its DTO type is unresolved, unsupported, or unnamed.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when a property or enumeration name cannot be represented as a legal C# identifier.
+        /// </exception>
+        private static string RenderDtoValidationRules(IProperty property)
+        {
+            ArgumentNullException.ThrowIfNull(property);
+
+            _ = property.QueryDtoTypeName();
+
+            var builder = new StringBuilder();
+            var propertyName = property.QueryPropertyName();
+            var lower = property.Lower;
+            var upper = property.QueryUpperValue();
+            var primitiveTypeName = property.Type is IPrimitiveType primitiveType ? primitiveType.QueryCSharpTypeName() : null;
+            var isString = primitiveTypeName == "string";
+            var isReferencePrimitive = primitiveTypeName is "Uri" or StringDictionaryTypeName;
+            var rule = $"this.RuleFor(dto => dto.{propertyName})";
+
+            if (property.QueryIsEnumerable())
+            {
+                if (lower > 0)
+                {
+                    AppendLine(builder, 0, $"{rule}.Must(value => (value?.Count ?? 0) >= {lower.ToString(CultureInfo.InvariantCulture)});");
+                }
+
+                if (upper != int.MaxValue)
+                {
+                    AppendLine(builder, 0, $"{rule}.Must(value => (value?.Count ?? 0) <= {upper.ToString(CultureInfo.InvariantCulture)});");
+                }
+
+                var itemRule = $"this.RuleForEach(dto => dto.{propertyName})";
+
+                if (isString)
+                {
+                    AppendLine(builder, 0, $"{itemRule}.Must(value => !string.IsNullOrWhiteSpace(value));");
+                }
+                else if (property.Type is IClass)
+                {
+                    AppendLine(builder, 0, $"{itemRule}.NotEmpty();");
+                }
+                else if (isReferencePrimitive)
+                {
+                    AppendLine(builder, 0, $"{itemRule}.NotNull();");
+                }
+
+                return builder.ToString();
+            }
+
+            if (upper == 0)
+            {
+                AppendLine(builder, 0, $"{rule}.Null();");
+
+                return builder.ToString();
+            }
+
+            if (isString)
+            {
+                var predicate = lower == 0 ? "value == null || !string.IsNullOrWhiteSpace(value)" : "!string.IsNullOrWhiteSpace(value)";
+
+                AppendLine(builder, 0, $"{rule}.Must(value => {predicate});");
+            }
+            else if (property.Type is IClass)
+            {
+                AppendLine(builder, 0, lower == 0 ? $"{rule}.Must(value => !value.HasValue || value.Value != Guid.Empty);" : $"{rule}.NotEmpty();");
+            }
+            else if (isReferencePrimitive && lower > 0)
+            {
+                AppendLine(builder, 0, $"{rule}.NotNull();");
+            }
+
+            return builder.ToString();
         }
 
         /// <summary>
@@ -333,7 +448,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 case "DateTime":
                     AppendSerializeRoundTripDateTime(builder, valueExpression, nullable, indentationLevel);
                     break;
-                case "Dictionary<string,string>":
+                case StringDictionaryTypeName:
 
                     AppendSerializeReferenceValue(builder, valueExpression, !property.QueryIsEnumerable(), valueDescription,
                         "StringDictionaryMessagePackFormatter", "Dictionary", indentationLevel);
@@ -406,7 +521,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 case "DateTime":
                     AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, $"ReadRoundTripDateTime(ref reader, \"{valueDescription}\")", indentationLevel);
                     break;
-                case "Dictionary<string,string>":
+                case StringDictionaryTypeName:
                     AppendDeserializeReferenceValue(builder, context, !property.QueryIsEnumerable(), "StringDictionaryMessagePackFormatter", "Dictionary");
 
                     break;
