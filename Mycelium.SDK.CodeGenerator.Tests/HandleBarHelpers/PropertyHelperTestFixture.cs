@@ -541,7 +541,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             var handlebars = Handlebars.CreateSharedEnvironment();
             handlebars.RegisterDtoValidatorPropertyHelper();
 
-            var template = handlebars.Compile("{{Property.WriteDtoValidationRules this}}");
+            var template = handlebars.Compile("{{ #Property.WriteDtoValidationRules this }}");
 
             return template(property);
         }
