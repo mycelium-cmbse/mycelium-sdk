@@ -179,11 +179,14 @@ namespace Mycelium.SDK.Validation.Tests
             dto.Content = null;
 
             var validator = new CommentValidator();
-            var exception = Assert.Throws<ValidationException>(() => validator.ValidateAndThrow(dto));
 
-            Assert.That(exception.Errors.Select(failure => failure.PropertyName), Is.EqualTo(new[] { nameof(Comment.Content) }));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(() => validator.ValidateAndThrow(dto), Throws.TypeOf<ValidationException>().And.Matches<ValidationException>(
+                    exception => exception.Errors.Select(failure => failure.PropertyName).SequenceEqual(new[] { nameof(Comment.Content) })));
 
-            Assert.That(() => validator.Validate((Comment)null), Throws.TypeOf<ArgumentNullException>());
+                Assert.That(() => validator.Validate((Comment)null), Throws.TypeOf<ArgumentNullException>());
+            }
         }
 
         private static Comment CreateComment()
