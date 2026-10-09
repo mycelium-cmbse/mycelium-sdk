@@ -28,6 +28,11 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     public static class PropertyHelper
     {
         /// <summary>
+        /// The mapped C# type name of a dictionary with string keys and values.
+        /// </summary>
+        private const string StringDictionaryTypeName = "Dictionary<string,string>";
+
+        /// <summary>
         /// The generated statement that writes a MessagePack nil value.
         /// </summary>
         private const string MessagePackWriteNilStatement = "writer.WriteNil();";
@@ -92,7 +97,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             {
                 var property = arguments.QuerySingle<IProperty>("{{Property.QueryIsStringDictionary}}");
 
-                return string.Equals(property.QueryDtoTypeName(), "Dictionary<string,string>", StringComparison.Ordinal);
+                return string.Equals(property.QueryDtoTypeName(), StringDictionaryTypeName, StringComparison.Ordinal);
             });
 
             handlebars.RegisterHelper("Property.WritePropertyName", (writer, _, arguments) =>
@@ -213,7 +218,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             var upper = property.QueryUpperValue();
             var primitiveTypeName = property.Type is IPrimitiveType primitiveType ? primitiveType.QueryCSharpTypeName() : null;
             var isString = primitiveTypeName == "string";
-            var isReferencePrimitive = primitiveTypeName is "Uri" or "Dictionary<string,string>";
+            var isReferencePrimitive = primitiveTypeName is "Uri" or StringDictionaryTypeName;
             var rule = $"this.RuleFor(dto => dto.{propertyName})";
 
             if (property.QueryIsEnumerable())
@@ -443,7 +448,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 case "DateTime":
                     AppendSerializeRoundTripDateTime(builder, valueExpression, nullable, indentationLevel);
                     break;
-                case "Dictionary<string,string>":
+                case StringDictionaryTypeName:
 
                     AppendSerializeReferenceValue(builder, valueExpression, !property.QueryIsEnumerable(), valueDescription,
                         "StringDictionaryMessagePackFormatter", "Dictionary", indentationLevel);
@@ -516,7 +521,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 case "DateTime":
                     AppendDeserializeNativeValue(builder, destination, addToCollection, nullable, $"ReadRoundTripDateTime(ref reader, \"{valueDescription}\")", indentationLevel);
                     break;
-                case "Dictionary<string,string>":
+                case StringDictionaryTypeName:
                     AppendDeserializeReferenceValue(builder, context, !property.QueryIsEnumerable(), "StringDictionaryMessagePackFormatter", "Dictionary");
 
                     break;
