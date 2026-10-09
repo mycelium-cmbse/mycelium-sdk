@@ -93,6 +93,13 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="..\Mycelium.SDK.Validation\AutoGenDtoValidator\**\*"
+              Link="Committed\Mycelium.SDK.Validation\AutoGenDtoValidator\%(RecursiveDir)%(Filename)%(Extension)">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
         <None Include="..\Mycelium.SDK.Serializer.Json\AutoGenSerializer\**\*"
               Link="Committed\Mycelium.SDK.Serializer.Json\AutoGenSerializer\%(RecursiveDir)%(Filename)%(Extension)">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
