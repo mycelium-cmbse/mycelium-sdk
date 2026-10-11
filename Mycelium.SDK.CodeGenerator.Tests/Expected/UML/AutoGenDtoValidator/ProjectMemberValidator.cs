@@ -26,7 +26,7 @@ namespace Mycelium.SDK.Validation
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ProjectMemberValidator" /> class
-        /// and registers its model-derived data-validation rules.
+        /// and registers its generated and handwritten data-validation rules.
         /// </summary>
         public ProjectMemberValidator()
         {
@@ -36,7 +36,14 @@ namespace Mycelium.SDK.Validation
             this.RuleForEach(dto => dto.Owns).NotEmpty();
             this.RuleFor(dto => dto.UpdatedBy).NotEmpty();
             this.RuleFor(dto => dto.User).NotEmpty();
+
+            this.AddCustomValidation();
         }
+
+        /// <summary>
+        /// Registers approved handwritten validation rules supplied by another partial declaration.
+        /// </summary>
+        partial void AddCustomValidation();
     }
 }
 

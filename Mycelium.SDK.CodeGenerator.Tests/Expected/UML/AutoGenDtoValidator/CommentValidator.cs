@@ -26,7 +26,7 @@ namespace Mycelium.SDK.Validation
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="CommentValidator" /> class
-        /// and registers its model-derived data-validation rules.
+        /// and registers its generated and handwritten data-validation rules.
         /// </summary>
         public CommentValidator()
         {
@@ -36,7 +36,14 @@ namespace Mycelium.SDK.Validation
             this.RuleFor(dto => dto.Quotes).Must(value => !value.HasValue || value.Value != Guid.Empty);
             this.RuleForEach(dto => dto.Replies).NotEmpty();
             this.RuleFor(dto => dto.UpdatedBy).NotEmpty();
+
+            this.AddCustomValidation();
         }
+
+        /// <summary>
+        /// Registers approved handwritten validation rules supplied by another partial declaration.
+        /// </summary>
+        partial void AddCustomValidation();
     }
 }
 
