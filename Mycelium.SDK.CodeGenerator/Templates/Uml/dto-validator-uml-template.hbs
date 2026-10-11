@@ -26,14 +26,21 @@ namespace Mycelium.SDK.Validation
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="{{ #NamedElement.WriteIdentifier this }}Validator" /> class
-        /// and registers its model-derived data-validation rules.
+        /// and registers its generated and handwritten data-validation rules.
         /// </summary>
         public {{ #NamedElement.WriteIdentifier this }}Validator()
         {
             {{ #each (#Class.QueryDtoImplementationProperties this) as | property | }}
                 {{ #Property.WriteDtoValidationRules property }}
             {{ /each }}
+
+            this.AddCustomValidation();
         }
+
+        /// <summary>
+        /// Registers approved handwritten validation rules supplied by another partial declaration.
+        /// </summary>
+        partial void AddCustomValidation();
     }
 }
 
