@@ -26,7 +26,7 @@ namespace Mycelium.SDK.Validation
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ReviewValidator" /> class
-        /// and registers its model-derived data-validation rules.
+        /// and registers its generated and handwritten data-validation rules.
         /// </summary>
         public ReviewValidator()
         {
@@ -37,7 +37,14 @@ namespace Mycelium.SDK.Validation
             this.RuleForEach(dto => dto.Reviewers).NotEmpty();
             this.RuleFor(dto => dto.Title).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleFor(dto => dto.UpdatedBy).NotEmpty();
+
+            this.AddCustomValidation();
         }
+
+        /// <summary>
+        /// Registers approved handwritten validation rules supplied by another partial declaration.
+        /// </summary>
+        partial void AddCustomValidation();
     }
 }
 

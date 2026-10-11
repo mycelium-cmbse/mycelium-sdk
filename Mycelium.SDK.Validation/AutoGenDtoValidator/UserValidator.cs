@@ -26,7 +26,7 @@ namespace Mycelium.SDK.Validation
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="UserValidator" /> class
-        /// and registers its model-derived data-validation rules.
+        /// and registers its generated and handwritten data-validation rules.
         /// </summary>
         public UserValidator()
         {
@@ -39,7 +39,14 @@ namespace Mycelium.SDK.Validation
             this.RuleFor(dto => dto.Name).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleFor(dto => dto.UpdatedBy).NotEmpty();
             this.RuleFor(dto => dto.UserPreferences).NotNull();
+
+            this.AddCustomValidation();
         }
+
+        /// <summary>
+        /// Registers approved handwritten validation rules supplied by another partial declaration.
+        /// </summary>
+        partial void AddCustomValidation();
     }
 }
 
