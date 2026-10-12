@@ -19,10 +19,10 @@ namespace Mycelium.SDK.Validation
     using FluentValidation;
 
     /// <summary>
-    /// Validates local data for the <see cref="Mycelium.SDK.DTO.Ownership" /> DTO.
+    /// Validates local data for objects implementing <see cref="Mycelium.SDK.DTO.IOwnership" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial class OwnershipValidator : AbstractValidator<Mycelium.SDK.DTO.Ownership>
+    public partial class OwnershipValidator : AuditableThingValidator<Mycelium.SDK.DTO.IOwnership>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="OwnershipValidator" /> class
@@ -30,19 +30,12 @@ namespace Mycelium.SDK.Validation
         /// </summary>
         public OwnershipValidator()
         {
-            this.RuleFor(dto => dto.CreatedBy).NotEmpty();
             this.RuleFor(dto => dto.Description).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleFor(dto => dto.Name).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleFor(dto => dto.ShortName).Must(value => !string.IsNullOrWhiteSpace(value));
-            this.RuleFor(dto => dto.UpdatedBy).NotEmpty();
 
             this.AddCustomValidation();
         }
-
-        /// <summary>
-        /// Registers approved handwritten validation rules supplied by another partial declaration.
-        /// </summary>
-        partial void AddCustomValidation();
     }
 }
 

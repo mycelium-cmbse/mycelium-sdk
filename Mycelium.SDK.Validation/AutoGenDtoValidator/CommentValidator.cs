@@ -19,10 +19,10 @@ namespace Mycelium.SDK.Validation
     using FluentValidation;
 
     /// <summary>
-    /// Validates local data for the <see cref="Mycelium.SDK.DTO.Comment" /> DTO.
+    /// Validates local data for objects implementing <see cref="Mycelium.SDK.DTO.IComment" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial class CommentValidator : AbstractValidator<Mycelium.SDK.DTO.Comment>
+    public partial class CommentValidator : AuditableThingValidator<Mycelium.SDK.DTO.IComment>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="CommentValidator" /> class
@@ -32,18 +32,11 @@ namespace Mycelium.SDK.Validation
         {
             this.RuleFor(dto => dto.Author).NotEmpty();
             this.RuleFor(dto => dto.Content).Must(value => !string.IsNullOrWhiteSpace(value));
-            this.RuleFor(dto => dto.CreatedBy).NotEmpty();
             this.RuleFor(dto => dto.Quotes).Must(value => !value.HasValue || value.Value != Guid.Empty);
             this.RuleForEach(dto => dto.Replies).NotEmpty();
-            this.RuleFor(dto => dto.UpdatedBy).NotEmpty();
 
             this.AddCustomValidation();
         }
-
-        /// <summary>
-        /// Registers approved handwritten validation rules supplied by another partial declaration.
-        /// </summary>
-        partial void AddCustomValidation();
     }
 }
 

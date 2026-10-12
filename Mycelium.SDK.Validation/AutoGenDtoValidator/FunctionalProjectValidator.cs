@@ -19,10 +19,10 @@ namespace Mycelium.SDK.Validation
     using FluentValidation;
 
     /// <summary>
-    /// Validates local data for the <see cref="Mycelium.SDK.DTO.FunctionalProject" /> DTO.
+    /// Validates local data for objects implementing <see cref="Mycelium.SDK.DTO.IFunctionalProject" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial class FunctionalProjectValidator : AbstractValidator<Mycelium.SDK.DTO.FunctionalProject>
+    public partial class FunctionalProjectValidator : AuditableThingValidator<Mycelium.SDK.DTO.IFunctionalProject>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="FunctionalProjectValidator" /> class
@@ -32,7 +32,6 @@ namespace Mycelium.SDK.Validation
         {
             this.RuleFor(dto => dto.BelongsTo).NotEmpty();
             this.RuleForEach(dto => dto.BranchRules).NotEmpty();
-            this.RuleFor(dto => dto.CreatedBy).NotEmpty();
             this.RuleForEach(dto => dto.Defines).NotEmpty();
             this.RuleFor(dto => dto.Description).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleForEach(dto => dto.Involves).NotEmpty();
@@ -40,15 +39,9 @@ namespace Mycelium.SDK.Validation
             this.RuleFor(dto => dto.Policy).NotEmpty();
             this.RuleForEach(dto => dto.Reviews).NotEmpty();
             this.RuleFor(dto => dto.SharedPreferences).NotNull();
-            this.RuleFor(dto => dto.UpdatedBy).NotEmpty();
 
             this.AddCustomValidation();
         }
-
-        /// <summary>
-        /// Registers approved handwritten validation rules supplied by another partial declaration.
-        /// </summary>
-        partial void AddCustomValidation();
     }
 }
 

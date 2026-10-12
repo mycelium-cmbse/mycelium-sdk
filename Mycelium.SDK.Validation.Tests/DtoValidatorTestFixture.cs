@@ -13,6 +13,8 @@ namespace Mycelium.SDK.Validation.Tests
     using System.Collections.Generic;
     using System.Linq;
 
+    using FluentValidation;
+
     using Mycelium.SDK.DTO;
 
     [TestFixture]
@@ -56,8 +58,8 @@ namespace Mycelium.SDK.Validation.Tests
         [Test]
         public void VerifyThatReferencesRejectEmptyValuesAndIdentifyCollectionItems()
         {
-            var dto = CreateComment();
-            var validator = new CommentValidator();
+            IComment dto = CreateComment();
+            IValidator<IComment> validator = new CommentValidator();
 
             Assert.That(validator.Validate(dto).IsValid, Is.True);
 
@@ -68,6 +70,7 @@ namespace Mycelium.SDK.Validation.Tests
 
             dto.Author = Guid.Empty;
             dto.CreatedBy = Guid.Empty;
+            dto.UpdatedBy = Guid.Empty;
             dto.Quotes = Guid.Empty;
             dto.Replies = [ReferenceId, Guid.Empty];
 
@@ -77,6 +80,7 @@ namespace Mycelium.SDK.Validation.Tests
             {
                 nameof(Comment.Author),
                 nameof(Comment.CreatedBy),
+                nameof(Comment.UpdatedBy),
                 nameof(Comment.Quotes),
                 $"{nameof(Comment.Replies)}[1]"
             }));
@@ -188,11 +192,11 @@ namespace Mycelium.SDK.Validation.Tests
         [Test]
         public void VerifyThatHandwrittenRulesRunAlongsideGeneratedRules()
         {
-            var dto = CreateProjectMember();
+            IProjectMember dto = CreateProjectMember();
             dto.ActiveOwnership = ReferenceId;
             dto.Owns = [Guid.Empty];
 
-            var validator = new ProjectMemberValidator();
+            IValidator<IProjectMember> validator = new ProjectMemberValidator();
             var result = validator.Validate(dto);
 
             Assert.That(result.Errors.Select(failure => failure.PropertyName), Is.EquivalentTo(new[]

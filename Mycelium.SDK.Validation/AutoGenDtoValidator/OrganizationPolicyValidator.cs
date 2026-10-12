@@ -19,10 +19,10 @@ namespace Mycelium.SDK.Validation
     using FluentValidation;
 
     /// <summary>
-    /// Validates local data for the <see cref="Mycelium.SDK.DTO.OrganizationPolicy" /> DTO.
+    /// Validates local data for objects implementing <see cref="Mycelium.SDK.DTO.IOrganizationPolicy" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial class OrganizationPolicyValidator : AbstractValidator<Mycelium.SDK.DTO.OrganizationPolicy>
+    public partial class OrganizationPolicyValidator : AuditableThingValidator<Mycelium.SDK.DTO.IOrganizationPolicy>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="OrganizationPolicyValidator" /> class
@@ -30,16 +30,9 @@ namespace Mycelium.SDK.Validation
         /// </summary>
         public OrganizationPolicyValidator()
         {
-            this.RuleFor(dto => dto.CreatedBy).NotEmpty();
-            this.RuleFor(dto => dto.UpdatedBy).NotEmpty();
 
             this.AddCustomValidation();
         }
-
-        /// <summary>
-        /// Registers approved handwritten validation rules supplied by another partial declaration.
-        /// </summary>
-        partial void AddCustomValidation();
     }
 }
 
