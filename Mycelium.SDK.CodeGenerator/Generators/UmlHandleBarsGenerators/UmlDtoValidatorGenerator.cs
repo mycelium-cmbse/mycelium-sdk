@@ -15,7 +15,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
     using uml4net.xmi.Readers;
 
     /// <summary>
-    /// Generates deterministic local data validators for concrete Fabric DTOs.
+    /// Generates deterministic local data validators for Fabric DTO interfaces, including generic abstract parent validators.
     /// </summary>
     public sealed class UmlDtoValidatorGenerator : UmlHandleBarsGenerator
     {
@@ -39,7 +39,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
-        /// Generates one data validator for every concrete DTO in the loaded Fabric model.
+        /// Generates one data validator for every class in the loaded Fabric model, including abstract classes.
         /// </summary>
         /// <param name="xmiReaderResult">
         /// The parsed UML model used for generation.
@@ -65,7 +65,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var payload = CreateHandlebarsPayload(xmiReaderResult);
 
-            var generatedFiles = QueryConcreteClasses(payload.Classes)
+            var generatedFiles = payload.Classes
                 .Select(this.RenderValidator)
                 .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
                 .ToArray();
@@ -82,6 +82,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         protected override void RegisterHelpers()
         {
             this.Handlebars.RegisterDtoClassHelper();
+            this.Handlebars.RegisterDtoValidatorClassHelper();
             this.Handlebars.RegisterDtoValidatorPropertyHelper();
             this.Handlebars.RegisterNamedElementHelper();
         }
@@ -104,10 +105,10 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
-        /// Renders and formats one concrete DTO validator without writing it.
+        /// Renders and formats one generic abstract parent validator or concrete DTO validator without writing it.
         /// </summary>
         /// <param name="umlClass">
-        /// The concrete UML class whose DTO is validated.
+        /// The UML class whose DTO interface is validated.
         /// </param>
         /// <returns>
         /// The validator filename and rendered source.

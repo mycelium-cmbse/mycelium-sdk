@@ -19,28 +19,58 @@ namespace Mycelium.SDK.Validation
     using FluentValidation;
 
     /// <summary>
-    /// Validates local data for the <see cref="Mycelium.SDK.DTO.{{ #NamedElement.WriteIdentifier this }}" /> DTO.
+    /// Validates local data for objects implementing <see cref="Mycelium.SDK.DTO.{{ #Class.WriteDtoInterfaceIdentifier this }}" />.
     /// </summary>
+    {{ #if this.IsAbstract }}
+    /// <typeparam name="T">
+    /// The DTO interface or implementation whose data is validated.
+    /// </typeparam>
+    {{ /if }}
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial class {{ #NamedElement.WriteIdentifier this }}Validator : AbstractValidator<Mycelium.SDK.DTO.{{ #NamedElement.WriteIdentifier this }}>
+    {{ #if this.IsAbstract }}
+    public abstract partial class {{ #NamedElement.WriteIdentifier this }}Validator<T> : {{ #Class.WriteDtoValidatorBaseClass this }}
+        where T : Mycelium.SDK.DTO.{{ #Class.WriteDtoInterfaceIdentifier this }}
+    {{ else }}
+    public partial class {{ #NamedElement.WriteIdentifier this }}Validator : {{ #Class.WriteDtoValidatorBaseClass this }}
+    {{ /if }}
     {
         /// <summary>
+        {{ #if this.IsAbstract }}
+        /// Initializes a new instance of the <see cref="{{ #NamedElement.WriteIdentifier this }}Validator{T}" /> class
+        /// and registers the generated data-validation rules declared by this model class.
+        {{ else }}
         /// Initializes a new instance of the <see cref="{{ #NamedElement.WriteIdentifier this }}Validator" /> class
         /// and registers its generated and handwritten data-validation rules.
+        {{ /if }}
         /// </summary>
+        {{ #if this.IsAbstract }}
+        protected {{ #NamedElement.WriteIdentifier this }}Validator()
+        {{ else }}
         public {{ #NamedElement.WriteIdentifier this }}Validator()
+        {{ /if }}
         {
-            {{ #each (#Class.QueryDtoImplementationProperties this) as | property | }}
+            {{ #each (#Class.QueryDtoInterfaceProperties this) as | property | }}
                 {{ #Property.WriteDtoValidationRules property }}
             {{ /each }}
+            {{ #unless this.IsAbstract }}
 
             this.AddCustomValidation();
+            {{ /unless }}
         }
+        {{ #unless (#Class.QueryDtoValidatorParent this) }}
 
         /// <summary>
-        /// Registers approved handwritten validation rules supplied by another partial declaration.
+        /// Registers approved handwritten validation rules supplied by overrides in partial validator declarations.
         /// </summary>
-        partial void AddCustomValidation();
+        /// <remarks>
+        /// The default implementation registers no rules. Concrete validator constructors invoke this method
+        /// once after registering all generated rules. Overrides call the base implementation before adding rules
+        /// and must not depend on state initialized by a more-derived constructor.
+        /// </remarks>
+        protected virtual void AddCustomValidation()
+        {
+        }
+        {{ /unless }}
     }
 }
 

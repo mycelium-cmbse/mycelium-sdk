@@ -16,7 +16,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     using uml4net.StructuredClassifiers;
 
     /// <summary>
-    /// Provides Handlebars support for UML classes used to generate DTOs and POCOs.
+    /// Provides Handlebars support for UML classes used to generate DTOs, DTO validators and POCOs.
     /// </summary>
     public static class ClassHelper
     {
@@ -54,6 +54,33 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 {
                     writer.WriteSafeString($" : {inheritance}");
                 }
+            });
+        }
+
+        /// <summary>
+        /// Registers the DTO validator inheritance helpers independently of the DTO and POCO class helpers.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the DTO validator inheritance helpers are registered.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
+        /// </exception>
+        public static void RegisterDtoValidatorClassHelper(this IHandlebars handlebars)
+        {
+            ArgumentNullException.ThrowIfNull(handlebars);
+
+            handlebars.RegisterHelper("Class.QueryDtoValidatorParent", (_, arguments) =>
+                arguments.QuerySingle<IClass>("{{Class.QueryDtoValidatorParent}}").QueryGeneralizations().SingleOrDefault());
+
+            handlebars.RegisterHelper("Class.WriteDtoValidatorBaseClass", (writer, _, arguments) =>
+            {
+                var umlClass = arguments.QuerySingle<IClass>("{{Class.WriteDtoValidatorBaseClass}}");
+                var parent = umlClass.QueryGeneralizations().SingleOrDefault();
+                var typeArgument = umlClass.IsAbstract ? "T" : $"Mycelium.SDK.DTO.{QueryGeneratedInterfaceIdentifier(umlClass)}";
+                var baseIdentifier = parent == null ? "AbstractValidator" : ReservedCSharpNameMapper.Map($"{parent.Name}Validator");
+
+                writer.WriteSafeString($"{baseIdentifier}<{typeArgument}>");
             });
         }
 

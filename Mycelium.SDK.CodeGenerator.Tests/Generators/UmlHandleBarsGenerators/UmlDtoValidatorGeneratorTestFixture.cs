@@ -75,7 +75,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             var representativeFileNames = this.QueryRepresentativeFileNames();
             var goldenFileNames = GeneratedOutput.QueryRelativeFileNames(this.expectedDirectory);
 
-            Assert.That(goldenFileNames, Is.EqualTo(representativeFileNames), "The validator golden set must match the concrete representative selection.");
+            Assert.That(goldenFileNames, Is.EqualTo(representativeFileNames), "The validator golden set must match the representative selection, including abstract classes.");
 
             foreach (var fileName in representativeFileNames)
             {
@@ -88,7 +88,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         {
             return new RepresentativeClasses()
                 .Select(className => this.classes[className])
-                .Where(umlClass => !umlClass.IsAbstract)
                 .Select(umlClass => $"{umlClass.Name}Validator.cs")
                 .OrderBy(fileName => fileName, StringComparer.Ordinal)
                 .ToArray();
