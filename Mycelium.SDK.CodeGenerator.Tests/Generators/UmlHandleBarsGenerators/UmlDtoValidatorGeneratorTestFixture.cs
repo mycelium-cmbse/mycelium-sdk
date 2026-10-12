@@ -61,8 +61,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             foreach (var fileName in stagedFileNames)
             {
-                await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, fileName),
-                    Path.Combine(this.committedDirectory.FullName, fileName), $"Generated validator '{fileName}'", "the committed production source");
+                await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, fileName), Path.Combine(this.committedDirectory.FullName, fileName),
+                    $"Generated validator '{fileName}'", "the committed production source");
             }
         }
 
@@ -79,18 +79,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             foreach (var fileName in representativeFileNames)
             {
-                await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, fileName),
-                    Path.Combine(this.expectedDirectory.FullName, fileName), $"Generated validator '{fileName}'", "its reviewed golden");
+                await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, fileName), Path.Combine(this.expectedDirectory.FullName, fileName),
+                    $"Generated validator '{fileName}'", "its reviewed golden");
             }
         }
 
         private string[] QueryRepresentativeFileNames()
         {
-            return new RepresentativeClasses()
-                .Select(className => this.classes[className])
-                .Select(umlClass => $"{umlClass.Name}Validator.cs")
-                .OrderBy(fileName => fileName, StringComparer.Ordinal)
-                .ToArray();
+            return new RepresentativeClasses().Select(className => this.classes[className]).Select(umlClass => $"{umlClass.Name}Validator.cs")
+                .OrderBy(fileName => fileName, StringComparer.Ordinal).ToArray();
         }
     }
 }
