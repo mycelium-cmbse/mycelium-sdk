@@ -3,7 +3,8 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
         <LangVersion>14.0</LangVersion>
-        <Version>0.0.1</Version>
+        <Version>0.1.0</Version>
+        <PackageReleaseNotes>Initial coordinated SDK release with interface-based DTO validators, inherited rules and approved handwritten constraints using FluentValidation 11.12.0.</PackageReleaseNotes>
         <Description>Generated DTO data validation for the Mycelium SDK.</Description>
         <PackageId>Mycelium.SDK.Validation</PackageId>
         <Company>Starion Group S.A.</Company>

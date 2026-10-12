@@ -2,6 +2,8 @@
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
+        <Version>0.1.0</Version>
+        <PackageReleaseNotes>Initial coordinated SDK release tooling for deterministic generation of SDK DTOs, POCOs, enumerations, providers, validators and serializers from the Fabric metamodel.</PackageReleaseNotes>
         <Description>The code generator for the Mycelium SDK.</Description>
         <Company>Starion Group S.A.</Company>
         <Copyright>Copyright © Starion Group S.A.</Copyright>
