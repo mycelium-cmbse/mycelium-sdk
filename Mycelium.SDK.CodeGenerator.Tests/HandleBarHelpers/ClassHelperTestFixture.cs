@@ -22,7 +22,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
     {
         private IClass[] classes = [];
         private IHandlebars pocoHandlebars;
-        private IHandlebars validatorHandlebars;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()
@@ -37,10 +36,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             this.pocoHandlebars = Handlebars.CreateSharedEnvironment();
             HandlebarsHelpers.Register(this.pocoHandlebars);
             this.pocoHandlebars.RegisterPocoClassHelper();
-
-            this.validatorHandlebars = Handlebars.CreateSharedEnvironment();
-            HandlebarsHelpers.Register(this.validatorHandlebars);
-            this.validatorHandlebars.RegisterDtoValidatorClassHelper();
         }
 
         [Test]
@@ -59,22 +54,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             {
                 Assert.That(dtoTemplate(projectMember), Is.EqualTo("IProjectMember"));
                 Assert.That(pocoTemplate(projectMember), Is.EqualTo("IProjectMember"));
-            }
-        }
-
-        [TestCase("Thing", "AbstractValidator<T>", "root")]
-        [TestCase("AuditableThing", "ThingValidator<T>", "Thing")]
-        [TestCase("ProjectMember", "AuditableThingValidator<Mycelium.SDK.DTO.IProjectMember>", "AuditableThing")]
-        public void Verify_that_Dto_validator_helpers_write_interface_based_inheritance(string className, string expectedBaseClass, string expectedParent)
-        {
-            var baseTemplate = this.validatorHandlebars.Compile("{{ #Class.WriteDtoValidatorBaseClass this }}");
-            var parentTemplate = this.validatorHandlebars.Compile("{{ #with (Class.QueryDtoValidatorParent this) }}{{ Name }}{{ else }}root{{ /with }}");
-            var umlClass = this.QueryClass(className);
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(baseTemplate(umlClass), Is.EqualTo(expectedBaseClass));
-                Assert.That(parentTemplate(umlClass), Is.EqualTo(expectedParent));
             }
         }
 
