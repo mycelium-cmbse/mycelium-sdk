@@ -15,7 +15,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
     using uml4net.xmi.Readers;
 
     /// <summary>
-    /// Generates deterministic local data validators for Fabric DTO interfaces, including generic abstract parent validators.
+    /// Generates deterministic local data validators for Fabric DTO interfaces, including generic validators for abstract classes and concrete parents.
     /// </summary>
     public sealed class UmlDtoValidatorGenerator : UmlHandleBarsGenerator
     {
@@ -39,7 +39,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
-        /// Generates one data validator for every class in the loaded Fabric model, including abstract classes.
+        /// Generates one validator file for every class in the loaded Fabric model, including both validator forms for concrete parents.
         /// </summary>
         /// <param name="xmiReaderResult">
         /// The parsed UML model used for generation.
@@ -65,6 +65,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var payload = CreateHandlebarsPayload(xmiReaderResult);
 
+            this.Handlebars.RegisterDtoValidatorClassHelper(payload.Classes);
+
             var generatedFiles = payload.Classes
                 .Select(this.RenderValidator)
                 .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
@@ -82,7 +84,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         protected override void RegisterHelpers()
         {
             this.Handlebars.RegisterDtoClassHelper();
-            this.Handlebars.RegisterDtoValidatorClassHelper();
             this.Handlebars.RegisterDtoValidatorPropertyHelper();
             this.Handlebars.RegisterNamedElementHelper();
         }
@@ -105,7 +106,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
-        /// Renders and formats one generic abstract parent validator or concrete DTO validator without writing it.
+        /// Renders and formats one validator file, including both declarations for a concrete parent, without writing it.
         /// </summary>
         /// <param name="umlClass">
         /// The UML class whose DTO interface is validated.

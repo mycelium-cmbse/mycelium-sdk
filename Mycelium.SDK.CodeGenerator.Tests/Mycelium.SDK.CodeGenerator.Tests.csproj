@@ -30,6 +30,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Mycelium.SDK.CodeGenerator\Mycelium.SDK.CodeGenerator.csproj"/>
         <ProjectReference Include="..\Mycelium.SDK.Extensions\Mycelium.SDK.Extensions.csproj"/>
+        <ProjectReference Include="..\Mycelium.SDK.Validation\Mycelium.SDK.Validation.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

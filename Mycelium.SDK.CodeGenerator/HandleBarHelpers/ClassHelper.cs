@@ -59,17 +59,28 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         }
 
         /// <summary>
-        /// Registers the DTO validator inheritance helpers independently of the DTO and POCO class helpers.
+        /// Registers the DTO validator shape and inheritance helpers for the complete loaded class set.
         /// </summary>
         /// <param name="handlebars">
         /// The Handlebars environment in which the DTO validator inheritance helpers are registered.
         /// </param>
+        /// <param name="classes">
+        /// The complete loaded Fabric class set used to identify abstract classes and concrete parents requiring generic validators.
+        /// </param>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
+        /// Thrown when <paramref name="handlebars" /> or <paramref name="classes" /> is <see langword="null" />.
         /// </exception>
-        public static void RegisterDtoValidatorClassHelper(this IHandlebars handlebars)
+        public static void RegisterDtoValidatorClassHelper(this IHandlebars handlebars, IEnumerable<IClass> classes)
         {
             ArgumentNullException.ThrowIfNull(handlebars);
+            ArgumentNullException.ThrowIfNull(classes);
+
+            var genericClasses = classes.Where(umlClass => umlClass.IsAbstract)
+                .Concat(classes.SelectMany(umlClass => umlClass.QueryGeneralizations()))
+                .ToHashSet<IClass>(ReferenceEqualityComparer.Instance);
+
+            handlebars.RegisterHelper("Class.QueryIsGenericDtoValidator",
+                (_, arguments) => genericClasses.Contains(arguments.QuerySingle<IClass>("{{Class.QueryIsGenericDtoValidator}}")));
 
             handlebars.RegisterHelper("Class.QueryDtoValidatorParent",
                 (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryDtoValidatorParent}}").QueryGeneralizations().SingleOrDefault());
@@ -78,7 +89,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             {
                 var umlClass = arguments.QuerySingle<IClass>("{{Class.WriteDtoValidatorBaseClass}}");
                 var parent = umlClass.QueryGeneralizations().SingleOrDefault();
-                var typeArgument = umlClass.IsAbstract ? "T" : $"Mycelium.SDK.DTO.{QueryGeneratedInterfaceIdentifier(umlClass)}";
+                var typeArgument = genericClasses.Contains(umlClass) ? "T" : $"Mycelium.SDK.DTO.{QueryGeneratedInterfaceIdentifier(umlClass)}";
                 var baseIdentifier = parent == null ? "AbstractValidator" : ReservedCSharpNameMapper.Map($"{parent.Name}Validator");
 
                 writer.WriteSafeString($"{baseIdentifier}<{typeArgument}>");
