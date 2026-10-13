@@ -34,8 +34,6 @@ namespace Mycelium.SDK.Validation
             this.RuleFor(dto => dto.Content).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleFor(dto => dto.Quotes).Must(value => !value.HasValue || value.Value != Guid.Empty);
             this.RuleForEach(dto => dto.Replies).NotEmpty();
-
-            this.AddCustomValidation();
         }
     }
 }

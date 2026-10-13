@@ -37,7 +37,11 @@ namespace Mycelium.SDK.Validation
         /// <summary>
         {{ #if this.IsAbstract }}
         /// Initializes a new instance of the <see cref="{{ #NamedElement.WriteIdentifier this }}Validator{T}" /> class
+        {{ #unless (#Class.QueryDtoValidatorParent this) }}
+        /// and registers its generated rules and the handwritten rules supplied by the validator hierarchy.
+        {{ else }}
         /// and registers the generated data-validation rules declared by this model class.
+        {{ /unless }}
         {{ else }}
         /// Initializes a new instance of the <see cref="{{ #NamedElement.WriteIdentifier this }}Validator" /> class
         /// and registers its generated and handwritten data-validation rules.
@@ -52,8 +56,7 @@ namespace Mycelium.SDK.Validation
             {{ #each (#Class.QueryDtoInterfaceProperties this) as | property | }}
                 {{ #Property.WriteDtoValidationRules property }}
             {{ /each }}
-            {{ #unless this.IsAbstract }}
-
+            {{ #unless (#Class.QueryDtoValidatorParent this) }}
             this.AddCustomValidation();
             {{ /unless }}
         }
@@ -63,9 +66,9 @@ namespace Mycelium.SDK.Validation
         /// Registers approved handwritten validation rules supplied by overrides in partial validator declarations.
         /// </summary>
         /// <remarks>
-        /// The default implementation registers no rules. Concrete validator constructors invoke this method
-        /// once after registering all generated rules. Overrides call the base implementation before adding rules
-        /// and must not depend on state initialized by a more-derived constructor.
+        /// The default implementation registers no rules. The root validator constructor invokes this method once
+        /// after registering its own generated rules and before derived constructor bodies run. Overrides call the base
+        /// implementation before adding rules and must not depend on state initialized by a more-derived constructor body.
         /// </remarks>
         protected virtual void AddCustomValidation()
         {

@@ -36,8 +36,6 @@ namespace Mycelium.SDK.Validation
             this.RuleFor(dto => dto.Name).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleFor(dto => dto.Policy).NotEmpty();
             this.RuleForEach(dto => dto.Projects).NotEmpty();
-
-            this.AddCustomValidation();
         }
     }
 }

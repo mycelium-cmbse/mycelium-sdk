@@ -33,8 +33,6 @@ namespace Mycelium.SDK.Validation
             this.RuleForEach(dto => dto.DefaultReviewers).NotEmpty();
             this.RuleFor(dto => dto.MergeAllowedFor).Must(value => (value?.Count ?? 0) >= 1);
             this.RuleFor(dto => dto.Name).Must(value => !string.IsNullOrWhiteSpace(value));
-
-            this.AddCustomValidation();
         }
     }
 }

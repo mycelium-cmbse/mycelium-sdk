@@ -39,8 +39,6 @@ namespace Mycelium.SDK.Validation
             this.RuleFor(dto => dto.Policy).NotEmpty();
             this.RuleForEach(dto => dto.Reviews).NotEmpty();
             this.RuleFor(dto => dto.SharedPreferences).NotNull();
-
-            this.AddCustomValidation();
         }
     }
 }

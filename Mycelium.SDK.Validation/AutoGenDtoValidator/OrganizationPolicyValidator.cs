@@ -30,8 +30,6 @@ namespace Mycelium.SDK.Validation
         /// </summary>
         public OrganizationPolicyValidator()
         {
-
-            this.AddCustomValidation();
         }
     }
 }

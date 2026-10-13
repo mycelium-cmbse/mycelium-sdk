@@ -32,8 +32,6 @@ namespace Mycelium.SDK.Validation
         {
             this.RuleFor(dto => dto.Organization).NotEmpty();
             this.RuleFor(dto => dto.User).NotEmpty();
-
-            this.AddCustomValidation();
         }
     }
 }

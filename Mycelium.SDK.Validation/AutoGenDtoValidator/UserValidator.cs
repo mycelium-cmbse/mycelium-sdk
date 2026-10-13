@@ -37,8 +37,6 @@ namespace Mycelium.SDK.Validation
             this.RuleFor(dto => dto.Mail).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleFor(dto => dto.Name).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleFor(dto => dto.UserPreferences).NotNull();
-
-            this.AddCustomValidation();
         }
     }
 }

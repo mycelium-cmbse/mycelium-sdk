@@ -34,8 +34,6 @@ namespace Mycelium.SDK.Validation
             this.RuleFor(dto => dto.IsPartOf).NotEmpty();
             this.RuleForEach(dto => dto.Owns).NotEmpty();
             this.RuleFor(dto => dto.User).NotEmpty();
-
-            this.AddCustomValidation();
         }
     }
 }

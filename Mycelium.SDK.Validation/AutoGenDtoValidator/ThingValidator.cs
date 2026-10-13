@@ -30,19 +30,20 @@ namespace Mycelium.SDK.Validation
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ThingValidator{T}" /> class
-        /// and registers the generated data-validation rules declared by this model class.
+        /// and registers its generated rules and the handwritten rules supplied by the validator hierarchy.
         /// </summary>
         protected ThingValidator()
         {
+            this.AddCustomValidation();
         }
 
         /// <summary>
         /// Registers approved handwritten validation rules supplied by overrides in partial validator declarations.
         /// </summary>
         /// <remarks>
-        /// The default implementation registers no rules. Concrete validator constructors invoke this method
-        /// once after registering all generated rules. Overrides call the base implementation before adding rules
-        /// and must not depend on state initialized by a more-derived constructor.
+        /// The default implementation registers no rules. The root validator constructor invokes this method once
+        /// after registering its own generated rules and before derived constructor bodies run. Overrides call the base
+        /// implementation before adding rules and must not depend on state initialized by a more-derived constructor body.
         /// </remarks>
         protected virtual void AddCustomValidation()
         {
