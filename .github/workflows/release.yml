@@ -87,12 +87,25 @@ jobs:
                           "dotnet", "msbuild", str(project), "-p:Configuration=Release",
                           "-p:ContinuousIntegrationBuild=true",
                           "-getProperty:Version,PackageVersion,PackageReleaseNotes,IsPackable,IsTestProject,"
-                          "TargetFramework,TargetFrameworks,PackageId,AssemblyName,PackageReadmeFile",
+                          "TargetFramework,TargetFrameworks,PackageId,AssemblyName,PackageReadmeFile,ProjectAssetsFile",
                           "-getItem:PackageReference,ProjectReference"
                       ]
                       if framework:
                           command.append(f"-p:TargetFramework={framework}")
                       return json.loads(subprocess.check_output(command, text=True))
+
+                  def is_framework_pruned(package_id, version, framework_assets):
+                      pruning = {name.lower(): value for name, value in framework_assets.get("packagesToPrune", {}).items()}
+                      pruning_range = pruning.get(package_id.lower())
+                      if not pruning_range:
+                          return False
+                      # The coordinated release declares stable versions; SDK pruning ranges have inclusive upper bounds.
+                      declared = re.fullmatch(r"[0-9]+(?:\.[0-9]+){0,3}", version)
+                      maximum = re.fullmatch(r"\(,([0-9]+(?:\.[0-9]+){0,3})\]", pruning_range.replace(" ", ""))
+                      require(declared and maximum, f"Cannot verify the framework pruning range for {package_id}.")
+                      declared_parts = tuple(int(part) for part in version.split("."))
+                      maximum_parts = tuple(int(part) for part in maximum.group(1).split("."))
+                      return declared_parts + (0,) * (4 - len(declared_parts)) <= maximum_parts + (0,) * (4 - len(maximum_parts))
 
                   runtime_projects = {
                       "Mycelium.SDK", "Mycelium.SDK.Extensions", "Mycelium.SDK.Validation",
@@ -161,13 +174,21 @@ jobs:
                           }
                   for name, package in sorted(packages.items()):
                       for framework in frameworks:
-                          items = evaluate(package["project"], framework)["Items"]
+                          evaluation = evaluate(package["project"], framework)
+                          items = evaluation["Items"]
+                          assets_path = Path(evaluation["Properties"]["ProjectAssetsFile"])
+                          assets = json.loads(assets_path.read_text(encoding="utf-8"))
+                          framework_assets = assets.get("project", {}).get("frameworks", {}).get(framework)
+                          require(framework_assets is not None, f"Restored framework metadata is missing in {name}: {framework}.")
                           dependencies = {}
                           for reference in items["PackageReference"]:
                               if "all" in reference.get("PrivateAssets", "").lower().split(";"):
                                   continue
                               dependency_version = reference.get("VersionOverride") or reference.get("Version")
                               require(dependency_version, f"A dependency version is missing in {name}.")
+                              if is_framework_pruned(reference["Identity"], dependency_version, framework_assets):
+                                  print(f"Verified framework pruning: {name}/{framework}/{reference['Identity']} {dependency_version}.")
+                                  continue
                               dependencies[reference["Identity"]] = dependency_version
                           for reference in items["ProjectReference"]:
                               target = evaluated.get(Path(reference["FullPath"]).resolve())
