@@ -28,6 +28,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     [TestFixture]
     public class UmlDtoValidatorGeneratorTestFixture : UmlClassGeneratorTestFixtureBase
     {
+        private static readonly string[] ExpectedParentFailureProperties = ["ActiveOwnership", "CreatedBy", "User"];
+        private static readonly string[] ExpectedChildFailureProperties = ["ActiveOwnership", "CreatedBy", "User", "Label"];
+
         private Dictionary<string, IClass> classes = [];
         private DirectoryInfo committedDirectory;
         private DirectoryInfo expectedDirectory;
@@ -145,9 +148,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(parentValidator.Validate(new ValidationContext<Mycelium.SDK.DTO.IProjectMember>(parentDto)).Errors.Select(failure => failure.PropertyName),
-                    Is.EquivalentTo(new[] { "ActiveOwnership", "CreatedBy", "User" }));
+                    Is.EquivalentTo(ExpectedParentFailureProperties));
                 Assert.That(childValidator.Validate(new ValidationContext<Mycelium.SDK.DTO.IProjectMember>(childDto)).Errors.Select(failure => failure.PropertyName),
-                    Is.EquivalentTo(new[] { "ActiveOwnership", "CreatedBy", "User", "Label" }));
+                    Is.EquivalentTo(ExpectedChildFailureProperties));
             }
 
             foreach (var dto in new[] { parentDto, childDto })
