@@ -20,11 +20,30 @@ namespace Mycelium.SDK.Validation.Tests
     {
         private static readonly Guid ReferenceId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void VerifyThatInheritedIdentifierRuleRunsOnceWithoutChangingTheDto(bool emptyIdentifier)
+        {
+            var identifier = emptyIdentifier ? Guid.Empty : ReferenceId;
+            var dto = CreateComment();
+            dto.Id = identifier;
+
+            var result = new CommentValidator().Validate(dto);
+            var expectedProperties = emptyIdentifier ? new[] { nameof(Comment.Id) } : Array.Empty<string>();
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.Errors.Select(failure => failure.PropertyName), Is.EqualTo(expectedProperties));
+                Assert.That(dto.Id, Is.EqualTo(identifier));
+            }
+        }
+
         [Test]
         public void VerifyThatValidPrimitiveDefaultsAreAccepted()
         {
             var dto = new BranchProtectionRule
             {
+                Id = ReferenceId,
                 CreatedBy = ReferenceId,
                 UpdatedBy = ReferenceId,
                 Name = "Main",
@@ -89,6 +108,7 @@ namespace Mycelium.SDK.Validation.Tests
         {
             var dto = new Organization
             {
+                Id = ReferenceId,
                 CreatedBy = ReferenceId,
                 UpdatedBy = ReferenceId,
                 Policy = ReferenceId,
@@ -123,6 +143,7 @@ namespace Mycelium.SDK.Validation.Tests
         {
             var dto = new FunctionalProject
             {
+                Id = ReferenceId,
                 BelongsTo = ReferenceId,
                 CreatedBy = ReferenceId,
                 UpdatedBy = ReferenceId,
@@ -220,6 +241,7 @@ namespace Mycelium.SDK.Validation.Tests
         {
             return new Comment
             {
+                Id = ReferenceId,
                 Author = ReferenceId,
                 CreatedBy = ReferenceId,
                 UpdatedBy = ReferenceId,
@@ -231,6 +253,7 @@ namespace Mycelium.SDK.Validation.Tests
         {
             return new ProjectMember
             {
+                Id = ReferenceId,
                 CreatedBy = ReferenceId,
                 UpdatedBy = ReferenceId,
                 IsPartOf = ReferenceId,

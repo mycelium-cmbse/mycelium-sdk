@@ -514,6 +514,15 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         }
 
         [Test]
+        public void VerifyThatOrdinaryPrimitiveUuidPropertiesDoNotRejectDefaultValues()
+        {
+            var otherIdentifier = CreateValidationProperty("UUID", 1, "1");
+            otherIdentifier.Name = "id";
+
+            Assert.That(RenderDtoValidationRules(otherIdentifier), Is.Empty);
+        }
+
+        [Test]
         public void VerifyThatZeroUpperBoundValidationRequiresAnAbsentScalar()
         {
             var property = CreateValidationProperty("Integer", 0, "0");

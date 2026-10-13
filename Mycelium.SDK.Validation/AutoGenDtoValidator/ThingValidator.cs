@@ -34,6 +34,7 @@ namespace Mycelium.SDK.Validation
         /// </summary>
         protected ThingValidator()
         {
+            this.RuleFor(dto => dto.Id).NotEmpty();
             this.AddCustomValidation();
         }
 
