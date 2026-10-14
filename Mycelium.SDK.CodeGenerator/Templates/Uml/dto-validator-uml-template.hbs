@@ -57,7 +57,6 @@ namespace Mycelium.SDK.Validation
                 {{ #Property.WriteDtoValidationRules property }}
             {{ /each }}
             {{ #unless (#Class.QueryDtoValidatorParent this) }}
-            this.RuleFor(dto => dto.Id).NotEmpty();
             this.AddCustomValidation();
             {{ /unless }}
         }

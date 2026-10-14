@@ -514,12 +514,17 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         }
 
         [Test]
-        public void VerifyThatOrdinaryPrimitiveUuidPropertiesDoNotRejectDefaultValues()
+        public void VerifyThatGuidValidationUsesMappedTypeAndScalarMultiplicity()
         {
-            var otherIdentifier = CreateValidationProperty("UUID", 1, "1");
-            otherIdentifier.Name = "id";
-
-            Assert.That(RenderDtoValidationRules(otherIdentifier), Is.Empty);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(RenderDtoValidationRules(CreateValidationProperty("UUID", 1, "1")), Is.EqualTo("this.RuleFor(dto => dto.Value).NotEmpty();" + Environment.NewLine));
+                Assert.That(RenderDtoValidationRules(this.QueryProperty("Thing", "id")), Is.EqualTo("this.RuleFor(dto => dto.Id).NotEmpty();" + Environment.NewLine));
+                Assert.That(RenderDtoValidationRules(CreateValidationProperty("UUID", 0, "1")), Is.Empty);
+                Assert.That(RenderDtoValidationRules(CreateValidationProperty("UUID", 1, "*")),
+                    Is.EqualTo("this.RuleFor(dto => dto.Value).Must(value => (value?.Count ?? 0) >= 1);" + Environment.NewLine));
+                Assert.That(RenderDtoValidationRules(this.QueryProperty("Comment", "author")), Is.EqualTo("this.RuleFor(dto => dto.Author).NotEmpty();" + Environment.NewLine));
+            }
         }
 
         [Test]

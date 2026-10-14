@@ -189,7 +189,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         }
 
         /// <summary>
-        /// Renders local DTO data-validation rules for one modeled property.
+        /// Renders local DTO data-validation rules from the property's mapped type and modeled multiplicity.
         /// </summary>
         /// <param name="property">
         /// The property whose multiplicity and represented values are validated.
@@ -267,6 +267,10 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             else if (property.Type is IClass)
             {
                 AppendLine(builder, 0, lower == 0 ? $"{rule}.Must(value => !value.HasValue || value.Value != Guid.Empty);" : $"{rule}.NotEmpty();");
+            }
+            else if (primitiveTypeName == "Guid" && lower == 1 && upper == 1)
+            {
+                AppendLine(builder, 0, $"{rule}.NotEmpty();");
             }
             else if (isReferencePrimitive && lower > 0)
             {
