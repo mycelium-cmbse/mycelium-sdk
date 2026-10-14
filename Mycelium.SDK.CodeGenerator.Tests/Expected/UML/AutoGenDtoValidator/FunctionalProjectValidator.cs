@@ -34,6 +34,7 @@ namespace Mycelium.SDK.Validation
             this.RuleForEach(dto => dto.BranchRules).NotEmpty();
             this.RuleForEach(dto => dto.Defines).NotEmpty();
             this.RuleFor(dto => dto.Description).Must(value => !string.IsNullOrWhiteSpace(value));
+            this.RuleFor(dto => dto.EngineeringProjectId).NotEmpty();
             this.RuleForEach(dto => dto.Involves).NotEmpty();
             this.RuleFor(dto => dto.Name).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleFor(dto => dto.Policy).NotEmpty();

@@ -31,6 +31,7 @@ namespace Mycelium.SDK.Validation
         public BranchProtectionRuleValidator()
         {
             this.RuleForEach(dto => dto.DefaultReviewers).NotEmpty();
+            this.RuleFor(dto => dto.EngineeringBranchId).NotEmpty();
             this.RuleFor(dto => dto.MergeAllowedFor).Must(value => (value?.Count ?? 0) >= 1);
             this.RuleFor(dto => dto.Name).Must(value => !string.IsNullOrWhiteSpace(value));
         }

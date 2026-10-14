@@ -31,6 +31,7 @@ namespace Mycelium.SDK.Validation
         public OwnershipValidator()
         {
             this.RuleFor(dto => dto.Description).Must(value => !string.IsNullOrWhiteSpace(value));
+            this.RuleFor(dto => dto.EngineeringMetadataId).NotEmpty();
             this.RuleFor(dto => dto.Name).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleFor(dto => dto.ShortName).Must(value => !string.IsNullOrWhiteSpace(value));
         }

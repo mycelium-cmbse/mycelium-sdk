@@ -46,6 +46,7 @@ namespace Mycelium.SDK.Validation.Tests
                 Id = ReferenceId,
                 CreatedBy = ReferenceId,
                 UpdatedBy = ReferenceId,
+                EngineeringBranchId = ReferenceId,
                 Name = "Main",
                 MergeAllowedFor = [default]
             };
@@ -148,6 +149,7 @@ namespace Mycelium.SDK.Validation.Tests
                 CreatedBy = ReferenceId,
                 UpdatedBy = ReferenceId,
                 Policy = ReferenceId,
+                EngineeringProjectId = ReferenceId,
                 Name = "Project",
                 Description = "Representative project",
                 SharedPreferences = null
@@ -245,7 +247,8 @@ namespace Mycelium.SDK.Validation.Tests
                 Author = ReferenceId,
                 CreatedBy = ReferenceId,
                 UpdatedBy = ReferenceId,
-                Content = "Representative comment"
+                Content = "Representative comment",
+                TargetElementId = ReferenceId
             };
         }
 
