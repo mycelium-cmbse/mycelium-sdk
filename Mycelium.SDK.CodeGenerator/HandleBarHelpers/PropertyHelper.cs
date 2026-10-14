@@ -268,7 +268,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             {
                 AppendLine(builder, 0, lower == 0 ? $"{rule}.Must(value => !value.HasValue || value.Value != Guid.Empty);" : $"{rule}.NotEmpty();");
             }
-            else if (primitiveTypeName == "Guid" && lower == 1 && upper == 1)
+            else if (primitiveTypeName == "Guid" && lower == 1)
             {
                 AppendLine(builder, 0, $"{rule}.NotEmpty();");
             }
