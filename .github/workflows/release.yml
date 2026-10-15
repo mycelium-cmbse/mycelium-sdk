@@ -3,14 +3,13 @@ name: NuGet release
 on:
     workflow_dispatch:
         inputs:
-            tag:
-                description: Existing release tag, for example 0.1.0 or v0.1.0
+            version:
+                description: SemVer, for example 0.1.0 or 0.1.0-beta.1
                 required: true
                 type: string
 
 permissions:
-    contents: read
-    actions: read
+    contents: write
 
 concurrency:
     group: nuget-release
@@ -20,320 +19,120 @@ jobs:
     release:
         runs-on: ubuntu-latest
         env:
-            RELEASE_TAG: ${{ inputs.tag }}
+            DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+            VERSION: ${{ inputs.version }}
         steps:
-            - name: Check out the existing release tag
+            - name: Check out the default branch
               uses: actions/checkout@v7.0.1
               with:
-                  ref: refs/tags/${{ inputs.tag }}
                   fetch-depth: 0
-                  persist-credentials: false
+                  ref: ${{ env.DEFAULT_BRANCH }}
 
-            - name: Resolve the release version and commit
-              id: tag
+            - name: Validate version (SemVer)
               shell: bash
               run: |
                   set -euo pipefail
-                  git check-ref-format "refs/tags/$RELEASE_TAG"
-                  VERSION="${RELEASE_TAG#v}"
-                  test -n "$VERSION"
-                  COMMIT=$(git rev-parse --verify "refs/tags/${RELEASE_TAG}^{commit}")
-                  test "$(git rev-parse HEAD)" = "$COMMIT"
-                  echo "RELEASE_VERSION=$VERSION" >> "$GITHUB_ENV"
-                  echo "RELEASE_DIRECTORY=$RUNNER_TEMP/mycelium-release" >> "$GITHUB_ENV"
-                  echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
-                  echo "Release $VERSION uses commit $COMMIT."
-
-            - name: Require successful CI for the release commit
-              uses: actions/github-script@v9.0.0
-              env:
-                  RELEASE_COMMIT: ${{ steps.tag.outputs.commit }}
-              with:
-                  script: |
-                      // CodeQuality runs all solution tests, including goldens and complete generated-output comparisons.
-                      const commit = process.env.RELEASE_COMMIT;
-                      const repository = context.repo;
-                      const repositoryName = `${repository.owner}/${repository.repo}`.toLowerCase();
-                      for (const workflow of ['CodeQuality.yml', 'codeql-analysis.yml']) {
-                          const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
-                              ...repository, workflow_id: workflow, head_sha: commit, event: 'push', per_page: 100
-                          });
-                          const candidates = runs.filter(run => run.head_sha === commit &&
-                              run.head_repository?.full_name?.toLowerCase() === repositoryName);
-                          candidates.sort((left, right) => right.id - left.id);
-                          if (!candidates.length) {
-                              throw new Error(`Required ${workflow} verification is missing for ${commit}.`);
-                          }
-                          const { data: run } = await github.rest.actions.getWorkflowRun({
-                              ...repository, run_id: candidates[0].id
-                          });
-                          if (run.head_sha !== commit || run.status !== 'completed' || run.conclusion !== 'success') {
-                              throw new Error(`Required ${workflow} verification is ${run.status}/${run.conclusion} for ${commit}.`);
-                          }
-                          core.info(`Required verification passed: ${run.html_url}`);
-                      }
+                  NUMBER='(0|[1-9][0-9]*)'
+                  IDENTIFIER='(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
+                  SEMVER="^${NUMBER}\.${NUMBER}\.${NUMBER}(-${IDENTIFIER}(\.${IDENTIFIER})*)?$"
+                  if [[ "$VERSION" =~ $SEMVER ]]; then
+                      if [[ "$VERSION" == *-* ]]; then
+                          echo "PRERELEASE=true" >> "$GITHUB_ENV"
+                      else
+                          echo "PRERELEASE=false" >> "$GITHUB_ENV"
+                      fi
+                  else
+                      echo "Provided version '$VERSION' is not a supported SemVer version." >&2
+                      exit 1
+                  fi
 
             - name: Set up .NET
               uses: actions/setup-dotnet@v6.0.0
               with:
                   dotnet-version: 10.0.x
 
-            - name: Restore the Release solution
-              run: dotnet restore Mycelium.SDK.sln -p:Configuration=Release -p:ContinuousIntegrationBuild=true
+            - name: Set release date
+              run: echo "DATE=$(date +'%Y-%m-%d')" >> "$GITHUB_ENV"
 
-            - name: Validate the project release contract
-              shell: python3 {0}
-              env:
-                  RELEASE_COMMIT: ${{ steps.tag.outputs.commit }}
-              run: |
-                  import json
-                  import os
-                  import re
-                  import subprocess
-                  import xml.etree.ElementTree as ET
-                  from pathlib import Path
-
-                  def require(condition, message):
-                      if not condition:
-                          raise SystemExit(message)
-
-                  def evaluate(project, framework=None):
-                      command = [
-                          "dotnet", "msbuild", str(project), "-p:Configuration=Release",
-                          "-p:ContinuousIntegrationBuild=true",
-                          "-getProperty:Version,PackageVersion,PackageReleaseNotes,IsPackable,IsTestProject,"
-                          "TargetFramework,TargetFrameworks,PackageId,AssemblyName,PackageReadmeFile,ProjectAssetsFile",
-                          "-getItem:PackageReference,ProjectReference"
-                      ]
-                      if framework:
-                          command.append(f"-p:TargetFramework={framework}")
-                      return json.loads(subprocess.check_output(command, text=True))
-
-                  def is_framework_pruned(package_id, version, framework_assets):
-                      pruning = {name.lower(): value for name, value in framework_assets.get("packagesToPrune", {}).items()}
-                      pruning_range = pruning.get(package_id.lower())
-                      if not pruning_range:
-                          return False
-                      # The coordinated release declares stable versions; SDK pruning ranges have inclusive upper bounds.
-                      declared = re.fullmatch(r"[0-9]+(?:\.[0-9]+){0,3}", version)
-                      maximum = re.fullmatch(r"\(,([0-9]+(?:\.[0-9]+){0,3})\]", pruning_range.replace(" ", ""))
-                      require(declared and maximum, f"Cannot verify the framework pruning range for {package_id}.")
-                      declared_parts = tuple(int(part) for part in version.split("."))
-                      maximum_parts = tuple(int(part) for part in maximum.group(1).split("."))
-                      return declared_parts + (0,) * (4 - len(declared_parts)) <= maximum_parts + (0,) * (4 - len(maximum_parts))
-
-                  runtime_projects = {
-                      "Mycelium.SDK", "Mycelium.SDK.Extensions", "Mycelium.SDK.Validation",
-                      "Mycelium.SDK.Serializer.Json", "Mycelium.SDK.Serializer.MessagePack"
-                  }
-                  non_packaged_projects = {
-                      "Mycelium.SDK.CodeGenerator", "Mycelium.SDK.Serializer.Json.Benchmarks",
-                      "Mycelium.SDK.Tests", "Mycelium.SDK.CodeGenerator.Tests",
-                      "Mycelium.SDK.Validation.Tests", "Mycelium.SDK.Serializer.Json.Tests",
-                      "Mycelium.SDK.Serializer.MessagePack.Tests"
-                  }
-                  expected_projects = runtime_projects | non_packaged_projects
-                  frameworks = ["netstandard2.1", "net10.0"]
-                  version = os.environ["RELEASE_VERSION"]
-                  commit = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
-                  require(commit == os.environ["RELEASE_COMMIT"], "Checkout differs from the resolved release commit.")
-                  solution = Path("Mycelium.SDK.sln").read_text(encoding="utf-8-sig")
-                  paths = [Path(value.replace("\\", "/")) for value in re.findall(
-                      r'^Project\("[^\"]+"\)\s*=\s*"[^\"]+",\s*"([^\"]+\.csproj)"', solution, re.MULTILINE
-                  )]
-                  expected_paths = {f"{name}/{name}.csproj" for name in expected_projects}
-                  tracked_paths = set(subprocess.check_output(
-                      ["git", "ls-files", "--", "*.csproj"], text=True
-                  ).splitlines())
-                  require(len(paths) == len(expected_paths) and {path.as_posix() for path in paths} == expected_paths,
-                          "The solution must contain exactly the architecture-defined projects.")
-                  require(tracked_paths == expected_paths, "The tracked project set differs from the release contract.")
-                  evaluated = {}
-                  packages = {}
-                  for project in sorted(paths):
-                      name = project.stem
-                      source = ET.parse(project).getroot()
-                      values = evaluate(project)["Properties"]
-                      evaluated[project.resolve()] = values
-                      is_test = name.endswith(".Tests")
-                      packable = values["IsPackable"].lower() == "true"
-                      require(packable == (name in runtime_projects), f"Unexpected evaluated packability: {name}.")
-                      if not packable:
-                          require(any((node.text or "").strip().lower() == "false"
-                                      for node in source.findall("./PropertyGroup/IsPackable")),
-                                  f"{name} must explicitly declare IsPackable=false.")
-                          require(values["TargetFramework"] == "net10.0", f"Unexpected tooling/test framework: {name}.")
-                      if is_test:
-                          require(values["IsTestProject"].lower() == "true", f"{name} is not an evaluated test project.")
-                          continue
-                      versions = source.findall("./PropertyGroup/Version")
-                      notes = source.findall("./PropertyGroup/PackageReleaseNotes")
-                      require(versions and all((node.text or "").strip() == version for node in versions),
-                              f"{name} must declare the tag's shared Version explicitly.")
-                      require(notes and any((node.text or "").strip() for node in notes),
-                              f"{name} must declare non-empty PackageReleaseNotes.")
-                      require(values["Version"] == version and values["PackageVersion"] == version,
-                              f"Evaluated version disagrees with the tag: {name}.")
-                      require(values["PackageReleaseNotes"].strip(), f"Evaluated release notes are empty: {name}.")
-                      if packable:
-                          require(set(values["TargetFrameworks"].split(";")) == set(frameworks),
-                                  f"{name} must support both runtime frameworks.")
-                          require(values["PackageId"] == name, f"Unexpected public package ID: {name}.")
-                          packages[name] = {
-                              "project": project.as_posix(), "version": version,
-                              "notes": values["PackageReleaseNotes"].strip(),
-                              "assembly": values["AssemblyName"], "readme": values["PackageReadmeFile"],
-                              "dependencies": {}
-                          }
-                  for name, package in sorted(packages.items()):
-                      for framework in frameworks:
-                          evaluation = evaluate(package["project"], framework)
-                          items = evaluation["Items"]
-                          assets_path = Path(evaluation["Properties"]["ProjectAssetsFile"])
-                          assets = json.loads(assets_path.read_text(encoding="utf-8"))
-                          framework_assets = assets.get("project", {}).get("frameworks", {}).get(framework)
-                          require(framework_assets is not None, f"Restored framework metadata is missing in {name}: {framework}.")
-                          dependencies = {}
-                          for reference in items["PackageReference"]:
-                              if "all" in reference.get("PrivateAssets", "").lower().split(";"):
-                                  continue
-                              dependency_version = reference.get("VersionOverride") or reference.get("Version")
-                              require(dependency_version, f"A dependency version is missing in {name}.")
-                              if is_framework_pruned(reference["Identity"], dependency_version, framework_assets):
-                                  print(f"Verified framework pruning: {name}/{framework}/{reference['Identity']} {dependency_version}.")
-                                  continue
-                              dependencies[reference["Identity"]] = dependency_version
-                          for reference in items["ProjectReference"]:
-                              target = evaluated.get(Path(reference["FullPath"]).resolve())
-                              require(target and target["PackageId"] in packages,
-                                      f"{name} references a project outside the runtime package set.")
-                              if "all" not in reference.get("PrivateAssets", "").lower().split(";"):
-                                  dependencies[target["PackageId"]] = target["PackageVersion"]
-                          package["dependencies"][framework] = dependencies
-                  directory = Path(os.environ["RELEASE_DIRECTORY"])
-                  directory.mkdir(parents=True, exist_ok=True)
-                  metadata = {"commit": commit, "packages": packages}
-                  (directory / "metadata.json").write_text(json.dumps(metadata, indent=4) + "\n", encoding="utf-8")
-                  print(f"Validated coordinated release {version} for all non-test projects.")
-
-            - name: Build every Release target with warnings as errors
-              run: dotnet build Mycelium.SDK.sln --configuration Release --no-restore -maxcpucount:1 -warnaserror -p:ContinuousIntegrationBuild=true
-
-            - name: Pack
-              run: dotnet pack Mycelium.SDK.sln --configuration Release --no-build --no-restore -p:ContinuousIntegrationBuild=true --output "$RELEASE_DIRECTORY/packages"
-
-            - name: Validate the actual packages and record their hashes
-              shell: python3 {0}
-              run: |
-                  import hashlib
-                  import json
-                  import os
-                  import re
-                  import xml.etree.ElementTree as ET
-                  import zipfile
-                  from pathlib import Path, PurePosixPath
-
-                  def require(condition, message):
-                      if not condition:
-                          raise SystemExit(message)
-
-                  def dependency_version(value):
-                      value = value.replace(" ", "")
-                      match = re.fullmatch(r"\[([^,\[\]]+),\)", value)
-                      return match.group(1) if match else value
-
-                  def validate_package(package_path, expected, expected_files):
-                      with zipfile.ZipFile(package_path) as archive:
-                          names = [item.filename for item in archive.infolist() if not item.is_dir()]
-                          require(len(names) == len(set(names)), "A package contains duplicate archive entries.")
-                          require(archive.testzip() is None, "A package archive failed its integrity check.")
-                          package_id = expected["id"]
-                          nuspec_name = package_id + ".nuspec"
-                          require(nuspec_name in names, f"The package specification is missing: {package_id}.")
-                          specification = ET.fromstring(archive.read(nuspec_name))
-                          for element in specification.iter():
-                              element.tag = element.tag.rsplit("}", 1)[-1]
-                          metadata = specification.find("metadata")
-                          require(metadata is not None, f"Package metadata is missing: {package_id}.")
-                          for field, value in (("id", package_id), ("version", expected["version"]),
-                                               ("releaseNotes", expected["notes"]), ("readme", expected["readme"])):
-                              require((metadata.findtext(field) or "").strip() == value,
-                                      f"Package {package_id} has mismatched {field}.")
-                          for name, content in expected_files.items():
-                              require(name in names and archive.read(name) == content,
-                                      f"Package {package_id} has a missing or incorrect file: {name}.")
-                          allowed = set(expected_files) | {nuspec_name, "[Content_Types].xml", "_rels/.rels"}
-                          for name in names:
-                              path = PurePosixPath(name)
-                              require(not path.is_absolute() and ".." not in path.parts and "\\" not in name,
-                                      f"Unsafe package path: {name}.")
-                              standard_metadata = re.fullmatch(r"package/services/metadata/core-properties/[^/]+\.psmdcp", name)
-                              sbom = re.fullmatch(r"_manifest/[^/]+/[^/]+\.spdx\.json(?:\.sha256)?", name)
-                              require(name in allowed or standard_metadata or sbom,
-                                      f"Unexpected package content in {package_id}: {name}.")
-                          groups = metadata.findall("dependencies/group")
-                          actual_dependencies = {}
-                          framework_names = {
-                              "netstandard2.1": "netstandard2.1", ".netstandard2.1": "netstandard2.1",
-                              "net10.0": "net10.0", ".netcoreapp10.0": "net10.0"
-                          }
-                          for group in groups:
-                              framework = framework_names.get(group.get("targetFramework", "").lower())
-                              require(framework and framework not in actual_dependencies,
-                                      f"Unexpected or duplicate dependency framework in {package_id}.")
-                              dependencies = group.findall("dependency")
-                              actual = {node.get("id"): dependency_version(node.get("version", "")) for node in dependencies}
-                              require(len(actual) == len(dependencies), f"Duplicate package dependencies in {package_id}.")
-                              actual_dependencies[framework] = actual
-                          require(not metadata.findall("dependencies/dependency"),
-                                  f"Unexpected ungrouped dependencies in {package_id}.")
-                          if not groups and not any(expected["dependencies"].values()):
-                              actual_dependencies = {framework: {} for framework in expected["dependencies"]}
-                          expected_dependencies = {
-                              framework: {name: dependency_version(version) for name, version in dependencies.items()}
-                              for framework, dependencies in expected["dependencies"].items()
-                          }
-                          require(actual_dependencies == expected_dependencies,
-                                  f"Internal or external dependency metadata differs for {package_id}.")
-
-                  directory = Path(os.environ["RELEASE_DIRECTORY"])
-                  metadata_path = directory / "metadata.json"
-                  metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-                  expected_names = {f"{name}.{package['version']}.nupkg" for name, package in metadata["packages"].items()}
-                  package_paths = sorted((directory / "packages").iterdir())
-                  require({path.name for path in package_paths} == expected_names,
-                          "The package output set has missing or unexpected files.")
-                  verified = {}
-                  for name, package in sorted(metadata["packages"].items()):
-                      package_path = directory / "packages" / f"{name}.{package['version']}.nupkg"
-                      project_directory = Path(package["project"]).parent
-                      expected_files = {package["readme"]: Path("README.md").read_bytes()}
-                      for framework in package["dependencies"]:
-                          for extension in ("dll", "xml"):
-                              file_name = f"{package['assembly']}.{extension}"
-                              expected_files[f"lib/{framework}/{file_name}"] = (
-                                  project_directory / "bin" / "Release" / framework / file_name
-                              ).read_bytes()
-                      validate_package(package_path, {"id": name, **package}, expected_files)
-                      verified[package_path.name] = hashlib.sha256(package_path.read_bytes()).hexdigest()
-                      print(f"Verified {package_path.name}.")
-                  (directory / "packages.sha256").write_text(
-                      "".join(f"{digest}  {name}\n" for name, digest in sorted(verified.items())), encoding="utf-8"
-                  )
-
-            - name: Push to NuGet
-              shell: bash
-              env:
-                  NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+            - name: Update CITATION.cff (version and date)
               run: |
                   set -euo pipefail
-                  if [[ -z "${NUGET_API_KEY//[[:space:]]/}" ]]; then
-                      echo "NUGET_API_KEY is not configured; publication is blocked." >&2
-                      exit 1
+                  sed -i "s/^version:.*/version: \"${VERSION}\"/" CITATION.cff
+                  sed -i "s/^date-released:.*/date-released: \"${DATE}\"/" CITATION.cff
+                  sed -i "s/^  version:.*/  version: \"${VERSION}\"/" CITATION.cff
+                  sed -i "s/^  date-released:.*/  date-released: \"${DATE}\"/" CITATION.cff
+
+            - name: Commit CITATION.cff to the default branch
+              run: |
+                  set -euo pipefail
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git add CITATION.cff
+                  if ! git diff --cached --quiet; then
+                      git commit -m "chore: release ${VERSION} (update CITATION.cff)"
+                      git push origin "HEAD:${DEFAULT_BRANCH}"
+                  else
+                      echo "No changes to CITATION.cff."
                   fi
-                  cd "$RELEASE_DIRECTORY/packages"
-                  diff <(cut -c 67- ../packages.sha256) <(find . -mindepth 1 -maxdepth 1 -printf '%f\n' | LC_ALL=C sort)
-                  sha256sum --check ../packages.sha256
-                  for package in *.nupkg; do
-                      dotnet nuget push "$package" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+
+            - name: Install xmlstarlet
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y xmlstarlet
+
+            - name: Prepare release notes from PackageReleaseNotes
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  echo "The following items have been included in this release:" > RELEASE_NOTES.md
+                  echo "" >> RELEASE_NOTES.md
+                  mapfile -t CSPROJS < <(git ls-files '*.csproj' | sort)
+                  for csproj in "${CSPROJS[@]}"; do
+                      pkg_id="$(xmlstarlet sel -t -v '(//Project/PropertyGroup/PackageId)[1]' "$csproj" 2>/dev/null || true)"
+                      if [[ -z "$pkg_id" ]]; then
+                          pkg_id="$(basename "$csproj" .csproj)"
+                      fi
+                      pkg_version="$(xmlstarlet sel -t -v '(//Project/PropertyGroup/Version)[1]' "$csproj" 2>/dev/null || true)"
+                      if [[ -z "$pkg_version" ]]; then
+                          pkg_version="$VERSION"
+                      fi
+                      notes="$(xmlstarlet sel -t -v '(//Project/PropertyGroup/PackageReleaseNotes)[1]' "$csproj" 2>/dev/null || true)"
+                      notes="$(printf '%s' "$notes" | sed 's/\r$//')"
+                      if [[ -n "$notes" ]]; then
+                          printf '**%s [%s]**\n' "$pkg_id" "$pkg_version" >> RELEASE_NOTES.md
+                          while IFS= read -r line; do
+                              trimmed="$(printf '%s' "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+                              if [[ -n "$trimmed" ]]; then
+                                  cleaned="$(printf '%s' "$trimmed" | sed 's/^- \{0,1\}//')"
+                                  printf '  - %s\n' "$cleaned" >> RELEASE_NOTES.md
+                              fi
+                          done <<< "$notes"
+                          echo "" >> RELEASE_NOTES.md
+                      fi
                   done
+                  cat RELEASE_NOTES.md
+
+            - name: Pack
+              run: dotnet pack Mycelium.SDK.sln --configuration Release --output ReleaseBuilds
+
+            - name: Push to NuGet
+              env:
+                  NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+              run: dotnet nuget push "ReleaseBuilds/*.nupkg" --api-key "${NUGET_API_KEY:?NUGET_API_KEY is not configured}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+            - name: Create annotated release tag
+              run: |
+                  set -euo pipefail
+                  git tag -a "$VERSION" -m "Release $VERSION"
+                  git push origin "refs/tags/${VERSION}"
+
+            - name: Create draft GitHub release
+              uses: softprops/action-gh-release@v2.5.0
+              with:
+                  draft: true
+                  prerelease: ${{ env.PRERELEASE }}
+                  name: Mycelium SDK ${{ env.VERSION }}
+                  tag_name: ${{ env.VERSION }}
+                  body_path: RELEASE_NOTES.md
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
