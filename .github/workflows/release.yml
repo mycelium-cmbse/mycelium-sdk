@@ -22,40 +22,56 @@ jobs:
         env:
             RELEASE_TAG: ${{ inputs.tag }}
         steps:
-            - name: Resolve the existing release tag
-              id: tag
-              uses: actions/github-script@v9.0.0
-              with:
-                  script: |
-                      const tag = process.env.RELEASE_TAG;
-                      const version = tag.startsWith('v') ? tag.slice(1) : tag;
-                      if (!version) {
-                          throw new Error('An existing versioned release tag is required.');
-                      }
-                      const repository = context.repo;
-                      const { data: reference } = await github.rest.git.getRef({
-                          ...repository, ref: `tags/${tag}`
-                      });
-                      let object = reference.object;
-                      while (object.type === 'tag') {
-                          const { data: annotatedTag } = await github.rest.git.getTag({
-                              ...repository, tag_sha: object.sha
-                          });
-                          object = annotatedTag.object;
-                      }
-                      if (object.type !== 'commit') {
-                          throw new Error(`Tag '${tag}' does not identify a commit.`);
-                      }
-                      core.setOutput('commit', object.sha);
-                      core.setOutput('version', version);
-                      core.exportVariable('RELEASE_DIRECTORY', require('path').join(process.env.RUNNER_TEMP, 'mycelium-release'));
-                      core.info(`Release ${version} uses commit ${object.sha}.`);
-
-            - name: Check out the resolved commit
+            - name: Check out the existing release tag
               uses: actions/checkout@v7.0.1
               with:
-                  ref: ${{ steps.tag.outputs.commit }}
+                  ref: refs/tags/${{ inputs.tag }}
+                  fetch-depth: 0
                   persist-credentials: false
+
+            - name: Resolve the release version and commit
+              id: tag
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  git check-ref-format "refs/tags/$RELEASE_TAG"
+                  VERSION="${RELEASE_TAG#v}"
+                  test -n "$VERSION"
+                  COMMIT=$(git rev-parse --verify "refs/tags/${RELEASE_TAG}^{commit}")
+                  test "$(git rev-parse HEAD)" = "$COMMIT"
+                  echo "RELEASE_VERSION=$VERSION" >> "$GITHUB_ENV"
+                  echo "RELEASE_DIRECTORY=$RUNNER_TEMP/mycelium-release" >> "$GITHUB_ENV"
+                  echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
+                  echo "Release $VERSION uses commit $COMMIT."
+
+            - name: Require successful CI for the release commit
+              uses: actions/github-script@v9.0.0
+              env:
+                  RELEASE_COMMIT: ${{ steps.tag.outputs.commit }}
+              with:
+                  script: |
+                      // CodeQuality runs all solution tests, including goldens and complete generated-output comparisons.
+                      const commit = process.env.RELEASE_COMMIT;
+                      const repository = context.repo;
+                      const repositoryName = `${repository.owner}/${repository.repo}`.toLowerCase();
+                      for (const workflow of ['CodeQuality.yml', 'codeql-analysis.yml']) {
+                          const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+                              ...repository, workflow_id: workflow, head_sha: commit, event: 'push', per_page: 100
+                          });
+                          const candidates = runs.filter(run => run.head_sha === commit &&
+                              run.head_repository?.full_name?.toLowerCase() === repositoryName);
+                          candidates.sort((left, right) => right.id - left.id);
+                          if (!candidates.length) {
+                              throw new Error(`Required ${workflow} verification is missing for ${commit}.`);
+                          }
+                          const { data: run } = await github.rest.actions.getWorkflowRun({
+                              ...repository, run_id: candidates[0].id
+                          });
+                          if (run.head_sha !== commit || run.status !== 'completed' || run.conclusion !== 'success') {
+                              throw new Error(`Required ${workflow} verification is ${run.status}/${run.conclusion} for ${commit}.`);
+                          }
+                          core.info(`Required verification passed: ${run.html_url}`);
+                      }
 
             - name: Set up .NET
               uses: actions/setup-dotnet@v6.0.0
@@ -69,7 +85,6 @@ jobs:
               shell: python3 {0}
               env:
                   RELEASE_COMMIT: ${{ steps.tag.outputs.commit }}
-                  RELEASE_VERSION: ${{ steps.tag.outputs.version }}
               run: |
                   import json
                   import os
@@ -134,7 +149,6 @@ jobs:
                           "The solution must contain exactly the architecture-defined projects.")
                   require(tracked_paths == expected_paths, "The tracked project set differs from the release contract.")
                   evaluated = {}
-                  test_assemblies = []
                   packages = {}
                   for project in sorted(paths):
                       name = project.stem
@@ -151,7 +165,6 @@ jobs:
                           require(values["TargetFramework"] == "net10.0", f"Unexpected tooling/test framework: {name}.")
                       if is_test:
                           require(values["IsTestProject"].lower() == "true", f"{name} is not an evaluated test project.")
-                          test_assemblies.append(values["AssemblyName"] + ".dll")
                           continue
                       versions = source.findall("./PropertyGroup/Version")
                       notes = source.findall("./PropertyGroup/PackageReleaseNotes")
@@ -199,39 +212,14 @@ jobs:
                           package["dependencies"][framework] = dependencies
                   directory = Path(os.environ["RELEASE_DIRECTORY"])
                   directory.mkdir(parents=True, exist_ok=True)
-                  metadata = {"commit": commit, "packages": packages, "testAssemblies": sorted(test_assemblies)}
+                  metadata = {"commit": commit, "packages": packages}
                   (directory / "metadata.json").write_text(json.dumps(metadata, indent=4) + "\n", encoding="utf-8")
                   print(f"Validated coordinated release {version} for all non-test projects.")
 
             - name: Build every Release target with warnings as errors
               run: dotnet build Mycelium.SDK.sln --configuration Release --no-restore -maxcpucount:1 -warnaserror -p:ContinuousIntegrationBuild=true
 
-            - name: Run runtime tests, representative goldens and complete generated-output comparisons
-              run: dotnet test Mycelium.SDK.sln --configuration Release --framework net10.0 --no-restore --no-build --logger trx --results-directory "$RELEASE_DIRECTORY/test-results"
-
-            - name: Require test execution from all five test projects
-              shell: python3 {0}
-              run: |
-                  import json
-                  import os
-                  import xml.etree.ElementTree as ET
-                  from pathlib import Path
-
-                  directory = Path(os.environ["RELEASE_DIRECTORY"])
-                  metadata = json.loads((directory / "metadata.json").read_text(encoding="utf-8"))
-                  assemblies = set()
-                  namespace = {"trx": "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"}
-                  for result in (directory / "test-results").glob("*.trx"):
-                      root = ET.parse(result).getroot()
-                      counters = root.find("trx:ResultSummary/trx:Counters", namespace)
-                      if counters is None or int(counters.get("executed", "0")) == 0 or int(counters.get("failed", "0")):
-                          raise SystemExit(f"Required test execution failed or is missing: {result.name}.")
-                      for method in root.findall("trx:TestDefinitions/trx:UnitTest/trx:TestMethod", namespace):
-                          assemblies.add(method.get("codeBase", "").replace("\\", "/").rsplit("/", 1)[-1])
-                  if assemblies != set(metadata["testAssemblies"]):
-                      raise SystemExit("Test results do not cover exactly the five required test assemblies.")
-
-            - name: Pack the successfully built Release solution
+            - name: Pack
               run: dotnet pack Mycelium.SDK.sln --configuration Release --no-build --no-restore -p:ContinuousIntegrationBuild=true --output "$RELEASE_DIRECTORY/packages"
 
             - name: Validate the actual packages and record their hashes
@@ -329,64 +317,23 @@ jobs:
                       validate_package(package_path, {"id": name, **package}, expected_files)
                       verified[package_path.name] = hashlib.sha256(package_path.read_bytes()).hexdigest()
                       print(f"Verified {package_path.name}.")
-                  metadata["verifiedPackages"] = verified
-                  metadata_path.write_text(json.dumps(metadata, indent=4) + "\n", encoding="utf-8")
+                  (directory / "packages.sha256").write_text(
+                      "".join(f"{digest}  {name}\n" for name, digest in sorted(verified.items())), encoding="utf-8"
+                  )
 
-            - name: Require successful existing CI for the resolved commit
-              uses: actions/github-script@v9.0.0
-              env:
-                  RELEASE_COMMIT: ${{ steps.tag.outputs.commit }}
-              with:
-                  script: |
-                      const commit = process.env.RELEASE_COMMIT;
-                      const repository = context.repo;
-                      const repositoryName = `${repository.owner}/${repository.repo}`.toLowerCase();
-                      for (const workflow of ['CodeQuality.yml', 'codeql-analysis.yml']) {
-                          const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
-                              ...repository, workflow_id: workflow, head_sha: commit, event: 'push', per_page: 100
-                          });
-                          const candidates = runs.filter(run => run.head_sha === commit &&
-                              run.head_repository?.full_name?.toLowerCase() === repositoryName);
-                          candidates.sort((left, right) => right.id - left.id);
-                          if (!candidates.length) {
-                              throw new Error(`Required ${workflow} verification is missing for ${commit}.`);
-                          }
-                          const { data: run } = await github.rest.actions.getWorkflowRun({
-                              ...repository, run_id: candidates[0].id
-                          });
-                          if (run.head_sha !== commit || run.status !== 'completed' || run.conclusion !== 'success') {
-                              throw new Error(`Required ${workflow} verification is ${run.status}/${run.conclusion} for ${commit}.`);
-                          }
-                          core.info(`Required verification passed: ${run.html_url}`);
-                      }
-
-            - name: Publish the verified package files to NuGet.org
-              shell: python3 {0}
+            - name: Push to NuGet
+              shell: bash
               env:
                   NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
               run: |
-                  import hashlib
-                  import json
-                  import os
-                  import subprocess
-                  from pathlib import Path
-
-                  key = os.environ.get("NUGET_API_KEY", "")
-                  if not key.strip():
-                      raise SystemExit("NUGET_API_KEY is not configured; publication is blocked.")
-                  directory = Path(os.environ["RELEASE_DIRECTORY"])
-                  metadata = json.loads((directory / "metadata.json").read_text(encoding="utf-8"))
-                  verified = metadata["verifiedPackages"]
-                  packages = directory / "packages"
-                  if {path.name for path in packages.iterdir()} != set(verified):
-                      raise SystemExit("The verified package set changed before publication.")
-                  for name, digest in sorted(verified.items()):
-                      if hashlib.sha256((packages / name).read_bytes()).hexdigest() != digest:
-                          raise SystemExit(f"Verified package changed before publication: {name}.")
-                  for name in sorted(verified):
-                      result = subprocess.run([
-                          "dotnet", "nuget", "push", str(packages / name), "--api-key", key,
-                          "--source", "https://api.nuget.org/v3/index.json"
-                      ])
-                      if result.returncode:
-                          raise SystemExit(f"NuGet publication failed for {name}; remaining uploads are stopped.")
+                  set -euo pipefail
+                  if [[ -z "${NUGET_API_KEY//[[:space:]]/}" ]]; then
+                      echo "NUGET_API_KEY is not configured; publication is blocked." >&2
+                      exit 1
+                  fi
+                  cd "$RELEASE_DIRECTORY/packages"
+                  diff <(cut -c 67- ../packages.sha256) <(find . -mindepth 1 -maxdepth 1 -printf '%f\n' | LC_ALL=C sort)
+                  sha256sum --check ../packages.sha256
+                  for package in *.nupkg; do
+                      dotnet nuget push "$package" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+                  done
