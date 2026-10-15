@@ -1,9 +1,9 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="ClassHelper.cs" company="Starion Group S.A.">
-// 
+//
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-// 
+//
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
@@ -16,7 +16,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     using uml4net.StructuredClassifiers;
 
     /// <summary>
-    /// Provides Handlebars support for UML classes used to generate DTOs and POCOs.
+    /// Provides Handlebars support for UML classes used to generate DTOs, DTO validators and POCOs.
     /// </summary>
     public static class ClassHelper
     {
@@ -33,9 +33,11 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper("Class.QueryDtoInterfaceProperties", (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryDtoInterfaceProperties}}").QueryDtoInterfaceProperties());
+            handlebars.RegisterHelper("Class.QueryDtoInterfaceProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryDtoInterfaceProperties}}").QueryDtoInterfaceProperties());
 
-            handlebars.RegisterHelper("Class.QueryDtoImplementationProperties", (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryDtoImplementationProperties}}").QueryDtoImplementationProperties());
+            handlebars.RegisterHelper("Class.QueryDtoImplementationProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryDtoImplementationProperties}}").QueryDtoImplementationProperties());
 
             handlebars.RegisterHelper("Class.WriteDtoInterfaceIdentifier", (writer, _, arguments) =>
             {
@@ -47,13 +49,50 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             handlebars.RegisterHelper("Class.WriteDtoInterfaceGeneralizations", (writer, _, arguments) =>
             {
                 var umlClass = arguments.QuerySingle<IClass>("{{Class.WriteDtoInterfaceGeneralizations}}");
-                var inheritance = string.Join(", ", umlClass.QueryGeneralizations()
-                    .Select(QueryGeneratedInterfaceIdentifier));
+                var inheritance = string.Join(", ", umlClass.QueryGeneralizations().Select(QueryGeneratedInterfaceIdentifier));
 
                 if (inheritance.Length > 0)
                 {
                     writer.WriteSafeString($" : {inheritance}");
                 }
+            });
+        }
+
+        /// <summary>
+        /// Registers the DTO validator shape and inheritance helpers for the complete loaded class set.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the DTO validator inheritance helpers are registered.
+        /// </param>
+        /// <param name="classes">
+        /// The complete loaded Fabric class set used to identify abstract classes and concrete parents requiring generic validators.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars" /> or <paramref name="classes" /> is <see langword="null" />.
+        /// </exception>
+        public static void RegisterDtoValidatorClassHelper(this IHandlebars handlebars, IEnumerable<IClass> classes)
+        {
+            ArgumentNullException.ThrowIfNull(handlebars);
+            ArgumentNullException.ThrowIfNull(classes);
+
+            var genericClasses = classes.Where(umlClass => umlClass.IsAbstract)
+                .Concat(classes.SelectMany(umlClass => umlClass.QueryGeneralizations()))
+                .ToHashSet<IClass>(ReferenceEqualityComparer.Instance);
+
+            handlebars.RegisterHelper("Class.QueryIsGenericDtoValidator",
+                (_, arguments) => genericClasses.Contains(arguments.QuerySingle<IClass>("{{Class.QueryIsGenericDtoValidator}}")));
+
+            handlebars.RegisterHelper("Class.QueryDtoValidatorParent",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryDtoValidatorParent}}").QueryGeneralizations().SingleOrDefault());
+
+            handlebars.RegisterHelper("Class.WriteDtoValidatorBaseClass", (writer, _, arguments) =>
+            {
+                var umlClass = arguments.QuerySingle<IClass>("{{Class.WriteDtoValidatorBaseClass}}");
+                var parent = umlClass.QueryGeneralizations().SingleOrDefault();
+                var typeArgument = genericClasses.Contains(umlClass) ? "T" : $"Mycelium.SDK.DTO.{QueryGeneratedInterfaceIdentifier(umlClass)}";
+                var baseIdentifier = parent == null ? "AbstractValidator" : ReservedCSharpNameMapper.Map($"{parent.Name}Validator");
+
+                writer.WriteSafeString($"{baseIdentifier}<{typeArgument}>");
             });
         }
 
@@ -70,9 +109,11 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper("Class.QueryPocoInterfaceProperties", (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryPocoInterfaceProperties}}").QueryPocoInterfaceProperties());
+            handlebars.RegisterHelper("Class.QueryPocoInterfaceProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryPocoInterfaceProperties}}").QueryPocoInterfaceProperties());
 
-            handlebars.RegisterHelper("Class.QueryPocoImplementationProperties", (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryPocoImplementationProperties}}").QueryPocoImplementationProperties());
+            handlebars.RegisterHelper("Class.QueryPocoImplementationProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryPocoImplementationProperties}}").QueryPocoImplementationProperties());
 
             handlebars.RegisterHelper("Class.WritePocoInterfaceIdentifier", (writer, _, arguments) =>
             {
@@ -84,8 +125,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             {
                 var umlClass = arguments.QuerySingle<IClass>("{{Class.WritePocoInterfaceGeneralizations}}");
 
-                var inheritance = string.Join(", ", umlClass.QueryGeneralizations()
-                    .Select(QueryGeneratedInterfaceIdentifier));
+                var inheritance = string.Join(", ", umlClass.QueryGeneralizations().Select(QueryGeneratedInterfaceIdentifier));
 
                 if (inheritance.Length > 0)
                 {

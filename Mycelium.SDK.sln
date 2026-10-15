@@ -20,6 +20,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mycelium.SDK.Serializer.Jso
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mycelium.SDK.Serializer.Json.Benchmarks", "Mycelium.SDK.Serializer.Json.Benchmarks\Mycelium.SDK.Serializer.Json.Benchmarks.csproj", "{F357B3F9-37A7-475D-A33F-35DC453DDCD1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mycelium.SDK.Validation", "Mycelium.SDK.Validation\Mycelium.SDK.Validation.csproj", "{9388C81A-5720-4AD7-8F11-1C20E4D36D5A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mycelium.SDK.Validation.Tests", "Mycelium.SDK.Validation.Tests\Mycelium.SDK.Validation.Tests.csproj", "{A37F094E-52C7-49C0-B6B9-8E2DA8531F42}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,5 +70,13 @@ Global
 		{F357B3F9-37A7-475D-A33F-35DC453DDCD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F357B3F9-37A7-475D-A33F-35DC453DDCD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F357B3F9-37A7-475D-A33F-35DC453DDCD1}.Release|Any CPU.Build.0 = Release|Any CPU
+        {9388C81A-5720-4AD7-8F11-1C20E4D36D5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {9388C81A-5720-4AD7-8F11-1C20E4D36D5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {9388C81A-5720-4AD7-8F11-1C20E4D36D5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {9388C81A-5720-4AD7-8F11-1C20E4D36D5A}.Release|Any CPU.Build.0 = Release|Any CPU
+        {A37F094E-52C7-49C0-B6B9-8E2DA8531F42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {A37F094E-52C7-49C0-B6B9-8E2DA8531F42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {A37F094E-52C7-49C0-B6B9-8E2DA8531F42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {A37F094E-52C7-49C0-B6B9-8E2DA8531F42}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

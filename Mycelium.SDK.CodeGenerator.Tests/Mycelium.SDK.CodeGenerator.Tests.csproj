@@ -30,6 +30,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Mycelium.SDK.CodeGenerator\Mycelium.SDK.CodeGenerator.csproj"/>
         <ProjectReference Include="..\Mycelium.SDK.Extensions\Mycelium.SDK.Extensions.csproj"/>
+        <ProjectReference Include="..\Mycelium.SDK.Validation\Mycelium.SDK.Validation.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -88,6 +89,13 @@
     <ItemGroup>
         <None Include="..\Mycelium.SDK\AutoGenPOCO\**\*"
               Link="Committed\Mycelium.SDK\AutoGenPOCO\%(RecursiveDir)%(Filename)%(Extension)">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\Mycelium.SDK.Validation\AutoGenDtoValidator\**\*"
+              Link="Committed\Mycelium.SDK.Validation\AutoGenDtoValidator\%(RecursiveDir)%(Filename)%(Extension)">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>

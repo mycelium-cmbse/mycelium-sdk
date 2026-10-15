@@ -1,0 +1,101 @@
+// ------------------------------------------------------------------------------------------------
+//  <copyright file="{{ #NamedElement.WriteIdentifier this }}Validator.cs" company="Starion Group S.A.">
+//
+//    Copyright 2026 Starion Group S.A.
+//    SPDX-License-Identifier: Apache-2.0
+//
+//  </copyright>
+//  ------------------------------------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
+namespace Mycelium.SDK.Validation
+{
+    using System;
+    using System.CodeDom.Compiler;
+
+    using FluentValidation;
+
+    /// <summary>
+    /// Validates local data for objects implementing <see cref="Mycelium.SDK.DTO.{{ #Class.WriteDtoInterfaceIdentifier this }}" />.
+    /// </summary>
+    {{ #if (#Class.QueryIsGenericDtoValidator this) }}
+    /// <typeparam name="T">
+    /// The DTO interface or implementation whose data is validated.
+    /// </typeparam>
+    {{ /if }}
+    [GeneratedCode("Mycelium.SDK", "latest")]
+    {{ #if (#Class.QueryIsGenericDtoValidator this) }}
+    public abstract partial class {{ #NamedElement.WriteIdentifier this }}Validator<T> : {{ #Class.WriteDtoValidatorBaseClass this }}
+        where T : Mycelium.SDK.DTO.{{ #Class.WriteDtoInterfaceIdentifier this }}
+    {{ else }}
+    public partial class {{ #NamedElement.WriteIdentifier this }}Validator : {{ #Class.WriteDtoValidatorBaseClass this }}
+    {{ /if }}
+    {
+        /// <summary>
+        {{ #if (#Class.QueryIsGenericDtoValidator this) }}
+        /// Initializes a new instance of the <see cref="{{ #NamedElement.WriteIdentifier this }}Validator{T}" /> class
+        {{ #unless (#Class.QueryDtoValidatorParent this) }}
+        /// and registers its generated rules and the handwritten rules supplied by the validator hierarchy.
+        {{ else }}
+        /// and registers the generated data-validation rules declared by this model class.
+        {{ /unless }}
+        {{ else }}
+        /// Initializes a new instance of the <see cref="{{ #NamedElement.WriteIdentifier this }}Validator" /> class
+        /// and registers its generated and handwritten data-validation rules.
+        {{ /if }}
+        /// </summary>
+        {{ #if (#Class.QueryIsGenericDtoValidator this) }}
+        protected {{ #NamedElement.WriteIdentifier this }}Validator()
+        {{ else }}
+        public {{ #NamedElement.WriteIdentifier this }}Validator()
+        {{ /if }}
+        {
+            {{ #each (#Class.QueryDtoInterfaceProperties this) as | property | }}
+                {{ #Property.WriteDtoValidationRules property }}
+            {{ /each }}
+            {{ #unless (#Class.QueryDtoValidatorParent this) }}
+            this.AddCustomValidation();
+            {{ /unless }}
+        }
+        {{ #unless (#Class.QueryDtoValidatorParent this) }}
+
+        /// <summary>
+        /// Registers approved handwritten validation rules supplied by overrides in partial validator declarations.
+        /// </summary>
+        /// <remarks>
+        /// The default implementation registers no rules. The root validator constructor invokes this method once
+        /// after registering its own generated rules and before derived constructor bodies run. Overrides call the base
+        /// implementation before adding rules and must not depend on state initialized by a more-derived constructor body.
+        /// </remarks>
+        protected virtual void AddCustomValidation()
+        {
+        }
+        {{ /unless }}
+    }
+    {{ #if (#Class.QueryIsGenericDtoValidator this) }}
+    {{ #unless this.IsAbstract }}
+
+    /// <summary>
+    /// Validates local data for objects implementing <see cref="Mycelium.SDK.DTO.{{ #Class.WriteDtoInterfaceIdentifier this }}" />.
+    /// </summary>
+    [GeneratedCode("Mycelium.SDK", "latest")]
+    public partial class {{ #NamedElement.WriteIdentifier this }}Validator : {{ #NamedElement.WriteIdentifier this }}Validator<Mycelium.SDK.DTO.{{ #Class.WriteDtoInterfaceIdentifier this }}>
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="{{ #NamedElement.WriteIdentifier this }}Validator" /> class
+        /// using the generated and handwritten rules registered by its generic validator hierarchy.
+        /// </summary>
+        public {{ #NamedElement.WriteIdentifier this }}Validator()
+        {
+        }
+    }
+    {{ /unless }}
+    {{ /if }}
+}
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

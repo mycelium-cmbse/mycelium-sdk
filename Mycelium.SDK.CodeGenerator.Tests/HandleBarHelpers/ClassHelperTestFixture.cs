@@ -15,6 +15,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
     using Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators;
 
+    using uml4net.Classification;
     using uml4net.StructuredClassifiers;
 
     [TestFixture]
@@ -114,6 +115,31 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
             IHandlebars handlebars = null;
 
             Assert.That(() => handlebars.RegisterPocoClassHelper(), Throws.ArgumentNullException);
+        }
+
+        [Test]
+        public void VerifyThatValidatorShapeUsesSubclassPresenceAndPreservesAbstractLeaves()
+        {
+            var parent = new Class { XmiId = "parent", Name = "Parent" };
+            var child = new Class { XmiId = "child", Name = "Child" };
+            var abstractLeaf = new Class { XmiId = "abstract-leaf", Name = "AbstractLeaf", IsAbstract = true };
+            child.Generalization.Add(new Generalization { XmiId = "child-parent", Specific = child, General = parent });
+
+            var handlebars = Handlebars.CreateSharedEnvironment();
+            handlebars.RegisterDtoValidatorClassHelper([parent, child, abstractLeaf]);
+
+            var template = handlebars.Compile("{{ #if (#Class.QueryIsGenericDtoValidator this) }}generic{{ else }}concrete{{ /if }}:{{ #Class.WriteDtoValidatorBaseClass this }}");
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(template(parent), Is.EqualTo("generic:AbstractValidator<T>"));
+                Assert.That(template(child), Is.EqualTo("concrete:ParentValidator<Mycelium.SDK.DTO.IChild>"));
+                Assert.That(template(abstractLeaf), Is.EqualTo("generic:AbstractValidator<T>"));
+            }
+
+            handlebars.RegisterDtoValidatorClassHelper([parent]);
+
+            Assert.That(template(parent), Is.EqualTo("concrete:AbstractValidator<Mycelium.SDK.DTO.IParent>"));
         }
 
         private IClass QueryClass(string className) => this.classes.Single(umlClass => umlClass.Name == className);
