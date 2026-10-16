@@ -3,8 +3,8 @@ message: "If you use this software, please cite it as below."
 
 title: "mycelium sdk"
 abstract: "mycelium sdk: the mycelium SDK"
-version: "0.0.1"
-date-released: "2026-02-02"
+version: "0.1.0"
+date-released: "2026-10-16"
 url: "https://github.com/mycelium-cmbse/mycelium-sdk"
 
 authors:
@@ -43,6 +43,6 @@ preferred-citation:
     - given-names: "Omrane"
       family-names: "Haj Mohamed"
     - name: "Starion Group S.A."
-  version: "0.0.1"
+  version: "0.1.0"
   url: "https://github.com/mycelium-cmbse/mycelium-sdk"
-  date-released: "2026-06-02"
+  date-released: "2026-10-16"
