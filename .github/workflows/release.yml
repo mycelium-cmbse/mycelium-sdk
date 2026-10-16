@@ -1,0 +1,138 @@
+name: NuGet release
+
+on:
+    workflow_dispatch:
+        inputs:
+            version:
+                description: SemVer, for example 0.1.0 or 0.1.0-beta.1
+                required: true
+                type: string
+
+permissions:
+    contents: write
+
+concurrency:
+    group: nuget-release
+    cancel-in-progress: false
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        env:
+            DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+            VERSION: ${{ inputs.version }}
+        steps:
+            - name: Check out the default branch
+              uses: actions/checkout@v7.0.1
+              with:
+                  fetch-depth: 0
+                  ref: ${{ env.DEFAULT_BRANCH }}
+
+            - name: Validate version (SemVer)
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  NUMBER='(0|[1-9][0-9]*)'
+                  IDENTIFIER='(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
+                  SEMVER="^${NUMBER}\.${NUMBER}\.${NUMBER}(-${IDENTIFIER}(\.${IDENTIFIER})*)?$"
+                  if [[ "$VERSION" =~ $SEMVER ]]; then
+                      if [[ "$VERSION" == *-* ]]; then
+                          echo "PRERELEASE=true" >> "$GITHUB_ENV"
+                      else
+                          echo "PRERELEASE=false" >> "$GITHUB_ENV"
+                      fi
+                  else
+                      echo "Provided version '$VERSION' is not a supported SemVer version." >&2
+                      exit 1
+                  fi
+
+            - name: Set up .NET
+              uses: actions/setup-dotnet@v6.0.0
+              with:
+                  dotnet-version: 10.0.x
+
+            - name: Set release date
+              run: echo "DATE=$(date +'%Y-%m-%d')" >> "$GITHUB_ENV"
+
+            - name: Update CITATION.cff (version and date)
+              run: |
+                  set -euo pipefail
+                  sed -i "s/^version:.*/version: \"${VERSION}\"/" CITATION.cff
+                  sed -i "s/^date-released:.*/date-released: \"${DATE}\"/" CITATION.cff
+                  sed -i "s/^  version:.*/  version: \"${VERSION}\"/" CITATION.cff
+                  sed -i "s/^  date-released:.*/  date-released: \"${DATE}\"/" CITATION.cff
+
+            - name: Commit CITATION.cff to the default branch
+              run: |
+                  set -euo pipefail
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git add CITATION.cff
+                  if ! git diff --cached --quiet; then
+                      git commit -m "chore: release ${VERSION} (update CITATION.cff)"
+                      git push origin "HEAD:${DEFAULT_BRANCH}"
+                  else
+                      echo "No changes to CITATION.cff."
+                  fi
+
+            - name: Install xmlstarlet
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y xmlstarlet
+
+            - name: Prepare release notes from PackageReleaseNotes
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  echo "The following items have been included in this release:" > RELEASE_NOTES.md
+                  echo "" >> RELEASE_NOTES.md
+                  mapfile -t CSPROJS < <(git ls-files '*.csproj' | sort)
+                  for csproj in "${CSPROJS[@]}"; do
+                      pkg_id="$(xmlstarlet sel -t -v '(//Project/PropertyGroup/PackageId)[1]' "$csproj" 2>/dev/null || true)"
+                      if [[ -z "$pkg_id" ]]; then
+                          pkg_id="$(basename "$csproj" .csproj)"
+                      fi
+                      pkg_version="$(xmlstarlet sel -t -v '(//Project/PropertyGroup/Version)[1]' "$csproj" 2>/dev/null || true)"
+                      if [[ -z "$pkg_version" ]]; then
+                          pkg_version="$VERSION"
+                      fi
+                      notes="$(xmlstarlet sel -t -v '(//Project/PropertyGroup/PackageReleaseNotes)[1]' "$csproj" 2>/dev/null || true)"
+                      notes="$(printf '%s' "$notes" | sed 's/\r$//')"
+                      if [[ -n "$notes" ]]; then
+                          printf '**%s [%s]**\n' "$pkg_id" "$pkg_version" >> RELEASE_NOTES.md
+                          while IFS= read -r line; do
+                              trimmed="$(printf '%s' "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+                              if [[ -n "$trimmed" ]]; then
+                                  cleaned="$(printf '%s' "$trimmed" | sed 's/^- \{0,1\}//')"
+                                  printf '  - %s\n' "$cleaned" >> RELEASE_NOTES.md
+                              fi
+                          done <<< "$notes"
+                          echo "" >> RELEASE_NOTES.md
+                      fi
+                  done
+                  cat RELEASE_NOTES.md
+
+            - name: Pack
+              run: dotnet pack Mycelium.SDK.sln --configuration Release --output ReleaseBuilds
+
+            - name: Push to NuGet
+              env:
+                  NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+              run: dotnet nuget push "ReleaseBuilds/*.nupkg" --api-key "${NUGET_API_KEY:?NUGET_API_KEY is not configured}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+            - name: Create annotated release tag
+              run: |
+                  set -euo pipefail
+                  git tag -a "$VERSION" -m "Release $VERSION"
+                  git push origin "refs/tags/${VERSION}"
+
+            - name: Create draft GitHub release
+              uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+              with:
+                  draft: true
+                  prerelease: ${{ env.PRERELEASE }}
+                  name: Mycelium SDK ${{ env.VERSION }}
+                  tag_name: ${{ env.VERSION }}
+                  body_path: RELEASE_NOTES.md
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -3,7 +3,8 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
         <LangVersion>14.0</LangVersion>
-        <Version>0.0.1</Version>
+        <Version>0.1.0</Version>
+        <PackageReleaseNotes>Initial coordinated SDK release with MessagePack DTO serialization and payloads. Producers and consumers must use matching model layouts and value encodings.</PackageReleaseNotes>
         <Description>MessagePack serialization for Mycelium SDK DTOs.</Description>
         <PackageId>Mycelium.SDK.Serializer.MessagePack</PackageId>
         <Company>Starion Group S.A.</Company>
