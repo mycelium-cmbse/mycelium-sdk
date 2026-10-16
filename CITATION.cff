@@ -15,6 +15,12 @@ authors:
   - given-names: Antoine
     family-names: Théate
     affiliation: "Starion Group S.A."
+  - given-names: "Régis"
+    family-names: "André"
+  - given-names: "Tanase-Marius"
+    family-names: "Manafu"
+  - given-names: "Omrane"
+    family-names: "Haj Mohamed"
   - name: "Starion Group S.A."
 
 repository-code: "https://github.com/mycelium-cmbse/mycelium-sdk"
@@ -30,6 +36,12 @@ preferred-citation:
     - given-names: Antoine
       family-names: Théate
       affiliation: "Starion Group S.A."
+    - given-names: "Régis"
+      family-names: "André"
+    - given-names: "Tanase-Marius"
+      family-names: "Manafu"
+    - given-names: "Omrane"
+      family-names: "Haj Mohamed"
     - name: "Starion Group S.A."
   version: "0.0.1"
   url: "https://github.com/mycelium-cmbse/mycelium-sdk"
