@@ -24,7 +24,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Mycelium.SDK\Mycelium.SDK.csproj"/>
         <PackageReference Include="FluentValidation" Version="11.12.0"/>
-        <PackageReference Include="Microsoft.Sbom.Targets" Version="4.1.5" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.Sbom.Targets" Version="4.1.13" PrivateAssets="all"/>
     </ItemGroup>
 
     <ItemGroup>

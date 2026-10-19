@@ -42,11 +42,40 @@ jobs:
           echo "=== Full outdated packages report ==="
           cat outdated.log
 
+          # Use direct dependencies for actionable outdated-package findings.
+          # Transitive versions remain visible in the full diagnostic report above.
+          dotnet list Mycelium.SDK.sln package --outdated > outdated-direct.log
+
+          # FluentValidation must support netstandard2.1. Check updates within its
+          # selected major version instead of reporting an incompatible major upgrade.
+          dotnet list Mycelium.SDK.Validation/Mycelium.SDK.Validation.csproj package --outdated --highest-minor > outdated-validation-compatible.log
+
           awk '
             /^Project .*.Tests/ { skip=1; next }
-            /^Project / { skip=0 }
-            !skip { print }
-          ' outdated.log > outdated-issue.log
+            /^Project / { skip=0; validation=($0 ~ /`Mycelium\.SDK\.Validation`/) }
+            !skip && !(validation && $1 == ">" && $2 == "FluentValidation") { print }
+          ' outdated-direct.log > outdated-direct-filtered.log
+
+          grep -v -E "$IGNORE_PACKAGES" outdated-direct-filtered.log > outdated-issue.log || true
+
+          awk '
+            /^Project / { project=$0 }
+            /^[[:space:]]*\[net/ { framework=$0 }
+            /Top-level Package/ { columns=$0 }
+            $1 == ">" && $2 == "FluentValidation" {
+              if (!printedProject++) {
+                print ""
+                print "Compatible same-major FluentValidation updates:"
+                print project
+              }
+              print framework
+              print columns
+              print $0
+            }
+          ' outdated-validation-compatible.log >> outdated-issue.log
+
+          echo "=== Actionable direct dependency updates ==="
+          cat outdated-issue.log
 
           if grep -q "^ *>" outdated-issue.log; then
             echo "Outdated packages found in non-test projects"
