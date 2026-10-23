@@ -78,8 +78,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             var representativeFileNames = new RepresentativeClasses().Select(className => $"{className}.sql")
                 .OrderBy(fileName => fileName, StringComparer.Ordinal).ToArray();
 
-            Assert.That(GeneratedOutput.QueryRelativeFileNames(this.fragmentDirectory), Is.EqualTo(representativeFileNames));
-            Assert.That(GeneratedOutput.QueryRelativeFileNames(this.expectedDirectory), Is.EqualTo(representativeFileNames));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(GeneratedOutput.QueryRelativeFileNames(this.fragmentDirectory), Is.EqualTo(representativeFileNames));
+                Assert.That(GeneratedOutput.QueryRelativeFileNames(this.expectedDirectory), Is.EqualTo(representativeFileNames));
+            }
 
             foreach (var fileName in representativeFileNames)
             {
@@ -96,18 +99,23 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             await new UmlSqlSchemaGenerator().GenerateAsync(GeneratorSetupFixture.ResourcesDirectory, replayDirectory);
 
             var stagedPath = Path.Combine(this.stagingDirectory.FullName, "schema.sql");
-            var stagedBytes = await File.ReadAllBytesAsync(stagedPath);
-            var replayBytes = await File.ReadAllBytesAsync(Path.Combine(replayDirectory.FullName, "schema.sql"));
-            var source = await GeneratorSetupFixture.ReadSourceAsync(stagedPath);
-            var hasBom = stagedBytes.Length >= 3 && stagedBytes[0] == 0xEF && stagedBytes[1] == 0xBB && stagedBytes[2] == 0xBF;
+            var replayPath = Path.Combine(replayDirectory.FullName, "schema.sql");
 
-            using (Assert.EnterMultipleScope())
+            await AssertFilesMatchAsync(replayPath, stagedPath, "SQL generated through the resources-directory entry point", "SQL generated through the parsed-model entry point");
+
+            foreach (var path in new[] { stagedPath, replayPath })
             {
-                Assert.That(replayBytes, Is.EqualTo(stagedBytes));
-                Assert.That(hasBom, Is.False);
-                Assert.That(source, Does.Not.Contain("\r"));
-                Assert.That(source.EndsWith("\n", StringComparison.Ordinal), Is.True);
-                Assert.That(source.EndsWith("\n\n", StringComparison.Ordinal), Is.False);
+                var bytes = await File.ReadAllBytesAsync(path);
+                var source = await GeneratorSetupFixture.ReadSourceAsync(path);
+                var hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(hasBom, Is.False, $"SQL '{path}' must not contain a UTF-8 BOM.");
+                    Assert.That(source, Does.Not.Contain("\r"), $"SQL '{path}' must use LF line endings.");
+                    Assert.That(source.EndsWith("\n", StringComparison.Ordinal), Is.True, $"SQL '{path}' must end with a newline.");
+                    Assert.That(source.EndsWith("\n\n", StringComparison.Ordinal), Is.False, $"SQL '{path}' must have only one final newline.");
+                }
             }
         }
 
