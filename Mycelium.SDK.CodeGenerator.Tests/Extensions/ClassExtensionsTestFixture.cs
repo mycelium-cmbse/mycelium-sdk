@@ -13,7 +13,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
     using Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators;
 
     using uml4net.Classification;
+    using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
+    using uml4net.Values;
 
     [TestFixture]
     public class ClassExtensionsTestFixture
@@ -31,6 +33,35 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             this.classes = functionalData.PackagedElement
                 .OfType<IClass>()
                 .ToArray();
+        }
+
+        [Test]
+        public void Verify_that_SQL_references_include_declared_scalars_and_collections_without_inherited_or_value_properties()
+        {
+            var target = new Class { XmiId = "target-class", Name = "Target" };
+            var parent = new Class { XmiId = "parent-class", Name = "Parent" };
+            var umlClass = new Class { XmiId = "class-id", Name = "TestClass" };
+            var scalar = new Property { XmiId = "scalar-reference", Name = "scalar", Type = target };
+            var collection = new Property { XmiId = "collection-reference", Name = "collection", Type = target };
+
+            collection.UpperValue.Add(new LiteralUnlimitedNatural { Value = "*" });
+
+            parent.OwnedAttribute.Add(new Property { XmiId = "inherited-reference", Name = "inherited", Type = target });
+
+            umlClass.Generalization.Add(new Generalization { XmiId = "generalization", General = parent, Specific = umlClass });
+
+            umlClass.OwnedAttribute.Add(scalar);
+            umlClass.OwnedAttribute.Add(collection);
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "derived-reference", Name = "derived", Type = target, IsDerived = true });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "union-reference", Name = "derivedUnion", Type = target, IsDerivedUnion = true });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "unnamed-reference", Type = target });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "blank-reference", Name = " ", Type = target });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "value-property", Name = "value", Type = new PrimitiveType { Name = "String" } });
+            umlClass.OwnedAttribute.Add(new Property { XmiId = "enum-property", Name = "kind", Type = new Enumeration { Name = "Kind" } });
+
+            var references = umlClass.QuerySqlReferenceProperties();
+
+            Assert.That(references, Is.EqualTo([collection, scalar]));
         }
 
         [Test]

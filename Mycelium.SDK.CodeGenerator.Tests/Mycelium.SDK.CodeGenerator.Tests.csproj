@@ -52,6 +52,10 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
 
+        <None Update="Expected\UML\AutoGenSql\**\*.sql">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+
         <Compile Remove="Expected\OpenApi\**\*.cs"/>
 
         <None Include="Expected\OpenApi\**\*.cs">
@@ -116,6 +120,13 @@
 
     <ItemGroup>
         <Folder Include="Committed\Mycelium.SDK.Extensions\AutoGenEnumProvider\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\Mycelium.SDK.CodeGenerator\AutoGenSql\**\*.sql"
+              Link="Committed\Mycelium.SDK.CodeGenerator\AutoGenSql\%(RecursiveDir)%(Filename)%(Extension)">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

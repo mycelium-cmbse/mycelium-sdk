@@ -1,0 +1,123 @@
+{{#*inline "sql-tables"}}
+{{#with this as |owner|}}
+CREATE TABLE {{#SQL.Table owner}} (
+    "id" uuid NOT NULL,
+    {{#if (#SQL.IsThing owner)}}
+    "classKind" text,
+    "data" jsonb,
+    {{/if}}
+    {{#each (#SQL.References owner) as |property|}}
+        {{#unless (#SQL.IsCollection property)}}
+    {{#SQL.Column property}} uuid{{#if (#SQL.IsRequired property)}} NOT NULL{{/if}},
+        {{/unless}}
+    {{/each}}
+    PRIMARY KEY ("id")
+);
+
+{{#each (#SQL.References owner) as |property|}}
+    {{#if (#SQL.IsCollection property)}}
+CREATE TABLE {{#SQL.LinkTable owner property}} (
+    {{#SQL.SourceColumn owner}} uuid NOT NULL,
+    {{#SQL.TargetColumn property}} uuid NOT NULL,
+        {{#if (#SQL.HasPosition property)}}
+    "position" bigint NOT NULL,
+    PRIMARY KEY ({{#SQL.SourceColumn owner}}, "position"){{#if property.IsUnique}},
+    UNIQUE ({{#SQL.SourceColumn owner}}, {{#SQL.TargetColumn property}}){{/if}}
+        {{else}}
+    PRIMARY KEY ({{#SQL.SourceColumn owner}}, {{#SQL.TargetColumn property}})
+        {{/if}}
+);
+
+    {{/if}}
+{{/each}}
+{{/with}}
+{{/inline}}
+{{#*inline "sql-constraints"}}
+{{#with this as |owner|}}
+{{#unless (#SQL.IsThing owner)}}
+ALTER TABLE {{#SQL.Table owner}}
+    ADD FOREIGN KEY ("id") REFERENCES "Fabric"."Thing" ("id")
+    ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+{{/unless}}
+{{#each (#SQL.References owner) as |property|}}
+    {{#if (#SQL.IsCollection property)}}
+ALTER TABLE {{#SQL.LinkTable owner property}}
+    ADD FOREIGN KEY ({{#SQL.SourceColumn owner}}) REFERENCES {{#SQL.Table owner}} ("id")
+    ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE {{#SQL.LinkTable owner property}}
+    ADD FOREIGN KEY ({{#SQL.TargetColumn property}}) REFERENCES {{#SQL.TargetTable property}} ("id")
+    ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
+
+CREATE INDEX ON {{#SQL.LinkTable owner property}} ({{#SQL.TargetColumn property}});
+
+    {{else}}
+ALTER TABLE {{#SQL.Table owner}}
+    ADD FOREIGN KEY ({{#SQL.Column property}}) REFERENCES {{#SQL.TargetTable property}} ("id")
+    ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
+
+CREATE INDEX ON {{#SQL.Table owner}} ({{#SQL.Column property}});
+
+    {{/if}}
+{{/each}}
+{{/with}}
+{{/inline}}
+{{#*inline "sql-triggers"}}
+{{#with this as |owner|}}
+{{#unless (#SQL.IsThing owner)}}
+CREATE TRIGGER "trg_thing_delete"
+    AFTER DELETE ON {{#SQL.Table owner}}
+    FOR EACH ROW EXECUTE FUNCTION "Fabric"."thing_delete"();
+
+{{#each (#SQL.Parents owner) as |parent|}}
+    {{#unless (#SQL.IsThing parent)}}
+CREATE TRIGGER {{#SQL.DeleteTrigger parent}}
+    AFTER DELETE ON {{#SQL.Table owner}}
+    FOR EACH ROW EXECUTE FUNCTION {{#SQL.DeleteFunction parent}}();
+
+    {{/unless}}
+{{/each}}
+{{/unless}}
+{{/with}}
+{{/inline}}
+{{#if IncludeInfrastructure}}
+-- ------------------------------------------------------------------------------------------------
+-- <copyright file="schema.sql" company="Starion Group S.A.">
+--
+--   Copyright 2026 Starion Group S.A.
+--   SPDX-License-Identifier: Apache-2.0
+--
+-- </copyright>
+-- ------------------------------------------------------------------------------------------------
+-- THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!
+-- Fabric #33: initial PostgreSQL 18 schema; the consumer owns the transaction.
+-- Mycelium.Model.Fabric {{FabricModelVersion}}
+-- Mycelium.Model.CommonPrimitives {{CommonPrimitivesModelVersion}}
+
+CREATE SCHEMA IF NOT EXISTS "Fabric";
+
+{{/if}}
+{{#each Classes}}
+{{> sql-tables this}}
+{{/each}}
+{{#each Classes}}
+{{> sql-constraints this}}
+{{/each}}
+{{#if IncludeInfrastructure}}
+{{#each BaseClasses}}
+CREATE FUNCTION {{#SQL.DeleteFunction this}}()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $mycelium$
+BEGIN
+    DELETE FROM {{#SQL.Table this}} WHERE "id" = OLD."id";
+    RETURN OLD;
+END;
+$mycelium$;
+
+{{/each}}
+{{/if}}
+{{#each Classes}}
+{{> sql-triggers this}}
+{{/each}}
