@@ -18,6 +18,58 @@ A change to any DTO field position or count, or payload group position or count,
 
 A positional wire-layout change requires a breaking package-version increase. After the first stable MessagePack package release, it requires a major-version increase. Release notes must identify the incompatibility so producers and consumers can coordinate upgrades to matching versions.
 
+## PostgreSQL schema generation
+
+The SDK generates the initial PostgreSQL 18 schema for [Fabric issue #33](https://github.com/mycelium-cmbse/mycelium-fabric/issues/33). The authoritative inputs are `model/mycelium-fabric.xmi` from `Mycelium.Model.Fabric 0.2.0` (UML package `Fabric`) and `model/mycelium-commonprimitives.xmi` from `Mycelium.Model.CommonPrimitives 0.4.0`. Generation reuses the strict canonical loader and packaged model resources.
+
+The generator, SQL helper and template live in `Mycelium.SDK.CodeGenerator`:
+
+- `Generators/UmlHandleBarsGenerators/UmlSqlSchemaGenerator.cs`
+- `HandleBarHelpers/SqlSchemaHelper.cs`
+- `Templates/Uml/sql-schema-uml-template.hbs`
+
+The complete consumer artifact is [Mycelium.SDK.CodeGenerator/AutoGenSql/schema.sql](Mycelium.SDK.CodeGenerator/AutoGenSql/schema.sql). SQL remains generator-owned: change the model or generator source and regenerate rather than editing the script by hand.
+
+### Generate and review
+
+From the repository root, run:
+
+```powershell
+dotnet test Mycelium.SDK.CodeGenerator.Tests/Mycelium.SDK.CodeGenerator.Tests.csproj --configuration Debug --filter FullyQualifiedName~UmlSqlSchemaGeneratorTestFixture
+```
+
+The fixture builds the producer, generates through its production rendering path and reports retained staging directories. It does not execute SQL or automatically update committed output or goldens. With the current Debug/net10.0 configuration, the directories are:
+
+| Output | Staging directory |
+|---|---|
+| Complete `schema.sql` | `Mycelium.SDK.CodeGenerator.Tests/bin/Debug/net10.0/UML/_Mycelium.SDK.CodeGenerator.AutoGenSql` |
+| Representative class fragments | `Mycelium.SDK.CodeGenerator.Tests/bin/Debug/net10.0/UML/_Mycelium.SDK.CodeGenerator.AutoGenSql.Representative` |
+
+The complete schema is compared with committed production output. Separate class fragments, selected through the existing `RepresentativeClasses`, are compared with `Mycelium.SDK.CodeGenerator.Tests/Expected/UML/AutoGenSql`. These goldens are bounded review contracts, not standalone database scripts.
+
+SQL uses UTF-8 without BOM, LF line endings and a final newline. Comparisons do not normalize whitespace or line endings. The SQL-only `.gitattributes` rules preserve LF on checkout.
+
+When a model or generator change causes a comparison failure:
+
+1. Review the complete staged schema against the committed schema and the approved SQL mappings.
+2. Deliberately copy the reviewed staged `schema.sql` to `Mycelium.SDK.CodeGenerator/AutoGenSql/schema.sql`, preserving its bytes.
+3. Separately review affected representative fragments and copy approved files to `Mycelium.SDK.CodeGenerator.Tests/Expected/UML/AutoGenSql`, preserving their bytes. Do not refresh goldens merely to make tests pass.
+4. Rerun the generation command above, including its build so updated baselines are copied into test output, then run the complete generator suite:
+
+```powershell
+dotnet test Mycelium.SDK.CodeGenerator.Tests/Mycelium.SDK.CodeGenerator.Tests.csproj --configuration Debug --no-build
+```
+
+### Provide the schema to Fabric
+
+Fabric explicitly copies and reviews the complete SDK `schema.sql`, records the producing SDK revision and model-package versions, and embeds its reviewed copy in the consumer assembly. If producer changes are uncommitted, identify them in the handoff; a base commit alone does not reproduce the result. Include the generation command and verification results. The SQL header also records the model-package versions.
+
+The Fabric destination path and owning assembly are decided in the Fabric stage. Fabric does not need the SDK checkout at runtime, a sibling-checkout project reference or package publication. The two repository copies are not automatically synchronized: a new SDK artifact requires a deliberate Fabric review and update. Change SQL content in the producer and regenerate; do not hand-edit the consumer copy.
+
+The database and connection must already exist. The script creates the `"Fabric"` schema and its tables, keys, indexes, functions and triggers. It is an initial-creation script, is not safe to rerun against existing application tables, and does not upgrade existing databases. It includes no database creation, credentials, domain seed records or transaction-control commands. Fabric supplies the transaction and determines whether initialization is appropriate, including handling existing or partial state and concurrent startup.
+
+Generator tests verify rendering and exact output comparisons. Actual PostgreSQL execution, rollback and restart preservation require Fabric integration verification. Schema initialization does not connect Fabric's existing SysML2.NET runtime interfaces to this storage; DAO generation and CRUD belong to #42.
+
 ## Build Status
 
 GitHub actions are used to build and test the library
