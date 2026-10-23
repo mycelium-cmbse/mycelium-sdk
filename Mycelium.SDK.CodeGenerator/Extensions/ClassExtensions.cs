@@ -19,6 +19,28 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     public static class ClassExtensions
     {
         /// <summary>
+        /// Queries the named references declared directly by the class for relational SQL storage.
+        /// </summary>
+        /// <param name="umlClass">
+        /// The UML class whose declared references are queried.
+        /// </param>
+        /// <returns>
+        /// The non-derived class-typed properties, including scalar and collection references,
+        /// deduplicated by XMI identifier and deterministically ordered.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="umlClass" /> is <see langword="null" />.
+        /// </exception>
+        public static IReadOnlyList<IProperty> QuerySqlReferenceProperties(this IClass umlClass)
+        {
+            ArgumentNullException.ThrowIfNull(umlClass);
+
+            return OrderProperties(umlClass.OwnedAttribute.Where(property =>
+                    property.Type is IClass && !string.IsNullOrWhiteSpace(property.Name) && !property.IsDerived && !property.IsDerivedUnion))
+                .ToArray();
+        }
+
+        /// <summary>
         /// Queries the properties declared directly by the class.
         /// </summary>
         /// <param name="umlClass">
