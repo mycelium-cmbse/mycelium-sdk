@@ -14,17 +14,24 @@
         <IsPackable>false</IsPackable>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
+        <FabricModelVersion>0.2.0</FabricModelVersion>
+        <CommonPrimitivesModelVersion>0.4.0</CommonPrimitivesModelVersion>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Humanizer.Core" Version="2.14.1"/>
         <PackageReference Include="Microsoft.CodeAnalysis" Version="5.3.0"/>
         <PackageReference Include="Microsoft.OpenApi" Version="3.10.2"/>
-        <PackageReference Include="Mycelium.Model.CommonPrimitives" Version="0.4.0"/>
-        <PackageReference Include="Mycelium.Model.Fabric" Version="0.2.0"/>
+        <PackageReference Include="Mycelium.Model.CommonPrimitives" Version="$(CommonPrimitivesModelVersion)"/>
+        <PackageReference Include="Mycelium.Model.Fabric" Version="$(FabricModelVersion)"/>
         <PackageReference Include="uml4net.HandleBars" Version="8.3.0"/>
         <PackageReference Include="uml4net.xmi.Extensions.EnterpriseArchitect" Version="8.6.1"/>
         <PackageReference Include="uml4net.xmi" Version="8.5.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyMetadata Include="Mycelium.Model.Fabric" Value="$(FabricModelVersion)"/>
+        <AssemblyMetadata Include="Mycelium.Model.CommonPrimitives" Value="$(CommonPrimitivesModelVersion)"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -44,6 +51,9 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
         <None Update="Templates\Uml\dto-validator-uml-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Templates\Uml\sql-schema-uml-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
         <None Update="Templates\Uml\enumeration-uml-template.hbs">
