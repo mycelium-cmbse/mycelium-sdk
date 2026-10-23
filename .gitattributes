@@ -1,0 +1,2 @@
+Mycelium.SDK.CodeGenerator/AutoGenSql/*.sql text eol=lf
+Mycelium.SDK.CodeGenerator.Tests/Expected/UML/AutoGenSql/*.sql text eol=lf
