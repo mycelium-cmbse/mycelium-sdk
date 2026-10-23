@@ -113,7 +113,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 {
                     Assert.That(hasBom, Is.False, $"SQL '{path}' must not contain a UTF-8 BOM.");
                     Assert.That(source, Does.Not.Contain("\r"), $"SQL '{path}' must use LF line endings.");
-                    Assert.That(source.EndsWith("\n", StringComparison.Ordinal), Is.True, $"SQL '{path}' must end with a newline.");
+                    Assert.That(source.EndsWith('\n'), Is.True, $"SQL '{path}' must end with a newline.");
                     Assert.That(source.EndsWith("\n\n", StringComparison.Ordinal), Is.False, $"SQL '{path}' must have only one final newline.");
                 }
             }
