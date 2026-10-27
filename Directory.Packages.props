@@ -8,11 +8,11 @@
     </PropertyGroup>
 
     <!--
-    Use lowest compatible library versions; update for required APIs or security fixes.
-    Keep serialization/crypto current within approved compatibility; preserve tooling versions during migration.
-    Deliberate floor: Microsoft.Extensions.Logging.Abstractions (.NET 8 LTS; sufficient APIs).
-    Exclude floors only from outdated checks; retain deprecated/vulnerable checks.
--->
+        Use lowest compatible library versions; update for required APIs or security fixes.
+        Keep serialization/crypto current within approved compatibility; preserve tooling versions during migration.
+        Deliberate floor: Microsoft.Extensions.Logging.Abstractions (.NET 8 LTS; sufficient APIs).
+        Exclude floors only from outdated checks; retain deprecated/vulnerable checks.
+    -->
     <ItemGroup>
         <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
         <PackageVersion Include="coverlet.collector" Version="10.0.1" />
