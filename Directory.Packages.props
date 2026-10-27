@@ -8,14 +8,11 @@
     </PropertyGroup>
 
     <!--
-        Libraries use the lowest supported versions providing the required APIs.
-        Raise stable framework-abstraction LTS floors only for required APIs or affected vulnerabilities.
-        Keep serialization and cryptography dependencies current within approved compatibility contracts.
-        Preserve other versions during CPM migration; do not mass-upgrade tooling, tests or benchmarks.
-
-        Deliberately floored: Microsoft.Extensions.Logging.Abstractions (compatible .NET 8 LTS logging APIs).
-        Mirror this list only in the workflow's outdated exclusions; retain deprecated and vulnerable checks.
-    -->
+    Use lowest compatible library versions; update for required APIs or security fixes.
+    Keep serialization/crypto current within approved compatibility; preserve tooling versions during migration.
+    Deliberate floor: Microsoft.Extensions.Logging.Abstractions (.NET 8 LTS; sufficient APIs).
+    Exclude floors only from outdated checks; retain deprecated/vulnerable checks.
+-->
     <ItemGroup>
         <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
         <PackageVersion Include="coverlet.collector" Version="10.0.1" />
