@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Project>
+
+    <ItemGroup>
+        <PackageReference Update="coverlet.collector;coverlet.msbuild">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Update="Microsoft.Sbom.Targets">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+</Project>
