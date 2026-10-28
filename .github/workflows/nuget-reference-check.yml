@@ -33,7 +33,8 @@ jobs:
         run: |
           set -e
 
-          IGNORE_PACKAGES="Microsoft\.NETCore\.Platforms|Microsoft\.NETCore\.Targets"
+          # Mirror the deliberately floored packages in Directory.Packages.props.
+          IGNORE_PACKAGES="Microsoft\.Extensions\.Logging\.Abstractions"
 
           dotnet list Mycelium.SDK.sln package --outdated --include-transitive > outdated-raw.log
 
