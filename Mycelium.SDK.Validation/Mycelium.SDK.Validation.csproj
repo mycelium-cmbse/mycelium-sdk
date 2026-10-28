@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
+        <TargetFramework>net10.0</TargetFramework>
         <LangVersion>14.0</LangVersion>
         <Version>0.1.0</Version>
         <PackageReleaseNotes>Initial coordinated SDK release with interface-based DTO validators, inherited rules and approved handwritten constraints using FluentValidation 11.12.0.</PackageReleaseNotes>
