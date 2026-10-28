@@ -101,8 +101,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         {
             using var objectStream = OpenDataStream("OrganizationPolicy.json");
 
-            var objectDtos = JsonDeSerializer.DeSerialize(objectStream)
-                .ToArray();
+            var objectDtos = JsonDeSerializer.DeSerialize(objectStream).ToArray();
 
             var organizationPolicy = (OrganizationPolicy)objectDtos.Single();
 
@@ -121,8 +120,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
             using var synchronousArrayStream = CreateStream(arrayPayload);
 
-            var synchronousArrayDtos = JsonDeSerializer.DeSerialize(synchronousArrayStream)
-                .ToArray();
+            var synchronousArrayDtos = JsonDeSerializer.DeSerialize(synchronousArrayStream).ToArray();
 
             using var asynchronousArrayStream = CreateStream(arrayPayload);
 
@@ -152,7 +150,8 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
                 Assert.That(synchronousArrayDtos.Select(dto => dto.GetType()), Is.EqualTo(new[] { typeof(Comment), typeof(ProjectMember), }));
 
-                Assert.That(synchronousArrayDtos.Select(dto => dto.Id), Is.EqualTo(new[] { Guid.Parse("70000000-0000-0000-0000-000000000002"), Guid.Parse("70000000-0000-0000-0000-000000000003"), }));
+                Assert.That(synchronousArrayDtos.Select(dto => dto.Id),
+                    Is.EqualTo(new[] { Guid.Parse("70000000-0000-0000-0000-000000000002"), Guid.Parse("70000000-0000-0000-0000-000000000003"), }));
 
                 Assert.That(asynchronousArrayDtos.Select(dto => dto.GetType()), Is.EqualTo(synchronousArrayDtos.Select(dto => dto.GetType())));
 
@@ -193,8 +192,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
             using var stream = CreateStream(payload);
 
-            var comment = (Comment)deSerializer.DeSerialize(stream)
-                .Single();
+            var comment = (Comment)deSerializer.DeSerialize(stream).Single();
 
             var logEntry = loggerFactory.Entries.Single();
 
@@ -564,7 +562,10 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
 
-        private static MemoryStream CreateStream(string json) => new(Encoding.UTF8.GetBytes(json));
+        private static MemoryStream CreateStream(string json)
+        {
+            return new MemoryStream(Encoding.UTF8.GetBytes(json));
+        }
 
         private static T Read<T>(string json, ReaderOperation<T> operation)
         {
@@ -598,13 +599,19 @@ namespace Mycelium.SDK.Serializer.Json.Tests
         {
             private readonly List<LogEntry> entries = [];
 
-            internal IReadOnlyList<LogEntry> Entries => this.entries;
+            internal IReadOnlyList<LogEntry> Entries
+            {
+                get { return this.entries; }
+            }
 
             public void AddProvider(ILoggerProvider provider)
             {
             }
 
-            public ILogger CreateLogger(string categoryName) => new RecordingLogger(categoryName, this.entries);
+            public ILogger CreateLogger(string categoryName)
+            {
+                return new RecordingLogger(categoryName, this.entries);
+            }
 
             public void Dispose()
             {
@@ -623,9 +630,15 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 this.entries = entries;
             }
 
-            public IDisposable BeginScope<TState>(TState state) where TState : notnull => EmptyScope.Instance;
+            public IDisposable BeginScope<TState>(TState state) where TState : notnull
+            {
+                return EmptyScope.Instance;
+            }
 
-            public bool IsEnabled(LogLevel logLevel) => logLevel == LogLevel.Debug;
+            public bool IsEnabled(LogLevel logLevel)
+            {
+                return logLevel == LogLevel.Debug;
+            }
 
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
             {
