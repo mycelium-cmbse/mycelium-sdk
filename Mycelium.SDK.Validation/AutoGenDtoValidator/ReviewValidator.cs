@@ -30,7 +30,6 @@ namespace Mycelium.SDK.Validation
         /// </summary>
         public ReviewValidator()
         {
-            this.RuleFor(dto => dto.Author).NotEmpty();
             this.RuleForEach(dto => dto.Comments).NotEmpty();
             this.RuleFor(dto => dto.Description).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleForEach(dto => dto.Reviewers).NotEmpty();

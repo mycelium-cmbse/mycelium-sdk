@@ -22,7 +22,7 @@ namespace Mycelium.SDK.Validation
     /// Validates local data for objects implementing <see cref="Mycelium.SDK.DTO.IComment" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial class CommentValidator : AuditableThingValidator<Mycelium.SDK.DTO.IComment>
+    public partial class CommentValidator : MessageValidator<Mycelium.SDK.DTO.IComment>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="CommentValidator" /> class
@@ -30,9 +30,6 @@ namespace Mycelium.SDK.Validation
         /// </summary>
         public CommentValidator()
         {
-            this.RuleFor(dto => dto.Author).NotEmpty();
-            this.RuleFor(dto => dto.Content).Must(value => !string.IsNullOrWhiteSpace(value));
-            this.RuleFor(dto => dto.Quotes).Must(value => !value.HasValue || value.Value != Guid.Empty);
             this.RuleForEach(dto => dto.Replies).NotEmpty();
             this.RuleFor(dto => dto.TargetElementId).NotEmpty();
         }
