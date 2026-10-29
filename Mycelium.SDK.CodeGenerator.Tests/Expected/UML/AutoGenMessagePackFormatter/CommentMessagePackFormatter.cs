@@ -54,11 +54,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 throw new ArgumentNullException(nameof(dto));
             }
 
-            writer.WriteArrayHeader(11);
+            writer.WriteArrayHeader(10);
 
             GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Id, options);
-            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Author, options);
-            CommentStatusMessagePackFormatter.Instance.Serialize(ref writer, dto.CommentStatus, options);
             WriteRequiredString(ref writer, dto.Content, "Content");
             GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.CreatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
@@ -83,6 +81,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Replies[i], options);
                 }
             }
+            CommentStatusMessagePackFormatter.Instance.Serialize(ref writer, dto.Status, options);
             GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.TargetElementId, options);
             GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
@@ -117,16 +116,14 @@ namespace Mycelium.SDK.Serializer.MessagePack
             {
                 var fieldCount = reader.ReadArrayHeader();
 
-                if (fieldCount != 11)
+                if (fieldCount != 10)
                 {
-                    throw new MessagePackSerializationException($"Comment contains {fieldCount} fields; exactly 11 fields are required.");
+                    throw new MessagePackSerializationException($"Comment contains {fieldCount} fields; exactly 10 fields are required.");
                 }
 
                 var dto = new Comment();
 
                 dto.Id = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
-                dto.Author = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
-                dto.CommentStatus = CommentStatusMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.Content = ReadRequiredString(ref reader, "Content");
                 dto.CreatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
@@ -157,6 +154,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                         dto.Replies.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
                     }
                 }
+                dto.Status = CommentStatusMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.TargetElementId = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");

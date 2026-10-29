@@ -54,10 +54,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 throw new ArgumentNullException(nameof(dto));
             }
 
-            writer.WriteArrayHeader(13);
+            writer.WriteArrayHeader(12);
 
             GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Id, options);
-            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Author, options);
             if (dto.Comments == null)
             {
                 writer.WriteNil();
@@ -124,15 +123,14 @@ namespace Mycelium.SDK.Serializer.MessagePack
             {
                 var fieldCount = reader.ReadArrayHeader();
 
-                if (fieldCount != 13)
+                if (fieldCount != 12)
                 {
-                    throw new MessagePackSerializationException($"Review contains {fieldCount} fields; exactly 13 fields are required.");
+                    throw new MessagePackSerializationException($"Review contains {fieldCount} fields; exactly 12 fields are required.");
                 }
 
                 var dto = new Review();
 
                 dto.Id = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
-                dto.Author = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 if (reader.TryReadNil())
                 {
                     dto.Comments = null;

@@ -83,6 +83,11 @@ namespace Mycelium.SDK.Serializer.MessagePack
         internal List<ProjectMember> ProjectMember { get; } = new();
 
         /// <summary>
+        /// Gets the Reply DTO group.
+        /// </summary>
+        internal List<Reply> Reply { get; } = new();
+
+        /// <summary>
         /// Gets the Review DTO group.
         /// </summary>
         internal List<Review> Review { get; } = new();

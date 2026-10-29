@@ -59,6 +59,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Id, options);
             GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.CreatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
+            WriteRequiredString(ref writer, dto.Email, "Email");
             WriteRequiredString(ref writer, dto.ExternalIdentifier, "ExternalIdentifier");
             if (dto.IsPartOfOrganizations == null)
             {
@@ -86,7 +87,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.IsPartOfProjects[i], options);
                 }
             }
-            WriteRequiredString(ref writer, dto.Mail, "Mail");
             WriteRequiredString(ref writer, dto.Name, "Name");
             ActivationStatusMessagePackFormatter.Instance.Serialize(ref writer, dto.Status, options);
             GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
@@ -140,6 +140,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dto.Id = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CreatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
+                dto.Email = ReadRequiredString(ref reader, "Email");
                 dto.ExternalIdentifier = ReadRequiredString(ref reader, "ExternalIdentifier");
                 if (reader.TryReadNil())
                 {
@@ -179,7 +180,6 @@ namespace Mycelium.SDK.Serializer.MessagePack
                         dto.IsPartOfProjects.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
                     }
                 }
-                dto.Mail = ReadRequiredString(ref reader, "Mail");
                 dto.Name = ReadRequiredString(ref reader, "Name");
                 dto.Status = ActivationStatusMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);

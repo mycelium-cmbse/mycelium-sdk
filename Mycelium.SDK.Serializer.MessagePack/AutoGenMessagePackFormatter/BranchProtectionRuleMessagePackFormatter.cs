@@ -86,7 +86,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     ProjectMemberRoleMessagePackFormatter.Instance.Serialize(ref writer, dto.MergeAllowedFor[i], options);
                 }
             }
-            writer.Write(dto.MinimumRequiredApproval);
+            writer.Write(dto.MinimumRequiredApprovals);
             WriteRequiredString(ref writer, dto.Name, "Name");
             writer.Write(dto.ReviewRequired);
             GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
@@ -171,7 +171,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                         dto.MergeAllowedFor.Add(ProjectMemberRoleMessagePackFormatter.Instance.Deserialize(ref reader, options));
                     }
                 }
-                dto.MinimumRequiredApproval = reader.ReadInt32();
+                dto.MinimumRequiredApprovals = reader.ReadInt32();
                 dto.Name = ReadRequiredString(ref reader, "Name");
                 dto.ReviewRequired = reader.ReadBoolean();
                 dto.UpdatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);

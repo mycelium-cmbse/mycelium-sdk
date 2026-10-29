@@ -41,6 +41,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
             [typeof(OrganizationPolicy)] = new OrganizationPolicyMessagePackFormatter(),
             [typeof(Ownership)] = new OwnershipMessagePackFormatter(),
             [typeof(ProjectMember)] = new ProjectMemberMessagePackFormatter(),
+            [typeof(Reply)] = new ReplyMessagePackFormatter(),
             [typeof(Review)] = new ReviewMessagePackFormatter(),
             [typeof(User)] = new UserMessagePackFormatter(),
         };
