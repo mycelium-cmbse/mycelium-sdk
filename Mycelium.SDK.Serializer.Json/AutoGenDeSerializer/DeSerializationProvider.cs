@@ -59,6 +59,7 @@ namespace Mycelium.SDK.Serializer.Json
                 ["OrganizationPolicy"] = OrganizationPolicyDeSerializer.DeSerialize,
                 ["Ownership"] = OwnershipDeSerializer.DeSerialize,
                 ["ProjectMember"] = ProjectMemberDeSerializer.DeSerialize,
+                ["Reply"] = ReplyDeSerializer.DeSerialize,
                 ["Review"] = ReviewDeSerializer.DeSerialize,
                 ["User"] = UserDeSerializer.DeSerialize,
             };

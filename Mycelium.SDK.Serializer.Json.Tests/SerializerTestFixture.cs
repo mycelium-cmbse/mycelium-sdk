@@ -35,7 +35,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             "defaultReviewers",
             "engineeringBranchId",
             "mergeAllowedFor",
-            "minimumRequiredApproval",
+            "minimumRequiredApprovals",
             "name",
             "reviewRequired",
             "updatedBy",
@@ -406,7 +406,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                     ProjectMemberRole.Viewer,
                     ProjectMemberRole.Administrator,
                 ],
-                MinimumRequiredApproval = 2,
+                MinimumRequiredApprovals = 2,
                 Name = "main",
                 ReviewRequired = true,
                 UpdatedBy = updatedBy,
@@ -448,7 +448,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
                 Assert.That(mergeAllowedFor, Is.EqualTo(ExpectedMergeAllowedForLiterals));
 
-                Assert.That(root.GetProperty("minimumRequiredApproval").GetInt32(), Is.EqualTo(2));
+                Assert.That(root.GetProperty("minimumRequiredApprovals").GetInt32(), Is.EqualTo(2));
 
                 Assert.That(root.GetProperty("name").GetString(), Is.EqualTo("main"));
 
@@ -487,8 +487,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             return new Comment
             {
                 Id = id,
-                Author = Guid.Parse("40000000-0000-0000-0000-000000000001"),
-                CommentStatus = CommentStatus.Open,
+                Status = CommentStatus.Open,
                 Content = "Facade serialization",
                 CreatedBy = Guid.Parse("40000000-0000-0000-0000-000000000002"),
                 CreatedOn = new DateTime(2026, 7, 8, 9, 10, 11, DateTimeKind.Utc),

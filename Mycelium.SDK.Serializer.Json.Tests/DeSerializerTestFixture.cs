@@ -37,7 +37,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                                                                              "ADMINISTRATOR"
                                                                            ],
                                                                            "reviewRequired": true,
-                                                                           "minimumRequiredApproval": 2,
+                                                                           "minimumRequiredApprovals": 2,
                                                                            "defaultReviewers": [
                                                                              "21000000-0000-0000-0000-000000000001",
                                                                              "21000000-0000-0000-0000-000000000002"
@@ -78,7 +78,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                     ProjectMemberRole.Administrator,
                 ]));
 
-                Assert.That(branchProtectionRule.MinimumRequiredApproval, Is.EqualTo(2));
+                Assert.That(branchProtectionRule.MinimumRequiredApprovals, Is.EqualTo(2));
 
                 Assert.That(branchProtectionRule.ReviewRequired, Is.True);
 
@@ -174,8 +174,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                                    {
                                      "@type": "Comment",
                                      "@id": "74000000-0000-0000-0000-000000000001",
-                                     "author": "74000000-0000-0000-0000-000000000002",
-                                     "commentStatus": "OPEN",
+                                     "status": "OPEN",
                                      "createdBy": "74000000-0000-0000-0000-000000000003",
                                      "createdOn": "2026-09-12T10:11:12.0000000Z",
                                      "quotes": null,

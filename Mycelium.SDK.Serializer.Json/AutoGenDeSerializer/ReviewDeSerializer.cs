@@ -61,7 +61,6 @@ namespace Mycelium.SDK.Serializer.Json
             var hasId = false;
             var hasEndObject = false;
 
-            var hasAuthor = false;
             var hasComments = false;
             var hasCreatedBy = false;
             var hasCreatedOn = false;
@@ -118,15 +117,6 @@ namespace Mycelium.SDK.Serializer.Json
                     continue;
                 }
 
-                if (reader.ValueTextEquals("author"u8))
-                {
-                    Utf8JsonReaderHelper.ReadNext(ref reader);
-
-                    dto.Author = Utf8JsonReaderHelper.ReadGuid(ref reader);
-
-                    hasAuthor = true;
-                    continue;
-                }
                 if (reader.ValueTextEquals("comments"u8))
                 {
                     Utf8JsonReaderHelper.ReadNext(ref reader);
@@ -286,14 +276,6 @@ namespace Mycelium.SDK.Serializer.Json
                 throw new JsonException("The required @id metadata property is missing.");
             }
 
-            if (!hasAuthor)
-            {
-                logger.LogDebug(
-                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
-                    "author",
-                    "Review",
-                    dto.Id);
-            }
             if (!hasComments)
             {
                 logger.LogDebug(

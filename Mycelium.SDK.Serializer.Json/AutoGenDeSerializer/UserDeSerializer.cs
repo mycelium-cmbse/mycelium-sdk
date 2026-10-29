@@ -63,10 +63,10 @@ namespace Mycelium.SDK.Serializer.Json
 
             var hasCreatedBy = false;
             var hasCreatedOn = false;
+            var hasEmail = false;
             var hasExternalIdentifier = false;
             var hasIsPartOfOrganizations = false;
             var hasIsPartOfProjects = false;
-            var hasMail = false;
             var hasName = false;
             var hasStatus = false;
             var hasUpdatedBy = false;
@@ -135,6 +135,15 @@ namespace Mycelium.SDK.Serializer.Json
                     hasCreatedOn = true;
                     continue;
                 }
+                if (reader.ValueTextEquals("email"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.Email = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
+
+                    hasEmail = true;
+                    continue;
+                }
                 if (reader.ValueTextEquals("externalIdentifier"u8))
                 {
                     Utf8JsonReaderHelper.ReadNext(ref reader);
@@ -200,15 +209,6 @@ namespace Mycelium.SDK.Serializer.Json
                     }
 
                     hasIsPartOfProjects = true;
-                    continue;
-                }
-                if (reader.ValueTextEquals("mail"u8))
-                {
-                    Utf8JsonReaderHelper.ReadNext(ref reader);
-
-                    dto.Mail = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
-
-                    hasMail = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("name"u8))
@@ -292,6 +292,14 @@ namespace Mycelium.SDK.Serializer.Json
                     "User",
                     dto.Id);
             }
+            if (!hasEmail)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "email",
+                    "User",
+                    dto.Id);
+            }
             if (!hasExternalIdentifier)
             {
                 logger.LogDebug(
@@ -313,14 +321,6 @@ namespace Mycelium.SDK.Serializer.Json
                 logger.LogDebug(
                     "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
                     "isPartOfProjects",
-                    "User",
-                    dto.Id);
-            }
-            if (!hasMail)
-            {
-                logger.LogDebug(
-                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
-                    "mail",
                     "User",
                     dto.Id);
             }

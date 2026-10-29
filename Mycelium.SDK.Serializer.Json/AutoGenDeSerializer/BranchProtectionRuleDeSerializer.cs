@@ -66,7 +66,7 @@ namespace Mycelium.SDK.Serializer.Json
             var hasDefaultReviewers = false;
             var hasEngineeringBranchId = false;
             var hasMergeAllowedFor = false;
-            var hasMinimumRequiredApproval = false;
+            var hasMinimumRequiredApprovals = false;
             var hasName = false;
             var hasReviewRequired = false;
             var hasUpdatedBy = false;
@@ -201,13 +201,13 @@ namespace Mycelium.SDK.Serializer.Json
                     hasMergeAllowedFor = true;
                     continue;
                 }
-                if (reader.ValueTextEquals("minimumRequiredApproval"u8))
+                if (reader.ValueTextEquals("minimumRequiredApprovals"u8))
                 {
                     Utf8JsonReaderHelper.ReadNext(ref reader);
 
-                    dto.MinimumRequiredApproval = Utf8JsonReaderHelper.ReadInt32(ref reader);
+                    dto.MinimumRequiredApprovals = Utf8JsonReaderHelper.ReadInt32(ref reader);
 
-                    hasMinimumRequiredApproval = true;
+                    hasMinimumRequiredApprovals = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("name"u8))
@@ -306,11 +306,11 @@ namespace Mycelium.SDK.Serializer.Json
                     "BranchProtectionRule",
                     dto.Id);
             }
-            if (!hasMinimumRequiredApproval)
+            if (!hasMinimumRequiredApprovals)
             {
                 logger.LogDebug(
                     "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
-                    "minimumRequiredApproval",
+                    "minimumRequiredApprovals",
                     "BranchProtectionRule",
                     dto.Id);
             }

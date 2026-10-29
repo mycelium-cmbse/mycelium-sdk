@@ -86,8 +86,8 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             writer.WriteEndArray();
-            writer.WritePropertyName("minimumRequiredApproval"u8);
-            writer.WriteNumberValue(dto.MinimumRequiredApproval);
+            writer.WritePropertyName("minimumRequiredApprovals"u8);
+            writer.WriteNumberValue(dto.MinimumRequiredApprovals);
             writer.WritePropertyName("name"u8);
             writer.WriteStringValue(dto.Name);
             writer.WritePropertyName("reviewRequired"u8);

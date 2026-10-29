@@ -64,8 +64,6 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteStartObject();
             writer.WriteString("@type"u8, "Review"u8);
             writer.WriteString("@id"u8, dto.Id);
-            writer.WritePropertyName("author"u8);
-            writer.WriteStringValue(dto.Author);
             writer.WriteStartArray("comments"u8);
 
             foreach (var item in dto.Comments)

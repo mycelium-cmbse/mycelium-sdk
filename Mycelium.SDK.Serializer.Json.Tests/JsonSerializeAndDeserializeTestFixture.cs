@@ -31,8 +31,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
             var comment = new Comment
             {
                 Id = Guid.Parse("80000000-0000-0000-0000-000000000001"),
-                Author = Guid.Parse("80000000-0000-0000-0000-000000000002"),
-                CommentStatus = CommentStatus.Open,
+                Status = CommentStatus.Resolved,
                 Content = "Semantic round trip",
                 CreatedBy = Guid.Parse("80000000-0000-0000-0000-000000000003"),
                 CreatedOn = new DateTime(2026, 9, 10, 11, 12, 13, DateTimeKind.Utc),
@@ -44,6 +43,17 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 TargetElementId = Guid.Parse("80000000-0000-0000-0000-000000000004"),
                 UpdatedBy = Guid.Parse("80000000-0000-0000-0000-000000000005"),
                 UpdatedOn = new DateTime(2026, 9, 11, 12, 13, 14, DateTimeKind.Utc),
+            };
+
+            var replyDto = new Reply
+            {
+                Id = reply,
+                Content = "A reply to the representative comment.",
+                CreatedBy = comment.CreatedBy,
+                CreatedOn = comment.CreatedOn,
+                Quotes = comment.Id,
+                UpdatedBy = comment.UpdatedBy,
+                UpdatedOn = comment.UpdatedOn
             };
 
             var ownership = Guid.Parse("82000000-0000-0000-0000-000000000001");
@@ -110,7 +120,7 @@ namespace Mycelium.SDK.Serializer.Json.Tests
 
             using var sequenceStream = new MemoryStream();
 
-            JsonSerializer.Serialize(new IThing[] { comment, projectMember, functionalProject, }, sequenceStream, default);
+            JsonSerializer.Serialize(new IThing[] { comment, projectMember, functionalProject, replyDto, }, sequenceStream, default);
 
             sequenceStream.Position = 0;
 
@@ -124,12 +134,17 @@ namespace Mycelium.SDK.Serializer.Json.Tests
                 Assert.That(objectRoundTrip, Is.EqualTo(comment)
                     .UsingPropertiesComparer());
 
-                Assert.That(sequenceRoundTrip, Has.Length.EqualTo(3));
+                Assert.That(sequenceRoundTrip, Has.Length.EqualTo(4));
 
                 Assert.That(sequenceRoundTrip[0], Is.EqualTo(comment)
                     .UsingPropertiesComparer());
 
                 Assert.That(sequenceRoundTrip[1], Is.EqualTo(projectMember)
+                    .UsingPropertiesComparer());
+
+                Assert.That(sequenceRoundTrip[3], Is.TypeOf<Reply>());
+
+                Assert.That(sequenceRoundTrip[3], Is.EqualTo(replyDto)
                     .UsingPropertiesComparer());
 
                 Assert.That(functionalProjectRoundTrip, Is.EqualTo(functionalProject)
