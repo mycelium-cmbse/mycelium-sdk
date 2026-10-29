@@ -89,7 +89,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                 Assert.That(this.QueryProperty("AuditableThing", "createdOn")
                     .QueryPocoTypeName(), Is.EqualTo("DateTime"));
 
-                Assert.That(this.QueryProperty("BranchProtectionRule", "minimumRequiredApproval")
+                Assert.That(this.QueryProperty("BranchProtectionRule", "minimumRequiredApprovals")
                     .QueryPocoTypeName(), Is.EqualTo("int"));
 
                 Assert.That(this.QueryProperty("BranchProtectionRule", "name")

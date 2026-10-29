@@ -30,11 +30,6 @@ namespace Mycelium.SDK.DTO
         public Guid Id { get; set; }
 
         /// <summary>
-        /// References the <see cref="ProjectMember" /> who created this <see cref="Review" />.
-        /// </summary>
-        public Guid Author { get; set; }
-
-        /// <summary>
         /// Contains the <see cref="Comment" /> instances posted on this <see cref="Review" />.
         /// </summary>
         public List<Guid> Comments { get; set; } = [];
@@ -55,8 +50,7 @@ namespace Mycelium.SDK.DTO
         public string Description { get; set; }
 
         /// <summary>
-        /// References the <see cref="ProjectMember" /> instances designated as reviewers for this
-        /// <see cref="Review" />.
+        /// References the <see cref="User" /> instances designated as reviewers for this <see cref="Review" />.
         /// </summary>
         public List<Guid> Reviewers { get; set; } = [];
 

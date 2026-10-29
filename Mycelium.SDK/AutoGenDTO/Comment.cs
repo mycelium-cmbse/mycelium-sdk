@@ -30,17 +30,7 @@ namespace Mycelium.SDK.DTO
         public Guid Id { get; set; }
 
         /// <summary>
-        /// References the <see cref="ProjectMember" /> who authored this <see cref="Comment" />.
-        /// </summary>
-        public Guid Author { get; set; }
-
-        /// <summary>
-        /// Defines the current status of the current Comment.
-        /// </summary>
-        public CommentStatus CommentStatus { get; set; }
-
-        /// <summary>
-        /// The textual content of the comment.
+        /// The textual content of the message.
         /// </summary>
         public string Content { get; set; }
 
@@ -55,14 +45,19 @@ namespace Mycelium.SDK.DTO
         public DateTime CreatedOn { get; set; }
 
         /// <summary>
-        /// References a quoted <see cref="Comment" />
+        /// References a quoted <see cref="IMessage" />
         /// </summary>
         public Guid? Quotes { get; set; }
 
         /// <summary>
-        /// Contains threaded reply <see cref="Comment" /> instances nested under this comment.
+        /// Contains threaded reply instances nested under this comment.
         /// </summary>
         public List<Guid> Replies { get; set; } = [];
+
+        /// <summary>
+        /// Defines the current status of the current Comment.
+        /// </summary>
+        public CommentStatus Status { get; set; }
 
         /// <summary>
         /// The <see cref="Guid" /> of the SysML v2 model element this comment is attached to in the Concurrent

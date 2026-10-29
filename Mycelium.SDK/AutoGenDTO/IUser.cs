@@ -25,6 +25,11 @@ namespace Mycelium.SDK.DTO
     public partial interface IUser : IAuditableThing
     {
         /// <summary>
+        /// The email address of the user, cached from Keycloak for display purposes.
+        /// </summary>
+        string Email { get; set; }
+
+        /// <summary>
         /// The Keycloak user identifier used as the permanent join key between the Functional Server and the
         /// identity provider.
         /// </summary>
@@ -41,11 +46,6 @@ namespace Mycelium.SDK.DTO
         /// projects.
         /// </summary>
         List<Guid> IsPartOfProjects { get; set; }
-
-        /// <summary>
-        /// The email address of the user, cached from Keycloak for display purposes.
-        /// </summary>
-        string Mail { get; set; }
 
         /// <summary>
         /// The display name of the user, cached from Keycloak for UI rendering.
