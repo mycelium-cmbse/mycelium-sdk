@@ -146,10 +146,8 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(reader.ReadArrayHeader(), Is.EqualTo(11));
+                Assert.That(reader.ReadArrayHeader(), Is.EqualTo(10));
                 AssertGuid(ref reader, dto.Id);
-                AssertGuid(ref reader, dto.Author);
-                Assert.That(reader.ReadString(), Is.EqualTo("open"));
                 Assert.That(reader.ReadString(), Is.EqualTo(dto.Content));
                 AssertGuid(ref reader, dto.CreatedBy);
                 Assert.That(reader.ReadString(), Is.EqualTo(dto.CreatedOn.ToString("o", CultureInfo.InvariantCulture)));
@@ -157,6 +155,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
                 Assert.That(reader.ReadArrayHeader(), Is.EqualTo(2));
                 AssertGuid(ref reader, dto.Replies[0]);
                 AssertGuid(ref reader, dto.Replies[1]);
+                Assert.That(reader.ReadString(), Is.EqualTo("open"));
                 AssertGuid(ref reader, dto.TargetElementId);
                 AssertGuid(ref reader, dto.UpdatedBy);
                 Assert.That(reader.ReadString(), Is.EqualTo(dto.UpdatedOn.ToString("o", CultureInfo.InvariantCulture)));
@@ -189,7 +188,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
                 Assert.That(reader.ReadArrayHeader(), Is.EqualTo(dto.MergeAllowedFor.Count));
                 Assert.That(reader.ReadString(), Is.EqualTo("administrator"));
                 Assert.That(reader.ReadString(), Is.EqualTo("viewer"));
-                Assert.That(reader.ReadInt32(), Is.EqualTo(dto.MinimumRequiredApproval));
+                Assert.That(reader.ReadInt32(), Is.EqualTo(dto.MinimumRequiredApprovals));
                 Assert.That(reader.ReadString(), Is.EqualTo(dto.Name));
                 Assert.That(reader.ReadBoolean(), Is.EqualTo(dto.ReviewRequired));
                 AssertGuid(ref reader, dto.UpdatedBy);
@@ -254,7 +253,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
         public void Verify_that_undefined_enumeration_values_are_rejected_during_serialization()
         {
             var dto = CreateComment();
-            dto.CommentStatus = (CommentStatus)int.MaxValue;
+            dto.Status = (CommentStatus)int.MaxValue;
 
             Assert.That(() => MessagePackSerializer.Serialize(dto, SerializerOptions), Throws.TypeOf<MessagePackSerializationException>());
         }
@@ -403,8 +402,8 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             Assert.That(() => MessagePackFormatterProbe.DeserializeStringDictionary(payload), Throws.TypeOf<MessagePackSerializationException>());
         }
 
-        [TestCase(10)]
-        [TestCase(12)]
+        [TestCase(9)]
+        [TestCase(11)]
         public void Verify_that_incorrect_DTO_field_counts_are_rejected(int fieldCount)
         {
             var payload = CreateIncorrectFieldCountPayload(fieldCount);
@@ -413,7 +412,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
                 () => MessagePackSerializer.Deserialize<Comment>(payload, SerializerOptions),
                 Throws.TypeOf<MessagePackSerializationException>()
                     .And.Matches<MessagePackSerializationException>(exception =>
-                        exception.ToString().Contains($"Comment contains {fieldCount} fields; exactly 11 fields are required.", StringComparison.Ordinal)));
+                        exception.ToString().Contains($"Comment contains {fieldCount} fields; exactly 10 fields are required.", StringComparison.Ordinal)));
         }
 
         [Test]
@@ -434,8 +433,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(actual.Id, Is.EqualTo(expected.Id));
-                Assert.That(actual.Author, Is.EqualTo(expected.Author));
-                Assert.That(actual.CommentStatus, Is.EqualTo(expected.CommentStatus));
+                Assert.That(actual.Status, Is.EqualTo(expected.Status));
                 Assert.That(actual.Content, Is.EqualTo(expected.Content));
                 Assert.That(actual.CreatedBy, Is.EqualTo(expected.CreatedBy));
                 Assert.That(actual.CreatedOn, Is.EqualTo(expected.CreatedOn));
@@ -531,7 +529,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
                 DefaultReviewers = [Guid.Parse("10000000-0000-0000-0000-000000000003")],
                 EngineeringBranchId = Guid.Parse("10000000-0000-0000-0000-000000000004"),
                 MergeAllowedFor = [ProjectMemberRole.Administrator, ProjectMemberRole.Viewer],
-                MinimumRequiredApproval = 2,
+                MinimumRequiredApprovals = 2,
                 Name = "Protected main",
                 ReviewRequired = true,
                 UpdatedBy = Guid.Parse("10000000-0000-0000-0000-000000000005"),
@@ -544,8 +542,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             return new Comment
             {
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000001"),
-                Author = Guid.Parse("20000000-0000-0000-0000-000000000002"),
-                CommentStatus = CommentStatus.Open,
+                Status = CommentStatus.Open,
                 Content = "Review this element.",
                 CreatedBy = Guid.Parse("20000000-0000-0000-0000-000000000003"),
                 CreatedOn = new DateTime(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc),
@@ -612,8 +609,11 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             var reader = new MessagePackReader(payload);
 
             reader.ReadArrayHeader();
-            reader.Skip();
-            reader.Skip();
+
+            for (var index = 0; index < 6; index++)
+            {
+                reader.Skip();
+            }
 
             var statusOffset = checked((int)reader.Consumed);
             reader.Skip();
@@ -690,7 +690,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             writer.WriteArrayHeader(dto.MergeAllowedFor.Count);
             writer.Write("administrator");
             writer.Write("viewer");
-            writer.Write(dto.MinimumRequiredApproval);
+            writer.Write(dto.MinimumRequiredApprovals);
             writer.Write(dto.Name);
             writer.Write(dto.ReviewRequired);
             WriteGuid(ref writer, dto.UpdatedBy);

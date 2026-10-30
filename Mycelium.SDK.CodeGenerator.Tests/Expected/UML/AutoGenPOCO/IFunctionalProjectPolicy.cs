@@ -18,7 +18,7 @@ namespace Mycelium.SDK.POCO
     using System.Collections.Generic;
 
     /// <summary>
-    /// The FunctionalProjectPolicy defines policies t associated to as specific
+    /// The FunctionalProjectPolicy defines the policies associated to a specific
     /// <see cref="FunctionalProject" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]

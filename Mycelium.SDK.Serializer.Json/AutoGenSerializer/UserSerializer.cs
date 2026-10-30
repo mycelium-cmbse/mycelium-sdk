@@ -68,6 +68,8 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteStringValue(dto.CreatedBy);
             writer.WritePropertyName("createdOn"u8);
             writer.WriteStringValue(dto.CreatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("email"u8);
+            writer.WriteStringValue(dto.Email);
             writer.WritePropertyName("externalIdentifier"u8);
             writer.WriteStringValue(dto.ExternalIdentifier);
             writer.WriteStartArray("isPartOfOrganizations"u8);
@@ -86,8 +88,6 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             writer.WriteEndArray();
-            writer.WritePropertyName("mail"u8);
-            writer.WriteStringValue(dto.Mail);
             writer.WritePropertyName("name"u8);
             writer.WriteStringValue(dto.Name);
             writer.WritePropertyName("status"u8);

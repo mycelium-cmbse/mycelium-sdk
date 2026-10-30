@@ -52,7 +52,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 throw new ArgumentNullException(nameof(payload));
             }
 
-            writer.WriteArrayHeader(12);
+            writer.WriteArrayHeader(13);
             WriteRoundTripDateTime(ref writer, payload.Created);
 
             writer.WriteArrayHeader(payload.BranchProtectionRule.Count);
@@ -172,6 +172,19 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     .Serialize(ref writer, dataItem, options);
             }
 
+            writer.WriteArrayHeader(payload.Reply.Count);
+
+            foreach (var dataItem in payload.Reply)
+            {
+                if (dataItem == null)
+                {
+                    throw new ArgumentNullException(nameof(payload), "A payload group contains a null DTO.");
+                }
+
+                options.Resolver.GetFormatterWithVerify<Reply>()
+                    .Serialize(ref writer, dataItem, options);
+            }
+
             writer.WriteArrayHeader(payload.Review.Count);
 
             foreach (var dataItem in payload.Review)
@@ -229,9 +242,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
             {
                 var fieldCount = reader.ReadArrayHeader();
 
-                if (fieldCount != 12)
+                if (fieldCount != 13)
                 {
-                    throw new MessagePackSerializationException($"The payload contains {fieldCount} fields; exactly 12 fields are required.");
+                    throw new MessagePackSerializationException($"The payload contains {fieldCount} fields; exactly 13 fields are required.");
                 }
 
                 var payload = new Payload
@@ -372,6 +385,21 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     }
 
                     payload.ProjectMember.Add(dataItem);
+                }
+
+                var replyCount = reader.ReadArrayHeader();
+
+                for (var index = 0; index < replyCount; index++)
+                {
+                    var dataItem = options.Resolver.GetFormatterWithVerify<Reply>()
+                        .Deserialize(ref reader, options);
+
+                    if (dataItem == null)
+                    {
+                        throw new MessagePackSerializationException("The Reply group contains a null DTO.");
+                    }
+
+                    payload.Reply.Add(dataItem);
                 }
 
                 var reviewCount = reader.ReadArrayHeader();

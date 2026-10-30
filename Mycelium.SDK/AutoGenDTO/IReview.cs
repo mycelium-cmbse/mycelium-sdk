@@ -25,11 +25,6 @@ namespace Mycelium.SDK.DTO
     public partial interface IReview : IAuditableThing
     {
         /// <summary>
-        /// References the <see cref="ProjectMember" /> who created this <see cref="Review" />.
-        /// </summary>
-        Guid Author { get; set; }
-
-        /// <summary>
         /// Contains the <see cref="Comment" /> instances posted on this <see cref="Review" />.
         /// </summary>
         List<Guid> Comments { get; set; }
@@ -40,8 +35,7 @@ namespace Mycelium.SDK.DTO
         string Description { get; set; }
 
         /// <summary>
-        /// References the <see cref="ProjectMember" /> instances designated as reviewers for this
-        /// <see cref="Review" />.
+        /// References the <see cref="User" /> instances designated as reviewers for this <see cref="Review" />.
         /// </summary>
         List<Guid> Reviewers { get; set; }
 

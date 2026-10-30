@@ -41,6 +41,7 @@ namespace Mycelium.SDK.Serializer.Json
                 [typeof(OrganizationPolicy)] = OrganizationPolicySerializer.Serialize,
                 [typeof(Ownership)] = OwnershipSerializer.Serialize,
                 [typeof(ProjectMember)] = ProjectMemberSerializer.Serialize,
+                [typeof(Reply)] = ReplySerializer.Serialize,
                 [typeof(Review)] = ReviewSerializer.Serialize,
                 [typeof(User)] = UserSerializer.Serialize,
             };

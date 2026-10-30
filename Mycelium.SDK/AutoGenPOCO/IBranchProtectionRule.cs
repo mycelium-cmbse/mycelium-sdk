@@ -25,7 +25,7 @@ namespace Mycelium.SDK.POCO
     public partial interface IBranchProtectionRule : IAuditableThing
     {
         /// <summary>
-        /// References the default <see cref="ProjectMember" /> reviewers designated for this
+        /// References the default <see cref="User" /> reviewers designated for this
         /// <see cref="BranchProtectionRule" />.
         /// </summary>
         List<IUser> DefaultReviewers { get; set; }
@@ -43,7 +43,7 @@ namespace Mycelium.SDK.POCO
         /// <summary>
         /// Gets or sets the number of approval(s) required before being allowed to merge a Branch.
         /// </summary>
-        int MinimumRequiredApproval { get; set; }
+        int MinimumRequiredApprovals { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the current rule.

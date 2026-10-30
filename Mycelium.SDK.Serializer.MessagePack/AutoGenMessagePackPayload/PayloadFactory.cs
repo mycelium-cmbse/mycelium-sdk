@@ -112,6 +112,12 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     continue;
                 }
 
+                if (runtimeType == typeof(Reply))
+                {
+                    payload.Reply.Add((Reply)dataItem);
+                    continue;
+                }
+
                 if (runtimeType == typeof(Review))
                 {
                     payload.Review.Add((Review)dataItem);
@@ -232,6 +238,16 @@ namespace Mycelium.SDK.Serializer.MessagePack
             }
 
             foreach (var dataItem in payload.ProjectMember)
+            {
+                if (dataItem == null)
+                {
+                    throw new ArgumentNullException(nameof(payload), "A payload group contains a null DTO.");
+                }
+
+                dataItems.Add(dataItem);
+            }
+
+            foreach (var dataItem in payload.Reply)
             {
                 if (dataItem == null)
                 {

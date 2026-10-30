@@ -407,7 +407,18 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             empty.Id = Guid.Parse("40000000-0000-0000-0000-000000000002");
             empty.Replies.Clear();
 
-            var source = new IThing[] { ordered, CreateOrganizationPolicy(), nullable, empty };
+            var reply = new Reply
+            {
+                Id = Guid.Parse("40000000-0000-0000-0000-000000000003"),
+                Content = "A reply to the representative comment.",
+                CreatedBy = ordered.CreatedBy,
+                CreatedOn = ordered.CreatedOn,
+                Quotes = ordered.Id,
+                UpdatedBy = ordered.UpdatedBy,
+                UpdatedOn = ordered.UpdatedOn
+            };
+
+            var source = new IThing[] { ordered, reply, CreateOrganizationPolicy(), nullable, empty };
             var originalSource = source.ToArray();
             var writer = new ArrayBufferWriter<byte>();
 
@@ -424,7 +435,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
 
             var actual = this.deSerializer.DeSerialize(new ReadOnlySequence<byte>(writer.WrittenMemory)).ToArray();
 
-            Assert.That(actual, Has.Length.EqualTo(4));
+            Assert.That(actual, Has.Length.EqualTo(5));
             Assert.That(actual[3], Is.TypeOf<OrganizationPolicy>());
 
             var comments = actual.Take(3).Cast<Comment>().ToArray();
@@ -436,6 +447,8 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
                 Assert.That(comments[1].Quotes, Is.Null);
                 Assert.That(comments[1].Replies, Is.Null);
                 Assert.That(comments[2].Replies, Is.Empty);
+                Assert.That(actual[4], Is.TypeOf<Reply>());
+                Assert.That(actual[4], Is.EqualTo(reply).UsingPropertiesComparer());
             }
         }
 
@@ -717,8 +730,7 @@ namespace Mycelium.SDK.Serializer.MessagePack.Tests
             return new Comment
             {
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000001"),
-                Author = Guid.Parse("20000000-0000-0000-0000-000000000002"),
-                CommentStatus = CommentStatus.Open,
+                Status = CommentStatus.Open,
                 Content = "Review this element.",
                 CreatedBy = Guid.Parse("20000000-0000-0000-0000-000000000003"),
                 CreatedOn = new DateTime(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc),

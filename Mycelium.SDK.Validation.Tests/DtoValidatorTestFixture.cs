@@ -86,7 +86,6 @@ namespace Mycelium.SDK.Validation.Tests
 
             Assert.That(validator.Validate(dto).IsValid, Is.True);
 
-            dto.Author = Guid.Empty;
             dto.CreatedBy = Guid.Empty;
             dto.UpdatedBy = Guid.Empty;
             dto.Quotes = Guid.Empty;
@@ -96,7 +95,6 @@ namespace Mycelium.SDK.Validation.Tests
 
             Assert.That(result.Errors.Select(failure => failure.PropertyName), Is.EquivalentTo(new[]
             {
-                nameof(Comment.Author),
                 nameof(Comment.CreatedBy),
                 nameof(Comment.UpdatedBy),
                 nameof(Comment.Quotes),
@@ -244,7 +242,6 @@ namespace Mycelium.SDK.Validation.Tests
             return new Comment
             {
                 Id = ReferenceId,
-                Author = ReferenceId,
                 CreatedBy = ReferenceId,
                 UpdatedBy = ReferenceId,
                 Content = "Representative comment",

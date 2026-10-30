@@ -30,11 +30,6 @@ namespace Mycelium.SDK.POCO
         public Guid Id { get; set; }
 
         /// <summary>
-        /// References the <see cref="ProjectMember" /> who created this <see cref="Review" />.
-        /// </summary>
-        public IUser Author { get; set; }
-
-        /// <summary>
         /// Contains the <see cref="Comment" /> instances posted on this <see cref="Review" />.
         /// </summary>
         public List<IComment> Comments { get; set; } = [];
@@ -55,8 +50,7 @@ namespace Mycelium.SDK.POCO
         public string Description { get; set; }
 
         /// <summary>
-        /// References the <see cref="ProjectMember" /> instances designated as reviewers for this
-        /// <see cref="Review" />.
+        /// References the <see cref="User" /> instances designated as reviewers for this <see cref="Review" />.
         /// </summary>
         public List<IUser> Reviewers { get; set; } = [];
 

@@ -22,32 +22,17 @@ namespace Mycelium.SDK.DTO
     /// Supports threaded replies.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial interface IComment : IAuditableThing
+    public partial interface IComment : IMessage
     {
         /// <summary>
-        /// References the <see cref="ProjectMember" /> who authored this <see cref="Comment" />.
+        /// Contains threaded reply instances nested under this comment.
         /// </summary>
-        Guid Author { get; set; }
+        List<Guid> Replies { get; set; }
 
         /// <summary>
         /// Defines the current status of the current Comment.
         /// </summary>
-        CommentStatus CommentStatus { get; set; }
-
-        /// <summary>
-        /// The textual content of the comment.
-        /// </summary>
-        string Content { get; set; }
-
-        /// <summary>
-        /// References a quoted <see cref="Comment" />
-        /// </summary>
-        Guid? Quotes { get; set; }
-
-        /// <summary>
-        /// Contains threaded reply <see cref="Comment" /> instances nested under this comment.
-        /// </summary>
-        List<Guid> Replies { get; set; }
+        CommentStatus Status { get; set; }
 
         /// <summary>
         /// The <see cref="Guid" /> of the SysML v2 model element this comment is attached to in the Concurrent
