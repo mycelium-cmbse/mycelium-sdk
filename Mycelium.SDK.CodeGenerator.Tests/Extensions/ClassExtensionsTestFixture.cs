@@ -13,7 +13,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
     using Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators;
 
     using uml4net.Classification;
+    using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
+    using uml4net.Values;
 
     [TestFixture]
     public class ClassExtensionsTestFixture
@@ -31,6 +33,93 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             this.classes = functionalData.PackagedElement
                 .OfType<IClass>()
                 .ToArray();
+        }
+
+        [Test]
+        public void VerifyThatSqlReferencesStayWithTheirDeclaringClass()
+        {
+            var targetClass = new Class { XmiId = "target-class", Name = "Target" };
+            var parentClass = new Class { XmiId = "parent-class", Name = "Parent" };
+            var ownerClass = new Class { XmiId = "owner-class", Name = "Owner" };
+            var ownedReference = new Property { XmiId = "owned-reference", Name = "reference", Type = targetClass };
+
+            parentClass.OwnedAttribute.Add(new Property { XmiId = "inherited-reference", Name = "inheritedReference", Type = targetClass });
+
+            ownerClass.Generalization.Add(new Generalization { XmiId = "owner-parent", Specific = ownerClass, General = parentClass });
+
+            ownerClass.OwnedAttribute.Add(ownedReference);
+
+            ownerClass.OwnedAttribute.Add(new Property { XmiId = "derived-reference", Name = "derivedReference", Type = targetClass, IsDerived = true });
+
+            ownerClass.OwnedAttribute.Add(new Property { XmiId = "union-reference", Name = "unionReference", Type = targetClass, IsDerivedUnion = true });
+
+            ownerClass.OwnedAttribute.Add(new Property { XmiId = "unnamed-reference", Type = targetClass });
+
+            ownerClass.OwnedAttribute.Add(new Property { XmiId = "blank-reference", Name = " ", Type = targetClass });
+
+            ownerClass.OwnedAttribute.Add(new Property { XmiId = "value-property", Name = "label", Type = new PrimitiveType { XmiId = "string-type", Name = "String" } });
+
+            ownerClass.OwnedAttribute.Add(new Property { XmiId = "enum-property", Name = "kind", Type = new Enumeration { XmiId = "kind-type", Name = "Kind" } });
+
+            Assert.That(ownerClass.QuerySqlReferenceProperties(), Is.EqualTo(new[] { ownedReference }),
+                "Only named, non-derived references declared by Owner belong in its relational storage; inherited references and values must be excluded.");
+        }
+
+        [Test]
+        public void VerifyThatSqlReferencesIncludeCollectionsWithScalarOpposites()
+        {
+            var ownerClass = new Class { XmiId = "owner-class", Name = "Owner" };
+            var targetClass = new Class { XmiId = "target-class", Name = "Target" };
+            var association = new Association { XmiId = "owner-target-association", Name = "OwnerTargets" };
+
+            var reference = new Property { XmiId = "collection-reference", Name = "targets", Type = targetClass, Association = association };
+            var opposite = new Property { XmiId = "unnamed-opposite", Type = ownerClass, Association = association };
+
+            reference.UpperValue.Add(new LiteralUnlimitedNatural { Value = "*" });
+
+            opposite.UpperValue.Add(new LiteralInteger { Value = 1 });
+
+            ownerClass.OwnedAttribute.Add(reference);
+
+            association.OwnedEnd.Add(opposite);
+            association.MemberEnd.AddRange([reference, opposite]);
+
+            Assert.That(ownerClass.QuerySqlReferenceProperties(), Is.EqualTo(new[] { reference }),
+                "The owned collection needs relational storage even when its association opposite is scalar and unnamed.");
+        }
+
+        [Test]
+        public void VerifyThatSqlReferencesAreDeduplicatedAndDeterministicallyOrdered()
+        {
+            var ownerClass = new Class { XmiId = "owner-class", Name = "Owner" };
+            var targetClass = new Class { XmiId = "target-class", Name = "Target" };
+
+            ownerClass.OwnedAttribute.Add(new Property { XmiId = "reference-zeta", Name = "zeta", Type = targetClass });
+
+            ownerClass.OwnedAttribute.Add(new Property { XmiId = "reference-alpha-lower", Name = "alpha", Type = targetClass });
+
+            ownerClass.OwnedAttribute.Add(new Property { XmiId = "reference-alpha-2", Name = "Alpha", Type = targetClass });
+
+            ownerClass.OwnedAttribute.Add(new Property { XmiId = "reference-alpha-1", Name = "Alpha", Type = targetClass });
+
+            ownerClass.OwnedAttribute.Add(new Property { XmiId = "reference-alpha-lower", Name = "duplicateReference", Type = targetClass });
+
+            var references = ownerClass.QuerySqlReferenceProperties();
+
+            Assert.That(references.Select(property => property.XmiId), Is.EqualTo([
+                "reference-alpha-1",
+                "reference-alpha-2",
+                "reference-alpha-lower",
+                "reference-zeta"
+            ]), "SQL references must be unique by XMI identifier and ordered by case-insensitive name, ordinal name and XMI identifier.");
+        }
+
+        [Test]
+        public void VerifyThatSqlReferenceQueriesRejectNullClasses()
+        {
+            IClass umlClass = null;
+
+            Assert.That(() => umlClass.QuerySqlReferenceProperties(), Throws.ArgumentNullException);
         }
 
         [Test]
