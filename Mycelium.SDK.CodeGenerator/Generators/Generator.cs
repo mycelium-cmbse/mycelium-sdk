@@ -106,6 +106,9 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// <param name="fileName">
         /// The deterministic output filename.
         /// </param>
+        /// <param name="newLine">
+        /// The line-ending sequence, or <see langword="null" /> to use the platform's line endings.
+        /// </param>
         /// <returns>
         /// An awaitable task.
         /// </returns>
@@ -116,7 +119,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// <exception cref="ArgumentException">
         /// Thrown when <paramref name="generatedCode" /> or <paramref name="fileName" /> is empty.
         /// </exception>
-        protected static async Task WriteAsync(string generatedCode, DirectoryInfo outputDirectory, string fileName)
+        protected static async Task WriteAsync(string generatedCode, DirectoryInfo outputDirectory, string fileName, string newLine = null)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(generatedCode);
             ArgumentNullException.ThrowIfNull(outputDirectory);
@@ -124,7 +127,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
 
             var filePath = Path.Combine(outputDirectory.FullName, fileName);
 
-            await File.WriteAllTextAsync(filePath, generatedCode.ReplaceLineEndings(), Utf8WithoutBom);
+            await File.WriteAllTextAsync(filePath, generatedCode.ReplaceLineEndings(newLine ?? Environment.NewLine), Utf8WithoutBom);
         }
 
         /// <summary>
@@ -135,6 +138,9 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// </param>
         /// <param name="outputDirectory">
         /// The output directory, created if it does not exist.
+        /// </param>
+        /// <param name="newLine">
+        /// The line-ending sequence for every file, or <see langword="null" /> to use the platform's line endings.
         /// </param>
         /// <returns>
         /// An awaitable task.
@@ -147,7 +153,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// Thrown when <paramref name="generatedFiles" /> or <paramref name="outputDirectory" /> is
         /// <see langword="null" />.
         /// </exception>
-        protected static async Task WriteAsync(IReadOnlyCollection<GeneratedFile> generatedFiles, DirectoryInfo outputDirectory)
+        protected static async Task WriteAsync(IReadOnlyCollection<GeneratedFile> generatedFiles, DirectoryInfo outputDirectory, string newLine = null)
         {
             ArgumentNullException.ThrowIfNull(generatedFiles);
             ArgumentNullException.ThrowIfNull(outputDirectory);
@@ -156,7 +162,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
 
             foreach (var generatedFile in generatedFiles)
             {
-                await WriteAsync(generatedFile.Source, outputDirectory, generatedFile.FileName);
+                await WriteAsync(generatedFile.Source, outputDirectory, generatedFile.FileName, newLine);
             }
         }
 
