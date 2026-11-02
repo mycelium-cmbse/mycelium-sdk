@@ -61,7 +61,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
 
             ownerClass.OwnedAttribute.Add(new Property { XmiId = "enum-property", Name = "kind", Type = new Enumeration { XmiId = "kind-type", Name = "Kind" } });
 
-            Assert.That(ownerClass.QuerySqlReferenceProperties(), Is.EqualTo(new[] { ownedReference }),
+            Assert.That(ownerClass.QuerySqlReferenceProperties(), Is.EqualTo([ownedReference]),
                 "Only named, non-derived references declared by Owner belong in its relational storage; inherited references and values must be excluded.");
         }
 
@@ -84,7 +84,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
             association.OwnedEnd.Add(opposite);
             association.MemberEnd.AddRange([reference, opposite]);
 
-            Assert.That(ownerClass.QuerySqlReferenceProperties(), Is.EqualTo(new[] { reference }),
+            Assert.That(ownerClass.QuerySqlReferenceProperties(), Is.EqualTo([reference]),
                 "The owned collection needs relational storage even when its association opposite is scalar and unnamed.");
         }
 

@@ -121,9 +121,9 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// </exception>
         protected static async Task WriteAsync(string generatedCode, DirectoryInfo outputDirectory, string fileName, string newLine = null)
         {
-            ArgumentNullException.ThrowIfNullOrEmpty(generatedCode);
+            ArgumentException.ThrowIfNullOrEmpty(generatedCode);
             ArgumentNullException.ThrowIfNull(outputDirectory);
-            ArgumentNullException.ThrowIfNullOrEmpty(fileName);
+            ArgumentException.ThrowIfNullOrEmpty(fileName);
 
             var filePath = Path.Combine(outputDirectory.FullName, fileName);
 
@@ -206,7 +206,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators
         /// The generated filename.
         /// </param>
         /// <param name="Source">
-        /// The formatted or normalized generated C# source.
+        /// The formatted or normalized generated source.
         /// </param>
         protected sealed record GeneratedFile(string FileName, string Source);
     }
