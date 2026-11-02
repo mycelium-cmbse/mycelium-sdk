@@ -46,6 +46,10 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
 
+        <None Update="Expected\UML\AutoGenSql\**\*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+
         <Compile Remove="Expected\OpenApi\**\*.cs"/>
 
         <None Include="Expected\OpenApi\**\*.cs">
