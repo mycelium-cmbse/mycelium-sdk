@@ -21,6 +21,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// </summary>
         private const string ModuleNameSuffix = "Api";
 
+        /// <param name="tag">
+        /// The OpenAPI tag name that is queried.
+        /// </param>
         extension(string tag)
         {
             /// <summary>

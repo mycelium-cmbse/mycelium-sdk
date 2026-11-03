@@ -27,6 +27,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// </remarks>
         private static readonly string[] HttpMethodOrder = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "TRACE"];
 
+        /// <param name="searchResult">
+        /// The search result that locates the OpenAPI operation.
+        /// </param>
         extension(SearchResult searchResult)
         {
             /// <summary>

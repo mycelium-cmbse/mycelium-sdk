@@ -34,6 +34,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             TypeExtensions.AddOrOverwriteCSharpTypeMappings(("UUID", "Guid"), ("URI", "Uri"));
         }
 
+        /// <param name="resourcesDirectory">
+        /// The directory that holds the XMI resources.
+        /// </param>
         extension(DirectoryInfo resourcesDirectory)
         {
             /// <summary>
@@ -112,6 +115,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
         }
 
+        /// <param name="xmiReaderResult">
+        /// The result of reading an XMI model.
+        /// </param>
         extension(XmiReaderResult xmiReaderResult)
         {
             /// <summary>

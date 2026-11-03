@@ -16,6 +16,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     /// </summary>
     public static class NamedElementExtensions
     {
+        /// <param name="namedElement">
+        /// The UML named element that is described.
+        /// </param>
         extension(INamedElement namedElement)
         {
             /// <summary>

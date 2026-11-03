@@ -120,6 +120,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             return ReservedCSharpNameMapper.Map(typeName);
         }
 
+        /// <param name="property">
+        /// The UML property that is queried.
+        /// </param>
         extension(IProperty property)
         {
             /// <summary>

@@ -146,6 +146,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             throw new InvalidOperationException($"Parameter '{parameter.DescribeQualified()}' has no resolved type and its reference '{hyperlinkReference}' has no mapping.");
         }
 
+        /// <param name="parameter">
+        /// The PIM parameter that is queried.
+        /// </param>
         extension(IParameter parameter)
         {
             /// <summary>

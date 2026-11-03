@@ -16,6 +16,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     /// </summary>
     public static class OpenApiDocumentExtensions
     {
+        /// <param name="document">
+        /// The OpenAPI document that is queried.
+        /// </param>
         extension(OpenApiDocument document)
         {
             /// <summary>

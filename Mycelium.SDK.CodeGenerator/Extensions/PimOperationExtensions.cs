@@ -25,6 +25,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// </summary>
         private const string MethodNameSuffix = "Async";
 
+        /// <param name="operation">
+        /// The PIM operation that is queried.
+        /// </param>
         extension(IOperation operation)
         {
             /// <summary>

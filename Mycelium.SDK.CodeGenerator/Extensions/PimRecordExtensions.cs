@@ -69,6 +69,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             return [package, .. package.PackagedElement.OfType<IPackage>().SelectMany(QuerySelfAndNestedPackages)];
         }
 
+        /// <param name="package">
+        /// The package whose persisted records are queried.
+        /// </param>
         extension(IPackage package)
         {
             /// <summary>
@@ -104,6 +107,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
         }
 
+        /// <param name="recordClass">
+        /// The PIM record class that is queried.
+        /// </param>
         extension(IClass recordClass)
         {
             /// <summary>

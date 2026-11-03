@@ -18,6 +18,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     /// </summary>
     public static class PimServiceExtensions
     {
+        /// <param name="package">
+        /// The package whose services are queried.
+        /// </param>
         extension(IPackage package)
         {
             /// <summary>
@@ -50,6 +53,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
         }
 
+        /// <param name="serviceClass">
+        /// The PIM service class that is queried.
+        /// </param>
         extension(IClass serviceClass)
         {
             /// <summary>

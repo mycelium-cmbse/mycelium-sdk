@@ -74,6 +74,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 .ThenBy(property => property.XmiId, StringComparer.Ordinal);
         }
 
+        /// <param name="umlClass">
+        /// The UML class that is queried.
+        /// </param>
         extension(IClass umlClass)
         {
             /// <summary>
