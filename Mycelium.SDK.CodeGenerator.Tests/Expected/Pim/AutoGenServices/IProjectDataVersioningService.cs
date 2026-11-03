@@ -36,14 +36,8 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
         /// Create a new branch with the given name (branchName) in the given project, and set the head of the
         /// new branch as the given commit (head).
         /// </summary>
-        /// <param name="projectId">
-        /// The identifier of the project.
-        /// </param>
-        /// <param name="branchName">
-        /// The branchName.
-        /// </param>
-        /// <param name="headId">
-        /// The identifier of the head.
+        /// <param name="branch">
+        /// The Branch to create: only its <c>name</c> and <c>head</c> are read, and the service assigns every other member.
         /// </param>
         /// <param name="cancellationToken">
         /// The <see cref="CancellationToken" /> that cancels the operation.
@@ -51,7 +45,7 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
         /// <returns>
         /// The outcome of the operation, or the errors that prevented it.
         /// </returns>
-        Task<ErrorOr<Branch>> CreateBranchAsync(Guid projectId, string branchName, Guid headId, CancellationToken cancellationToken);
+        Task<ErrorOr<Branch>> CreateBranchAsync(Branch branch, CancellationToken cancellationToken);
 
         /// <summary>
         /// Create a new commit with the given change (collection of DataVersion records) in the given branch of
@@ -81,11 +75,8 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
         /// <param name="branchId">
         /// The identifier of the branch.
         /// </param>
-        /// <param name="previousCommitsIds">
-        /// The identifier of the previousCommits elements.
-        /// </param>
-        /// <param name="projectId">
-        /// The identifier of the project.
+        /// <param name="commit">
+        /// The Commit to create: only its <c>previousCommits</c> are read, and the service assigns every other member.
         /// </param>
         /// <param name="cancellationToken">
         /// The <see cref="CancellationToken" /> that cancels the operation.
@@ -93,20 +84,14 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
         /// <returns>
         /// The outcome of the operation, or the errors that prevented it.
         /// </returns>
-        Task<ErrorOr<Commit>> CreateCommitAsync(IReadOnlyList<DataVersion> change, Guid? branchId, IReadOnlyList<Guid> previousCommitsIds, Guid projectId, CancellationToken cancellationToken);
+        Task<ErrorOr<Commit>> CreateCommitAsync(IReadOnlyList<DataVersion> change, Guid? branchId, Commit commit, CancellationToken cancellationToken);
 
         /// <summary>
         /// Create a new tag with the given name (tagName) in the given project, and set the taggedCommit of the
         /// new tag as the given commit (taggedCommit).
         /// </summary>
-        /// <param name="projectId">
-        /// The identifier of the project.
-        /// </param>
-        /// <param name="tagName">
-        /// The tagName.
-        /// </param>
-        /// <param name="taggedCommitId">
-        /// The identifier of the taggedCommit.
+        /// <param name="tag">
+        /// The Tag to create: only its <c>name</c> and <c>taggedCommit</c> are read, and the service assigns every other member.
         /// </param>
         /// <param name="cancellationToken">
         /// The <see cref="CancellationToken" /> that cancels the operation.
@@ -114,7 +99,7 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
         /// <returns>
         /// The outcome of the operation, or the errors that prevented it.
         /// </returns>
-        Task<ErrorOr<Tag>> CreateTagAsync(Guid projectId, string tagName, Guid taggedCommitId, CancellationToken cancellationToken);
+        Task<ErrorOr<Tag>> CreateTagAsync(Tag tag, CancellationToken cancellationToken);
 
         /// <summary>
         /// Delete the branch with the given id (branchId) in the given project.

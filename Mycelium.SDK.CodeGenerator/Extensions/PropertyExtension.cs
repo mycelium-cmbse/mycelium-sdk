@@ -20,171 +20,6 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     public static class PropertyExtension
     {
         /// <summary>
-        /// Queries the legal C# property identifier with its first letter capitalized.
-        /// </summary>
-        /// <param name="property">
-        /// The UML property whose generated identifier is queried.
-        /// </param>
-        /// <returns>
-        /// The legal PascalCase C# property identifier.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="property" /> is <see langword="null" />.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the UML property has no name.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// Thrown when the capitalized property name cannot be represented as a legal C# identifier.
-        /// </exception>
-        public static string QueryPropertyName(this IProperty property)
-        {
-            ArgumentNullException.ThrowIfNull(property);
-
-            if (string.IsNullOrWhiteSpace(property.Name))
-            {
-                throw new InvalidOperationException($"Property '{property.XmiId}' has no name.");
-            }
-
-            var cSharpPropertyName = property.Name.CapitalizeFirstLetter();
-
-            return ReservedCSharpNameMapper.Map(cSharpPropertyName);
-        }
-
-        /// <summary>
-        /// Queries the complete DTO property type, including collection and
-        /// scalar-nullability syntax.
-        /// </summary>
-        /// <param name="property">
-        /// The UML property whose complete DTO type is queried.
-        /// </param>
-        /// <returns>
-        /// The complete C# DTO type name, including collection and scalar-nullability syntax.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="property" /> is <see langword="null" />.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the property type is unresolved, unsupported, or unnamed.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// Thrown when a named UML type cannot be represented as a legal C# identifier.
-        /// </exception>
-        public static string QueryDtoTypeName(this IProperty property)
-        {
-            ArgumentNullException.ThrowIfNull(property);
-
-            var elementTypeName = property.QueryDtoElementTypeName();
-
-            if (property.QueryIsEnumerable())
-            {
-                return $"List<{elementTypeName}>";
-            }
-
-            if (property.QueryIsNullableAndNotString() && elementTypeName is not ("Uri" or "Dictionary<string,string>"))
-            {
-                return $"{elementTypeName}?";
-            }
-
-            return elementTypeName;
-        }
-
-        /// <summary>
-        /// Queries the complete POCO property type, including interface references, collections, and
-        /// value-type nullability.
-        /// </summary>
-        /// <param name="property">
-        /// The UML property whose complete POCO type is queried.
-        /// </param>
-        /// <returns>
-        /// The complete C# POCO type name.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="property" /> is <see langword="null" />.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the property type is unresolved, unsupported, or unnamed.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// Thrown when a named UML type cannot be represented as a legal C# identifier.
-        /// </exception>
-        public static string QueryPocoTypeName(this IProperty property)
-        {
-            ArgumentNullException.ThrowIfNull(property);
-
-            var elementTypeName = property.QueryPocoElementTypeName();
-
-            if (property.QueryIsEnumerable())
-            {
-                return $"List<{elementTypeName}>";
-            }
-
-            if (property.QueryIsNullable() && QueryPocoElementIsValueType(property, elementTypeName))
-            {
-                return $"{elementTypeName}?";
-            }
-
-            return elementTypeName;
-        }
-
-        /// <summary>
-        /// Queries the C# DTO element type before multiplicity and nullability
-        /// syntax are applied.
-        /// </summary>
-        /// <param name="property">
-        /// The UML property whose DTO element type is queried.
-        /// </param>
-        /// <returns>
-        /// The corresponding C# DTO element type name.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the property type is unresolved or unsupported.
-        /// </exception>
-        private static string QueryDtoElementTypeName(this IProperty property)
-        {
-            if (property.Type is null)
-            {
-                throw new InvalidOperationException($"Property '{property.Describe()}' has no resolved type.");
-            }
-
-            return property.Type switch
-            {
-                IClass => "Guid",
-                IEnumeration enumeration => MapNamedType(enumeration.Name, property),
-                IPrimitiveType primitiveType => primitiveType.QueryCSharpTypeName(),
-                _ => throw new InvalidOperationException($"Property '{property.Describe()}' has unsupported UML type " + $"'{property.Type.Name}'.")
-            };
-        }
-
-        /// <summary>
-        /// Queries the POCO element type before multiplicity and nullability are applied.
-        /// </summary>
-        /// <param name="property">
-        /// The UML property whose POCO element type is queried.
-        /// </param>
-        /// <returns>
-        /// The corresponding POCO element type.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the property's UML type is unresolved, unnamed, or unsupported.
-        /// </exception>
-        private static string QueryPocoElementTypeName(this IProperty property)
-        {
-            if (property.Type is null)
-            {
-                throw new InvalidOperationException($"Property '{property.Describe()}' has no resolved type.");
-            }
-
-            return property.Type switch
-            {
-                IClass umlClass => QueryPocoInterfaceTypeName(umlClass, property),
-                IEnumeration enumeration => MapNamedType(enumeration.Name, property),
-                IPrimitiveType primitiveType => QueryPrimitiveTypeName(primitiveType, property),
-                _ => throw new InvalidOperationException($"Property '{property.Describe()}' has unsupported UML type " + $"'{property.Type.Name}'.")
-            };
-        }
-
-        /// <summary>
         /// Maps a referenced UML class to its generated POCO interface identifier.
         /// </summary>
         /// <param name="umlClass">
@@ -283,6 +118,208 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             return ReservedCSharpNameMapper.Map(typeName);
+        }
+
+        extension(IProperty property)
+        {
+            /// <summary>
+            /// Queries the legal C# property identifier with its first letter capitalized.
+            /// </summary>
+            /// <returns>
+            /// The legal PascalCase C# property identifier.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the UML property has no name.
+            /// </exception>
+            /// <exception cref="ArgumentException">
+            /// Thrown when the capitalized property name cannot be represented as a legal C# identifier.
+            /// </exception>
+            public string QueryPropertyName()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                if (string.IsNullOrWhiteSpace(property.Name))
+                {
+                    throw new InvalidOperationException($"Property '{property.XmiId}' has no name.");
+                }
+
+                var cSharpPropertyName = property.Name.CapitalizeFirstLetter();
+
+                return ReservedCSharpNameMapper.Map(cSharpPropertyName);
+            }
+
+            /// <summary>
+            /// Queries the complete DTO property type, including collection and
+            /// scalar-nullability syntax.
+            /// </summary>
+            /// <returns>
+            /// The complete C# DTO type name, including collection and scalar-nullability syntax.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the property type is unresolved, unsupported, or unnamed.
+            /// </exception>
+            /// <exception cref="ArgumentException">
+            /// Thrown when a named UML type cannot be represented as a legal C# identifier.
+            /// </exception>
+            public string QueryDtoTypeName()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                var elementTypeName = property.QueryDtoElementTypeName();
+
+                if (property.QueryIsEnumerable())
+                {
+                    return $"List<{elementTypeName}>";
+                }
+
+                if (property.QueryIsNullableAndNotString() && elementTypeName is not ("Uri" or "Dictionary<string,string>"))
+                {
+                    return $"{elementTypeName}?";
+                }
+
+                return elementTypeName;
+            }
+
+            /// <summary>
+            /// Queries the complete POCO property type, including interface references, collections, and
+            /// value-type nullability.
+            /// </summary>
+            /// <returns>
+            /// The complete C# POCO type name.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the property type is unresolved, unsupported, or unnamed.
+            /// </exception>
+            /// <exception cref="ArgumentException">
+            /// Thrown when a named UML type cannot be represented as a legal C# identifier.
+            /// </exception>
+            public string QueryPocoTypeName()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                var elementTypeName = property.QueryPocoElementTypeName();
+
+                if (property.QueryIsEnumerable())
+                {
+                    return $"List<{elementTypeName}>";
+                }
+
+                if (property.QueryIsNullable() && QueryPocoElementIsValueType(property, elementTypeName))
+                {
+                    return $"{elementTypeName}?";
+                }
+
+                return elementTypeName;
+            }
+
+            /// <summary>
+            /// Queries the opposite end of a property when that end is navigable from the property's type.
+            /// </summary>
+            /// <returns>
+            /// The opposite end, or <see langword="null" /> when the association is navigable one way only.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            public IProperty QueryNavigableOpposite()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return property.Opposite is { } opposite && property.Type is IClass oppositeOwner && oppositeOwner.OwnedAttribute.Contains(opposite) ? opposite : null;
+            }
+
+            /// <summary>
+            /// Determines whether a property points back to the container that collects its owner.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the navigable opposite end is a collection.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            public bool QueryIsBackReference()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return property.QueryNavigableOpposite()
+                    ?.QueryIsEnumerable() == true;
+            }
+
+            /// <summary>
+            /// Determines whether a property collects parts that cannot exist without its owner.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the property is a collection whose navigable opposite end is mandatory and single.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            public bool QueryIsComposedPart()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return property.QueryIsEnumerable() && property.QueryNavigableOpposite() is { } opposite && !opposite.QueryIsEnumerable() && opposite.Lower > 0;
+            }
+
+            /// <summary>
+            /// Queries the C# DTO element type before multiplicity and nullability
+            /// syntax are applied.
+            /// </summary>
+            /// <returns>
+            /// The corresponding C# DTO element type name.
+            /// </returns>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the property type is unresolved or unsupported.
+            /// </exception>
+            private string QueryDtoElementTypeName()
+            {
+                if (property.Type is null)
+                {
+                    throw new InvalidOperationException($"Property '{property.Describe()}' has no resolved type.");
+                }
+
+                return property.Type switch
+                {
+                    IClass => "Guid",
+                    IEnumeration enumeration => MapNamedType(enumeration.Name, property),
+                    IPrimitiveType primitiveType => primitiveType.QueryCSharpTypeName(),
+                    _ => throw new InvalidOperationException($"Property '{property.Describe()}' has unsupported UML type " + $"'{property.Type.Name}'.")
+                };
+            }
+
+            /// <summary>
+            /// Queries the POCO element type before multiplicity and nullability are applied.
+            /// </summary>
+            /// <returns>
+            /// The corresponding POCO element type.
+            /// </returns>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the property's UML type is unresolved, unnamed, or unsupported.
+            /// </exception>
+            private string QueryPocoElementTypeName()
+            {
+                if (property.Type is null)
+                {
+                    throw new InvalidOperationException($"Property '{property.Describe()}' has no resolved type.");
+                }
+
+                return property.Type switch
+                {
+                    IClass umlClass => QueryPocoInterfaceTypeName(umlClass, property),
+                    IEnumeration enumeration => MapNamedType(enumeration.Name, property),
+                    IPrimitiveType primitiveType => QueryPrimitiveTypeName(primitiveType, property),
+                    _ => throw new InvalidOperationException($"Property '{property.Describe()}' has unsupported UML type " + $"'{property.Type.Name}'.")
+                };
+            }
         }
     }
 }

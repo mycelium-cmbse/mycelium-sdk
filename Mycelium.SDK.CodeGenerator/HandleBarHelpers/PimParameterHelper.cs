@@ -79,16 +79,28 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             {
                 const string HelperName = "{{Parameter.QueryIsIdentifier}}";
 
-                var parameter = arguments.QueryFirst<IParameter>(HelperName);
-
-                if (arguments.Length < 2 || arguments[1] is not IOperation operation)
-                {
-                    throw new HandlebarsException($"{HelperName} requires an IOperation second argument.");
-                }
-
+                var (parameter, operation) = QueryParameterAndOperation(arguments, HelperName);
                 var contentCarryingNames = arguments.QueryStringsFrom(2, HelperName);
 
                 return parameter.QueryIsIdentifier(operation, contentCarryingNames);
+            });
+
+            handlebars.RegisterHelper("Parameter.QueryFoldsIntoRecord", (_, arguments) =>
+            {
+                const string HelperName = "{{Parameter.QueryFoldsIntoRecord}}";
+
+                var (parameter, operation) = QueryParameterAndOperation(arguments, HelperName);
+
+                return operation.QueryFoldsIntoRecord(parameter);
+            });
+
+            handlebars.RegisterHelper("Parameter.QueryIsRecordPosition", (_, arguments) =>
+            {
+                const string HelperName = "{{Parameter.QueryIsRecordPosition}}";
+
+                var (parameter, operation) = QueryParameterAndOperation(arguments, HelperName);
+
+                return operation.QueryIsRecordPosition(parameter);
             });
 
             handlebars.RegisterHelper("Parameter.QueryIsCollection", (_, arguments) =>
@@ -104,6 +116,28 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                 return parameter.QueryIsOptionalValueType();
             });
+        }
+
+        /// <summary>
+        /// Queries the parameter and its declaring operation that lead the arguments of a helper.
+        /// </summary>
+        /// <param name="arguments">
+        /// The helper arguments.
+        /// </param>
+        /// <param name="helperName">
+        /// The helper name reported when the arguments are malformed.
+        /// </param>
+        /// <returns>
+        /// The parameter and the operation.
+        /// </returns>
+        /// <exception cref="HandlebarsException">
+        /// Thrown when the first argument is not a parameter or the second is not an operation.
+        /// </exception>
+        private static (IParameter Parameter, IOperation Operation) QueryParameterAndOperation(Arguments arguments, string helperName)
+        {
+            var parameter = arguments.QueryFirst<IParameter>(helperName);
+
+            return arguments.Length >= 2 && arguments[1] is IOperation operation ? (parameter, operation) : throw new HandlebarsException($"{helperName} requires an IOperation second argument.");
         }
     }
 }

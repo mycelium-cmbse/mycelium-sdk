@@ -19,109 +19,6 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     public static class ClassExtensions
     {
         /// <summary>
-        /// Queries the properties declared directly by the class.
-        /// </summary>
-        /// <param name="umlClass">
-        /// The UML class whose directly owned properties are queried.
-        /// </param>
-        /// <returns>
-        /// The directly owned properties, deduplicated and deterministically ordered.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="umlClass" /> is <see langword="null" />.
-        /// </exception>
-        public static IReadOnlyList<IProperty> QueryDtoInterfaceProperties(this IClass umlClass)
-        {
-            ArgumentNullException.ThrowIfNull(umlClass);
-
-            return OrderProperties(umlClass.OwnedAttribute.Where(IsDtoProperty))
-                .ToArray();
-        }
-
-        /// <summary>
-        /// Queries the properties declared directly by the class for the POCO interface contract.
-        /// </summary>
-        /// <param name="umlClass">
-        /// The UML class whose directly owned POCO properties are queried.
-        /// </param>
-        /// <returns>
-        /// The directly owned POCO properties, deduplicated and deterministically ordered.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="umlClass" /> is <see langword="null" />.
-        /// </exception>
-        public static IReadOnlyList<IProperty> QueryPocoInterfaceProperties(this IClass umlClass)
-        {
-            ArgumentNullException.ThrowIfNull(umlClass);
-
-            return OrderProperties(umlClass.OwnedAttribute)
-                .ToArray();
-        }
-
-        /// <summary>
-        /// Queries every property that a concrete DTO implementation must
-        /// implement, including inherited properties.
-        /// </summary>
-        /// <param name="umlClass">
-        /// The UML class whose implementation properties are queried.
-        /// </param>
-        /// <returns>
-        /// The direct and inherited properties, deduplicated and deterministically ordered.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="umlClass" /> is <see langword="null" />.
-        /// </exception>
-        public static IReadOnlyList<IProperty> QueryDtoImplementationProperties(this IClass umlClass)
-        {
-            ArgumentNullException.ThrowIfNull(umlClass);
-
-            return OrderProperties(umlClass.QueryAllProperties()
-                .Where(IsDtoProperty))
-                .ToArray();
-        }
-
-        /// <summary>
-        /// Queries every property that a concrete POCO implementation must implement, including inherited
-        /// properties.
-        /// </summary>
-        /// <param name="umlClass">
-        /// The UML class whose POCO implementation properties are queried.
-        /// </param>
-        /// <returns>
-        /// The complete direct and inherited POCO property contract, deduplicated and deterministically
-        /// ordered.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="umlClass" /> is <see langword="null" />.
-        /// </exception>
-        public static IReadOnlyList<IProperty> QueryPocoImplementationProperties(this IClass umlClass)
-        {
-            ArgumentNullException.ThrowIfNull(umlClass);
-
-            return OrderProperties(umlClass.QueryAllProperties())
-                .ToArray();
-        }
-
-        /// <summary>
-        /// Queries the direct UML generalizations used for generated interface inheritance.
-        /// </summary>
-        /// <param name="umlClass">
-        /// The UML class whose direct generalizations are queried.
-        /// </param>
-        /// <returns>
-        /// The distinct direct generalizations in deterministic order.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="umlClass" /> is <see langword="null" />.
-        /// </exception>
-        public static IReadOnlyList<IClass> QueryGeneralizations(this IClass umlClass)
-        {
-            ArgumentNullException.ThrowIfNull(umlClass);
-
-            return QueryDirectGeneralizations(umlClass);
-        }
-
-        /// <summary>
         /// Deduplicates and deterministically orders resolved direct UML generalizations.
         /// </summary>
         /// <param name="umlClass">
@@ -175,6 +72,137 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 .ThenBy(property => property.Name, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(property => property.Name, StringComparer.Ordinal)
                 .ThenBy(property => property.XmiId, StringComparer.Ordinal);
+        }
+
+        extension(IClass umlClass)
+        {
+            /// <summary>
+            /// Queries the properties declared directly by the class.
+            /// </summary>
+            /// <returns>
+            /// The directly owned properties, deduplicated and deterministically ordered.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryDtoInterfaceProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return OrderProperties(umlClass.OwnedAttribute.Where(IsDtoProperty))
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the properties declared directly by the class for the POCO interface contract.
+            /// </summary>
+            /// <returns>
+            /// The directly owned POCO properties, deduplicated and deterministically ordered.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryPocoInterfaceProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return OrderProperties(umlClass.OwnedAttribute)
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries every property that a concrete DTO implementation must
+            /// implement, including inherited properties.
+            /// </summary>
+            /// <returns>
+            /// The direct and inherited properties, deduplicated and deterministically ordered.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryDtoImplementationProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return OrderProperties(umlClass.QueryAllProperties()
+                    .Where(IsDtoProperty))
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries every property that a concrete POCO implementation must implement, including inherited
+            /// properties.
+            /// </summary>
+            /// <returns>
+            /// The complete direct and inherited POCO property contract, deduplicated and deterministically
+            /// ordered.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryPocoImplementationProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return OrderProperties(umlClass.QueryAllProperties())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the direct UML generalizations used for generated interface inheritance.
+            /// </summary>
+            /// <returns>
+            /// The distinct direct generalizations in deterministic order.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IClass> QueryGeneralizations()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return QueryDirectGeneralizations(umlClass);
+            }
+
+            /// <summary>
+            /// Queries the non-derived attributes of a class and of its generalizations.
+            /// </summary>
+            /// <returns>
+            /// The attributes in declaration order, own attributes before inherited ones.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IEnumerable<IProperty> QueryNonDerivedAttributes()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.OwnedAttribute
+                    .Where(property => !property.IsDerived)
+                    .Concat(umlClass.Generalization
+                        .Select(generalization => generalization.General)
+                        .OfType<IClass>()
+                        .SelectMany(general => general.QueryNonDerivedAttributes()));
+            }
+
+            /// <summary>
+            /// Queries a non-derived attribute of a class or of its generalizations, the most specific declaration first.
+            /// </summary>
+            /// <param name="attributeName">
+            /// The attribute name.
+            /// </param>
+            /// <returns>
+            /// The attribute, or <see langword="null" /> when the class declares none by that name.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IProperty QueryNonDerivedAttribute(string attributeName)
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryNonDerivedAttributes().FirstOrDefault(property => string.Equals(property.Name, attributeName, StringComparison.Ordinal));
+            }
         }
     }
 }

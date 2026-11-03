@@ -16,22 +16,22 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     /// </summary>
     public static class NamedElementExtensions
     {
-        /// <summary>
-        /// Returns a readable description of a UML named element.
-        /// </summary>
-        /// <param name="namedElement">
-        /// The UML named element to describe.
-        /// </param>
-        /// <returns>
-        /// The element name when available; otherwise, its XMI identifier.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="namedElement"/> is <see langword="null"/>.
-        /// </exception>
-        public static string Describe(this INamedElement namedElement)
+        extension(INamedElement namedElement)
         {
-            ArgumentNullException.ThrowIfNull(namedElement);
-            return string.IsNullOrWhiteSpace(namedElement.Name) ? namedElement.XmiId : namedElement.Name;
+            /// <summary>
+            /// Returns a readable description of a UML named element.
+            /// </summary>
+            /// <returns>
+            /// The element name when available; otherwise, its XMI identifier.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the named element is <see langword="null"/>.
+            /// </exception>
+            public string Describe()
+            {
+                ArgumentNullException.ThrowIfNull(namedElement);
+                return string.IsNullOrWhiteSpace(namedElement.Name) ? namedElement.XmiId : namedElement.Name;
+            }
         }
     }
 }

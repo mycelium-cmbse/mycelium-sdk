@@ -60,6 +60,35 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                 return operation.QueryReturnsMany();
             });
+
+            handlebars.RegisterHelper("Operation.WriteRecordTypeName", (writer, _, arguments) =>
+            {
+                var operation = arguments.QuerySingle<IOperation>("{{Operation.WriteRecordTypeName}}");
+                var recordClass = operation.QueryInputRecordClass() ?? throw new HandlebarsException($"Operation '{operation.Name}' folds no input into a record.");
+
+                writer.WriteSafeString(recordClass.QueryRecordTypeName());
+            });
+
+            handlebars.RegisterHelper("Operation.WriteRecordParameterName", (writer, _, arguments) =>
+            {
+                var operation = arguments.QuerySingle<IOperation>("{{Operation.WriteRecordParameterName}}");
+
+                writer.WriteSafeString(operation.QueryRecordParameterName());
+            });
+
+            handlebars.RegisterHelper("Operation.WriteRecordMemberNames", (writer, _, arguments) =>
+            {
+                var operation = arguments.QuerySingle<IOperation>("{{Operation.WriteRecordMemberNames}}");
+
+                writer.WriteSafeString(operation.QueryRecordMemberNames());
+            });
+
+            handlebars.RegisterHelper("Operation.QueryUpdatesRecord", (_, arguments) =>
+            {
+                var operation = arguments.QuerySingle<IOperation>("{{Operation.QueryUpdatesRecord}}");
+
+                return operation.QueryUpdatesRecord();
+            });
         }
     }
 }
