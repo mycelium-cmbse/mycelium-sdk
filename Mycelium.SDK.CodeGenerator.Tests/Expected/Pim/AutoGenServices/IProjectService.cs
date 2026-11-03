@@ -35,11 +35,8 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
         /// <summary>
         /// Create a new project with the given name and description (optional).
         /// </summary>
-        /// <param name="name">
-        /// The name.
-        /// </param>
-        /// <param name="description">
-        /// The description.
+        /// <param name="project">
+        /// The Project to create: only its <c>name</c> and <c>description</c> are read, and the service assigns every other member.
         /// </param>
         /// <param name="cancellationToken">
         /// The <see cref="CancellationToken" /> that cancels the operation.
@@ -47,7 +44,7 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
         /// <returns>
         /// The outcome of the operation, or the errors that prevented it.
         /// </returns>
-        Task<ErrorOr<Project>> CreateProjectAsync(string name, string description, CancellationToken cancellationToken);
+        Task<ErrorOr<Project>> CreateProjectAsync(Project project, CancellationToken cancellationToken);
 
         /// <summary>
         /// Delete the project with the given id (projectId). The following pre-condition must be satisfied for
@@ -111,17 +108,8 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
         /// <summary>
         /// Update the project with the given id (projectId).
         /// </summary>
-        /// <param name="projectId">
-        /// The projectId.
-        /// </param>
-        /// <param name="name">
-        /// The name.
-        /// </param>
-        /// <param name="description">
-        /// The description.
-        /// </param>
-        /// <param name="defaultBranchId">
-        /// The identifier of the defaultBranch.
+        /// <param name="project">
+        /// The changes to the Project in scope: only its <c>name</c>, <c>description</c> and <c>defaultBranch</c> are read, and a member left unset keeps its current value.
         /// </param>
         /// <param name="cancellationToken">
         /// The <see cref="CancellationToken" /> that cancels the operation.
@@ -129,7 +117,7 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
         /// <returns>
         /// The outcome of the operation, or the errors that prevented it.
         /// </returns>
-        Task<ErrorOr<Project>> UpdateProjectAsync(Guid projectId, string name, string description, Guid? defaultBranchId, CancellationToken cancellationToken);
+        Task<ErrorOr<Project>> UpdateProjectAsync(Project project, CancellationToken cancellationToken);
     }
 }
 

@@ -13,6 +13,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
     using uml4net.Classification;
     using uml4net.Extensions;
+    using uml4net.StructuredClassifiers;
 
     /// <summary>
     /// Provides Mycelium-specific queries for the PIM operations that a service member is generated from.
@@ -24,6 +25,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// </summary>
         private const string MethodNameSuffix = "Async";
 
+        /// <param name="operation">
+        /// The PIM operation that is queried.
+        /// </param>
         extension(IOperation operation)
         {
             /// <summary>
@@ -120,6 +124,175 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             /// <summary>
+            /// Queries the record that replaces the covered inputs of an operation.
+            /// </summary>
+            /// <returns>
+            /// The record class, or <see langword="null" /> when the operation keeps its declared inputs.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the operation is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when an input names a one-way attribute of a different type.
+            /// </exception>
+            public IClass QueryInputRecordClass()
+            {
+                ArgumentNullException.ThrowIfNull(operation);
+
+                return operation.QueryInputParameters().Any(operation.QueryPopulatesOneWayAttribute) ? operation.QueryResultRecordClass() : null;
+            }
+
+            /// <summary>
+            /// Determines whether an input is dropped because the record parameter covers it.
+            /// </summary>
+            /// <param name="parameter">
+            /// The input parameter of the operation.
+            /// </param>
+            /// <returns>
+            /// <see langword="true" /> when the operation takes its record and the input names an attribute of it
+            /// that does not collect parts created with the record, or is typed by the container that a
+            /// back-reference attribute of it points to.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the operation or <paramref name="parameter" /> is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when an input names a one-way attribute of a different type.
+            /// </exception>
+            public bool QueryFoldsIntoRecord(IParameter parameter)
+            {
+                ArgumentNullException.ThrowIfNull(operation);
+                ArgumentNullException.ThrowIfNull(parameter);
+
+                var recordClass = operation.QueryInputRecordClass();
+
+                if (recordClass is null)
+                {
+                    return false;
+                }
+
+                if (operation.QueryMatchedAttribute(parameter) is { } attribute)
+                {
+                    return !attribute.QueryIsComposedPart();
+                }
+
+                return recordClass.QueryNonDerivedAttributes().Any(recordAttribute => ReferenceEquals(recordAttribute.Type, parameter.Type) && recordAttribute.QueryIsBackReference());
+            }
+
+            /// <summary>
+            /// Determines whether the record parameter takes the place of an input in the generated signature.
+            /// </summary>
+            /// <param name="parameter">
+            /// The input parameter of the operation.
+            /// </param>
+            /// <returns>
+            /// <see langword="true" /> when the input is the first, in document order, that the record covers.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the operation or <paramref name="parameter" /> is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when an input names a one-way attribute of a different type.
+            /// </exception>
+            public bool QueryIsRecordPosition(IParameter parameter)
+            {
+                ArgumentNullException.ThrowIfNull(operation);
+                ArgumentNullException.ThrowIfNull(parameter);
+
+                return ReferenceEquals(operation.QueryInputParameters().FirstOrDefault(operation.QueryFoldsIntoRecord), parameter);
+            }
+
+            /// <summary>
+            /// Determines whether an input typed by a record carries content rather than an identifier.
+            /// </summary>
+            /// <param name="parameter">
+            /// The input parameter of the operation.
+            /// </param>
+            /// <returns>
+            /// <see langword="true" /> when the input collects parts created with the returned record.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the operation or <paramref name="parameter" /> is <see langword="null" />.
+            /// </exception>
+            public bool QueryCarriesRecordContent(IParameter parameter)
+            {
+                ArgumentNullException.ThrowIfNull(operation);
+                ArgumentNullException.ThrowIfNull(parameter);
+
+                return operation.QueryMatchedAttribute(parameter) is { IsReadOnly: false } attribute && attribute.QueryIsComposedPart();
+            }
+
+            /// <summary>
+            /// Determines whether an operation changes an existing record rather than creating one.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when an input names a read-only attribute of the returned record, which
+            /// identifies the record being changed.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the operation is <see langword="null" />.
+            /// </exception>
+            public bool QueryUpdatesRecord()
+            {
+                ArgumentNullException.ThrowIfNull(operation);
+
+                return operation.QueryInputParameters().Any(parameter => operation.QueryMatchedAttribute(parameter) is { IsReadOnly: true });
+            }
+
+            /// <summary>
+            /// Queries the legal C# identifier of the record parameter.
+            /// </summary>
+            /// <returns>
+            /// The camel-cased record name.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the operation is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the operation keeps its declared inputs, or when the name is already taken by another input.
+            /// </exception>
+            public string QueryRecordParameterName()
+            {
+                ArgumentNullException.ThrowIfNull(operation);
+
+                var recordClass = operation.QueryInputRecordClass() ?? throw new InvalidOperationException($"Operation '{operation.Name}' does not take a record.");
+                var recordParameterName = ReservedCSharpNameMapper.Map(recordClass.Name.LowerCaseFirstLetter());
+
+                var collidingParameter = operation.QueryInputParameters()
+                    .Where(parameter => !operation.QueryFoldsIntoRecord(parameter))
+                    .FirstOrDefault(parameter => string.Equals(parameter.Name, recordParameterName, StringComparison.Ordinal));
+
+                return collidingParameter is null ? recordParameterName : throw new InvalidOperationException($"Operation '{operation.Name}' already declares parameter '{collidingParameter.Name}', so the record parameter cannot take that name.");
+            }
+
+            /// <summary>
+            /// Queries the record attributes that the caller supplies to an operation.
+            /// </summary>
+            /// <returns>
+            /// The writable attributes named by the covered inputs, in document order of those inputs, joined into a
+            /// readable list.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the operation is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when an input names a one-way attribute of a different type.
+            /// </exception>
+            public string QueryRecordMemberNames()
+            {
+                ArgumentNullException.ThrowIfNull(operation);
+
+                var memberNames = operation.QueryInputParameters()
+                    .Where(operation.QueryFoldsIntoRecord)
+                    .Select(operation.QueryMatchedAttribute)
+                    .Where(attribute => attribute is { IsReadOnly: false } && !attribute.QueryIsBackReference())
+                    .Select(attribute => $"<c>{attribute.Name}</c>")
+                    .ToArray();
+
+                return memberNames.Length < 2 ? string.Concat(memberNames) : $"{string.Join(", ", memberNames[..^1])} and {memberNames[^1]}";
+            }
+
+            /// <summary>
             /// Queries the parameter that carries the result of an operation.
             /// </summary>
             /// <returns>
@@ -140,6 +313,74 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 ArgumentNullException.ThrowIfNull(operation);
 
                 return operation.OwnedParameter.LastOrDefault(parameter => parameter.Direction == ParameterDirectionKind.Return);
+            }
+
+            /// <summary>
+            /// Determines whether an input populates a writable attribute of the returned record that is navigable
+            /// one way only.
+            /// </summary>
+            /// <param name="parameter">
+            /// The input parameter of the operation.
+            /// </param>
+            /// <returns>
+            /// <see langword="true" /> when the input names such an attribute.
+            /// </returns>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the input is typed differently from the attribute it names.
+            /// </exception>
+            private bool QueryPopulatesOneWayAttribute(IParameter parameter)
+            {
+                var attribute = operation.QueryMatchedAttribute(parameter);
+
+                if (attribute is null || attribute.IsReadOnly || attribute.QueryNavigableOpposite() is not null)
+                {
+                    return false;
+                }
+
+                return ReferenceEquals(attribute.Type, parameter.Type) ? true : throw new InvalidOperationException($"Parameter '{parameter.Name}' of operation '{operation.Name}' names attribute '{attribute.Name}' of '{attribute.Type?.Name}', but is typed by '{parameter.Type?.Name}'.");
+            }
+
+            /// <summary>
+            /// Queries the record that an operation returns.
+            /// </summary>
+            /// <returns>
+            /// The record class, or <see langword="null" /> when the result is absent, a collection, or not a
+            /// persisted record.
+            /// </returns>
+            private IClass QueryResultRecordClass()
+            {
+                var resultParameter = operation.QueryReturnParameters().SingleOrDefault();
+
+                return resultParameter is { Type: IClass resultClass } && !resultParameter.QueryIsEnumerable() && resultClass.QueryIsPersistedRecord() ? resultClass : null;
+            }
+
+            /// <summary>
+            /// Queries the attribute of the returned record that an input names.
+            /// </summary>
+            /// <param name="parameter">
+            /// The input parameter of the operation.
+            /// </param>
+            /// <returns>
+            /// The attribute named by the input, or by the input with the record name stripped from its front;
+            /// <see langword="null" /> when there is none.
+            /// </returns>
+            private IProperty QueryMatchedAttribute(IParameter parameter)
+            {
+                var recordClass = operation.QueryResultRecordClass();
+
+                if (recordClass is null)
+                {
+                    return null;
+                }
+
+                var recordPrefix = recordClass.Name.LowerCaseFirstLetter();
+
+                if (recordClass.QueryNonDerivedAttribute(parameter.Name) is { } attribute)
+                {
+                    return attribute;
+                }
+
+                return parameter.Name.Length > recordPrefix.Length && parameter.Name.StartsWith(recordPrefix, StringComparison.Ordinal) ? recordClass.QueryNonDerivedAttribute(parameter.Name[recordPrefix.Length..].LowerCaseFirstLetter()) : null;
             }
 
             /// <summary>

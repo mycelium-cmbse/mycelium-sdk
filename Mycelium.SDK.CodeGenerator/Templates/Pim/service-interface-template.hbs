@@ -35,14 +35,26 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
         {{ #each (Service.QueryOperations this) as | operation | ~}}
             {{ Documentation ~}}
             {{~ #each (Operation.QueryInputParameters operation) as | parameter | ~}}
-                {{ #if (Parameter.QueryIsIdentifier parameter operation "updateQuery.updateQuery" "executeQuery.query" "createCommit.change") ~}}
-                    /// <param name="{{ Parameter.WriteIdentifierName parameter }}">
-                    /// The identifier of the {{ Parameter.WriteName parameter }}{{ #if (Parameter.QueryIsCollection parameter) }} elements{{ /if }}.
-                    /// </param>
+                {{ #if (Parameter.QueryFoldsIntoRecord parameter operation) ~}}
+                    {{ #if (Parameter.QueryIsRecordPosition parameter operation) ~}}
+                        /// <param name="{{ Operation.WriteRecordParameterName operation }}">
+                        {{ #if (Operation.QueryUpdatesRecord operation) ~}}
+                            /// The changes to the {{ Operation.WriteRecordTypeName operation }} in scope: only its {{ Operation.WriteRecordMemberNames operation }} are read, and a member left unset keeps its current value.
+                        {{ else ~}}
+                            /// The {{ Operation.WriteRecordTypeName operation }} to create: only its {{ Operation.WriteRecordMemberNames operation }} are read, and the service assigns every other member.
+                        {{ /if ~}}
+                        /// </param>
+                    {{ /if ~}}
                 {{ else ~}}
-                    /// <param name="{{ Parameter.WriteName parameter }}">
-                    /// The {{ Parameter.WriteName parameter }}{{ #if (Parameter.QueryIsCollection parameter) }} elements{{ /if }}.
-                    /// </param>
+                    {{ #if (Parameter.QueryIsIdentifier parameter operation "updateQuery.updateQuery" "executeQuery.query") ~}}
+                        /// <param name="{{ Parameter.WriteIdentifierName parameter }}">
+                        /// The identifier of the {{ Parameter.WriteName parameter }}{{ #if (Parameter.QueryIsCollection parameter) }} elements{{ /if }}.
+                        /// </param>
+                    {{ else ~}}
+                        /// <param name="{{ Parameter.WriteName parameter }}">
+                        /// The {{ Parameter.WriteName parameter }}{{ #if (Parameter.QueryIsCollection parameter) }} elements{{ /if }}.
+                        /// </param>
+                    {{ /if ~}}
                 {{ /if ~}}
             {{~ /each ~}}
             {{~ #if (Operation.QueryReturnsMany operation) ~}}
@@ -56,7 +68,7 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
             /// <returns>
             /// The outcome of the operation, or the errors that prevented it.
             /// </returns>
-            Task<ErrorOr<{{ #each (Operation.QueryReturnParameters operation) as | returnParameter | }}{{ #if (Parameter.QueryIsCollection returnParameter) }}PagedResult<{{ Parameter.WriteElementTypeName returnParameter "KerML Abstract Syntax.xml#_18_5_3_12e503d9_1533160651703_306405_42199" "SysML2.NET.Core.DTO.Root.Elements.IElement" "KerML Abstract Syntax.xml#_18_5_3_12e503d9_1533160651700_869737_42192" "SysML2.NET.Core.DTO.Root.Elements.IRelationship" }}>{{ else }}{{ Parameter.WriteElementTypeName returnParameter "KerML Abstract Syntax.xml#_18_5_3_12e503d9_1533160651703_306405_42199" "SysML2.NET.Core.DTO.Root.Elements.IElement" "KerML Abstract Syntax.xml#_18_5_3_12e503d9_1533160651700_869737_42192" "SysML2.NET.Core.DTO.Root.Elements.IRelationship" }}{{ /if }}{{ else }}Success{{ /each }}>> {{ Operation.WriteMethodName operation }}({{ #each (Operation.QueryInputParameters operation) as | parameter | }}{{ #if (Parameter.QueryIsIdentifier parameter operation "updateQuery.updateQuery" "executeQuery.query" "createCommit.change") }}{{ Parameter.WriteIdentifierTypeName parameter }}{{ #if (Parameter.QueryIsOptionalValueType parameter) }}?{{ /if }} {{ Parameter.WriteIdentifierName parameter }}{{ else }}{{ Parameter.WriteTypeName parameter }}{{ #if (Parameter.QueryIsOptionalValueType parameter) }}?{{ /if }} {{ Parameter.WriteName parameter }}{{ /if }}, {{ /each }}{{ #if (Operation.QueryReturnsMany operation) }}QueryParameters queryParameters, {{ /if }}CancellationToken cancellationToken);
+            Task<ErrorOr<{{ #each (Operation.QueryReturnParameters operation) as | returnParameter | }}{{ #if (Parameter.QueryIsCollection returnParameter) }}PagedResult<{{ Parameter.WriteElementTypeName returnParameter "KerML Abstract Syntax.xml#_18_5_3_12e503d9_1533160651703_306405_42199" "SysML2.NET.Core.DTO.Root.Elements.IElement" "KerML Abstract Syntax.xml#_18_5_3_12e503d9_1533160651700_869737_42192" "SysML2.NET.Core.DTO.Root.Elements.IRelationship" }}>{{ else }}{{ Parameter.WriteElementTypeName returnParameter "KerML Abstract Syntax.xml#_18_5_3_12e503d9_1533160651703_306405_42199" "SysML2.NET.Core.DTO.Root.Elements.IElement" "KerML Abstract Syntax.xml#_18_5_3_12e503d9_1533160651700_869737_42192" "SysML2.NET.Core.DTO.Root.Elements.IRelationship" }}{{ /if }}{{ else }}Success{{ /each }}>> {{ Operation.WriteMethodName operation }}({{ #each (Operation.QueryInputParameters operation) as | parameter | }}{{ #if (Parameter.QueryFoldsIntoRecord parameter operation) }}{{ #if (Parameter.QueryIsRecordPosition parameter operation) }}{{ Operation.WriteRecordTypeName operation }} {{ Operation.WriteRecordParameterName operation }}, {{ /if }}{{ else }}{{ #if (Parameter.QueryIsIdentifier parameter operation "updateQuery.updateQuery" "executeQuery.query") }}{{ Parameter.WriteIdentifierTypeName parameter }}{{ #if (Parameter.QueryIsOptionalValueType parameter) }}?{{ /if }} {{ Parameter.WriteIdentifierName parameter }}{{ else }}{{ Parameter.WriteTypeName parameter }}{{ #if (Parameter.QueryIsOptionalValueType parameter) }}?{{ /if }} {{ Parameter.WriteName parameter }}{{ /if }}, {{ /if }}{{ /each }}{{ #if (Operation.QueryReturnsMany operation) }}QueryParameters queryParameters, {{ /if }}CancellationToken cancellationToken);
             {{ #unless @last }}
 
             {{ /unless ~}}

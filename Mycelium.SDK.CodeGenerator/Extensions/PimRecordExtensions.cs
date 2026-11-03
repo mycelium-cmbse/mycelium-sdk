@@ -69,6 +69,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             return [package, .. package.PackagedElement.OfType<IPackage>().SelectMany(QuerySelfAndNestedPackages)];
         }
 
+        /// <param name="package">
+        /// The package whose persisted records are queried.
+        /// </param>
         extension(IPackage package)
         {
             /// <summary>
@@ -96,7 +99,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
                 var recordClasses = QuerySelfAndNestedPackages(package)
                     .SelectMany(nestedPackage => nestedPackage.PackagedElement.OfType<IClass>())
-                    .Where(umlClass => !umlClass.IsAbstract && QueryBearsIdentity(umlClass))
+                    .Where(umlClass => umlClass.QueryIsPersistedRecord())
                     .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal)
                     .ToArray();
 
@@ -104,8 +107,27 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
         }
 
+        /// <param name="recordClass">
+        /// The PIM record class that is queried.
+        /// </param>
         extension(IClass recordClass)
         {
+            /// <summary>
+            /// Determines whether a class is a persisted record.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the class is concrete and specializes the abstract <c>Record</c> class.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public bool QueryIsPersistedRecord()
+            {
+                ArgumentNullException.ThrowIfNull(recordClass);
+
+                return !recordClass.IsAbstract && QueryBearsIdentity(recordClass);
+            }
+
             /// <summary>
             /// Queries the type name of the interface that declares the persistence contract of a record.
             /// </summary>

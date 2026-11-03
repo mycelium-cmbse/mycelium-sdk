@@ -146,6 +146,9 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             throw new InvalidOperationException($"Parameter '{parameter.DescribeQualified()}' has no resolved type and its reference '{hyperlinkReference}' has no mapping.");
         }
 
+        /// <param name="parameter">
+        /// The PIM parameter that is queried.
+        /// </param>
         extension(IParameter parameter)
         {
             /// <summary>
@@ -155,8 +158,8 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             /// The operation that declares the parameter.
             /// </param>
             /// <param name="contentCarryingNames">
-            /// The <c>operation.parameter</c> names that carry content despite being typed by an
-            /// identity-bearing class.
+            /// The <c>operation.parameter</c> names that carry content although no rule derived from the model
+            /// says so.
             /// </param>
             /// <returns>
             /// <see langword="true" /> when the parameter is reduced to its identifier.
@@ -171,7 +174,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 ArgumentNullException.ThrowIfNull(operation);
                 ArgumentNullException.ThrowIfNull(contentCarryingNames);
 
-                return parameter.QueryBearsIdentity() && !contentCarryingNames.Contains(parameter.QueryQualifiedName(operation), StringComparer.Ordinal);
+                return parameter.QueryBearsIdentity() && !operation.QueryCarriesRecordContent(parameter) && !contentCarryingNames.Contains(parameter.QueryQualifiedName(operation), StringComparer.Ordinal);
             }
 
             /// <summary>
