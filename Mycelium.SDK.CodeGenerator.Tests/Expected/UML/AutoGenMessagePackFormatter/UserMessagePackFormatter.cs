@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="OrganizationMessagePackFormatter.cs" company="Starion Group S.A.">
+//  <copyright file="UserMessagePackFormatter.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -23,13 +23,13 @@ namespace Mycelium.SDK.Serializer.MessagePack
 
     /// <summary>
     /// Serializes and deserializes an exact
-    /// <see cref="Organization" /> DTO using MessagePack.
+    /// <see cref="User" /> DTO using MessagePack.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public sealed partial class OrganizationMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<Organization>
+    public sealed partial class UserMessagePackFormatter : MessagePackFormatterBase, IMessagePackFormatter<User>
     {
         /// <summary>
-        /// Serializes an exact <see cref="Organization" /> DTO.
+        /// Serializes an exact <see cref="User" /> DTO.
         /// </summary>
         /// <param name="writer">
         /// The MessagePack writer that receives the serialized DTO.
@@ -47,54 +47,62 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when a DTO property contains a value that is invalid for its approved
         /// MessagePack representation.
         /// </exception>
-        public void Serialize(ref MessagePackWriter writer, Organization dto, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, User dto, MessagePackSerializerOptions options)
         {
             if (dto == null)
             {
                 throw new ArgumentNullException(nameof(dto));
             }
 
-            writer.WriteArrayHeader(11);
+            writer.WriteArrayHeader(12);
 
             GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Id, options);
             GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.CreatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.CreatedOn);
-            WriteRequiredString(ref writer, dto.Description, "Description");
-            if (dto.InvolvedUser == null)
+            WriteRequiredString(ref writer, dto.Email, "Email");
+            WriteRequiredString(ref writer, dto.ExternalIdentifier, "ExternalIdentifier");
+            if (dto.IsPartOfOrganizations == null)
             {
                 writer.WriteNil();
             }
             else
             {
-                writer.WriteArrayHeader(dto.InvolvedUser.Count);
+                writer.WriteArrayHeader(dto.IsPartOfOrganizations.Count);
 
-                for (var i = 0; i < dto.InvolvedUser.Count; i++)
+                for (var i = 0; i < dto.IsPartOfOrganizations.Count; i++)
                 {
-                    GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.InvolvedUser[i], options);
+                    GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.IsPartOfOrganizations[i], options);
+                }
+            }
+            if (dto.IsPartOfProjects == null)
+            {
+                writer.WriteNil();
+            }
+            else
+            {
+                writer.WriteArrayHeader(dto.IsPartOfProjects.Count);
+
+                for (var i = 0; i < dto.IsPartOfProjects.Count; i++)
+                {
+                    GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.IsPartOfProjects[i], options);
                 }
             }
             WriteRequiredString(ref writer, dto.Name, "Name");
-            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Policy, options);
-            if (dto.Projects == null)
+            ActivationStatusMessagePackFormatter.Instance.Serialize(ref writer, dto.Status, options);
+            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
+            WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
+            if (dto.UserPreferences == null)
             {
                 writer.WriteNil();
             }
             else
             {
-                writer.WriteArrayHeader(dto.Projects.Count);
-
-                for (var i = 0; i < dto.Projects.Count; i++)
-                {
-                    GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.Projects[i], options);
-                }
+                StringDictionaryMessagePackFormatter.Instance.Serialize(ref writer, dto.UserPreferences, options);
             }
-            ActivationStatusMessagePackFormatter.Instance.Serialize(ref writer, dto.Status, options);
-            GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
-            WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
         }
 
         /// <summary>
-        /// Deserializes an exact <see cref="Organization" /> DTO.
+        /// Deserializes an exact <see cref="User" /> DTO.
         /// </summary>
         /// <param name="reader">
         /// The MessagePack reader from which the DTO is deserialized.
@@ -109,11 +117,11 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Thrown when the encoded DTO is <c>nil</c>, has an incorrect field count or contains
         /// a value that is invalid for its approved MessagePack representation.
         /// </exception>
-        public Organization Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public User Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
-                throw new MessagePackSerializationException("Organization may not be nil.");
+                throw new MessagePackSerializationException("User may not be nil.");
             }
 
             options.Security.DepthStep(ref reader);
@@ -122,60 +130,68 @@ namespace Mycelium.SDK.Serializer.MessagePack
             {
                 var fieldCount = reader.ReadArrayHeader();
 
-                if (fieldCount != 11)
+                if (fieldCount != 12)
                 {
-                    throw new MessagePackSerializationException($"Organization contains {fieldCount} fields; exactly 11 fields are required.");
+                    throw new MessagePackSerializationException($"User contains {fieldCount} fields; exactly 12 fields are required.");
                 }
 
-                var dto = new Organization();
+                var dto = new User();
 
                 dto.Id = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CreatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.CreatedOn = ReadRoundTripDateTime(ref reader, "CreatedOn");
-                dto.Description = ReadRequiredString(ref reader, "Description");
+                dto.Email = ReadRequiredString(ref reader, "Email");
+                dto.ExternalIdentifier = ReadRequiredString(ref reader, "ExternalIdentifier");
                 if (reader.TryReadNil())
                 {
-                    dto.InvolvedUser = null;
+                    dto.IsPartOfOrganizations = null;
                 }
                 else
                 {
-                    var messagePackInvolvedUserCount = reader.ReadArrayHeader();
-                    dto.InvolvedUser.Clear();
+                    var messagePackIsPartOfOrganizationsCount = reader.ReadArrayHeader();
+                    dto.IsPartOfOrganizations.Clear();
 
-                    if (dto.InvolvedUser.Capacity < messagePackInvolvedUserCount)
+                    if (dto.IsPartOfOrganizations.Capacity < messagePackIsPartOfOrganizationsCount)
                     {
-                        dto.InvolvedUser.Capacity = messagePackInvolvedUserCount;
+                        dto.IsPartOfOrganizations.Capacity = messagePackIsPartOfOrganizationsCount;
                     }
 
-                    for (var i = 0; i < messagePackInvolvedUserCount; i++)
+                    for (var i = 0; i < messagePackIsPartOfOrganizationsCount; i++)
                     {
-                        dto.InvolvedUser.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
+                        dto.IsPartOfOrganizations.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
+                    }
+                }
+                if (reader.TryReadNil())
+                {
+                    dto.IsPartOfProjects = null;
+                }
+                else
+                {
+                    var messagePackIsPartOfProjectsCount = reader.ReadArrayHeader();
+                    dto.IsPartOfProjects.Clear();
+
+                    if (dto.IsPartOfProjects.Capacity < messagePackIsPartOfProjectsCount)
+                    {
+                        dto.IsPartOfProjects.Capacity = messagePackIsPartOfProjectsCount;
+                    }
+
+                    for (var i = 0; i < messagePackIsPartOfProjectsCount; i++)
+                    {
+                        dto.IsPartOfProjects.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
                     }
                 }
                 dto.Name = ReadRequiredString(ref reader, "Name");
-                dto.Policy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
-                if (reader.TryReadNil())
-                {
-                    dto.Projects = null;
-                }
-                else
-                {
-                    var messagePackProjectsCount = reader.ReadArrayHeader();
-                    dto.Projects.Clear();
-
-                    if (dto.Projects.Capacity < messagePackProjectsCount)
-                    {
-                        dto.Projects.Capacity = messagePackProjectsCount;
-                    }
-
-                    for (var i = 0; i < messagePackProjectsCount; i++)
-                    {
-                        dto.Projects.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
-                    }
-                }
                 dto.Status = ActivationStatusMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
+                if (reader.TryReadNil())
+                {
+                    dto.UserPreferences = null;
+                }
+                else
+                {
+                    dto.UserPreferences = StringDictionaryMessagePackFormatter.Instance.Deserialize(ref reader, options);
+                }
 
                 return dto;
             }

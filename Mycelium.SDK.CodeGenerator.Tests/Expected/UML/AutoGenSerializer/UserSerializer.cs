@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="OrganizationSerializer.cs" company="Starion Group S.A.">
+//  <copyright file="UserSerializer.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -20,13 +20,13 @@ namespace Mycelium.SDK.Serializer.Json
     using Mycelium.SDK.DTO;
 
     /// <summary>
-    /// Serializes an exact <see cref="Organization" /> DTO.
+    /// Serializes an exact <see cref="User" /> DTO.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    internal static class OrganizationSerializer
+    internal static class UserSerializer
     {
         /// <summary>
-        /// Serializes an exact <see cref="Organization" /> instance.
+        /// Serializes an exact <see cref="User" /> instance.
         /// </summary>
         /// <param name="obj">
         /// The exact concrete DTO to serialize.
@@ -40,7 +40,7 @@ namespace Mycelium.SDK.Serializer.Json
         /// </exception>
         /// <exception cref="NotSupportedException">
         /// Thrown when <paramref name="obj" /> is not an exact
-        /// <see cref="Organization" /> instance.
+        /// <see cref="User" /> instance.
         /// </exception>
         internal static void Serialize(object obj, Utf8JsonWriter writer)
         {
@@ -54,25 +54,35 @@ namespace Mycelium.SDK.Serializer.Json
                 throw new ArgumentNullException(nameof(writer));
             }
 
-            if (obj.GetType() != typeof(Organization))
+            if (obj.GetType() != typeof(User))
             {
-                throw new NotSupportedException($"Runtime DTO type '{obj.GetType().FullName}' is not supported by OrganizationSerializer.");
+                throw new NotSupportedException($"Runtime DTO type '{obj.GetType().FullName}' is not supported by UserSerializer.");
             }
 
-            var dto = (Organization)obj;
+            var dto = (User)obj;
 
             writer.WriteStartObject();
-            writer.WriteString("@type"u8, "Organization"u8);
+            writer.WriteString("@type"u8, "User"u8);
             writer.WriteString("@id"u8, dto.Id);
             writer.WritePropertyName("createdBy"u8);
             writer.WriteStringValue(dto.CreatedBy);
             writer.WritePropertyName("createdOn"u8);
             writer.WriteStringValue(dto.CreatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
-            writer.WritePropertyName("description"u8);
-            writer.WriteStringValue(dto.Description);
-            writer.WriteStartArray("involvedUser"u8);
+            writer.WritePropertyName("email"u8);
+            writer.WriteStringValue(dto.Email);
+            writer.WritePropertyName("externalIdentifier"u8);
+            writer.WriteStringValue(dto.ExternalIdentifier);
+            writer.WriteStartArray("isPartOfOrganizations"u8);
 
-            foreach (var item in dto.InvolvedUser)
+            foreach (var item in dto.IsPartOfOrganizations)
+            {
+                writer.WriteStringValue(item);
+            }
+
+            writer.WriteEndArray();
+            writer.WriteStartArray("isPartOfProjects"u8);
+
+            foreach (var item in dto.IsPartOfProjects)
             {
                 writer.WriteStringValue(item);
             }
@@ -80,22 +90,20 @@ namespace Mycelium.SDK.Serializer.Json
             writer.WriteEndArray();
             writer.WritePropertyName("name"u8);
             writer.WriteStringValue(dto.Name);
-            writer.WritePropertyName("policy"u8);
-            writer.WriteStringValue(dto.Policy);
-            writer.WriteStartArray("projects"u8);
-
-            foreach (var item in dto.Projects)
-            {
-                writer.WriteStringValue(item);
-            }
-
-            writer.WriteEndArray();
             writer.WritePropertyName("status"u8);
             writer.WriteStringValue(Mycelium.SDK.Extensions.ActivationStatusProvider.Format(dto.Status).ToUpperInvariant());
             writer.WritePropertyName("updatedBy"u8);
             writer.WriteStringValue(dto.UpdatedBy);
             writer.WritePropertyName("updatedOn"u8);
             writer.WriteStringValue(dto.UpdatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WriteStartObject("userPreferences"u8);
+
+            foreach (var entry in dto.UserPreferences)
+            {
+                writer.WriteString(entry.Key, entry.Value);
+            }
+
+            writer.WriteEndObject();
             writer.WriteEndObject();
         }
     }

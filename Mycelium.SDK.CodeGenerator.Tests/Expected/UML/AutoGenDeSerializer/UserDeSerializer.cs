@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="CommentDeSerializer.cs" company="Starion Group S.A.">
+//  <copyright file="UserDeSerializer.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -24,13 +24,13 @@ namespace Mycelium.SDK.Serializer.Json
     using Mycelium.SDK.Serializer.Json.Utility;
 
     /// <summary>
-    /// Deserializes an exact <see cref="Comment" /> DTO.
+    /// Deserializes an exact <see cref="User" /> DTO.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    internal static class CommentDeSerializer
+    internal static class UserDeSerializer
     {
         /// <summary>
-        /// Deserializes an exact <see cref="Comment" /> instance.
+        /// Deserializes an exact <see cref="User" /> instance.
         /// </summary>
         /// <param name="reader">
         /// The JSON reader positioned on the object-start token.
@@ -46,7 +46,7 @@ namespace Mycelium.SDK.Serializer.Json
         /// </exception>
         /// <exception cref="NotSupportedException">
         /// Thrown when the exact <c>@type</c> discriminator does not identify
-        /// <see cref="Comment" />.
+        /// <see cref="User" />.
         /// </exception>
         internal static IThing DeSerialize(ref Utf8JsonReader reader, ILoggerFactory loggerFactory = null)
         {
@@ -54,22 +54,24 @@ namespace Mycelium.SDK.Serializer.Json
 
             var logger = loggerFactory == null
                 ? NullLogger.Instance
-                : loggerFactory.CreateLogger("CommentDeSerializer");
+                : loggerFactory.CreateLogger("UserDeSerializer");
 
-            var dto = new Comment();
+            var dto = new User();
             var hasType = false;
             var hasId = false;
             var hasEndObject = false;
 
-            var hasContent = false;
             var hasCreatedBy = false;
             var hasCreatedOn = false;
-            var hasQuotes = false;
-            var hasReplies = false;
+            var hasEmail = false;
+            var hasExternalIdentifier = false;
+            var hasIsPartOfOrganizations = false;
+            var hasIsPartOfProjects = false;
+            var hasName = false;
             var hasStatus = false;
-            var hasTargetElementId = false;
             var hasUpdatedBy = false;
             var hasUpdatedOn = false;
+            var hasUserPreferences = false;
 
             while (reader.Read())
             {
@@ -92,9 +94,9 @@ namespace Mycelium.SDK.Serializer.Json
 
                     var typeName = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
 
-                    if (!string.Equals(typeName, "Comment", StringComparison.Ordinal))
+                    if (!string.Equals(typeName, "User", StringComparison.Ordinal))
                     {
-                        throw new NotSupportedException($"JSON discriminator '{typeName}' is not supported by CommentDeSerializer.");
+                        throw new NotSupportedException($"JSON discriminator '{typeName}' is not supported by UserDeSerializer.");
                     }
 
                     hasType = true;
@@ -115,15 +117,6 @@ namespace Mycelium.SDK.Serializer.Json
                     continue;
                 }
 
-                if (reader.ValueTextEquals("content"u8))
-                {
-                    Utf8JsonReaderHelper.ReadNext(ref reader);
-
-                    dto.Content = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
-
-                    hasContent = true;
-                    continue;
-                }
                 if (reader.ValueTextEquals("createdBy"u8))
                 {
                     Utf8JsonReaderHelper.ReadNext(ref reader);
@@ -142,22 +135,31 @@ namespace Mycelium.SDK.Serializer.Json
                     hasCreatedOn = true;
                     continue;
                 }
-                if (reader.ValueTextEquals("quotes"u8))
+                if (reader.ValueTextEquals("email"u8))
                 {
                     Utf8JsonReaderHelper.ReadNext(ref reader);
 
-                    dto.Quotes = Utf8JsonReaderHelper.ReadGuidOrNull(ref reader);
+                    dto.Email = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
 
-                    hasQuotes = true;
+                    hasEmail = true;
                     continue;
                 }
-                if (reader.ValueTextEquals("replies"u8))
+                if (reader.ValueTextEquals("externalIdentifier"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.ExternalIdentifier = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
+
+                    hasExternalIdentifier = true;
+                    continue;
+                }
+                if (reader.ValueTextEquals("isPartOfOrganizations"u8))
                 {
                     Utf8JsonReaderHelper.ReadNext(ref reader);
 
                     Utf8JsonReaderHelper.Expect(ref reader, JsonTokenType.StartArray);
 
-                    dto.Replies.Clear();
+                    dto.IsPartOfOrganizations.Clear();
 
                     var hasEndArray = false;
 
@@ -169,33 +171,62 @@ namespace Mycelium.SDK.Serializer.Json
                             break;
                         }
 
-                        dto.Replies.Add(Utf8JsonReaderHelper.ReadGuid(ref reader));
+                        dto.IsPartOfOrganizations.Add(Utf8JsonReaderHelper.ReadGuid(ref reader));
                     }
 
                     if (!hasEndArray)
                     {
-                        throw new JsonException("The replies array is incomplete.");
+                        throw new JsonException("The isPartOfOrganizations array is incomplete.");
                     }
 
-                    hasReplies = true;
+                    hasIsPartOfOrganizations = true;
+                    continue;
+                }
+                if (reader.ValueTextEquals("isPartOfProjects"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    Utf8JsonReaderHelper.Expect(ref reader, JsonTokenType.StartArray);
+
+                    dto.IsPartOfProjects.Clear();
+
+                    var hasEndArray = false;
+
+                    while (reader.Read())
+                    {
+                        if (reader.TokenType == JsonTokenType.EndArray)
+                        {
+                            hasEndArray = true;
+                            break;
+                        }
+
+                        dto.IsPartOfProjects.Add(Utf8JsonReaderHelper.ReadGuid(ref reader));
+                    }
+
+                    if (!hasEndArray)
+                    {
+                        throw new JsonException("The isPartOfProjects array is incomplete.");
+                    }
+
+                    hasIsPartOfProjects = true;
+                    continue;
+                }
+                if (reader.ValueTextEquals("name"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.Name = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
+
+                    hasName = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("status"u8))
                 {
                     Utf8JsonReaderHelper.ReadNext(ref reader);
 
-                    dto.Status = CommentStatusDeSerializer.DeSerialize(ref reader);
+                    dto.Status = ActivationStatusDeSerializer.DeSerialize(ref reader);
 
                     hasStatus = true;
-                    continue;
-                }
-                if (reader.ValueTextEquals("targetElementId"u8))
-                {
-                    Utf8JsonReaderHelper.ReadNext(ref reader);
-
-                    dto.TargetElementId = Utf8JsonReaderHelper.ReadGuid(ref reader);
-
-                    hasTargetElementId = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("updatedBy"u8))
@@ -214,6 +245,15 @@ namespace Mycelium.SDK.Serializer.Json
                     dto.UpdatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
 
                     hasUpdatedOn = true;
+                    continue;
+                }
+                if (reader.ValueTextEquals("userPreferences"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.UserPreferences = Utf8JsonReaderHelper.ReadStringDictionary(ref reader);
+
+                    hasUserPreferences = true;
                     continue;
                 }
 
@@ -236,20 +276,12 @@ namespace Mycelium.SDK.Serializer.Json
                 throw new JsonException("The required @id metadata property is missing.");
             }
 
-            if (!hasContent)
-            {
-                logger.LogDebug(
-                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
-                    "content",
-                    "Comment",
-                    dto.Id);
-            }
             if (!hasCreatedBy)
             {
                 logger.LogDebug(
                     "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
                     "createdBy",
-                    "Comment",
+                    "User",
                     dto.Id);
             }
             if (!hasCreatedOn)
@@ -257,23 +289,47 @@ namespace Mycelium.SDK.Serializer.Json
                 logger.LogDebug(
                     "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
                     "createdOn",
-                    "Comment",
+                    "User",
                     dto.Id);
             }
-            if (!hasQuotes)
+            if (!hasEmail)
             {
                 logger.LogDebug(
                     "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
-                    "quotes",
-                    "Comment",
+                    "email",
+                    "User",
                     dto.Id);
             }
-            if (!hasReplies)
+            if (!hasExternalIdentifier)
             {
                 logger.LogDebug(
                     "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
-                    "replies",
-                    "Comment",
+                    "externalIdentifier",
+                    "User",
+                    dto.Id);
+            }
+            if (!hasIsPartOfOrganizations)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "isPartOfOrganizations",
+                    "User",
+                    dto.Id);
+            }
+            if (!hasIsPartOfProjects)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "isPartOfProjects",
+                    "User",
+                    dto.Id);
+            }
+            if (!hasName)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "name",
+                    "User",
                     dto.Id);
             }
             if (!hasStatus)
@@ -281,15 +337,7 @@ namespace Mycelium.SDK.Serializer.Json
                 logger.LogDebug(
                     "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
                     "status",
-                    "Comment",
-                    dto.Id);
-            }
-            if (!hasTargetElementId)
-            {
-                logger.LogDebug(
-                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
-                    "targetElementId",
-                    "Comment",
+                    "User",
                     dto.Id);
             }
             if (!hasUpdatedBy)
@@ -297,7 +345,7 @@ namespace Mycelium.SDK.Serializer.Json
                 logger.LogDebug(
                     "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
                     "updatedBy",
-                    "Comment",
+                    "User",
                     dto.Id);
             }
             if (!hasUpdatedOn)
@@ -305,7 +353,15 @@ namespace Mycelium.SDK.Serializer.Json
                 logger.LogDebug(
                     "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
                     "updatedOn",
-                    "Comment",
+                    "User",
+                    dto.Id);
+            }
+            if (!hasUserPreferences)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "userPreferences",
+                    "User",
                     dto.Id);
             }
 
