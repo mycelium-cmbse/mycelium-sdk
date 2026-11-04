@@ -9,6 +9,7 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
+    using System.Text;
     using System.Text.RegularExpressions;
 
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
@@ -21,6 +22,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     [TestFixture]
     public class UmlSqlSchemaGeneratorTestFixture
     {
+        private const string SchemaResourceName = "Mycelium.SDK.Sql.schema.sql";
+
         private static readonly string[] ExpectedFileNames = ["schema.sql"];
 
         private DirectoryInfo expectedDirectory = null!;
@@ -73,6 +76,24 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                         $"Generated '{fileName}' differs from the complete reviewed SQL baseline. Review the entire SQL diff before replacing the expected file.");
                 }
             }
+        }
+
+        [Test]
+        public async Task VerifyThatSdkAssemblyEmbedsTheCompleteStagedSchema()
+        {
+            var stagedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.stagingDirectory.FullName, "schema.sql"));
+
+            await using var resourceStream = typeof(Mycelium.SDK.DTO.IThing).Assembly.GetManifestResourceStream(SchemaResourceName);
+
+            Assert.That(resourceStream, Is.Not.Null,
+                $"Mycelium.SDK must embed the reviewed expected schema as '{SchemaResourceName}'. Check the EmbeddedResource item in Mycelium.SDK/Mycelium.SDK.csproj.");
+
+            using var resourceReader = new StreamReader(resourceStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true), false);
+
+            var embeddedSource = await resourceReader.ReadToEndAsync();
+
+            Assert.That(embeddedSource, Is.EqualTo(stagedSource).Using(StringComparer.Ordinal),
+                "The schema embedded in Mycelium.SDK differs from the staged generation; review the SQL diff before replacing the expected file.");
         }
 
         [Test]

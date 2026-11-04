@@ -28,6 +28,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <EmbeddedResource Include="..\Mycelium.SDK.CodeGenerator.Tests\Expected\UML\AutoGenSql\schema.sql"
+                          LogicalName="Mycelium.SDK.Sql.schema.sql"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <Folder Include="AutoGenPOCO\"/>
     </ItemGroup>
 
