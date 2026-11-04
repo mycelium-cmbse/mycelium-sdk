@@ -9,6 +9,7 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
+    using System.Globalization;
     using System.Security.Cryptography;
     using System.Text;
     using System.Text.RegularExpressions;
@@ -125,7 +126,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             foreach (var umlClass in orderedClasses)
             {
                 var table = tableNames["class:" + umlClass.XmiId];
-                var reservedColumns = umlClass.XmiId == root.XmiId ? new[] { "id", "class_kind", "data" } : new[] { "id" };
+                string[] reservedColumns = umlClass.XmiId == root.XmiId ? ["id", "class_kind", "data"] : ["id"];
                 var columnNames = MapIdentifiers(references[umlClass.XmiId]
                     .Where(property => !property.QueryIsEnumerable())
                     .Select(property => (Identity: property.XmiId, Name: property.Name)), reservedColumns);
@@ -189,7 +190,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                 tables.Add(new
                 {
-                    Table = table, Root = string.Equals(umlClass.Name, "Thing", StringComparison.Ordinal),
+                    Table = table, Root = umlClass.XmiId == root.XmiId,
                     Kinds = QueryConcreteKinds(orderedClasses, umlClass), Columns = columns, Links = links,
                     Parents = umlClass.QueryGeneralizations()
                         .Select(parent => new { Table = tableNames["class:" + parent.XmiId] })
@@ -259,7 +260,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                         do
                         {
-                            name = CreateObjectName([entry.Name, entry.Identity, attempt.ToString(System.Globalization.CultureInfo.InvariantCulture)]);
+                            name = CreateObjectName([entry.Name, entry.Identity, attempt.ToString(CultureInfo.InvariantCulture)]);
                             attempt++;
                         }
                         while (!occupied.Add(name));

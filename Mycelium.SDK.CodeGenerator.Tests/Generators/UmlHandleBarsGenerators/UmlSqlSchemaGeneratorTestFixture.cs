@@ -97,9 +97,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         [Test]
-        public async Task VerifyThatNewModelNamesRemainValidUniqueAndIndependentOfInputOrder()
+        public async Task VerifyThatSyntheticModelNamesRemainValidUniqueAndIndependentOfInputOrder()
         {
-            var names = new[] { "HTTPConnection", "HttpConnection", "Select", new string('A', 80) };
+            string[] names = ["HTTPConnection", "HttpConnection", "Select", new string('A', 80)];
             var first = await this.RenderScenarioAsync(package =>
             {
                 foreach (var name in names)
@@ -125,7 +125,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 Assert.That(first, Is.EqualTo(reversed).Using(StringComparer.Ordinal), "Package element order must not change SQL names or output.");
                 Assert.That(tableNames, Is.Unique, "Distinct modeled tables must not collide after snake_case conversion.");
                 Assert.That(tableNames.All(name => name.Length <= 63), Is.True, "Generated ASCII identifiers must fit PostgreSQL's identifier limit.");
-                Assert.That(tableNames.Count(name => name.StartsWith("http_connection_", StringComparison.Ordinal)), Is.EqualTo(2));
+                Assert.That(tableNames.Count(name => name.StartsWith("http_connection_", StringComparison.Ordinal)), Is.EqualTo(2),
+                    "Both names that convert to 'http_connection' must keep that readable prefix with distinct suffixes.");
                 Assert.That(tableNames, Does.Contain("model_select"), "A reserved SQL keyword must receive a valid unquoted mapping.");
                 Assert.That(tableNames.Any(name => name.StartsWith(new string('a', 40), StringComparison.Ordinal)), Is.True,
                     "An overlong modeled name must retain a readable, shortened table name.");
@@ -166,7 +167,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         [Test]
-        public async Task VerifyThatNewMultipleInheritanceUsesBothDirectParentsAndConcreteTypeMembership()
+        public async Task VerifyThatSyntheticMultipleInheritanceUsesBothDirectParentsAndConcreteTypeMembership()
         {
             var sql = await this.RenderScenarioAsync(package =>
             {
