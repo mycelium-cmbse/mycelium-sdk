@@ -26,12 +26,27 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     /// <summary>
     /// Provides model-derived SQL names and relational rendering data for the Fabric schema template.
     /// </summary>
-    public static class SqlSchemaHelper
+    public static partial class SqlSchemaHelper
     {
         /// <summary>
         /// The PostgreSQL identifier limit in bytes; generated identifiers contain only ASCII characters.
         /// </summary>
         private const int MaximumIdentifierBytes = 63;
+
+        /// <summary>
+        /// The prefix that keys a class table by the XMI identifier of its class.
+        /// </summary>
+        private const string ClassIdentityPrefix = "class:";
+
+        /// <summary>
+        /// The prefix that keys a link table by the XMI identifier of the property it stores.
+        /// </summary>
+        private const string LinkIdentityPrefix = "link:";
+
+        /// <summary>
+        /// The time allowed to replace unsupported identifier characters in one modeled name.
+        /// </summary>
+        private const int IdentifierRegexTimeoutMilliseconds = 1000;
 
         /// <summary>
         /// The digest length used to distinguish shortened or ambiguous identifiers.
@@ -108,24 +123,24 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             var references = orderedClasses.ToDictionary(umlClass => umlClass.XmiId, umlClass => umlClass.QuerySqlReferenceProperties(), StringComparer.Ordinal);
             var root = orderedClasses.Single(umlClass => string.Equals(umlClass.Name, "Thing", StringComparison.Ordinal));
             var tableCandidates = orderedClasses.Where(umlClass => umlClass.XmiId != root.XmiId)
-                .Select(umlClass => (Identity: "class:" + umlClass.XmiId, Name: umlClass.Name))
+                .Select(umlClass => (Identity: ClassIdentityPrefix + umlClass.XmiId, Name: umlClass.Name))
                 .ToList();
 
             foreach (var umlClass in orderedClasses)
             {
                 tableCandidates.AddRange(references[umlClass.XmiId]
                     .Where(property => property.QuerySqlRequiresLinkTable())
-                    .Select(property => (Identity: "link:" + property.XmiId, Name: $"{umlClass.Name}_{property.Name}_{property.Type.Name}")));
+                    .Select(property => (Identity: LinkIdentityPrefix + property.XmiId, Name: $"{umlClass.Name}_{property.Name}_{property.Type.Name}")));
             }
 
             var tableNames = MapIdentifiers(tableCandidates, ["thing"]);
-            tableNames.Add("class:" + root.XmiId, "thing");
+            tableNames.Add(ClassIdentityPrefix + root.XmiId, "thing");
             var tables = new List<object>();
             var ownerships = new List<object>();
 
             foreach (var umlClass in orderedClasses)
             {
-                var table = tableNames["class:" + umlClass.XmiId];
+                var table = tableNames[ClassIdentityPrefix + umlClass.XmiId];
                 string[] reservedColumns = umlClass.XmiId == root.XmiId ? ["id", "class_kind", "data"] : ["id"];
                 var columnNames = MapIdentifiers(references[umlClass.XmiId]
                     .Where(property => !property.QueryIsEnumerable())
@@ -144,8 +159,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     }
 
                     var target = (IClass)property.Type;
-                    var targetTable = tableNames["class:" + target.XmiId];
-                    var storageTable = isLink ? tableNames["link:" + property.XmiId] : table;
+                    var targetTable = tableNames[ClassIdentityPrefix + target.XmiId];
+                    var storageTable = isLink ? tableNames[LinkIdentityPrefix + property.XmiId] : table;
                     var source = MapIdentifier("source_" + umlClass.Name);
                     var targetColumn = MapIdentifier("target_" + target.Name);
                     var column = isLink ? targetColumn : columnNames[property.XmiId];
@@ -175,8 +190,12 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     }
 
                     var partType = ownerEnd ? umlClass : target;
-                    var owner = isLink ? source : ownerEnd ? column : "id";
-                    var part = isLink ? targetColumn : ownerEnd ? "id" : column;
+                    var (owner, part) = (isLink, ownerEnd) switch
+                    {
+                        (true, _) => (source, targetColumn),
+                        (false, true) => (column, "id"),
+                        (false, false) => ("id", column)
+                    };
 
                     ownerships.Add(new
                     {
@@ -193,7 +212,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     Table = table, Root = umlClass.XmiId == root.XmiId,
                     Kinds = QueryConcreteKinds(orderedClasses, umlClass), Columns = columns, Links = links,
                     Parents = umlClass.QueryGeneralizations()
-                        .Select(parent => new { Table = tableNames["class:" + parent.XmiId] })
+                        .Select(parent => new { Table = tableNames[ClassIdentityPrefix + parent.XmiId] })
                         .ToArray()
                 });
             }
@@ -285,7 +304,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         private static string MapIdentifier(string name)
         {
             var snake = name.Underscore();
-            var safe = Regex.Replace(snake, "[^a-z0-9_]", "_");
+            var safe = UnsupportedIdentifierCharacters().Replace(snake, "_");
             var replacedCharacters = !string.Equals(snake, safe, StringComparison.Ordinal);
 
             if (safe.Length == 0 || char.IsDigit(safe[0]) || ReservedIdentifiers.Contains(safe))
@@ -312,7 +331,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             var identity = string.Join("\0", components);
             var suffix = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)))[..IdentifierHashLength].ToLowerInvariant();
             var prefix = string.Join("_", components).Underscore();
-            prefix = Regex.Replace(prefix, "[^a-z0-9_]", "_");
+            prefix = UnsupportedIdentifierCharacters().Replace(prefix, "_");
 
             if (prefix.Length == 0 || char.IsDigit(prefix[0]))
             {
@@ -334,5 +353,14 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// A SQL string literal with embedded apostrophes doubled.
         /// </returns>
         private static string SqlLiteral(string value) => "'" + value.Replace("'", "''", StringComparison.Ordinal) + "'";
+
+        /// <summary>
+        /// Matches every character that cannot appear in an unquoted lowercase PostgreSQL identifier.
+        /// </summary>
+        /// <returns>
+        /// A compile-time generated expression with a bounded match time.
+        /// </returns>
+        [GeneratedRegex("[^a-z0-9_]", RegexOptions.None, IdentifierRegexTimeoutMilliseconds)]
+        private static partial Regex UnsupportedIdentifierCharacters();
     }
 }

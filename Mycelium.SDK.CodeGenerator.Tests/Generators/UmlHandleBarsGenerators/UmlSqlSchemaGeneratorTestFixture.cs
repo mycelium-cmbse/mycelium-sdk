@@ -20,11 +20,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     using uml4net.Values;
 
     [TestFixture]
-    public class UmlSqlSchemaGeneratorTestFixture
+    public partial class UmlSqlSchemaGeneratorTestFixture
     {
         private const string SchemaResourceName = "Mycelium.SDK.Sql.schema.sql";
 
         private static readonly string[] ExpectedFileNames = ["schema.sql"];
+
+        private static readonly string[] ExpectedDirectParentTables = ["storage_parent_a", "storage_parent_b"];
 
         private DirectoryInfo expectedDirectory = null!;
 
@@ -100,7 +102,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         public async Task VerifyThatSyntheticModelNamesRemainValidUniqueAndIndependentOfInputOrder()
         {
             string[] names = ["HTTPConnection", "HttpConnection", "Select", new string('A', 80)];
-            var first = await this.RenderScenarioAsync(package =>
+            var first = await RenderScenarioAsync(package =>
             {
                 foreach (var name in names)
                 {
@@ -108,7 +110,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 }
             });
 
-            var reversed = await this.RenderScenarioAsync(package =>
+            var reversed = await RenderScenarioAsync(package =>
             {
                 foreach (var name in names.Reverse())
                 {
@@ -116,7 +118,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 }
             });
 
-            var tableNames = Regex.Matches(first, @"(?m)^CREATE TABLE fabric\.([a-z_][a-z0-9_]*) \(")
+            var tableNames = TableDeclaration().Matches(first)
                 .Select(match => match.Groups[1].Value)
                 .ToArray();
 
@@ -136,7 +138,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         [Test]
         public async Task VerifyThatMultipleOwnerRolesOnOnePartClassHaveDistinctTriggersAndMandatoryOwnerChecks()
         {
-            var sql = await this.RenderScenarioAsync(package =>
+            var sql = await RenderScenarioAsync(package =>
             {
                 var owner = AddModelClass(package, "StorageOwner");
                 var part = AddModelClass(package, "StoragePart");
@@ -145,13 +147,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 AddOwnerReference(owner, part, "secondaryOwner");
             });
 
-            var guards = Regex.Matches(sql,
-                @"CREATE TRIGGER ([a-z_][a-z0-9_]*)\s+AFTER INSERT OR UPDATE OR DELETE ON fabric\.storage_part\s+" +
-                @"FOR EACH ROW EXECUTE FUNCTION fabric\.track_ownership\('id', '(primary_owner|secondary_owner)'\);");
+            var guards = OwnershipTrackingTrigger().Matches(sql);
 
-            var checks = Regex.Matches(sql,
-                @"CREATE CONSTRAINT TRIGGER ([a-z_][a-z0-9_]*)\s+AFTER INSERT OR UPDATE OR DELETE ON fabric\.storage_part\s+" +
-                @"DEFERRABLE INITIALLY DEFERRED\s+FOR EACH ROW EXECUTE FUNCTION fabric\.validate_ownership\('id', '(primary_owner|secondary_owner)'\);");
+            var checks = OwnershipCheckTrigger().Matches(sql);
 
             using (Assert.EnterMultipleScope())
             {
@@ -169,7 +167,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         [Test]
         public async Task VerifyThatSyntheticMultipleInheritanceUsesBothDirectParentsAndConcreteTypeMembership()
         {
-            var sql = await this.RenderScenarioAsync(package =>
+            var sql = await RenderScenarioAsync(package =>
             {
                 var firstParent = AddModelClass(package, "StorageParentA");
                 var secondParent = AddModelClass(package, "StorageParentB");
@@ -180,14 +178,13 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 AddModelClass(package, "StorageChild", firstParent, secondParent);
             });
 
-            var parentTargets = Regex.Matches(sql,
-                    @"ALTER TABLE fabric\.storage_child\s+ADD CONSTRAINT [a-z_][a-z0-9_]* FOREIGN KEY \(id\) REFERENCES fabric\.([a-z_][a-z0-9_]*) \(id\)")
+            var parentTargets = ChildParentForeignKey().Matches(sql)
                 .Select(match => match.Groups[1].Value)
                 .ToArray();
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(parentTargets, Is.EquivalentTo(new[] { "storage_parent_a", "storage_parent_b" }),
+                Assert.That(parentTargets, Is.EquivalentTo(ExpectedDirectParentTables),
                     "The child must reference both direct parents instead of only the common root.");
 
                 foreach (var table in new[] { "storage_parent_a", "storage_parent_b", "storage_child" })
@@ -202,7 +199,21 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             }
         }
 
-        private async Task<string> RenderScenarioAsync(Action<IPackage> configure)
+        [GeneratedRegex(@"(?m)^CREATE TABLE fabric\.([a-z_][a-z0-9_]*) \(")]
+        private static partial Regex TableDeclaration();
+
+        [GeneratedRegex(@"CREATE TRIGGER ([a-z_][a-z0-9_]*)\s+AFTER INSERT OR UPDATE OR DELETE ON fabric\.storage_part\s+" +
+            @"FOR EACH ROW EXECUTE FUNCTION fabric\.track_ownership\('id', '(primary_owner|secondary_owner)'\);")]
+        private static partial Regex OwnershipTrackingTrigger();
+
+        [GeneratedRegex(@"CREATE CONSTRAINT TRIGGER ([a-z_][a-z0-9_]*)\s+AFTER INSERT OR UPDATE OR DELETE ON fabric\.storage_part\s+" +
+            @"DEFERRABLE INITIALLY DEFERRED\s+FOR EACH ROW EXECUTE FUNCTION fabric\.validate_ownership\('id', '(primary_owner|secondary_owner)'\);")]
+        private static partial Regex OwnershipCheckTrigger();
+
+        [GeneratedRegex(@"ALTER TABLE fabric\.storage_child\s+ADD CONSTRAINT [a-z_][a-z0-9_]* FOREIGN KEY \(id\) REFERENCES fabric\.([a-z_][a-z0-9_]*) \(id\)")]
+        private static partial Regex ChildParentForeignKey();
+
+        private static async Task<string> RenderScenarioAsync(Action<IPackage> configure)
         {
             var result = GeneratorSetupFixture.ReadFunctionalData();
 
@@ -216,7 +227,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             return await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(scenarioDirectory.FullName, "schema.sql"));
         }
 
-        private static IClass AddModelClass(IPackage package, string name, params IClass[] parents)
+        private static Class AddModelClass(IPackage package, string name, params IClass[] parents)
         {
             var umlClass = new Class { XmiId = "sql-regression-" + name, Name = name };
 
