@@ -11,7 +11,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 {
     using System.Reflection;
 
-    using Mycelium.SDK.CodeGenerator.Extensions;
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
 
     using uml4net.StructuredClassifiers;
@@ -105,11 +104,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             var context = new
             {
                 Classes = classes,
-                BaseClasses = classes.SelectMany(umlClass => umlClass.QueryGeneralizations())
-                    .DistinctBy(umlClass => umlClass.XmiId, StringComparer.Ordinal)
-                    .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal)
-                    .ThenBy(umlClass => umlClass.XmiId, StringComparer.Ordinal)
-                    .ToArray(),
                 FabricModelVersion = QueryModelPackageVersion("Mycelium.Model.Fabric"),
                 CommonPrimitivesModelVersion = QueryModelPackageVersion("Mycelium.Model.CommonPrimitives")
             };

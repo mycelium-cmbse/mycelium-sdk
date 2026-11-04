@@ -11,35 +11,51 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
     using System.Security.Cryptography;
     using System.Text;
+    using System.Text.RegularExpressions;
 
     using HandlebarsDotNet;
 
+    using Humanizer;
+
     using Mycelium.SDK.CodeGenerator.Extensions;
 
-    using uml4net.Classification;
     using uml4net.Extensions;
     using uml4net.StructuredClassifiers;
 
     /// <summary>
-    /// Provides SQL naming and representation helpers for the Fabric PostgreSQL schema template.
+    /// Provides model-derived SQL names and relational rendering data for the Fabric schema template.
     /// </summary>
     public static class SqlSchemaHelper
     {
         /// <summary>
-        /// The PostgreSQL identifier limit in UTF-8 bytes.
+        /// The PostgreSQL identifier limit in bytes; generated identifiers contain only ASCII characters.
         /// </summary>
         private const int MaximumIdentifierBytes = 63;
 
         /// <summary>
-        /// The number of hexadecimal digest characters retained in generated object names.
+        /// The digest length used to distinguish shortened or ambiguous identifiers.
         /// </summary>
         private const int IdentifierHashLength = 16;
 
         /// <summary>
-        /// Registers the helpers used to render class tables, named constraints and ownership and inheritance deletion objects.
+        /// PostgreSQL 18 reserved identifiers, including keywords reserved for particular SQL contexts.
+        /// Source: https://www.postgresql.org/docs/18/sql-keywords-appendix.html.
+        /// </summary>
+        private static readonly HashSet<string> ReservedIdentifiers = (
+            "all analyse analyze and any array as asc asymmetric authorization binary both case cast check collate collation column concurrently " +
+            "constraint create cross current_catalog current_date current_role current_schema current_time current_timestamp current_user default " +
+            "deferrable desc distinct do else end except false fetch for foreign freeze from full grant group having ilike in initially inner " +
+            "intersect into is isnull join lateral leading left like limit localtime localtimestamp natural not notnull null offset on only or " +
+            "order outer overlaps placing primary references returning right select session_user similar some symmetric system_user table " +
+            "tablesample then to trailing true union unique user using variadic verbose when where window with")
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .ToHashSet(StringComparer.Ordinal);
+
+        /// <summary>
+        /// Registers only the relational-model and SQL-object-name helpers consumed by the schema template.
         /// </summary>
         /// <param name="handlebars">
-        /// The Handlebars environment in which the SQL helpers are registered.
+        /// The Handlebars environment in which the helpers are registered.
         /// </param>
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
@@ -48,212 +64,274 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper("SQL.IsThing", (_, arguments) =>
-                string.Equals(arguments.QuerySingle<IClass>("{{SQL.IsThing}}").Name, "Thing", StringComparison.Ordinal));
-
-            handlebars.RegisterHelper("SQL.References", (_, arguments) =>
-                arguments.QuerySingle<IClass>("{{SQL.References}}").QuerySqlReferenceProperties());
-
-            handlebars.RegisterHelper("SQL.Compositions", (_, arguments) =>
-                arguments.QuerySingle<IClass>("{{SQL.Compositions}}").QuerySqlReferenceProperties()
-                    .Where(property => property.QuerySqlRequiresCompositionTrigger()).ToArray());
-
-            handlebars.RegisterHelper("SQL.Parents", (_, arguments) =>
-                arguments.QuerySingle<IClass>("{{SQL.Parents}}").QueryGeneralizations());
-
-            handlebars.RegisterHelper("SQL.IsCollection", (_, arguments) =>
-                arguments.QuerySingle<IProperty>("{{SQL.IsCollection}}").QueryIsEnumerable());
-
-            handlebars.RegisterHelper("SQL.RequiresLinkTable", (_, arguments) =>
-                arguments.QuerySingle<IProperty>("{{SQL.RequiresLinkTable}}").QuerySqlRequiresLinkTable());
-
-            handlebars.RegisterHelper("SQL.Cascades", (_, arguments) =>
-                arguments.QuerySingle<IProperty>("{{SQL.Cascades}}").QueryIsOwnerEnd());
-
-            handlebars.RegisterHelper("SQL.IsRequired", (_, arguments) =>
-                !arguments.QuerySingle<IProperty>("{{SQL.IsRequired}}").QueryIsNullable());
-
-            handlebars.RegisterHelper("SQL.HasPosition", (_, arguments) =>
-            {
-                var property = arguments.QuerySingle<IProperty>("{{SQL.HasPosition}}");
-
-                return property.IsOrdered || !property.IsUnique;
-            });
-
-            handlebars.RegisterHelper("SQL.Table", (writer, _, arguments) =>
-            {
-                var umlClass = arguments.QuerySingle<IClass>("{{SQL.Table}}");
-
-                writer.WriteSafeString(Qualify(umlClass.Name));
-            });
-
-            handlebars.RegisterHelper("SQL.Column", (writer, _, arguments) =>
-            {
-                var property = arguments.QuerySingle<IProperty>("{{SQL.Column}}");
-
-                writer.WriteSafeString(Quote(property.Name.LowerCaseFirstLetter()));
-            });
-
-            handlebars.RegisterHelper("SQL.TargetTable", (writer, _, arguments) =>
-            {
-                var property = arguments.QuerySingle<IProperty>("{{SQL.TargetTable}}");
-
-                writer.WriteSafeString(Qualify(property.Type.Name));
-            });
-
-            handlebars.RegisterHelper("SQL.LinkTable", (writer, _, arguments) =>
-            {
-                var (owner, property) = QueryReferenceArguments(arguments, "{{SQL.LinkTable}}");
-
-                writer.WriteSafeString(Qualify(QueryLinkTableName(owner, property)));
-            });
-
-            handlebars.RegisterHelper("SQL.LinkName", (_, arguments) =>
-            {
-                var (owner, property) = QueryReferenceArguments(arguments, "{{SQL.LinkName}}");
-
-                return QueryLinkTableName(owner, property);
-            });
+            handlebars.RegisterHelper("SQL.Model", (_, arguments) =>
+                QueryModel(arguments.QuerySingle<IReadOnlyCollection<IClass>>("{{SQL.Model}}")));
 
             handlebars.RegisterHelper("SQL.Name", (writer, _, arguments) =>
             {
-                if (arguments.Length < 2)
+                var components = arguments.QueryStringsFrom(0, "{{SQL.Name}}");
+
+                if (components.Length < 2)
                 {
                     throw new HandlebarsException("{{SQL.Name}} requires an object kind and at least one identifying name.");
                 }
 
-                var components = new string[arguments.Length];
-
-                for (var index = 0; index < arguments.Length; index++)
-                {
-                    components[index] = arguments[index] is string component
-                        ? component
-                        : throw new HandlebarsException("{{SQL.Name}} requires string arguments.");
-                }
-
-                writer.WriteSafeString(Quote(CreateObjectName(components)));
-            });
-
-            handlebars.RegisterHelper("SQL.SourceColumn", (writer, _, arguments) =>
-            {
-                var owner = arguments.QuerySingle<IClass>("{{SQL.SourceColumn}}");
-
-                writer.WriteSafeString(Quote($"source{owner.Name}"));
-            });
-
-            handlebars.RegisterHelper("SQL.TargetColumn", (writer, _, arguments) =>
-            {
-                var property = arguments.QuerySingle<IProperty>("{{SQL.TargetColumn}}");
-
-                writer.WriteSafeString(Quote($"target{property.Type.Name}"));
-            });
-
-            handlebars.RegisterHelper("SQL.DeleteFunction", (writer, _, arguments) =>
-            {
-                var umlClass = arguments.QuerySingle<IClass>("{{SQL.DeleteFunction}}");
-
-                writer.WriteSafeString(Qualify($"{umlClass.Name.ToLowerInvariant()}_delete"));
-            });
-
-            handlebars.RegisterHelper("SQL.DeleteTrigger", (writer, _, arguments) =>
-            {
-                var umlClass = arguments.QuerySingle<IClass>("{{SQL.DeleteTrigger}}");
-
-                writer.WriteSafeString(Quote($"trg_{umlClass.Name.ToLowerInvariant()}_delete"));
+                writer.WriteSafeString(CreateObjectName(components));
             });
         }
 
         /// <summary>
-        /// Reads a declaring class and reference property from a SQL helper invocation.
+        /// Constructs deterministic table, inheritance and ownership descriptions without rendering SQL statements.
         /// </summary>
-        /// <param name="arguments">
-        /// The helper arguments containing the owner and reference.
-        /// </param>
-        /// <param name="helperName">
-        /// The helper name included in argument diagnostics.
+        /// <param name="classes">
+        /// The canonical model classes selected by the generator.
         /// </param>
         /// <returns>
-        /// The declaring owner and its reference property.
+        /// Rendering data for all class tables and stored relationships, including required ownership roles.
         /// </returns>
-        /// <exception cref="HandlebarsException">
-        /// Thrown when the invocation does not supply exactly one class followed by one property.
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="classes" /> is <see langword="null" />.
         /// </exception>
-        private static (IClass Owner, IProperty Property) QueryReferenceArguments(Arguments arguments, string helperName)
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the canonical class selection does not contain exactly one root Thing class.
+        /// </exception>
+        private static object QueryModel(IReadOnlyCollection<IClass> classes)
         {
-            if (arguments.Length != 2 || arguments[0] is not IClass owner || arguments[1] is not IProperty property)
+            ArgumentNullException.ThrowIfNull(classes);
+
+            var orderedClasses = classes.DistinctBy(umlClass => umlClass.XmiId, StringComparer.Ordinal)
+                .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal)
+                .ThenBy(umlClass => umlClass.XmiId, StringComparer.Ordinal)
+                .ToArray();
+
+            var references = orderedClasses.ToDictionary(umlClass => umlClass.XmiId, umlClass => umlClass.QuerySqlReferenceProperties(), StringComparer.Ordinal);
+            var root = orderedClasses.Single(umlClass => string.Equals(umlClass.Name, "Thing", StringComparison.Ordinal));
+            var tableCandidates = orderedClasses.Where(umlClass => umlClass.XmiId != root.XmiId)
+                .Select(umlClass => (Identity: "class:" + umlClass.XmiId, Name: umlClass.Name))
+                .ToList();
+
+            foreach (var umlClass in orderedClasses)
             {
-                throw new HandlebarsException($"{helperName} requires an IClass and an IProperty argument.");
+                tableCandidates.AddRange(references[umlClass.XmiId]
+                    .Where(property => property.QuerySqlRequiresLinkTable())
+                    .Select(property => (Identity: "link:" + property.XmiId, Name: $"{umlClass.Name}_{property.Name}_{property.Type.Name}")));
             }
 
-            return (owner, property);
+            var tableNames = MapIdentifiers(tableCandidates, ["thing"]);
+            tableNames.Add("class:" + root.XmiId, "thing");
+            var tables = new List<object>();
+            var ownerships = new List<object>();
+
+            foreach (var umlClass in orderedClasses)
+            {
+                var table = tableNames["class:" + umlClass.XmiId];
+                var reservedColumns = umlClass.XmiId == root.XmiId ? new[] { "id", "class_kind", "data" } : new[] { "id" };
+                var columnNames = MapIdentifiers(references[umlClass.XmiId]
+                    .Where(property => !property.QueryIsEnumerable())
+                    .Select(property => (Identity: property.XmiId, Name: property.Name)), reservedColumns);
+
+                var columns = new List<object>();
+                var links = new List<object>();
+
+                foreach (var property in references[umlClass.XmiId])
+                {
+                    var isLink = property.QuerySqlRequiresLinkTable();
+
+                    if (property.QueryIsEnumerable() && !isLink)
+                    {
+                        continue;
+                    }
+
+                    var target = (IClass)property.Type;
+                    var targetTable = tableNames["class:" + target.XmiId];
+                    var storageTable = isLink ? tableNames["link:" + property.XmiId] : table;
+                    var source = MapIdentifier("source_" + umlClass.Name);
+                    var targetColumn = MapIdentifier("target_" + target.Name);
+                    var column = isLink ? targetColumn : columnNames[property.XmiId];
+                    var ownerEnd = property.QueryIsOwnerEnd();
+
+                    if (isLink)
+                    {
+                        links.Add(new
+                        {
+                            Table = storageTable, Source = source, Target = targetColumn, TargetTable = targetTable,
+                            Position = property.IsOrdered || !property.IsUnique, PairUnique = property.IsUnique,
+                            Exclusive = property.IsComposite && property.IsUnique
+                        });
+                    }
+                    else
+                    {
+                        columns.Add(new
+                        {
+                            Column = column, TargetTable = targetTable, Required = !property.QueryIsNullable(),
+                            Cascade = ownerEnd, Exclusive = property.IsComposite
+                        });
+                    }
+
+                    if (!property.IsComposite && !ownerEnd)
+                    {
+                        continue;
+                    }
+
+                    var partType = ownerEnd ? umlClass : target;
+                    var owner = isLink ? source : ownerEnd ? column : "id";
+                    var part = isLink ? targetColumn : ownerEnd ? "id" : column;
+
+                    ownerships.Add(new
+                    {
+                        Identity = property.XmiId, Table = storageTable, Owner = owner, Part = part,
+                        Required = ownerEnd ? !property.QueryIsNullable() : property.Opposite is { Lower: > 0 },
+                        PartKinds = QueryConcreteKinds(orderedClasses, partType),
+                        GuardTrigger = CreateObjectName(["guard", storageTable, owner, part, property.XmiId]),
+                        CheckTrigger = CreateObjectName(["ownership", storageTable, owner, part, property.XmiId])
+                    });
+                }
+
+                tables.Add(new
+                {
+                    Table = table, Root = string.Equals(umlClass.Name, "Thing", StringComparison.Ordinal),
+                    Kinds = QueryConcreteKinds(orderedClasses, umlClass), Columns = columns, Links = links,
+                    Parents = umlClass.QueryGeneralizations()
+                        .Select(parent => new { Table = tableNames["class:" + parent.XmiId] })
+                        .ToArray()
+                });
+            }
+
+            return new
+            {
+                Tables = tables, Ownerships = ownerships,
+                ConcreteKinds = string.Join(", ", orderedClasses.Where(umlClass => !umlClass.IsAbstract).Select(umlClass => SqlLiteral(umlClass.Name)))
+            };
         }
 
         /// <summary>
-        /// Queries the unquoted link-table name shared by table rendering and object naming.
+        /// Queries concrete model types whose class-table rows include the specified ancestor.
         /// </summary>
-        /// <param name="owner">
-        /// The class declaring the collection reference.
+        /// <param name="classes">
+        /// The deterministically ordered model classes.
         /// </param>
-        /// <param name="property">
-        /// The collection reference identifying the target class.
+        /// <param name="ancestor">
+        /// The class whose own and inherited membership is required.
         /// </param>
         /// <returns>
-        /// The modeled owner, property and target joined using the link-table naming convention.
+        /// SQL string literals for concrete descendants, including a concrete ancestor itself.
         /// </returns>
-        private static string QueryLinkTableName(IClass owner, IProperty property) =>
-            $"{owner.Name}_{property.Name.LowerCaseFirstLetter()}__{property.Type.Name}";
+        private static string QueryConcreteKinds(IEnumerable<IClass> classes, IClass ancestor)
+        {
+            return string.Join(", ", classes.Where(umlClass => !umlClass.IsAbstract &&
+                    umlClass.QueryAllGeneralClassifiers().Any(general => string.Equals(general.XmiId, ancestor.XmiId, StringComparison.Ordinal)))
+                .Select(umlClass => SqlLiteral(umlClass.Name)));
+        }
 
         /// <summary>
-        /// Creates a stable object name with a digest of its complete identity and a UTF-8-safe readable prefix.
+        /// Maps identifiers together within one SQL namespace, reserving fixed infrastructure column names.
         /// </summary>
-        /// <param name="components">
-        /// The object kind followed by its table, column and optional target or role names.
+        /// <param name="candidates">
+        /// Stable model identities paired with their requested SQL names.
+        /// </param>
+        /// <param name="reserved">
+        /// Names already occupied by fixed columns in this namespace.
         /// </param>
         /// <returns>
-        /// An unquoted identifier within PostgreSQL's byte limit whose suffix distinguishes ambiguous or truncated readable prefixes.
+        /// A mapping indexed by stable model identity, with collisions resolved deterministically.
+        /// </returns>
+        private static Dictionary<string, string> MapIdentifiers(IEnumerable<(string Identity, string Name)> candidates, IReadOnlyCollection<string> reserved)
+        {
+            var entries = candidates.Select(candidate => new
+            {
+                candidate.Identity, Name = MapIdentifier(candidate.Name)
+            }).ToArray();
+
+            var result = new Dictionary<string, string>(StringComparer.Ordinal);
+            var occupied = entries.Select(entry => entry.Name).Concat(reserved).ToHashSet(StringComparer.Ordinal);
+
+            foreach (var group in entries.GroupBy(entry => entry.Name, StringComparer.Ordinal).OrderBy(group => group.Key, StringComparer.Ordinal))
+            {
+                var needsSuffix = group.Count() > 1 || reserved.Contains(group.Key, StringComparer.Ordinal);
+
+                foreach (var entry in group.OrderBy(entry => entry.Identity, StringComparer.Ordinal))
+                {
+                    var name = entry.Name;
+
+                    if (needsSuffix)
+                    {
+                        var attempt = 0;
+
+                        do
+                        {
+                            name = CreateObjectName([entry.Name, entry.Identity, attempt.ToString(System.Globalization.CultureInfo.InvariantCulture)]);
+                            attempt++;
+                        }
+                        while (!occupied.Add(name));
+                    }
+
+                    result.Add(entry.Identity, name);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Converts a modeled name to lowercase snake_case and handles reserved, invalid and overlong identifiers.
+        /// </summary>
+        /// <param name="name">
+        /// The modeled class, property or relationship name.
+        /// </param>
+        /// <returns>
+        /// A valid unquoted PostgreSQL identifier, retaining a readable name whenever possible.
+        /// </returns>
+        private static string MapIdentifier(string name)
+        {
+            var snake = name.Underscore();
+            var safe = Regex.Replace(snake, "[^a-z0-9_]", "_");
+            var replacedCharacters = !string.Equals(snake, safe, StringComparison.Ordinal);
+
+            if (safe.Length == 0 || char.IsDigit(safe[0]) || ReservedIdentifiers.Contains(safe))
+            {
+                safe = "model_" + safe;
+            }
+
+            return safe.Length > MaximumIdentifierBytes || replacedCharacters
+                ? CreateObjectName([safe, name])
+                : safe;
+        }
+
+        /// <summary>
+        /// Creates a deterministic SQL object name from its full identity, escaping no identifiers.
+        /// </summary>
+        /// <param name="components">
+        /// Object kind, table, columns and any additional identity needed to distinguish roles.
+        /// </param>
+        /// <returns>
+        /// A safe lowercase identifier with one digest suffix and at most 63 ASCII bytes.
         /// </returns>
         private static string CreateObjectName(IReadOnlyList<string> components)
         {
-            var identityBytes = Encoding.UTF8.GetBytes(string.Join("\0", components));
-            var suffix = Convert.ToHexString(SHA256.HashData(identityBytes))[..IdentifierHashLength].ToLowerInvariant();
-            var availableBytes = MaximumIdentifierBytes - IdentifierHashLength - 1;
-            var prefix = new StringBuilder();
-            var prefixBytes = 0;
+            var identity = string.Join("\0", components);
+            var suffix = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)))[..IdentifierHashLength].ToLowerInvariant();
+            var prefix = string.Join("_", components).Underscore();
+            prefix = Regex.Replace(prefix, "[^a-z0-9_]", "_");
 
-            foreach (var rune in string.Join("_", components).EnumerateRunes())
+            if (prefix.Length == 0 || char.IsDigit(prefix[0]))
             {
-                if (prefixBytes + rune.Utf8SequenceLength > availableBytes)
-                {
-                    break;
-                }
-
-                prefix.Append(rune.ToString());
-                prefixBytes += rune.Utf8SequenceLength;
+                prefix = "object_" + prefix;
             }
 
-            return $"{prefix}_{suffix}";
+            var prefixLimit = MaximumIdentifierBytes - IdentifierHashLength - 1;
+
+            return $"{prefix[..Math.Min(prefix.Length, prefixLimit)]}_{suffix}";
         }
 
         /// <summary>
-        /// Qualifies a quoted SQL object name with the Fabric schema.
+        /// Escapes a modeled discriminator as a PostgreSQL string literal without changing its value.
         /// </summary>
-        /// <param name="name">
-        /// The unquoted object name.
+        /// <param name="value">
+        /// The modeled concrete class name.
         /// </param>
         /// <returns>
-        /// The schema-qualified SQL identifier.
+        /// A SQL string literal with embedded apostrophes doubled.
         /// </returns>
-        private static string Qualify(string name) => $"\"Fabric\".{Quote(name)}";
-
-        /// <summary>
-        /// Quotes a PostgreSQL identifier without changing its modeled spelling.
-        /// </summary>
-        /// <param name="name">
-        /// The unquoted identifier.
-        /// </param>
-        /// <returns>
-        /// The identifier surrounded by double quotes, with embedded double quotes escaped.
-        /// </returns>
-        private static string Quote(string name) => $"\"{name.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
+        private static string SqlLiteral(string value) => "'" + value.Replace("'", "''", StringComparison.Ordinal) + "'";
     }
 }
