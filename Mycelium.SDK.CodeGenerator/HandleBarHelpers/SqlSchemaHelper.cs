@@ -209,7 +209,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                 tables.Add(new
                 {
-                    Table = table, Root = umlClass.XmiId == root.XmiId,
+                    Table = table, IsRoot = umlClass.XmiId == root.XmiId,
                     Kinds = QueryConcreteKinds(orderedClasses, umlClass), Columns = columns, Links = links,
                     Parents = umlClass.QueryGeneralizations()
                         .Select(parent => new { Table = tableNames[ClassIdentityPrefix + parent.XmiId] })

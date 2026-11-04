@@ -11,7 +11,7 @@ WITH (
 {{#with this as |owner|}}
 CREATE TABLE fabric.{{Table}} (
     id uuid NOT NULL,
-    {{#if Root}}
+    {{#if IsRoot}}
     class_kind text NOT NULL,
     data jsonb NOT NULL,
     CONSTRAINT {{#SQL.Name "ck" Table "class_kind"}} CHECK (class_kind IN ({{{Kinds}}})),
@@ -87,7 +87,7 @@ CREATE INDEX {{#SQL.Name "ix" Table Target}} ON fabric.{{Table}} ({{Target}});
 {{/inline}}
 {{#*inline "sql-triggers"}}
 {{#with this as |owner|}}
-{{#unless Root}}
+{{#unless IsRoot}}
 CREATE TRIGGER {{#SQL.Name "trg" Table "delete_root"}}
     AFTER DELETE ON fabric.{{Table}}
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
@@ -275,7 +275,7 @@ BEGIN
     END IF;
 
     {{#each Tables}}
-    {{#unless Root}}
+    {{#unless IsRoot}}
     IF ((kind IN ({{#if Kinds}}{{{Kinds}}}{{else}}NULL{{/if}})) IS TRUE)
         IS DISTINCT FROM (EXISTS (SELECT 1 FROM fabric.{{Table}} WHERE id = p_id)) THEN
         RAISE EXCEPTION 'Inheritance rows do not match type % for %', kind, p_id USING ERRCODE = '23514';
