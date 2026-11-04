@@ -249,7 +249,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             return umlClass;
         }
 
-        private static void AddOwnerReference(IClass owner, IClass part, string role)
+        private static void AddOwnerReference(Class owner, Class part, string role)
         {
             var association = new Association { XmiId = "sql-regression-" + role };
             var collection = new Property
