@@ -521,9 +521,8 @@ RETURNS trigger
 LANGUAGE plpgsql
 AS $mycelium$
 BEGIN
-    IF EXISTS (SELECT 1 FROM fabric.thing WHERE id = OLD.id) THEN
-        DELETE FROM fabric.thing WHERE id = OLD.id;
-    END IF;
+    -- A root already removed by the current cascade matches no row.
+    DELETE FROM fabric.thing WHERE id = OLD.id;
 
     RETURN OLD;
 END;
@@ -538,12 +537,8 @@ BEGIN
         PERFORM fabric.lock_object(OLD.id);
     END IF;
 
-    IF TG_OP <> 'DELETE' THEN
-        IF TG_OP = 'INSERT' THEN
-            PERFORM fabric.lock_object(NEW.id);
-        ELSIF NEW.id IS DISTINCT FROM OLD.id THEN
-            PERFORM fabric.lock_object(NEW.id);
-        END IF;
+    IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND NEW.id IS DISTINCT FROM OLD.id) THEN
+        PERFORM fabric.lock_object(NEW.id);
     END IF;
 
     RETURN NULL;
@@ -971,12 +966,8 @@ BEGIN
         PERFORM fabric.validate_object(OLD.id);
     END IF;
 
-    IF TG_OP <> 'DELETE' THEN
-        IF TG_OP = 'INSERT' THEN
-            PERFORM fabric.validate_object(NEW.id);
-        ELSIF NEW.id IS DISTINCT FROM OLD.id THEN
-            PERFORM fabric.validate_object(NEW.id);
-        END IF;
+    IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND NEW.id IS DISTINCT FROM OLD.id) THEN
+        PERFORM fabric.validate_object(NEW.id);
     END IF;
 
     RETURN NULL;
