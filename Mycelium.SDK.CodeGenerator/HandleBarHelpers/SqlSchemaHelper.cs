@@ -380,14 +380,18 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// </exception>
         private static string ClaimName(Dictionary<(string Scope, string Name), string> claims, string element, string name, params string[] scopes)
         {
+            var collidingScope = scopes.FirstOrDefault(scope => claims.ContainsKey((scope, name)));
+
+            if (collidingScope != null)
+            {
+                throw new InvalidOperationException(
+                    $"The SQL name '{name}' is generated for both {claims[(collidingScope, name)]} and {element} in the {collidingScope}. " +
+                    "Rename one of them in the model; the generator does not add disambiguating suffixes.");
+            }
+
             foreach (var scope in scopes)
             {
-                if (!claims.TryAdd((scope, name), element))
-                {
-                    throw new InvalidOperationException(
-                        $"The SQL name '{name}' is generated for both {claims[(scope, name)]} and {element} in the {scope}. " +
-                        "Rename one of them in the model; the generator does not add disambiguating suffixes.");
-                }
+                claims.Add((scope, name), element);
             }
 
             return name;
