@@ -1,9 +1,9 @@
 // ------------------------------------------------------------------------------------------------
 //  <copyright file="ClassExtensions.cs" company="Starion Group S.A.">
-// 
+//
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
-// 
+//
 //  </copyright>
 //  ------------------------------------------------------------------------------------------------
 
@@ -79,6 +79,25 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// </param>
         extension(IClass umlClass)
         {
+            /// <summary>
+            /// Queries the named references declared directly by the class for relational SQL storage.
+            /// </summary>
+            /// <returns>
+            /// The non-derived class-typed properties, including scalar and collection references,
+            /// deduplicated by XMI identifier and deterministically ordered.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QuerySqlReferenceProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return OrderProperties(umlClass.OwnedAttribute.Where(property =>
+                        property.Type is IClass && !string.IsNullOrWhiteSpace(property.Name) && !property.IsDerived && !property.IsDerivedUnion))
+                    .ToArray();
+            }
+
             /// <summary>
             /// Queries the properties declared directly by the class.
             /// </summary>

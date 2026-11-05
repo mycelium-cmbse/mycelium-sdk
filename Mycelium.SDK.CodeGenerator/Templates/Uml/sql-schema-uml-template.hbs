@@ -1,0 +1,387 @@
+{{#*inline "sql-maintenance"}}
+WITH (
+    autovacuum_vacuum_scale_factor = 0.0,
+    autovacuum_vacuum_threshold = 2500,
+    autovacuum_analyze_scale_factor = 0.0,
+    autovacuum_analyze_threshold = 2500
+);
+
+{{/inline}}
+{{#*inline "sql-tables"}}
+{{#with this as |owner|}}
+CREATE TABLE fabric.{{Table}} (
+    id uuid NOT NULL,
+    {{#if IsRoot}}
+    class_kind text NOT NULL,
+    data jsonb NOT NULL,
+    CONSTRAINT {{ClassKindCheck}} CHECK (class_kind IN ({{{Kinds}}})),
+    CONSTRAINT {{DataCheck}} CHECK ((
+        jsonb_typeof(data) = 'object'
+        AND jsonb_typeof(data -> '@id') = 'string'
+        AND jsonb_typeof(data -> '@type') = 'string'
+        AND (data ->> '@id')::uuid = id
+        AND data ->> '@type' = class_kind
+    ) IS TRUE),
+    {{/if}}
+    {{#each Columns}}
+    {{Column}} uuid{{#if Required}} NOT NULL{{/if}},
+    {{/each}}
+    CONSTRAINT {{PrimaryKey}} PRIMARY KEY (id)
+)
+{{> sql-maintenance}}
+{{#each Links}}
+CREATE TABLE fabric.{{Table}} (
+    {{Source}} uuid NOT NULL,
+    {{Target}} uuid NOT NULL,
+    {{#if Position}}
+    position bigint NOT NULL,
+    CONSTRAINT {{PrimaryKey}} PRIMARY KEY ({{Source}}, position){{#if PairUnique}},
+    CONSTRAINT {{PairUniqueKey}} UNIQUE ({{Source}}, {{Target}}){{/if}}
+    {{else}}
+    CONSTRAINT {{PrimaryKey}} PRIMARY KEY ({{Source}}, {{Target}})
+    {{/if}}
+)
+{{> sql-maintenance}}
+{{/each}}
+{{/with}}
+{{/inline}}
+{{#*inline "sql-constraints"}}
+{{#with this as |owner|}}
+{{#each Parents}}
+ALTER TABLE fabric.{{owner.Table}}
+    ADD CONSTRAINT {{ForeignKey}} FOREIGN KEY (id) REFERENCES fabric.{{Table}} (id)
+    ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+{{/each}}
+{{#each Columns}}
+ALTER TABLE fabric.{{owner.Table}}
+    ADD CONSTRAINT {{ForeignKey}} FOREIGN KEY ({{Column}}) REFERENCES fabric.{{TargetTable}} (id)
+    ON DELETE {{#if Cascade}}CASCADE{{else}}NO ACTION{{/if}} DEFERRABLE INITIALLY IMMEDIATE;
+
+{{#if Exclusive}}
+ALTER TABLE fabric.{{owner.Table}}
+    ADD CONSTRAINT {{UniqueKey}} UNIQUE ({{Column}}) DEFERRABLE INITIALLY DEFERRED;
+{{else}}
+CREATE INDEX {{IndexName}} ON fabric.{{owner.Table}} ({{Column}});
+{{/if}}
+
+{{/each}}
+{{#each Links}}
+ALTER TABLE fabric.{{Table}}
+    ADD CONSTRAINT {{SourceForeignKey}} FOREIGN KEY ({{Source}}) REFERENCES fabric.{{owner.Table}} (id)
+    ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE fabric.{{Table}}
+    ADD CONSTRAINT {{TargetForeignKey}} FOREIGN KEY ({{Target}}) REFERENCES fabric.{{TargetTable}} (id)
+    ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+{{#if Exclusive}}
+ALTER TABLE fabric.{{Table}}
+    ADD CONSTRAINT {{TargetUniqueKey}} UNIQUE ({{Target}}) DEFERRABLE INITIALLY DEFERRED;
+{{else}}
+CREATE INDEX {{TargetIndexName}} ON fabric.{{Table}} ({{Target}});
+{{/if}}
+
+{{/each}}
+{{/with}}
+{{/inline}}
+{{#*inline "sql-triggers"}}
+{{#with this as |owner|}}
+{{#unless IsRoot}}
+CREATE TRIGGER t20_delete_root
+    AFTER DELETE ON fabric.{{Table}}
+    FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
+
+CREATE TRIGGER t30_serialize_object
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.{{Table}}
+    FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
+
+{{/unless}}
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.{{Table}}
+    DEFERRABLE INITIALLY DEFERRED
+    FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
+
+{{/with}}
+{{/inline}}
+{{#*inline "sql-compositions"}}
+-- All composition stores participate in the same ownership check. Multiple
+-- occurrences for one owner remain legal where the model permits duplicates.
+CREATE FUNCTION fabric.owners(p_part uuid)
+RETURNS TABLE (owner_id uuid)
+LANGUAGE sql
+AS $mycelium$
+    SELECT NULL::uuid WHERE false
+    {{#each Ownerships}}
+    UNION ALL
+    SELECT relationship.{{Owner}}
+    FROM fabric.{{Table}} AS relationship
+    WHERE relationship.{{Part}} = p_part AND relationship.{{Owner}} IS NOT NULL
+    {{/each}}
+$mycelium$;
+
+-- Capture detached identities immediately; delete them only after reparenting
+-- can finish. The private queue is transaction-local, including savepoint rollback.
+CREATE FUNCTION fabric.track_ownership()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $mycelium$
+DECLARE
+    old_part uuid;
+    new_part uuid;
+    old_owner uuid;
+    new_owner uuid;
+    part_id uuid;
+    pending jsonb;
+BEGIN
+    IF TG_OP <> 'INSERT' THEN
+        old_part := (to_jsonb(OLD) ->> TG_ARGV[0])::uuid;
+        old_owner := (to_jsonb(OLD) ->> TG_ARGV[1])::uuid;
+    END IF;
+
+    IF TG_OP <> 'DELETE' THEN
+        new_part := (to_jsonb(NEW) ->> TG_ARGV[0])::uuid;
+        new_owner := (to_jsonb(NEW) ->> TG_ARGV[1])::uuid;
+    END IF;
+
+    IF TG_OP = 'UPDATE' AND old_part IS NOT DISTINCT FROM new_part AND old_owner IS NOT DISTINCT FROM new_owner THEN
+        RETURN NULL;
+    END IF;
+
+    FOR part_id IN
+        SELECT DISTINCT candidate
+        FROM unnest(ARRAY[old_part, new_part]) AS affected(candidate)
+        WHERE candidate IS NOT NULL
+        ORDER BY candidate
+    LOOP
+        PERFORM fabric.lock_object(part_id);
+    END LOOP;
+
+    IF old_part IS NOT NULL AND old_owner IS NOT NULL THEN
+        pending := COALESCE(NULLIF(current_setting('mycelium.fabric_detached_parts', true), ''), '[]')::jsonb;
+        PERFORM set_config('mycelium.fabric_detached_parts', (pending || jsonb_build_array(old_part))::text, true);
+    END IF;
+
+    RETURN NULL;
+END;
+$mycelium$;
+
+CREATE FUNCTION fabric.remove_orphans()
+RETURNS void
+LANGUAGE plpgsql
+AS $mycelium$
+DECLARE
+    pending jsonb;
+    part_id uuid;
+BEGIN
+    LOOP
+        pending := COALESCE(NULLIF(current_setting('mycelium.fabric_detached_parts', true), ''), '[]')::jsonb;
+        EXIT WHEN pending = '[]'::jsonb;
+        PERFORM set_config('mycelium.fabric_detached_parts', '[]', true);
+
+        FOR part_id IN
+            SELECT DISTINCT value::uuid FROM jsonb_array_elements_text(pending) ORDER BY 1
+        LOOP
+            PERFORM fabric.lock_object(part_id);
+
+            IF NOT EXISTS (SELECT 1 FROM fabric.owners(part_id)) THEN
+                DELETE FROM fabric.thing WHERE id = part_id;
+            END IF;
+        END LOOP;
+        -- Cascaded deletion may have queued further contained objects.
+    END LOOP;
+END;
+$mycelium$;
+
+CREATE FUNCTION fabric.check_ownership(p_part uuid)
+RETURNS void
+LANGUAGE plpgsql
+AS $mycelium$
+BEGIN
+    IF p_part IS NULL THEN
+        RETURN;
+    END IF;
+
+    -- Reacquire protection when references were inserted before their deferred root.
+    PERFORM fabric.lock_object(p_part);
+
+    IF (SELECT count(DISTINCT owner_id) FROM fabric.owners(p_part)) > 1 THEN
+        RAISE EXCEPTION 'Part % has multiple composite owners', p_part USING ERRCODE = '23505';
+    END IF;
+END;
+$mycelium$;
+
+CREATE FUNCTION fabric.validate_ownership()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $mycelium$
+DECLARE
+    old_part uuid;
+    new_part uuid;
+    old_owner uuid;
+    new_owner uuid;
+BEGIN
+    IF TG_OP <> 'INSERT' THEN
+        old_part := (to_jsonb(OLD) ->> TG_ARGV[0])::uuid;
+        old_owner := (to_jsonb(OLD) ->> TG_ARGV[1])::uuid;
+    END IF;
+
+    IF TG_OP <> 'DELETE' THEN
+        new_part := (to_jsonb(NEW) ->> TG_ARGV[0])::uuid;
+        new_owner := (to_jsonb(NEW) ->> TG_ARGV[1])::uuid;
+    END IF;
+
+    IF TG_OP = 'UPDATE' AND old_part IS NOT DISTINCT FROM new_part AND old_owner IS NOT DISTINCT FROM new_owner THEN
+        RETURN NULL;
+    END IF;
+
+    PERFORM fabric.remove_orphans();
+    PERFORM fabric.check_ownership(old_part);
+
+    IF new_part IS DISTINCT FROM old_part THEN
+        PERFORM fabric.check_ownership(new_part);
+    END IF;
+
+    RETURN NULL;
+END;
+$mycelium$;
+
+{{#each Ownerships}}
+CREATE TRIGGER {{TrackTrigger}}
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.{{Table}}
+    FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('{{Part}}', '{{Owner}}');
+
+CREATE CONSTRAINT TRIGGER {{ValidateTrigger}}
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.{{Table}}
+    DEFERRABLE INITIALLY DEFERRED
+    FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('{{Part}}', '{{Owner}}');
+
+{{/each}}
+{{/inline}}
+{{#*inline "sql-inheritance"}}
+CREATE FUNCTION fabric.validate_object(p_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+AS $mycelium$
+DECLARE
+    kind text;
+BEGIN
+    -- Process all recorded removals first, regardless of deferred-event ordering.
+    PERFORM fabric.remove_orphans();
+    SELECT class_kind INTO kind FROM fabric.thing WHERE id = p_id;
+
+    IF NOT FOUND THEN
+        RETURN;
+    END IF;
+
+    {{#each Tables}}
+    {{#unless IsRoot}}
+    IF ((kind IN ({{#if Kinds}}{{{Kinds}}}{{else}}NULL{{/if}})) IS TRUE)
+        IS DISTINCT FROM (EXISTS (SELECT 1 FROM fabric.{{Table}} WHERE id = p_id)) THEN
+        RAISE EXCEPTION 'Inheritance rows do not match type % for %', kind, p_id USING ERRCODE = '23514';
+    END IF;
+
+    {{/unless}}
+    {{/each}}
+    {{#each Ownerships}}
+    {{#if Required}}
+    IF (kind IN ({{#if PartKinds}}{{{PartKinds}}}{{else}}NULL{{/if}})) IS TRUE
+        AND NOT EXISTS (
+            SELECT 1 FROM fabric.{{Table}} AS relationship
+            WHERE relationship.{{Part}} = p_id AND relationship.{{Owner}} IS NOT NULL
+        ) THEN
+        RAISE EXCEPTION 'Part % is missing a mandatory composite owner', p_id USING ERRCODE = '23514';
+    END IF;
+
+    {{/if}}
+    {{/each}}
+END;
+$mycelium$;
+
+CREATE FUNCTION fabric.validate_inheritance()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $mycelium$
+BEGIN
+    IF TG_OP <> 'INSERT' THEN
+        PERFORM fabric.validate_object(OLD.id);
+    END IF;
+
+    IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND NEW.id IS DISTINCT FROM OLD.id) THEN
+        PERFORM fabric.validate_object(NEW.id);
+    END IF;
+
+    RETURN NULL;
+END;
+$mycelium$;
+
+{{/inline}}
+-- ------------------------------------------------------------------------------------------------
+-- <copyright file="schema.sql" company="Starion Group S.A.">
+--
+--   Copyright 2026 Starion Group S.A.
+--   SPDX-License-Identifier: Apache-2.0
+--
+-- </copyright>
+-- ------------------------------------------------------------------------------------------------
+-- THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!
+-- Fabric #33: initial PostgreSQL 18 schema; the consumer owns the transaction.
+-- Mycelium.Model.Fabric {{FabricModelVersion}}
+-- Mycelium.Model.CommonPrimitives {{CommonPrimitivesModelVersion}}
+
+CREATE SCHEMA IF NOT EXISTS fabric;
+
+{{#with (#SQL.Model Classes)}}
+{{#each Tables}}
+{{> sql-tables this}}
+{{/each}}
+{{#each Tables}}
+{{> sql-constraints this}}
+{{/each}}
+-- Updating a non-key root column serializes writers for this object and forces
+-- a snapshot-conflict failure at repeatable-read isolation instead of a stale check.
+-- It preserves the payload value and avoids a database-wide graph lock.
+CREATE FUNCTION fabric.lock_object(p_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+AS $mycelium$
+BEGIN
+    UPDATE fabric.thing SET data = data WHERE id = p_id;
+END;
+$mycelium$;
+
+CREATE FUNCTION fabric.thing_delete()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $mycelium$
+BEGIN
+    -- A root already removed by the current cascade matches no row.
+    DELETE FROM fabric.thing WHERE id = OLD.id;
+
+    RETURN OLD;
+END;
+$mycelium$;
+
+CREATE FUNCTION fabric.serialize_object()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $mycelium$
+BEGIN
+    IF TG_OP <> 'INSERT' THEN
+        PERFORM fabric.lock_object(OLD.id);
+    END IF;
+
+    IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND NEW.id IS DISTINCT FROM OLD.id) THEN
+        PERFORM fabric.lock_object(NEW.id);
+    END IF;
+
+    RETURN NULL;
+END;
+$mycelium$;
+
+{{> sql-compositions this}}
+{{> sql-inheritance this}}
+{{#each Tables}}
+{{> sql-triggers this}}
+{{/each}}
+{{/with}}
