@@ -9,7 +9,6 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
-    using System.Globalization;
     using System.Security.Cryptography;
     using System.Text;
     using System.Text.RegularExpressions;
@@ -20,6 +19,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
     using Mycelium.SDK.CodeGenerator.Extensions;
 
+    using uml4net.Classification;
     using uml4net.Extensions;
     using uml4net.StructuredClassifiers;
 
@@ -34,6 +34,11 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         private const int MaximumIdentifierBytes = 63;
 
         /// <summary>
+        /// The number of hexadecimal hash characters appended to a name that exceeds the identifier limit.
+        /// </summary>
+        private const int IdentifierHashLength = 8;
+
+        /// <summary>
         /// The prefix that keys a class table by the XMI identifier of its class.
         /// </summary>
         private const string ClassIdentityPrefix = "class:";
@@ -44,14 +49,34 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         private const string LinkIdentityPrefix = "link:";
 
         /// <summary>
+        /// The fixed name of the root table.
+        /// </summary>
+        private const string RootTable = "thing";
+
+        /// <summary>
+        /// The fixed identity column of every class table.
+        /// </summary>
+        private const string IdentityColumn = "id";
+
+        /// <summary>
+        /// The fixed link-table column holding the owner object's identity.
+        /// </summary>
+        private const string SourceColumn = "source_id";
+
+        /// <summary>
+        /// The fixed link-table column holding the target object's identity.
+        /// </summary>
+        private const string TargetColumn = "target_id";
+
+        /// <summary>
+        /// The scope in which PostgreSQL requires table and index names to be unique.
+        /// </summary>
+        private const string SchemaScope = "relations of schema fabric";
+
+        /// <summary>
         /// The time allowed to replace unsupported identifier characters in one modeled name.
         /// </summary>
         private const int IdentifierRegexTimeoutMilliseconds = 1000;
-
-        /// <summary>
-        /// The digest length used to distinguish shortened or ambiguous identifiers.
-        /// </summary>
-        private const int IdentifierHashLength = 16;
 
         /// <summary>
         /// PostgreSQL 18 reserved identifiers, including keywords reserved for particular SQL contexts.
@@ -68,10 +93,10 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             .ToHashSet(StringComparer.Ordinal);
 
         /// <summary>
-        /// Registers only the relational-model and SQL-object-name helpers consumed by the schema template.
+        /// Registers only the relational-model helper consumed by the schema template.
         /// </summary>
         /// <param name="handlebars">
-        /// The Handlebars environment in which the helpers are registered.
+        /// The Handlebars environment in which the helper is registered.
         /// </param>
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
@@ -82,22 +107,10 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             handlebars.RegisterHelper("SQL.Model", (_, arguments) =>
                 QueryModel(arguments.QuerySingle<IReadOnlyCollection<IClass>>("{{SQL.Model}}")));
-
-            handlebars.RegisterHelper("SQL.Name", (writer, _, arguments) =>
-            {
-                var components = arguments.QueryStringsFrom(0, "{{SQL.Name}}");
-
-                if (components.Length < 2)
-                {
-                    throw new HandlebarsException("{{SQL.Name}} requires an object kind and at least one identifying name.");
-                }
-
-                writer.WriteSafeString(CreateObjectName(components));
-            });
         }
 
         /// <summary>
-        /// Constructs deterministic table, inheritance and ownership descriptions without rendering SQL statements.
+        /// Constructs deterministic table, inheritance and ownership descriptions, including every SQL object name, without rendering SQL statements.
         /// </summary>
         /// <param name="classes">
         /// The canonical model classes selected by the generator.
@@ -109,7 +122,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// Thrown when <paramref name="classes" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the canonical class selection does not contain exactly one root Thing class.
+        /// Thrown when the canonical class selection does not contain exactly one root Thing class, or when two modeled elements produce the same SQL name.
         /// </exception>
         private static object QueryModel(IReadOnlyCollection<IClass> classes)
         {
@@ -122,29 +135,38 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             var references = orderedClasses.ToDictionary(umlClass => umlClass.XmiId, umlClass => umlClass.QuerySqlReferenceProperties(), StringComparer.Ordinal);
             var root = orderedClasses.Single(umlClass => string.Equals(umlClass.Name, "Thing", StringComparison.Ordinal));
-            var tableCandidates = orderedClasses.Where(umlClass => umlClass.XmiId != root.XmiId)
-                .Select(umlClass => (Identity: ClassIdentityPrefix + umlClass.XmiId, Name: umlClass.Name))
-                .ToList();
+            var claims = new Dictionary<(string Scope, string Name), string>();
+            var tableNames = new Dictionary<string, string>(StringComparer.Ordinal);
 
             foreach (var umlClass in orderedClasses)
             {
-                tableCandidates.AddRange(references[umlClass.XmiId]
-                    .Where(property => property.QuerySqlRequiresLinkTable())
-                    .Select(property => (Identity: LinkIdentityPrefix + property.XmiId, Name: $"{umlClass.Name}_{property.Name}_{property.Type.Name}")));
+                var table = umlClass.XmiId == root.XmiId ? RootTable : QueryIdentifier(umlClass.Name);
+                tableNames.Add(ClassIdentityPrefix + umlClass.XmiId, ClaimName(claims, $"the table of class '{umlClass.Name}'", table, SchemaScope));
             }
 
-            var tableNames = MapIdentifiers(tableCandidates, ["thing"]);
-            tableNames.Add(ClassIdentityPrefix + root.XmiId, "thing");
+            foreach (var umlClass in orderedClasses)
+            {
+                foreach (var property in references[umlClass.XmiId].Where(property => property.QuerySqlRequiresLinkTable()))
+                {
+                    var table = QueryIdentifier($"{umlClass.Name}_{property.Name}");
+                    var element = $"the link table of property '{umlClass.Name}.{property.Name}'";
+                    tableNames.Add(LinkIdentityPrefix + property.XmiId, ClaimName(claims, element, table, SchemaScope));
+                }
+            }
+
             var tables = new List<object>();
-            var ownerships = new List<object>();
+            var roles = new List<OwnershipRole>();
 
             foreach (var umlClass in orderedClasses)
             {
                 var table = tableNames[ClassIdentityPrefix + umlClass.XmiId];
-                string[] reservedColumns = umlClass.XmiId == root.XmiId ? ["id", "class_kind", "data"] : ["id"];
-                var columnNames = MapIdentifiers(references[umlClass.XmiId]
-                    .Where(property => !property.QueryIsEnumerable())
-                    .Select(property => (Identity: property.XmiId, Name: property.Name)), reservedColumns);
+                var isRoot = umlClass.XmiId == root.XmiId;
+                string[] fixedColumns = isRoot ? [IdentityColumn, "class_kind", "data"] : [IdentityColumn];
+
+                foreach (var fixedColumn in fixedColumns)
+                {
+                    ClaimName(claims, $"the fixed column '{fixedColumn}'", fixedColumn, ColumnScope(table));
+                }
 
                 var columns = new List<object>();
                 var links = new List<object>();
@@ -160,27 +182,29 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                     var target = (IClass)property.Type;
                     var targetTable = tableNames[ClassIdentityPrefix + target.XmiId];
-                    var storageTable = isLink ? tableNames[LinkIdentityPrefix + property.XmiId] : table;
-                    var source = MapIdentifier("source_" + umlClass.Name);
-                    var targetColumn = MapIdentifier("target_" + target.Name);
-                    var column = isLink ? targetColumn : columnNames[property.XmiId];
                     var ownerEnd = property.QueryIsOwnerEnd();
+                    var element = $"property '{umlClass.Name}.{property.Name}'";
+                    string storageTable;
+                    string column;
 
                     if (isLink)
                     {
-                        links.Add(new
-                        {
-                            Table = storageTable, Source = source, Target = targetColumn, TargetTable = targetTable,
-                            Position = property.IsOrdered || !property.IsUnique, PairUnique = property.IsUnique,
-                            Exclusive = property.IsComposite && property.IsUnique
-                        });
+                        storageTable = tableNames[LinkIdentityPrefix + property.XmiId];
+                        column = TargetColumn;
+                        links.Add(QueryLink(claims, element, property, storageTable, targetTable));
                     }
                     else
                     {
+                        storageTable = table;
+                        column = ClaimName(claims, $"the column of {element}", QueryIdentifier(property.Name), ColumnScope(table));
+                        var exclusive = property.IsComposite;
+
                         columns.Add(new
                         {
-                            Column = column, TargetTable = targetTable, Required = !property.QueryIsNullable(),
-                            Cascade = ownerEnd, Exclusive = property.IsComposite
+                            Column = column, TargetTable = targetTable, Required = !property.QueryIsNullable(), Cascade = ownerEnd, Exclusive = exclusive,
+                            ForeignKey = ClaimName(claims, $"the foreign key of {element}", ObjectName(table, "fkey", column), ConstraintScope(table)),
+                            UniqueKey = exclusive ? ClaimName(claims, $"the unique key of {element}", ObjectName(table, "key", column), SchemaScope, ConstraintScope(table)) : null,
+                            IndexName = exclusive ? null : ClaimName(claims, $"the index of {element}", ObjectName(table, "idx", column), SchemaScope)
                         });
                     }
 
@@ -192,36 +216,126 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     var partType = ownerEnd ? umlClass : target;
                     var (owner, part) = (isLink, ownerEnd) switch
                     {
-                        (true, _) => (source, targetColumn),
-                        (false, true) => (column, "id"),
-                        (false, false) => ("id", column)
+                        (true, _) => (SourceColumn, TargetColumn),
+                        (false, true) => (column, IdentityColumn),
+                        (false, false) => (IdentityColumn, column)
                     };
 
-                    ownerships.Add(new
+                    var required = ownerEnd ? !property.QueryIsNullable() : property.Opposite is { Lower: > 0 };
+                    roles.Add(new OwnershipRole(storageTable, owner, part, required, QueryConcreteKinds(orderedClasses, partType), element));
+                }
+
+                var parents = new List<object>();
+
+                foreach (var parent in umlClass.QueryGeneralizations())
+                {
+                    var element = $"the generalization of class '{umlClass.Name}' to '{parent.Name}'";
+
+                    parents.Add(new
                     {
-                        Identity = property.XmiId, Table = storageTable, Owner = owner, Part = part,
-                        Required = ownerEnd ? !property.QueryIsNullable() : property.Opposite is { Lower: > 0 },
-                        PartKinds = QueryConcreteKinds(orderedClasses, partType),
-                        GuardTrigger = CreateObjectName(["guard", storageTable, owner, part, property.XmiId]),
-                        CheckTrigger = CreateObjectName(["ownership", storageTable, owner, part, property.XmiId])
+                        Table = tableNames[ClassIdentityPrefix + parent.XmiId],
+                        ForeignKey = ClaimName(claims, element, ObjectName(table, "fkey", IdentityColumn), ConstraintScope(table))
                     });
                 }
 
                 tables.Add(new
                 {
-                    Table = table, IsRoot = umlClass.XmiId == root.XmiId,
-                    Kinds = QueryConcreteKinds(orderedClasses, umlClass), Columns = columns, Links = links,
-                    Parents = umlClass.QueryGeneralizations()
-                        .Select(parent => new { Table = tableNames[ClassIdentityPrefix + parent.XmiId] })
-                        .ToArray()
+                    Table = table, IsRoot = isRoot, Kinds = QueryConcreteKinds(orderedClasses, umlClass), Columns = columns, Links = links, Parents = parents,
+                    PrimaryKey = ClaimName(claims, $"the primary key of class '{umlClass.Name}'", ObjectName(table, "pkey"), SchemaScope, ConstraintScope(table)),
+                    ClassKindCheck = isRoot ? ClaimName(claims, "the discriminator check", ObjectName(table, "check", "class_kind"), ConstraintScope(table)) : null,
+                    DataCheck = isRoot ? ClaimName(claims, "the payload metadata check", ObjectName(table, "check", "data"), ConstraintScope(table)) : null
                 });
             }
 
             return new
             {
-                Tables = tables, Ownerships = ownerships,
+                Tables = tables, Ownerships = QueryOwnerships(claims, roles),
                 ConcreteKinds = string.Join(", ", orderedClasses.Where(umlClass => !umlClass.IsAbstract).Select(umlClass => SqlLiteral(umlClass.Name)))
             };
+        }
+
+        /// <summary>
+        /// Describes one link table with its fixed columns and the names of its keys and index.
+        /// </summary>
+        /// <param name="claims">
+        /// The SQL names already generated, keyed by uniqueness scope and name.
+        /// </param>
+        /// <param name="element">
+        /// A description of the modeled property stored in the link table, used in collision messages.
+        /// </param>
+        /// <param name="property">
+        /// The modeled collection property stored in the link table.
+        /// </param>
+        /// <param name="table">
+        /// The link-table name.
+        /// </param>
+        /// <param name="targetTable">
+        /// The table of the property's declared target class.
+        /// </param>
+        /// <returns>
+        /// Rendering data for the link table.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when a generated name collides with a name generated for another modeled element.
+        /// </exception>
+        private static object QueryLink(Dictionary<(string Scope, string Name), string> claims, string element, IProperty property, string table, string targetTable)
+        {
+            var position = property.IsOrdered || !property.IsUnique;
+            var pairUnique = position && property.IsUnique;
+            var exclusive = property.IsComposite && property.IsUnique;
+
+            return new
+            {
+                Table = table, Source = SourceColumn, Target = TargetColumn, TargetTable = targetTable, Position = position, PairUnique = pairUnique, Exclusive = exclusive,
+                PrimaryKey = ClaimName(claims, $"the primary key of {element}", ObjectName(table, "pkey"), SchemaScope, ConstraintScope(table)),
+                PairUniqueKey = pairUnique
+                    ? ClaimName(claims, $"the pair key of {element}", ObjectName(table, "key", SourceColumn, TargetColumn), SchemaScope, ConstraintScope(table))
+                    : null,
+                SourceForeignKey = ClaimName(claims, $"the owner foreign key of {element}", ObjectName(table, "fkey", SourceColumn), ConstraintScope(table)),
+                TargetForeignKey = ClaimName(claims, $"the target foreign key of {element}", ObjectName(table, "fkey", TargetColumn), ConstraintScope(table)),
+                TargetUniqueKey = exclusive
+                    ? ClaimName(claims, $"the part key of {element}", ObjectName(table, "key", TargetColumn), SchemaScope, ConstraintScope(table))
+                    : null,
+                TargetIndexName = exclusive ? null : ClaimName(claims, $"the target index of {element}", ObjectName(table, "idx", TargetColumn), SchemaScope)
+            };
+        }
+
+        /// <summary>
+        /// Names the ownership triggers of every composition relationship, preserving model order.
+        /// </summary>
+        /// <param name="claims">
+        /// The SQL names already generated, keyed by uniqueness scope and name.
+        /// </param>
+        /// <param name="roles">
+        /// The composition relationships in model order.
+        /// </param>
+        /// <returns>
+        /// Rendering data for each ownership relationship, including its tracking and validation trigger names.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when a generated trigger name collides with another trigger on the same table.
+        /// </exception>
+        private static object[] QueryOwnerships(Dictionary<(string Scope, string Name), string> claims, IReadOnlyCollection<OwnershipRole> roles)
+        {
+            var rolesPerTable = roles.CountBy(role => role.Table, StringComparer.Ordinal).ToDictionary(StringComparer.Ordinal);
+            var ownerships = new List<object>();
+
+            foreach (var role in roles)
+            {
+                var relationshipColumn = string.Equals(role.Part, IdentityColumn, StringComparison.Ordinal) ? role.Owner : role.Part;
+                var suffix = rolesPerTable[role.Table] > 1 ? "_" + relationshipColumn : string.Empty;
+                var trackTrigger = Shorten("t10_track_ownership" + suffix);
+                var validateTrigger = Shorten("t80_validate_ownership" + suffix);
+
+                ownerships.Add(new
+                {
+                    role.Table, role.Owner, role.Part, role.Required, role.PartKinds,
+                    TrackTrigger = ClaimName(claims, $"the ownership tracking trigger of {role.Element}", trackTrigger, TriggerScope(role.Table)),
+                    ValidateTrigger = ClaimName(claims, $"the ownership validation trigger of {role.Element}", validateTrigger, TriggerScope(role.Table))
+                });
+            }
+
+            return [.. ownerships];
         }
 
         /// <summary>
@@ -244,103 +358,131 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         }
 
         /// <summary>
-        /// Maps identifiers together within one SQL namespace, reserving fixed infrastructure column names.
+        /// Records a generated SQL name in every scope in which PostgreSQL requires it to be unique, failing instead of disambiguating.
         /// </summary>
-        /// <param name="candidates">
-        /// Stable model identities paired with their requested SQL names.
+        /// <param name="claims">
+        /// The SQL names already generated, keyed by uniqueness scope and name, with the modeled element that produced each.
         /// </param>
-        /// <param name="reserved">
-        /// Names already occupied by fixed columns in this namespace.
+        /// <param name="element">
+        /// A description of the modeled element that produces the name, used in collision messages.
+        /// </param>
+        /// <param name="name">
+        /// The generated SQL name.
+        /// </param>
+        /// <param name="scopes">
+        /// The uniqueness scopes the name belongs to.
         /// </param>
         /// <returns>
-        /// A mapping indexed by stable model identity, with collisions resolved deterministically.
+        /// The unchanged <paramref name="name" />.
         /// </returns>
-        private static Dictionary<string, string> MapIdentifiers(IEnumerable<(string Identity, string Name)> candidates, IReadOnlyCollection<string> reserved)
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when another modeled element already produced the same name in one of the scopes.
+        /// </exception>
+        private static string ClaimName(Dictionary<(string Scope, string Name), string> claims, string element, string name, params string[] scopes)
         {
-            var entries = candidates.Select(candidate => new
+            foreach (var scope in scopes)
             {
-                candidate.Identity, Name = MapIdentifier(candidate.Name)
-            }).ToArray();
-
-            var result = new Dictionary<string, string>(StringComparer.Ordinal);
-            var occupied = entries.Select(entry => entry.Name).Concat(reserved).ToHashSet(StringComparer.Ordinal);
-
-            foreach (var group in entries.GroupBy(entry => entry.Name, StringComparer.Ordinal).OrderBy(group => group.Key, StringComparer.Ordinal))
-            {
-                var needsSuffix = group.Count() > 1 || reserved.Contains(group.Key, StringComparer.Ordinal);
-
-                foreach (var entry in group.OrderBy(entry => entry.Identity, StringComparer.Ordinal))
+                if (!claims.TryAdd((scope, name), element))
                 {
-                    var name = entry.Name;
-
-                    if (needsSuffix)
-                    {
-                        var attempt = 0;
-
-                        do
-                        {
-                            name = CreateObjectName([entry.Name, entry.Identity, attempt.ToString(CultureInfo.InvariantCulture)]);
-                            attempt++;
-                        }
-                        while (!occupied.Add(name));
-                    }
-
-                    result.Add(entry.Identity, name);
+                    throw new InvalidOperationException(
+                        $"The SQL name '{name}' is generated for both {claims[(scope, name)]} and {element} in the {scope}. " +
+                        "Rename one of them in the model; the generator does not add disambiguating suffixes.");
                 }
             }
 
-            return result;
+            return name;
         }
 
         /// <summary>
-        /// Converts a modeled name to lowercase snake_case and handles reserved, invalid and overlong identifiers.
+        /// Builds a constraint or index name from its own table, its own columns and its PostgreSQL purpose suffix.
+        /// </summary>
+        /// <param name="table">
+        /// The table the object belongs to.
+        /// </param>
+        /// <param name="suffix">
+        /// The PostgreSQL purpose suffix: <c>pkey</c>, <c>fkey</c>, <c>key</c>, <c>idx</c> or <c>check</c>.
+        /// </param>
+        /// <param name="columns">
+        /// The participating columns of the table, in declaration order.
+        /// </param>
+        /// <returns>
+        /// The readable name, hashed only when it exceeds the identifier limit.
+        /// </returns>
+        private static string ObjectName(string table, string suffix, params string[] columns) => Shorten(string.Join("_", [table, .. columns, suffix]));
+
+        /// <summary>
+        /// Describes the scope in which a table's column names must be unique.
+        /// </summary>
+        /// <param name="table">
+        /// The table name.
+        /// </param>
+        /// <returns>
+        /// The column scope of <paramref name="table" />.
+        /// </returns>
+        private static string ColumnScope(string table) => $"columns of table fabric.{table}";
+
+        /// <summary>
+        /// Describes the scope in which a table's constraint names must be unique.
+        /// </summary>
+        /// <param name="table">
+        /// The table name.
+        /// </param>
+        /// <returns>
+        /// The constraint scope of <paramref name="table" />.
+        /// </returns>
+        private static string ConstraintScope(string table) => $"constraints of table fabric.{table}";
+
+        /// <summary>
+        /// Describes the scope in which a table's trigger names must be unique.
+        /// </summary>
+        /// <param name="table">
+        /// The table name.
+        /// </param>
+        /// <returns>
+        /// The trigger scope of <paramref name="table" />.
+        /// </returns>
+        private static string TriggerScope(string table) => $"triggers of table fabric.{table}";
+
+        /// <summary>
+        /// Converts a modeled name to a lowercase snake_case PostgreSQL identifier, mapping reserved and invalid names.
         /// </summary>
         /// <param name="name">
         /// The modeled class, property or relationship name.
         /// </param>
         /// <returns>
-        /// A valid unquoted PostgreSQL identifier, retaining a readable name whenever possible.
+        /// A valid unquoted PostgreSQL identifier, hashed only when it exceeds the identifier limit.
         /// </returns>
-        private static string MapIdentifier(string name)
+        private static string QueryIdentifier(string name)
         {
-            var snake = name.Underscore();
-            var safe = UnsupportedIdentifierCharacters().Replace(snake, "_");
-            var replacedCharacters = !string.Equals(snake, safe, StringComparison.Ordinal);
+            var identifier = UnsupportedIdentifierCharacters().Replace(name.Underscore(), "_");
 
-            if (safe.Length == 0 || char.IsDigit(safe[0]) || ReservedIdentifiers.Contains(safe))
+            if (identifier.Length == 0 || char.IsDigit(identifier[0]) || ReservedIdentifiers.Contains(identifier))
             {
-                safe = "model_" + safe;
+                identifier = "model_" + identifier;
             }
 
-            return safe.Length > MaximumIdentifierBytes || replacedCharacters
-                ? CreateObjectName([safe, name])
-                : safe;
+            return Shorten(identifier);
         }
 
         /// <summary>
-        /// Creates a deterministic SQL object name from its full identity, escaping no identifiers.
+        /// Keeps a readable name unchanged unless it exceeds PostgreSQL's identifier limit, in which case it is truncated and given a reproducible hash.
         /// </summary>
-        /// <param name="components">
-        /// Object kind, table, columns and any additional identity needed to distinguish roles.
+        /// <param name="readableName">
+        /// The full readable name.
         /// </param>
         /// <returns>
-        /// A safe lowercase identifier with one digest suffix and at most 63 ASCII bytes.
+        /// The readable name, or its truncated form followed by <c>_</c> and the first 8 lowercase hexadecimal characters of the SHA-256 of the full name.
         /// </returns>
-        private static string CreateObjectName(IReadOnlyList<string> components)
+        private static string Shorten(string readableName)
         {
-            var identity = string.Join("\0", components);
-            var suffix = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)))[..IdentifierHashLength].ToLowerInvariant();
-            var prefix = string.Join("_", components).Underscore();
-            prefix = UnsupportedIdentifierCharacters().Replace(prefix, "_");
-
-            if (prefix.Length == 0 || char.IsDigit(prefix[0]))
+            if (readableName.Length <= MaximumIdentifierBytes)
             {
-                prefix = "object_" + prefix;
+                return readableName;
             }
 
-            var prefixLimit = MaximumIdentifierBytes - IdentifierHashLength - 1;
+            var hash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(readableName)))[..IdentifierHashLength];
 
-            return $"{prefix[..Math.Min(prefix.Length, prefixLimit)]}_{suffix}";
+            return $"{readableName[..(MaximumIdentifierBytes - IdentifierHashLength - 1)]}_{hash}";
         }
 
         /// <summary>
@@ -362,5 +504,28 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// </returns>
         [GeneratedRegex("[^a-z0-9_]", RegexOptions.None, IdentifierRegexTimeoutMilliseconds)]
         private static partial Regex UnsupportedIdentifierCharacters();
+
+        /// <summary>
+        /// One composition relationship as stored in a table, before its trigger names are assigned.
+        /// </summary>
+        /// <param name="Table">
+        /// The table that stores the relationship.
+        /// </param>
+        /// <param name="Owner">
+        /// The column holding the owner's identity.
+        /// </param>
+        /// <param name="Part">
+        /// The column holding the part's identity.
+        /// </param>
+        /// <param name="Required">
+        /// Whether the modeled multiplicity requires every part to have an owner.
+        /// </param>
+        /// <param name="PartKinds">
+        /// SQL string literals of the concrete part types.
+        /// </param>
+        /// <param name="Element">
+        /// A description of the modeled property, used in collision messages.
+        /// </param>
+        private sealed record OwnershipRole(string Table, string Owner, string Part, bool Required, string PartKinds, string Element);
     }
 }

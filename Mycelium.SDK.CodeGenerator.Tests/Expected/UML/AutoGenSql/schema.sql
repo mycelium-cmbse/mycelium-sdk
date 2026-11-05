@@ -17,7 +17,7 @@ CREATE TABLE fabric.auditable_thing (
     id uuid NOT NULL,
     created_by uuid NOT NULL,
     updated_by uuid NOT NULL,
-    CONSTRAINT pk_auditable_thing_id_66ca3296260efbf7 PRIMARY KEY (id)
+    CONSTRAINT auditable_thing_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -28,7 +28,7 @@ WITH (
 
 CREATE TABLE fabric.branch_protection_rule (
     id uuid NOT NULL,
-    CONSTRAINT pk_branch_protection_rule_id_d242ae8c51645501 PRIMARY KEY (id)
+    CONSTRAINT branch_protection_rule_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -37,10 +37,10 @@ WITH (
     autovacuum_analyze_threshold = 2500
 );
 
-CREATE TABLE fabric.branch_protection_rule_default_reviewers_user (
-    source_branch_protection_rule uuid NOT NULL,
-    target_user uuid NOT NULL,
-    CONSTRAINT pk_branch_protection_rule_default_reviewers_us_ff66b8269acbe382 PRIMARY KEY (source_branch_protection_rule, target_user)
+CREATE TABLE fabric.branch_protection_rule_default_reviewers (
+    source_id uuid NOT NULL,
+    target_id uuid NOT NULL,
+    CONSTRAINT branch_protection_rule_default_reviewers_pkey PRIMARY KEY (source_id, target_id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -51,7 +51,7 @@ WITH (
 
 CREATE TABLE fabric.comment (
     id uuid NOT NULL,
-    CONSTRAINT pk_comment_id_669e58f0a8642c17 PRIMARY KEY (id)
+    CONSTRAINT comment_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -60,10 +60,10 @@ WITH (
     autovacuum_analyze_threshold = 2500
 );
 
-CREATE TABLE fabric.comment_replies_reply (
-    source_comment uuid NOT NULL,
-    target_reply uuid NOT NULL,
-    CONSTRAINT pk_comment_replies_reply_source_comment_target_939e4b8264998800 PRIMARY KEY (source_comment, target_reply)
+CREATE TABLE fabric.comment_replies (
+    source_id uuid NOT NULL,
+    target_id uuid NOT NULL,
+    CONSTRAINT comment_replies_pkey PRIMARY KEY (source_id, target_id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -76,7 +76,7 @@ CREATE TABLE fabric.functional_project (
     id uuid NOT NULL,
     belongs_to uuid NOT NULL,
     policy uuid NOT NULL,
-    CONSTRAINT pk_functional_project_id_20fcc0dccc5138c3 PRIMARY KEY (id)
+    CONSTRAINT functional_project_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -85,10 +85,10 @@ WITH (
     autovacuum_analyze_threshold = 2500
 );
 
-CREATE TABLE fabric.functional_project_branch_rules_branch_protection_rule (
-    source_functional_project uuid NOT NULL,
-    target_branch_protection_rule uuid NOT NULL,
-    CONSTRAINT pk_functional_project_branch_rules_branch_prot_50a64003b2111785 PRIMARY KEY (source_functional_project, target_branch_protection_rule)
+CREATE TABLE fabric.functional_project_branch_rules (
+    source_id uuid NOT NULL,
+    target_id uuid NOT NULL,
+    CONSTRAINT functional_project_branch_rules_pkey PRIMARY KEY (source_id, target_id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -97,10 +97,10 @@ WITH (
     autovacuum_analyze_threshold = 2500
 );
 
-CREATE TABLE fabric.functional_project_defines_ownership (
-    source_functional_project uuid NOT NULL,
-    target_ownership uuid NOT NULL,
-    CONSTRAINT pk_functional_project_defines_ownership_source_b17e242735075122 PRIMARY KEY (source_functional_project, target_ownership)
+CREATE TABLE fabric.functional_project_defines (
+    source_id uuid NOT NULL,
+    target_id uuid NOT NULL,
+    CONSTRAINT functional_project_defines_pkey PRIMARY KEY (source_id, target_id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -109,10 +109,10 @@ WITH (
     autovacuum_analyze_threshold = 2500
 );
 
-CREATE TABLE fabric.functional_project_reviews_review (
-    source_functional_project uuid NOT NULL,
-    target_review uuid NOT NULL,
-    CONSTRAINT pk_functional_project_reviews_review_source_fu_d6ea2c891a96c8b5 PRIMARY KEY (source_functional_project, target_review)
+CREATE TABLE fabric.functional_project_reviews (
+    source_id uuid NOT NULL,
+    target_id uuid NOT NULL,
+    CONSTRAINT functional_project_reviews_pkey PRIMARY KEY (source_id, target_id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -123,7 +123,7 @@ WITH (
 
 CREATE TABLE fabric.functional_project_policy (
     id uuid NOT NULL,
-    CONSTRAINT pk_functional_project_policy_id_8a2af00df0dd8092 PRIMARY KEY (id)
+    CONSTRAINT functional_project_policy_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -135,7 +135,7 @@ WITH (
 CREATE TABLE fabric.message (
     id uuid NOT NULL,
     quotes uuid,
-    CONSTRAINT pk_message_id_8d82859e352a261a PRIMARY KEY (id)
+    CONSTRAINT message_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -147,7 +147,7 @@ WITH (
 CREATE TABLE fabric.organization (
     id uuid NOT NULL,
     policy uuid NOT NULL,
-    CONSTRAINT pk_organization_id_2b07e26c759bc143 PRIMARY KEY (id)
+    CONSTRAINT organization_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -160,7 +160,7 @@ CREATE TABLE fabric.organization_member (
     id uuid NOT NULL,
     organization uuid NOT NULL,
     model_user uuid NOT NULL,
-    CONSTRAINT pk_organization_member_id_7b0f8b2a37fc414c PRIMARY KEY (id)
+    CONSTRAINT organization_member_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -171,7 +171,7 @@ WITH (
 
 CREATE TABLE fabric.organization_policy (
     id uuid NOT NULL,
-    CONSTRAINT pk_organization_policy_id_db4f4f0aed613a80 PRIMARY KEY (id)
+    CONSTRAINT organization_policy_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -182,7 +182,7 @@ WITH (
 
 CREATE TABLE fabric.ownership (
     id uuid NOT NULL,
-    CONSTRAINT pk_ownership_id_e676b4b73574efdd PRIMARY KEY (id)
+    CONSTRAINT ownership_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -196,7 +196,7 @@ CREATE TABLE fabric.project_member (
     active_ownership uuid,
     is_part_of uuid NOT NULL,
     model_user uuid NOT NULL,
-    CONSTRAINT pk_project_member_id_2f2f5651e107fbd9 PRIMARY KEY (id)
+    CONSTRAINT project_member_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -205,10 +205,10 @@ WITH (
     autovacuum_analyze_threshold = 2500
 );
 
-CREATE TABLE fabric.project_member_owns_ownership (
-    source_project_member uuid NOT NULL,
-    target_ownership uuid NOT NULL,
-    CONSTRAINT pk_project_member_owns_ownership_source_projec_1b4d0a7cf683b9f2 PRIMARY KEY (source_project_member, target_ownership)
+CREATE TABLE fabric.project_member_owns (
+    source_id uuid NOT NULL,
+    target_id uuid NOT NULL,
+    CONSTRAINT project_member_owns_pkey PRIMARY KEY (source_id, target_id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -219,7 +219,7 @@ WITH (
 
 CREATE TABLE fabric.reply (
     id uuid NOT NULL,
-    CONSTRAINT pk_reply_id_2967daf2494819a0 PRIMARY KEY (id)
+    CONSTRAINT reply_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -230,7 +230,7 @@ WITH (
 
 CREATE TABLE fabric.review (
     id uuid NOT NULL,
-    CONSTRAINT pk_review_id_898c2f8b172ba2b8 PRIMARY KEY (id)
+    CONSTRAINT review_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -239,10 +239,10 @@ WITH (
     autovacuum_analyze_threshold = 2500
 );
 
-CREATE TABLE fabric.review_comments_comment (
-    source_review uuid NOT NULL,
-    target_comment uuid NOT NULL,
-    CONSTRAINT pk_review_comments_comment_source_review_targe_e10bf666381ddfb6 PRIMARY KEY (source_review, target_comment)
+CREATE TABLE fabric.review_comments (
+    source_id uuid NOT NULL,
+    target_id uuid NOT NULL,
+    CONSTRAINT review_comments_pkey PRIMARY KEY (source_id, target_id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -251,10 +251,10 @@ WITH (
     autovacuum_analyze_threshold = 2500
 );
 
-CREATE TABLE fabric.review_reviewers_user (
-    source_review uuid NOT NULL,
-    target_user uuid NOT NULL,
-    CONSTRAINT pk_review_reviewers_user_source_review_target__288467e2f54d2572 PRIMARY KEY (source_review, target_user)
+CREATE TABLE fabric.review_reviewers (
+    source_id uuid NOT NULL,
+    target_id uuid NOT NULL,
+    CONSTRAINT review_reviewers_pkey PRIMARY KEY (source_id, target_id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -267,15 +267,15 @@ CREATE TABLE fabric.thing (
     id uuid NOT NULL,
     class_kind text NOT NULL,
     data jsonb NOT NULL,
-    CONSTRAINT ck_thing_class_kind_a5e3c76a43ee76df CHECK (class_kind IN ('BranchProtectionRule', 'Comment', 'FunctionalProject', 'FunctionalProjectPolicy', 'Organization', 'OrganizationMember', 'OrganizationPolicy', 'Ownership', 'ProjectMember', 'Reply', 'Review', 'User')),
-    CONSTRAINT ck_thing_data_metadata_b7364e19b70378a6 CHECK ((
+    CONSTRAINT thing_class_kind_check CHECK (class_kind IN ('BranchProtectionRule', 'Comment', 'FunctionalProject', 'FunctionalProjectPolicy', 'Organization', 'OrganizationMember', 'OrganizationPolicy', 'Ownership', 'ProjectMember', 'Reply', 'Review', 'User')),
+    CONSTRAINT thing_data_check CHECK ((
         jsonb_typeof(data) = 'object'
         AND jsonb_typeof(data -> '@id') = 'string'
         AND jsonb_typeof(data -> '@type') = 'string'
         AND (data ->> '@id')::uuid = id
         AND data ->> '@type' = class_kind
     ) IS TRUE),
-    CONSTRAINT pk_thing_id_d4b927f80093cf60 PRIMARY KEY (id)
+    CONSTRAINT thing_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -286,7 +286,7 @@ WITH (
 
 CREATE TABLE fabric.model_user (
     id uuid NOT NULL,
-    CONSTRAINT pk_model_user_id_1e4cd347ffaea3a5 PRIMARY KEY (id)
+    CONSTRAINT model_user_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -296,212 +296,212 @@ WITH (
 );
 
 ALTER TABLE fabric.auditable_thing
-    ADD CONSTRAINT fk_auditable_thing_id_thing_1f9e0d452a4e6fe8 FOREIGN KEY (id) REFERENCES fabric.thing (id)
+    ADD CONSTRAINT auditable_thing_id_fkey FOREIGN KEY (id) REFERENCES fabric.thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE fabric.auditable_thing
-    ADD CONSTRAINT fk_auditable_thing_created_by_model_user_06d1ba260c71cede FOREIGN KEY (created_by) REFERENCES fabric.model_user (id)
+    ADD CONSTRAINT auditable_thing_created_by_fkey FOREIGN KEY (created_by) REFERENCES fabric.model_user (id)
     ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
 
-CREATE INDEX ix_auditable_thing_created_by_181d7a82eafadc2f ON fabric.auditable_thing (created_by);
+CREATE INDEX auditable_thing_created_by_idx ON fabric.auditable_thing (created_by);
 
 ALTER TABLE fabric.auditable_thing
-    ADD CONSTRAINT fk_auditable_thing_updated_by_model_user_b26aae25254c211b FOREIGN KEY (updated_by) REFERENCES fabric.model_user (id)
+    ADD CONSTRAINT auditable_thing_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES fabric.model_user (id)
     ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
 
-CREATE INDEX ix_auditable_thing_updated_by_81ae399ef82bdf47 ON fabric.auditable_thing (updated_by);
+CREATE INDEX auditable_thing_updated_by_idx ON fabric.auditable_thing (updated_by);
 
 ALTER TABLE fabric.branch_protection_rule
-    ADD CONSTRAINT fk_branch_protection_rule_id_auditable_thing_2181d8456f67e8d1 FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
+    ADD CONSTRAINT branch_protection_rule_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.branch_protection_rule_default_reviewers_user
-    ADD CONSTRAINT fk_branch_protection_rule_default_reviewers_us_878bb6f0a64b3f14 FOREIGN KEY (source_branch_protection_rule) REFERENCES fabric.branch_protection_rule (id)
+ALTER TABLE fabric.branch_protection_rule_default_reviewers
+    ADD CONSTRAINT branch_protection_rule_default_reviewers_source_id_fkey FOREIGN KEY (source_id) REFERENCES fabric.branch_protection_rule (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.branch_protection_rule_default_reviewers_user
-    ADD CONSTRAINT fk_branch_protection_rule_default_reviewers_us_c201ef7079e374fa FOREIGN KEY (target_user) REFERENCES fabric.model_user (id)
+ALTER TABLE fabric.branch_protection_rule_default_reviewers
+    ADD CONSTRAINT branch_protection_rule_default_reviewers_target_id_fkey FOREIGN KEY (target_id) REFERENCES fabric.model_user (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-CREATE INDEX ix_branch_protection_rule_default_reviewers_us_69d81bcb9adc03ac ON fabric.branch_protection_rule_default_reviewers_user (target_user);
+CREATE INDEX branch_protection_rule_default_reviewers_target_id_idx ON fabric.branch_protection_rule_default_reviewers (target_id);
 
 ALTER TABLE fabric.comment
-    ADD CONSTRAINT fk_comment_id_message_f7e2195dd6e624a0 FOREIGN KEY (id) REFERENCES fabric.message (id)
+    ADD CONSTRAINT comment_id_fkey FOREIGN KEY (id) REFERENCES fabric.message (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.comment_replies_reply
-    ADD CONSTRAINT fk_comment_replies_reply_source_comment_commen_56ff440013756b61 FOREIGN KEY (source_comment) REFERENCES fabric.comment (id)
+ALTER TABLE fabric.comment_replies
+    ADD CONSTRAINT comment_replies_source_id_fkey FOREIGN KEY (source_id) REFERENCES fabric.comment (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.comment_replies_reply
-    ADD CONSTRAINT fk_comment_replies_reply_target_reply_reply_c6ac9760579eab36 FOREIGN KEY (target_reply) REFERENCES fabric.reply (id)
+ALTER TABLE fabric.comment_replies
+    ADD CONSTRAINT comment_replies_target_id_fkey FOREIGN KEY (target_id) REFERENCES fabric.reply (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.comment_replies_reply
-    ADD CONSTRAINT uq_comment_replies_reply_target_reply_25c4943af7db9897 UNIQUE (target_reply) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE fabric.comment_replies
+    ADD CONSTRAINT comment_replies_target_id_key UNIQUE (target_id) DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE fabric.functional_project
-    ADD CONSTRAINT fk_functional_project_id_auditable_thing_71fac0c45ca8c932 FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
+    ADD CONSTRAINT functional_project_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE fabric.functional_project
-    ADD CONSTRAINT fk_functional_project_belongs_to_organization_080403d7c7ed427a FOREIGN KEY (belongs_to) REFERENCES fabric.organization (id)
+    ADD CONSTRAINT functional_project_belongs_to_fkey FOREIGN KEY (belongs_to) REFERENCES fabric.organization (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-CREATE INDEX ix_functional_project_belongs_to_b26b71a4bde8a1a4 ON fabric.functional_project (belongs_to);
+CREATE INDEX functional_project_belongs_to_idx ON fabric.functional_project (belongs_to);
 
 ALTER TABLE fabric.functional_project
-    ADD CONSTRAINT fk_functional_project_policy_functional_projec_2367343fd3c9090e FOREIGN KEY (policy) REFERENCES fabric.functional_project_policy (id)
+    ADD CONSTRAINT functional_project_policy_fkey FOREIGN KEY (policy) REFERENCES fabric.functional_project_policy (id)
     ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE fabric.functional_project
-    ADD CONSTRAINT uq_functional_project_policy_6b41245d01e6369b UNIQUE (policy) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT functional_project_policy_key UNIQUE (policy) DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE fabric.functional_project_branch_rules_branch_protection_rule
-    ADD CONSTRAINT fk_functional_project_branch_rules_branch_prot_eb952a2165a2912b FOREIGN KEY (source_functional_project) REFERENCES fabric.functional_project (id)
+ALTER TABLE fabric.functional_project_branch_rules
+    ADD CONSTRAINT functional_project_branch_rules_source_id_fkey FOREIGN KEY (source_id) REFERENCES fabric.functional_project (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.functional_project_branch_rules_branch_protection_rule
-    ADD CONSTRAINT fk_functional_project_branch_rules_branch_prot_e7de2a33423a4d98 FOREIGN KEY (target_branch_protection_rule) REFERENCES fabric.branch_protection_rule (id)
+ALTER TABLE fabric.functional_project_branch_rules
+    ADD CONSTRAINT functional_project_branch_rules_target_id_fkey FOREIGN KEY (target_id) REFERENCES fabric.branch_protection_rule (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.functional_project_branch_rules_branch_protection_rule
-    ADD CONSTRAINT uq_functional_project_branch_rules_branch_prot_157aff4638de9312 UNIQUE (target_branch_protection_rule) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE fabric.functional_project_branch_rules
+    ADD CONSTRAINT functional_project_branch_rules_target_id_key UNIQUE (target_id) DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE fabric.functional_project_defines_ownership
-    ADD CONSTRAINT fk_functional_project_defines_ownership_source_99f717cb8849f380 FOREIGN KEY (source_functional_project) REFERENCES fabric.functional_project (id)
+ALTER TABLE fabric.functional_project_defines
+    ADD CONSTRAINT functional_project_defines_source_id_fkey FOREIGN KEY (source_id) REFERENCES fabric.functional_project (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.functional_project_defines_ownership
-    ADD CONSTRAINT fk_functional_project_defines_ownership_target_2e9a576e6946f1eb FOREIGN KEY (target_ownership) REFERENCES fabric.ownership (id)
+ALTER TABLE fabric.functional_project_defines
+    ADD CONSTRAINT functional_project_defines_target_id_fkey FOREIGN KEY (target_id) REFERENCES fabric.ownership (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.functional_project_defines_ownership
-    ADD CONSTRAINT uq_functional_project_defines_ownership_target_43f32fb6eeb4ed99 UNIQUE (target_ownership) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE fabric.functional_project_defines
+    ADD CONSTRAINT functional_project_defines_target_id_key UNIQUE (target_id) DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE fabric.functional_project_reviews_review
-    ADD CONSTRAINT fk_functional_project_reviews_review_source_fu_85ba2c06d155c663 FOREIGN KEY (source_functional_project) REFERENCES fabric.functional_project (id)
+ALTER TABLE fabric.functional_project_reviews
+    ADD CONSTRAINT functional_project_reviews_source_id_fkey FOREIGN KEY (source_id) REFERENCES fabric.functional_project (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.functional_project_reviews_review
-    ADD CONSTRAINT fk_functional_project_reviews_review_target_re_cc0f782f02ca211e FOREIGN KEY (target_review) REFERENCES fabric.review (id)
+ALTER TABLE fabric.functional_project_reviews
+    ADD CONSTRAINT functional_project_reviews_target_id_fkey FOREIGN KEY (target_id) REFERENCES fabric.review (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.functional_project_reviews_review
-    ADD CONSTRAINT uq_functional_project_reviews_review_target_re_da1d08a899225c58 UNIQUE (target_review) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE fabric.functional_project_reviews
+    ADD CONSTRAINT functional_project_reviews_target_id_key UNIQUE (target_id) DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE fabric.functional_project_policy
-    ADD CONSTRAINT fk_functional_project_policy_id_auditable_thin_f189954e3ec8edfe FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
+    ADD CONSTRAINT functional_project_policy_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE fabric.message
-    ADD CONSTRAINT fk_message_id_auditable_thing_2bd55495957f786c FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
+    ADD CONSTRAINT message_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE fabric.message
-    ADD CONSTRAINT fk_message_quotes_message_7d2044c5079685cc FOREIGN KEY (quotes) REFERENCES fabric.message (id)
+    ADD CONSTRAINT message_quotes_fkey FOREIGN KEY (quotes) REFERENCES fabric.message (id)
     ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
 
-CREATE INDEX ix_message_quotes_d767aaa5275900dc ON fabric.message (quotes);
+CREATE INDEX message_quotes_idx ON fabric.message (quotes);
 
 ALTER TABLE fabric.organization
-    ADD CONSTRAINT fk_organization_id_auditable_thing_0d90cd2cc694afc4 FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
+    ADD CONSTRAINT organization_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE fabric.organization
-    ADD CONSTRAINT fk_organization_policy_organization_policy_205ac3eabe305c07 FOREIGN KEY (policy) REFERENCES fabric.organization_policy (id)
+    ADD CONSTRAINT organization_policy_fkey FOREIGN KEY (policy) REFERENCES fabric.organization_policy (id)
     ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE fabric.organization
-    ADD CONSTRAINT uq_organization_policy_b9b4fce7677e6c84 UNIQUE (policy) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT organization_policy_key UNIQUE (policy) DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE fabric.organization_member
-    ADD CONSTRAINT fk_organization_member_id_auditable_thing_c306b474ff6144a4 FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
+    ADD CONSTRAINT organization_member_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE fabric.organization_member
-    ADD CONSTRAINT fk_organization_member_organization_organizati_4cde24eeb121dc4f FOREIGN KEY (organization) REFERENCES fabric.organization (id)
+    ADD CONSTRAINT organization_member_organization_fkey FOREIGN KEY (organization) REFERENCES fabric.organization (id)
     ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
 
-CREATE INDEX ix_organization_member_organization_16c5bd788927b549 ON fabric.organization_member (organization);
+CREATE INDEX organization_member_organization_idx ON fabric.organization_member (organization);
 
 ALTER TABLE fabric.organization_member
-    ADD CONSTRAINT fk_organization_member_model_user_model_user_5c92915e42d06b71 FOREIGN KEY (model_user) REFERENCES fabric.model_user (id)
+    ADD CONSTRAINT organization_member_model_user_fkey FOREIGN KEY (model_user) REFERENCES fabric.model_user (id)
     ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
 
-CREATE INDEX ix_organization_member_model_user_96daed42a0232088 ON fabric.organization_member (model_user);
+CREATE INDEX organization_member_model_user_idx ON fabric.organization_member (model_user);
 
 ALTER TABLE fabric.organization_policy
-    ADD CONSTRAINT fk_organization_policy_id_auditable_thing_947c7898a939fca4 FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
+    ADD CONSTRAINT organization_policy_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE fabric.ownership
-    ADD CONSTRAINT fk_ownership_id_auditable_thing_812730ab7d731cc1 FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
+    ADD CONSTRAINT ownership_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE fabric.project_member
-    ADD CONSTRAINT fk_project_member_id_auditable_thing_37495760ecf1b90e FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
+    ADD CONSTRAINT project_member_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE fabric.project_member
-    ADD CONSTRAINT fk_project_member_active_ownership_ownership_20a754fe05935501 FOREIGN KEY (active_ownership) REFERENCES fabric.ownership (id)
+    ADD CONSTRAINT project_member_active_ownership_fkey FOREIGN KEY (active_ownership) REFERENCES fabric.ownership (id)
     ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
 
-CREATE INDEX ix_project_member_active_ownership_729b4c638a122ab6 ON fabric.project_member (active_ownership);
+CREATE INDEX project_member_active_ownership_idx ON fabric.project_member (active_ownership);
 
 ALTER TABLE fabric.project_member
-    ADD CONSTRAINT fk_project_member_is_part_of_functional_projec_2f6496acc5186982 FOREIGN KEY (is_part_of) REFERENCES fabric.functional_project (id)
+    ADD CONSTRAINT project_member_is_part_of_fkey FOREIGN KEY (is_part_of) REFERENCES fabric.functional_project (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-CREATE INDEX ix_project_member_is_part_of_3b6bc2b5d06b8164 ON fabric.project_member (is_part_of);
+CREATE INDEX project_member_is_part_of_idx ON fabric.project_member (is_part_of);
 
 ALTER TABLE fabric.project_member
-    ADD CONSTRAINT fk_project_member_model_user_model_user_8fdb93398c120c65 FOREIGN KEY (model_user) REFERENCES fabric.model_user (id)
+    ADD CONSTRAINT project_member_model_user_fkey FOREIGN KEY (model_user) REFERENCES fabric.model_user (id)
     ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
 
-CREATE INDEX ix_project_member_model_user_0e9cdbde4fcdd984 ON fabric.project_member (model_user);
+CREATE INDEX project_member_model_user_idx ON fabric.project_member (model_user);
 
-ALTER TABLE fabric.project_member_owns_ownership
-    ADD CONSTRAINT fk_project_member_owns_ownership_source_projec_13d3c8916265cc57 FOREIGN KEY (source_project_member) REFERENCES fabric.project_member (id)
+ALTER TABLE fabric.project_member_owns
+    ADD CONSTRAINT project_member_owns_source_id_fkey FOREIGN KEY (source_id) REFERENCES fabric.project_member (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.project_member_owns_ownership
-    ADD CONSTRAINT fk_project_member_owns_ownership_target_owners_2781318ae10511ad FOREIGN KEY (target_ownership) REFERENCES fabric.ownership (id)
+ALTER TABLE fabric.project_member_owns
+    ADD CONSTRAINT project_member_owns_target_id_fkey FOREIGN KEY (target_id) REFERENCES fabric.ownership (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-CREATE INDEX ix_project_member_owns_ownership_target_owners_ba02b03cf35b7ce1 ON fabric.project_member_owns_ownership (target_ownership);
+CREATE INDEX project_member_owns_target_id_idx ON fabric.project_member_owns (target_id);
 
 ALTER TABLE fabric.reply
-    ADD CONSTRAINT fk_reply_id_message_d770fac9efdda8cb FOREIGN KEY (id) REFERENCES fabric.message (id)
+    ADD CONSTRAINT reply_id_fkey FOREIGN KEY (id) REFERENCES fabric.message (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE fabric.review
-    ADD CONSTRAINT fk_review_id_auditable_thing_4cebf791cb87737f FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
+    ADD CONSTRAINT review_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.review_comments_comment
-    ADD CONSTRAINT fk_review_comments_comment_source_review_revie_cd506c00523bdf2c FOREIGN KEY (source_review) REFERENCES fabric.review (id)
+ALTER TABLE fabric.review_comments
+    ADD CONSTRAINT review_comments_source_id_fkey FOREIGN KEY (source_id) REFERENCES fabric.review (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.review_comments_comment
-    ADD CONSTRAINT fk_review_comments_comment_target_comment_comm_1d46752f8eb1c0b0 FOREIGN KEY (target_comment) REFERENCES fabric.comment (id)
+ALTER TABLE fabric.review_comments
+    ADD CONSTRAINT review_comments_target_id_fkey FOREIGN KEY (target_id) REFERENCES fabric.comment (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.review_comments_comment
-    ADD CONSTRAINT uq_review_comments_comment_target_comment_05d0faab1e6708a5 UNIQUE (target_comment) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE fabric.review_comments
+    ADD CONSTRAINT review_comments_target_id_key UNIQUE (target_id) DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE fabric.review_reviewers_user
-    ADD CONSTRAINT fk_review_reviewers_user_source_review_review_44322f12bcf1f655 FOREIGN KEY (source_review) REFERENCES fabric.review (id)
+ALTER TABLE fabric.review_reviewers
+    ADD CONSTRAINT review_reviewers_source_id_fkey FOREIGN KEY (source_id) REFERENCES fabric.review (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE fabric.review_reviewers_user
-    ADD CONSTRAINT fk_review_reviewers_user_target_user_model_use_12f0caddc785154e FOREIGN KEY (target_user) REFERENCES fabric.model_user (id)
+ALTER TABLE fabric.review_reviewers
+    ADD CONSTRAINT review_reviewers_target_id_fkey FOREIGN KEY (target_id) REFERENCES fabric.model_user (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
-CREATE INDEX ix_review_reviewers_user_target_user_c5abab6dc142cb75 ON fabric.review_reviewers_user (target_user);
+CREATE INDEX review_reviewers_target_id_idx ON fabric.review_reviewers (target_id);
 
 ALTER TABLE fabric.model_user
-    ADD CONSTRAINT fk_model_user_id_auditable_thing_8b096f2acff04a88 FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
+    ADD CONSTRAINT model_user_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
 -- Updating a non-key root column serializes writers for this object and forces
@@ -553,29 +553,29 @@ LANGUAGE sql
 AS $mycelium$
     SELECT NULL::uuid WHERE false
     UNION ALL
-    SELECT relationship.source_comment
-    FROM fabric.comment_replies_reply AS relationship
-    WHERE relationship.target_reply = p_part AND relationship.source_comment IS NOT NULL
+    SELECT relationship.source_id
+    FROM fabric.comment_replies AS relationship
+    WHERE relationship.target_id = p_part AND relationship.source_id IS NOT NULL
     UNION ALL
     SELECT relationship.belongs_to
     FROM fabric.functional_project AS relationship
     WHERE relationship.id = p_part AND relationship.belongs_to IS NOT NULL
     UNION ALL
-    SELECT relationship.source_functional_project
-    FROM fabric.functional_project_branch_rules_branch_protection_rule AS relationship
-    WHERE relationship.target_branch_protection_rule = p_part AND relationship.source_functional_project IS NOT NULL
+    SELECT relationship.source_id
+    FROM fabric.functional_project_branch_rules AS relationship
+    WHERE relationship.target_id = p_part AND relationship.source_id IS NOT NULL
     UNION ALL
-    SELECT relationship.source_functional_project
-    FROM fabric.functional_project_defines_ownership AS relationship
-    WHERE relationship.target_ownership = p_part AND relationship.source_functional_project IS NOT NULL
+    SELECT relationship.source_id
+    FROM fabric.functional_project_defines AS relationship
+    WHERE relationship.target_id = p_part AND relationship.source_id IS NOT NULL
     UNION ALL
     SELECT relationship.id
     FROM fabric.functional_project AS relationship
     WHERE relationship.policy = p_part AND relationship.id IS NOT NULL
     UNION ALL
-    SELECT relationship.source_functional_project
-    FROM fabric.functional_project_reviews_review AS relationship
-    WHERE relationship.target_review = p_part AND relationship.source_functional_project IS NOT NULL
+    SELECT relationship.source_id
+    FROM fabric.functional_project_reviews AS relationship
+    WHERE relationship.target_id = p_part AND relationship.source_id IS NOT NULL
     UNION ALL
     SELECT relationship.id
     FROM fabric.organization AS relationship
@@ -585,9 +585,9 @@ AS $mycelium$
     FROM fabric.project_member AS relationship
     WHERE relationship.id = p_part AND relationship.is_part_of IS NOT NULL
     UNION ALL
-    SELECT relationship.source_review
-    FROM fabric.review_comments_comment AS relationship
-    WHERE relationship.target_comment = p_part AND relationship.source_review IS NOT NULL
+    SELECT relationship.source_id
+    FROM fabric.review_comments AS relationship
+    WHERE relationship.target_id = p_part AND relationship.source_id IS NOT NULL
 $mycelium$;
 
 -- Capture detached identities immediately; delete them only after reparenting
@@ -716,86 +716,86 @@ BEGIN
 END;
 $mycelium$;
 
-CREATE TRIGGER guard_comment_replies_reply_source_comment_tar_be6de4d8eb8987c0
-    AFTER INSERT OR UPDATE OR DELETE ON fabric.comment_replies_reply
-    FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('target_reply', 'source_comment');
+CREATE TRIGGER t10_track_ownership
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.comment_replies
+    FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('target_id', 'source_id');
 
-CREATE CONSTRAINT TRIGGER ownership_comment_replies_reply_source_comment_bc2c64a9dfbca732
-    AFTER INSERT OR UPDATE OR DELETE ON fabric.comment_replies_reply
+CREATE CONSTRAINT TRIGGER t80_validate_ownership
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.comment_replies
     DEFERRABLE INITIALLY DEFERRED
-    FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('target_reply', 'source_comment');
+    FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('target_id', 'source_id');
 
-CREATE TRIGGER guard_functional_project_belongs_to_id_eaid_ds_0193c30ef0610a35
+CREATE TRIGGER t10_track_ownership_belongs_to
     AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project
     FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('id', 'belongs_to');
 
-CREATE CONSTRAINT TRIGGER ownership_functional_project_belongs_to_id_eai_c12f9a53079a328a
+CREATE CONSTRAINT TRIGGER t80_validate_ownership_belongs_to
     AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('id', 'belongs_to');
 
-CREATE TRIGGER guard_functional_project_branch_rules_branch_p_c505788b8488fc1f
-    AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_branch_rules_branch_protection_rule
-    FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('target_branch_protection_rule', 'source_functional_project');
+CREATE TRIGGER t10_track_ownership
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_branch_rules
+    FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('target_id', 'source_id');
 
-CREATE CONSTRAINT TRIGGER ownership_functional_project_branch_rules_bran_c1d2f61b8d0a483d
-    AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_branch_rules_branch_protection_rule
+CREATE CONSTRAINT TRIGGER t80_validate_ownership
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_branch_rules
     DEFERRABLE INITIALLY DEFERRED
-    FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('target_branch_protection_rule', 'source_functional_project');
+    FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('target_id', 'source_id');
 
-CREATE TRIGGER guard_functional_project_defines_ownership_sou_dc4c38d3026ccaa6
-    AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_defines_ownership
-    FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('target_ownership', 'source_functional_project');
+CREATE TRIGGER t10_track_ownership
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_defines
+    FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('target_id', 'source_id');
 
-CREATE CONSTRAINT TRIGGER ownership_functional_project_defines_ownership_b0024635c6fbe7f2
-    AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_defines_ownership
+CREATE CONSTRAINT TRIGGER t80_validate_ownership
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_defines
     DEFERRABLE INITIALLY DEFERRED
-    FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('target_ownership', 'source_functional_project');
+    FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('target_id', 'source_id');
 
-CREATE TRIGGER guard_functional_project_id_policy_eaid_src334_b841731cc2e7b907
+CREATE TRIGGER t10_track_ownership_policy
     AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project
     FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('policy', 'id');
 
-CREATE CONSTRAINT TRIGGER ownership_functional_project_id_policy_eaid_sr_2a0ab346af1f6e0d
+CREATE CONSTRAINT TRIGGER t80_validate_ownership_policy
     AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('policy', 'id');
 
-CREATE TRIGGER guard_functional_project_reviews_review_source_49b3d22307c1392c
-    AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_reviews_review
-    FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('target_review', 'source_functional_project');
+CREATE TRIGGER t10_track_ownership
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_reviews
+    FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('target_id', 'source_id');
 
-CREATE CONSTRAINT TRIGGER ownership_functional_project_reviews_review_so_7f970c2dda60210f
-    AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_reviews_review
+CREATE CONSTRAINT TRIGGER t80_validate_ownership
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_reviews
     DEFERRABLE INITIALLY DEFERRED
-    FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('target_review', 'source_functional_project');
+    FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('target_id', 'source_id');
 
-CREATE TRIGGER guard_organization_id_policy_eaid_src55_fb64_e_f46be3af09d90ce0
+CREATE TRIGGER t10_track_ownership
     AFTER INSERT OR UPDATE OR DELETE ON fabric.organization
     FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('policy', 'id');
 
-CREATE CONSTRAINT TRIGGER ownership_organization_id_policy_eaid_src55_fb_db13af43380301b8
+CREATE CONSTRAINT TRIGGER t80_validate_ownership
     AFTER INSERT OR UPDATE OR DELETE ON fabric.organization
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('policy', 'id');
 
-CREATE TRIGGER guard_project_member_is_part_of_id_eaid_dst128_7f96b59b4b4df852
+CREATE TRIGGER t10_track_ownership
     AFTER INSERT OR UPDATE OR DELETE ON fabric.project_member
     FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('id', 'is_part_of');
 
-CREATE CONSTRAINT TRIGGER ownership_project_member_is_part_of_id_eaid_ds_d4211e11e6f524a5
+CREATE CONSTRAINT TRIGGER t80_validate_ownership
     AFTER INSERT OR UPDATE OR DELETE ON fabric.project_member
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('id', 'is_part_of');
 
-CREATE TRIGGER guard_review_comments_comment_source_review_ta_5eed82b8408bbd1f
-    AFTER INSERT OR UPDATE OR DELETE ON fabric.review_comments_comment
-    FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('target_comment', 'source_review');
+CREATE TRIGGER t10_track_ownership
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.review_comments
+    FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('target_id', 'source_id');
 
-CREATE CONSTRAINT TRIGGER ownership_review_comments_comment_source_revie_6755434285537ca2
-    AFTER INSERT OR UPDATE OR DELETE ON fabric.review_comments_comment
+CREATE CONSTRAINT TRIGGER t80_validate_ownership
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.review_comments
     DEFERRABLE INITIALLY DEFERRED
-    FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('target_comment', 'source_review');
+    FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('target_id', 'source_id');
 
 CREATE FUNCTION fabric.validate_object(p_id uuid)
 RETURNS void
@@ -884,8 +884,8 @@ BEGIN
 
     IF (kind IN ('Reply')) IS TRUE
         AND NOT EXISTS (
-            SELECT 1 FROM fabric.comment_replies_reply AS relationship
-            WHERE relationship.target_reply = p_id AND relationship.source_comment IS NOT NULL
+            SELECT 1 FROM fabric.comment_replies AS relationship
+            WHERE relationship.target_id = p_id AND relationship.source_id IS NOT NULL
         ) THEN
         RAISE EXCEPTION 'Part % is missing a mandatory composite owner', p_id USING ERRCODE = '23514';
     END IF;
@@ -900,16 +900,16 @@ BEGIN
 
     IF (kind IN ('BranchProtectionRule')) IS TRUE
         AND NOT EXISTS (
-            SELECT 1 FROM fabric.functional_project_branch_rules_branch_protection_rule AS relationship
-            WHERE relationship.target_branch_protection_rule = p_id AND relationship.source_functional_project IS NOT NULL
+            SELECT 1 FROM fabric.functional_project_branch_rules AS relationship
+            WHERE relationship.target_id = p_id AND relationship.source_id IS NOT NULL
         ) THEN
         RAISE EXCEPTION 'Part % is missing a mandatory composite owner', p_id USING ERRCODE = '23514';
     END IF;
 
     IF (kind IN ('Ownership')) IS TRUE
         AND NOT EXISTS (
-            SELECT 1 FROM fabric.functional_project_defines_ownership AS relationship
-            WHERE relationship.target_ownership = p_id AND relationship.source_functional_project IS NOT NULL
+            SELECT 1 FROM fabric.functional_project_defines AS relationship
+            WHERE relationship.target_id = p_id AND relationship.source_id IS NOT NULL
         ) THEN
         RAISE EXCEPTION 'Part % is missing a mandatory composite owner', p_id USING ERRCODE = '23514';
     END IF;
@@ -924,8 +924,8 @@ BEGIN
 
     IF (kind IN ('Review')) IS TRUE
         AND NOT EXISTS (
-            SELECT 1 FROM fabric.functional_project_reviews_review AS relationship
-            WHERE relationship.target_review = p_id AND relationship.source_functional_project IS NOT NULL
+            SELECT 1 FROM fabric.functional_project_reviews AS relationship
+            WHERE relationship.target_id = p_id AND relationship.source_id IS NOT NULL
         ) THEN
         RAISE EXCEPTION 'Part % is missing a mandatory composite owner', p_id USING ERRCODE = '23514';
     END IF;
@@ -948,8 +948,8 @@ BEGIN
 
     IF (kind IN ('Comment')) IS TRUE
         AND NOT EXISTS (
-            SELECT 1 FROM fabric.review_comments_comment AS relationship
-            WHERE relationship.target_comment = p_id AND relationship.source_review IS NOT NULL
+            SELECT 1 FROM fabric.review_comments AS relationship
+            WHERE relationship.target_id = p_id AND relationship.source_id IS NOT NULL
         ) THEN
         RAISE EXCEPTION 'Part % is missing a mandatory composite owner', p_id USING ERRCODE = '23514';
     END IF;
@@ -974,189 +974,189 @@ BEGIN
 END;
 $mycelium$;
 
-CREATE TRIGGER trg_auditable_thing_delete_root_1783ec8ffbe01551
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.auditable_thing
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_auditable_thing_serialize_object_f961699f9f32eb8d
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.auditable_thing
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_auditable_thing_validate_inheritance_c36fa3a3d886a449
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.auditable_thing
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE TRIGGER trg_branch_protection_rule_delete_root_8c0680d706cae5ba
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.branch_protection_rule
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_branch_protection_rule_serialize_object_638bb70dac30cf0a
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.branch_protection_rule
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_branch_protection_rule_validate_inheritanc_ce97a50dbeb2f018
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.branch_protection_rule
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE TRIGGER trg_comment_delete_root_e80394fbfb3ae14c
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.comment
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_comment_serialize_object_9968bf7110aa188d
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.comment
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_comment_validate_inheritance_f932950c963a4468
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.comment
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE TRIGGER trg_functional_project_delete_root_29320a60165d19f6
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.functional_project
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_functional_project_serialize_object_deb4f6354fd01568
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_functional_project_validate_inheritance_571b0ac6fe2c2ee7
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE TRIGGER trg_functional_project_policy_delete_root_de4ec0a7937c1ba4
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.functional_project_policy
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_functional_project_policy_serialize_object_8fc3137657b2b987
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_policy
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_functional_project_policy_validate_inherit_d7be4fe2cf0c5a8e
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.functional_project_policy
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE TRIGGER trg_message_delete_root_4c157095e4d3fb4a
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.message
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_message_serialize_object_db0eed979eab9caf
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.message
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_message_validate_inheritance_202709dc217a3fe7
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.message
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE TRIGGER trg_organization_delete_root_01ec6d09bcc20638
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.organization
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_organization_serialize_object_142237bba5fd29dd
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.organization
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_organization_validate_inheritance_b4b30dbb32362cdc
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.organization
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE TRIGGER trg_organization_member_delete_root_7db397c27e1b4425
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.organization_member
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_organization_member_serialize_object_cc97f91e3463e335
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.organization_member
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_organization_member_validate_inheritance_3a28339dd1a0912f
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.organization_member
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE TRIGGER trg_organization_policy_delete_root_85c13ddf3a02333a
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.organization_policy
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_organization_policy_serialize_object_38bd1ca68d7639b3
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.organization_policy
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_organization_policy_validate_inheritance_2e5ea0f57a8eb5c0
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.organization_policy
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE TRIGGER trg_ownership_delete_root_5b9c2ca42bd07d62
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.ownership
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_ownership_serialize_object_f83f6e5b155b2b32
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.ownership
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_ownership_validate_inheritance_a57f26b10622e8ee
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.ownership
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE TRIGGER trg_project_member_delete_root_e5add233212bf381
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.project_member
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_project_member_serialize_object_54fd84e2cc795a20
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.project_member
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_project_member_validate_inheritance_a8fe6effccfee550
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.project_member
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE TRIGGER trg_reply_delete_root_f43adc3d2ebd4254
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.reply
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_reply_serialize_object_a6ec5af1bc8310bb
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.reply
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_reply_validate_inheritance_c169f2cbfcf3963d
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.reply
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE TRIGGER trg_review_delete_root_3d99ff7b5597e214
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.review
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_review_serialize_object_6553520f65c4992d
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.review
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_review_validate_inheritance_41358cc7f80a4239
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.review
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE CONSTRAINT TRIGGER trg_thing_validate_inheritance_44b900cbf1426f05
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.thing
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
-CREATE TRIGGER trg_model_user_delete_root_161f79f2bbe3f2f9
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.model_user
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
-CREATE TRIGGER trg_model_user_serialize_object_4927eeb83083bd59
+CREATE TRIGGER t30_serialize_object
     AFTER INSERT OR UPDATE OR DELETE ON fabric.model_user
     FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
 
-CREATE CONSTRAINT TRIGGER trg_model_user_validate_inheritance_c4e31c7bb952d83c
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.model_user
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();

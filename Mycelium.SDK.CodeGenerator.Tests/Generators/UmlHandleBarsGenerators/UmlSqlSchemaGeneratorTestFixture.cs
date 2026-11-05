@@ -26,7 +26,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
         private static readonly string[] ExpectedFileNames = ["schema.sql"];
 
-        private static readonly string[] ExpectedDirectParentTables = ["storage_parent_a", "storage_parent_b"];
+        private static readonly string[] ExpectedOwnershipTrackingTriggers = ["t10_track_ownership_primary_owner", "t10_track_ownership_secondary_owner"];
 
         private DirectoryInfo expectedDirectory = null!;
 
@@ -99,9 +99,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         [Test]
-        public async Task VerifyThatSyntheticModelNamesRemainValidUniqueAndIndependentOfInputOrder()
+        public async Task VerifyThatSyntheticModelNamesRemainValidReadableAndIndependentOfInputOrder()
         {
-            string[] names = ["HTTPConnection", "HttpConnection", "Select", new string('A', 80)];
+            string[] names = ["Select", new string('A', 80)];
             var first = await RenderScenarioAsync(package =>
             {
                 foreach (var name in names)
@@ -125,13 +125,31 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(first, Is.EqualTo(reversed).Using(StringComparer.Ordinal), "Package element order must not change SQL names or output.");
-                Assert.That(tableNames, Is.Unique, "Distinct modeled tables must not collide after snake_case conversion.");
                 Assert.That(tableNames.All(name => name.Length <= 63), Is.True, "Generated ASCII identifiers must fit PostgreSQL's identifier limit.");
-                Assert.That(tableNames.Count(name => name.StartsWith("http_connection_", StringComparison.Ordinal)), Is.EqualTo(2),
-                    "Both names that convert to 'http_connection' must keep that readable prefix with distinct suffixes.");
                 Assert.That(tableNames, Does.Contain("model_select"), "A reserved SQL keyword must receive a valid unquoted mapping.");
-                Assert.That(tableNames.Any(name => name.StartsWith(new string('a', 40), StringComparison.Ordinal)), Is.True,
-                    "An overlong modeled name must retain a readable, shortened table name.");
+                Assert.That(tableNames, Has.One.Match("^a{54}_[0-9a-f]{8}$"),
+                    "Only an overlong name is hashed: a readable 54-character prefix followed by an 8-character hash.");
+                Assert.That(first, Does.Not.Match("_[0-9a-f]{16}\\b"), "Names within the identifier limit must not carry a digest suffix.");
+            }
+        }
+
+        [Test]
+        public async Task VerifyThatModelNamesCollidingAfterConversionFailGenerationNamingBothElements()
+        {
+            var failure = await RenderFailureAsync(package =>
+            {
+                AddModelClass(package, "HTTPConnection");
+                AddModelClass(package, "HttpConnection");
+            });
+
+            Assert.That(failure, Is.Not.Null, "Two classes that both become 'http_connection' must stop generation instead of being suffixed.");
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(failure, Does.Contain(nameof(InvalidOperationException)), "A name collision is a model problem reported as an invalid operation.");
+                Assert.That(failure, Does.Contain("'http_connection'"), "The message must name the colliding SQL name.");
+                Assert.That(failure, Does.Contain("'HTTPConnection'"), "The message must name the first colliding class.");
+                Assert.That(failure, Does.Contain("'HttpConnection'"), "The message must name the second colliding class.");
             }
         }
 
@@ -155,19 +173,21 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             {
                 Assert.That(guards.Count, Is.EqualTo(2), "Each owner role needs its own immediate ownership tracking trigger.");
                 Assert.That(checks.Count, Is.EqualTo(2), "Each owner role needs its own deferred ownership check.");
+                Assert.That(guards.Select(match => match.Groups[1].Value), Is.EquivalentTo(ExpectedOwnershipTrackingTriggers),
+                    "Two ownership roles on one table must be distinguished by their relationship column, not by a digest.");
                 Assert.That(guards.Concat(checks).Select(match => match.Groups[1].Value), Is.Unique,
                     "Using the common part column 'id' must not produce duplicate trigger names.");
                 Assert.That(sql, Does.Contain("WHERE relationship.id = p_id AND relationship.primary_owner IS NOT NULL"));
                 Assert.That(sql, Does.Contain("WHERE relationship.id = p_id AND relationship.secondary_owner IS NOT NULL"));
-                Assert.That(sql, Does.Not.Contain("CREATE TABLE fabric.storage_owner_primary_owner_parts_storage_part"),
+                Assert.That(sql, Does.Not.Contain("CREATE TABLE fabric.storage_owner_primary_owner_parts"),
                     "A navigable scalar owner opposite must supply storage instead of an additional collection link table.");
             }
         }
 
         [Test]
-        public async Task VerifyThatSyntheticMultipleInheritanceUsesBothDirectParentsAndConcreteTypeMembership()
+        public async Task VerifyThatMultipleDirectParentsFailGenerationNamingBothGeneralizations()
         {
-            var sql = await RenderScenarioAsync(package =>
+            var failure = await RenderFailureAsync(package =>
             {
                 var firstParent = AddModelClass(package, "StorageParentA");
                 var secondParent = AddModelClass(package, "StorageParentB");
@@ -178,24 +198,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 AddModelClass(package, "StorageChild", firstParent, secondParent);
             });
 
-            var parentTargets = ChildParentForeignKey().Matches(sql)
-                .Select(match => match.Groups[1].Value)
-                .ToArray();
+            Assert.That(failure, Is.Not.Null, "The model guarantees single inheritance, so a second direct parent must stop generation.");
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(parentTargets, Is.EquivalentTo(ExpectedDirectParentTables),
-                    "The child must reference both direct parents instead of only the common root.");
-
-                foreach (var table in new[] { "storage_parent_a", "storage_parent_b", "storage_child" })
-                {
-                    Assert.That(sql, Does.Match(
-                        @"IF \(\(kind IN \('StorageChild'\)\) IS TRUE\)\s+IS DISTINCT FROM \(EXISTS \(SELECT 1 FROM fabric\." + table + @" WHERE id = p_id\)\)"),
-                        $"Concrete-type membership must require the '{table}' row for StorageChild.");
-                }
-
-                Assert.That(sql, Does.Not.Contain("'StorageParentA'"), "An abstract parent is not a permitted concrete discriminator.");
-                Assert.That(sql, Does.Not.Contain("'StorageParentB'"), "An abstract parent is not a permitted concrete discriminator.");
+                Assert.That(failure, Does.Contain(nameof(InvalidOperationException)), "A second parent is a model problem reported as an invalid operation.");
+                Assert.That(failure, Does.Contain("'storage_child_id_fkey'"), "Both parents would claim the same parent foreign-key name.");
+                Assert.That(failure, Does.Contain("'StorageParentA'"), "The message must name the first generalization.");
+                Assert.That(failure, Does.Contain("'StorageParentB'"), "The message must name the second generalization.");
             }
         }
 
@@ -210,8 +220,26 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             @"DEFERRABLE INITIALLY DEFERRED\s+FOR EACH ROW EXECUTE FUNCTION fabric\.validate_ownership\('id', '(primary_owner|secondary_owner)'\);")]
         private static partial Regex OwnershipCheckTrigger();
 
-        [GeneratedRegex(@"ALTER TABLE fabric\.storage_child\s+ADD CONSTRAINT [a-z_][a-z0-9_]* FOREIGN KEY \(id\) REFERENCES fabric\.([a-z_][a-z0-9_]*) \(id\)")]
-        private static partial Regex ChildParentForeignKey();
+        private static async Task<string> RenderFailureAsync(Action<IPackage> configure)
+        {
+            try
+            {
+                await RenderScenarioAsync(configure);
+            }
+            catch (Exception exception)
+            {
+                var details = new List<string>();
+
+                for (var current = exception; current != null; current = current.InnerException)
+                {
+                    details.Add($"{current.GetType().Name}: {current.Message}");
+                }
+
+                return string.Join(Environment.NewLine, details);
+            }
+
+            return null;
+        }
 
         private static async Task<string> RenderScenarioAsync(Action<IPackage> configure)
         {
