@@ -222,7 +222,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     };
 
                     var required = ownerEnd ? !property.QueryIsNullable() : property.Opposite is { Lower: > 0 };
-                    roles.Add(new OwnershipRole(storageTable, owner, part, required, QueryConcreteKinds(orderedClasses, partType), element));
+                    roles.Add(new OwnershipRole(storageTable, isLink, owner, part, required, QueryConcreteKinds(orderedClasses, partType), element));
                 }
 
                 var parents = new List<object>();
@@ -301,7 +301,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         }
 
         /// <summary>
-        /// Names the ownership triggers of every composition relationship, preserving model order.
+        /// Names the ownership triggers of every composition relationship, preserving model order. A relationship stored on a class table suffixes its
+        /// trigger names with its storing column; one stored in a link table, which holds only that relationship, takes no suffix. A trigger name therefore
+        /// never depends on other relationships stored on the same table.
         /// </summary>
         /// <param name="claims">
         /// The SQL names already generated, keyed by uniqueness scope and name.
@@ -317,13 +319,12 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// </exception>
         private static object[] QueryOwnerships(Dictionary<(string Scope, string Name), string> claims, IReadOnlyCollection<OwnershipRole> roles)
         {
-            var rolesPerTable = roles.CountBy(role => role.Table, StringComparer.Ordinal).ToDictionary(StringComparer.Ordinal);
             var ownerships = new List<object>();
 
             foreach (var role in roles)
             {
                 var relationshipColumn = string.Equals(role.Part, IdentityColumn, StringComparison.Ordinal) ? role.Owner : role.Part;
-                var suffix = rolesPerTable[role.Table] > 1 ? "_" + relationshipColumn : string.Empty;
+                var suffix = role.IsLink ? string.Empty : "_" + relationshipColumn;
                 var trackTrigger = Shorten("t10_track_ownership" + suffix);
                 var validateTrigger = Shorten("t80_validate_ownership" + suffix);
 
@@ -515,6 +516,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="Table">
         /// The table that stores the relationship.
         /// </param>
+        /// <param name="IsLink">
+        /// Whether the relationship is stored in its own link table rather than in a column of a class table.
+        /// </param>
         /// <param name="Owner">
         /// The column holding the owner's identity.
         /// </param>
@@ -530,6 +534,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <param name="Element">
         /// A description of the modeled property, used in collision messages.
         /// </param>
-        private sealed record OwnershipRole(string Table, string Owner, string Part, bool Required, string PartKinds, string Element);
+        private sealed record OwnershipRole(string Table, bool IsLink, string Owner, string Part, bool Required, string PartKinds, string Element);
     }
 }

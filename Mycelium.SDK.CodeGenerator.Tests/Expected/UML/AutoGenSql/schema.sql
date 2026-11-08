@@ -770,20 +770,20 @@ CREATE CONSTRAINT TRIGGER t80_validate_ownership
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('target_id', 'source_id');
 
-CREATE TRIGGER t10_track_ownership
+CREATE TRIGGER t10_track_ownership_policy
     AFTER INSERT OR UPDATE OR DELETE ON fabric.organization
     FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('policy', 'id');
 
-CREATE CONSTRAINT TRIGGER t80_validate_ownership
+CREATE CONSTRAINT TRIGGER t80_validate_ownership_policy
     AFTER INSERT OR UPDATE OR DELETE ON fabric.organization
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('policy', 'id');
 
-CREATE TRIGGER t10_track_ownership
+CREATE TRIGGER t10_track_ownership_is_part_of
     AFTER INSERT OR UPDATE OR DELETE ON fabric.project_member
     FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('id', 'is_part_of');
 
-CREATE CONSTRAINT TRIGGER t80_validate_ownership
+CREATE CONSTRAINT TRIGGER t80_validate_ownership_is_part_of
     AFTER INSERT OR UPDATE OR DELETE ON fabric.project_member
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('id', 'is_part_of');
