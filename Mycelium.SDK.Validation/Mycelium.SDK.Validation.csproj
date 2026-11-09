@@ -3,8 +3,8 @@
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <LangVersion>14.0</LangVersion>
-        <Version>0.1.0</Version>
-        <PackageReleaseNotes>Initial coordinated SDK release with interface-based DTO validators, inherited rules and approved handwritten constraints using FluentValidation 11.12.0.</PackageReleaseNotes>
+        <Version>0.2.0</Version>
+        <PackageReleaseNotes>DTO validators aligned with Mycelium.Model.Fabric 0.3.0. Targets net10.0 only and uses FluentValidation 12.2.0.</PackageReleaseNotes>
         <Description>Generated DTO data validation for the Mycelium SDK.</Description>
         <PackageId>Mycelium.SDK.Validation</PackageId>
         <Company>Starion Group S.A.</Company>
