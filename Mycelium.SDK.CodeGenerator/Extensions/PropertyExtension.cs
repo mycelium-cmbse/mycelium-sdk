@@ -15,7 +15,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     using uml4net.StructuredClassifiers;
 
     /// <summary>
-    /// Provides artifact-specific name, type, and multiplicity queries for UML properties.
+    /// Provides artifact-specific name, type, multiplicity and relational-storage queries for UML properties.
     /// </summary>
     public static class PropertyExtension
     {
@@ -125,6 +125,60 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// </param>
         extension(IProperty property)
         {
+            /// <summary>
+            /// Queries the eligible navigable scalar opposite that can store a SQL association.
+            /// </summary>
+            /// <returns>
+            /// The named, non-derived scalar reference declared by its class, or <see langword="null" /> when no eligible opposite exists.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            public IProperty QuerySqlScalarOpposite()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                if (property.Opposite is not { Owner: IClass owner } opposite || opposite.QueryIsEnumerable())
+                {
+                    return null;
+                }
+
+                return owner.QuerySqlReferenceProperties()
+                    .FirstOrDefault(reference => string.Equals(reference.XmiId, opposite.XmiId, StringComparison.Ordinal));
+            }
+
+            /// <summary>
+            /// Determines whether a collection requires its own SQL link table.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> for a collection without an eligible navigable scalar opposite.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            public bool QuerySqlRequiresLinkTable()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return property.QueryIsEnumerable() && property.QuerySqlScalarOpposite() is null;
+            }
+
+            /// <summary>
+            /// Determines whether composition deletion needs a trigger beyond a contained object's scalar owner reference.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> for a composite reference without an eligible scalar owner opposite.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            public bool QuerySqlRequiresCompositionTrigger()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return property.IsComposite && property.QuerySqlScalarOpposite() is null;
+            }
+
             /// <summary>
             /// Queries the legal C# property identifier with its first letter capitalized.
             /// </summary>

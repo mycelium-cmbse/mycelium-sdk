@@ -97,6 +97,9 @@
         <None Update="Templates\Uml\poco-class-uml-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="Templates\Uml\sql-schema-uml-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
         <None Update="Templates\OpenApi\carter-module-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
@@ -107,5 +110,14 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
+
+    <Target Name="RecordSqlModelPackageVersions" BeforeTargets="GetAssemblyAttributes">
+        <ItemGroup>
+            <AssemblyMetadata Include="@(PackageVersion)"
+                              Condition="'%(PackageVersion.Identity)' == 'Mycelium.Model.Fabric' Or '%(PackageVersion.Identity)' == 'Mycelium.Model.CommonPrimitives'">
+                <Value>%(PackageVersion.Version)</Value>
+            </AssemblyMetadata>
+        </ItemGroup>
+    </Target>
 
 </Project>
