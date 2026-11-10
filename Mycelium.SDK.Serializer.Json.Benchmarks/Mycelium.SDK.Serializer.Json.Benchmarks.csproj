@@ -5,7 +5,6 @@
         <TargetFramework>net10.0</TargetFramework>
         <LangVersion>14.0</LangVersion>
         <Version>0.2.0</Version>
-        <PackageReleaseNotes>JSON DTO deserialization benchmarks rebuilt against the 0.2.0 SDK packages.</PackageReleaseNotes>
         <Company>Starion Group S.A.</Company>
         <Authors>Sam Gerene, Antoine Théate, Régis André, Tanase-Marius Manafu, Omrane Haj Mohamed</Authors>
         <Description>Repeatable benchmarks for the public Mycelium SDK JSON deserializer.</Description>
