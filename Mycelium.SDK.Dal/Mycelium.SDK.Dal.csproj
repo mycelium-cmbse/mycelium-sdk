@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
+        <LangVersion>14.0</LangVersion>
+        <Version>0.2.0</Version>
+        <Description>The data access layer of the Mycelium SDK: the generated PostgreSQL schema scripts.</Description>
+        <PackageId>Mycelium.SDK.Dal</PackageId>
+        <Company>Starion Group S.A.</Company>
+        <Copyright>Copyright © Starion Group S.A.</Copyright>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/mycelium-cmbse/mycelium-sdk.git</RepositoryUrl>
+        <RepositoryType>Git</RepositoryType>
+        <Authors>Sam Gerene, Antoine Théate, Régis André, Tanase-Marius Manafu, Omrane Haj Mohamed</Authors>
+        <RequireLicenseAcceptance>true</RequireLicenseAcceptance>
+        <PackageReleaseNotes>Initial release. Embeds the generated initial PostgreSQL schema 0001_initial.sql (Mycelium.Model.Fabric 0.3.0, CommonPrimitives 0.4.0), exposed through SqlSchemaScripts.GetAll().</PackageReleaseNotes>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <GenerateSBOM>true</GenerateSBOM>
+        <Nullable>disable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Sbom.Targets"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="AutoGenSql\*.sql" LogicalName="Mycelium.SDK.Dal.AutoGenSql.%(Filename)%(Extension)"/>
+    </ItemGroup>
+
+</Project>

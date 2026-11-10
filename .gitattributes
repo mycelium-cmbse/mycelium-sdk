@@ -1,2 +1,0 @@
-# Keep the reviewed SQL baseline aligned with LF generator output.
-Mycelium.SDK.CodeGenerator.Tests/Expected/UML/AutoGenSql/*.sql text eol=lf

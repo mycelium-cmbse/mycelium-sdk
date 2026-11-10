@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
         <LangVersion>14.0</LangVersion>
-        <Version>0.1.0</Version>
+        <Version>0.2.0</Version>
         <Description>The SDK for the Mycelium platform.</Description>
         <PackageId>Mycelium.SDK</PackageId>
         <Company>Starion Group S.A.</Company>
@@ -13,10 +13,11 @@
         <RepositoryType>Git</RepositoryType>
         <Authors>Sam Gerene, Antoine Théate, Régis André, Tanase-Marius Manafu, Omrane Haj Mohamed</Authors>
         <RequireLicenseAcceptance>true</RequireLicenseAcceptance>
-        <PackageReleaseNotes>Initial coordinated SDK release with DTOs, POCOs, interfaces and enumerations generated from the Fabric metamodel.</PackageReleaseNotes>
+        <PackageReleaseNotes>DTOs, POCOs, interfaces and enumerations generated from Mycelium.Model.Fabric 0.3.0 (CommonPrimitives 0.4.0). The generated PostgreSQL schema ships in the separate Mycelium.SDK.Dal package.</PackageReleaseNotes>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <GenerateSBOM>true</GenerateSBOM>
+        <Nullable>disable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
@@ -25,11 +26,6 @@
 
     <ItemGroup>
         <None Include="..\README.md" Pack="true" PackagePath="\"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <EmbeddedResource Include="..\Mycelium.SDK.CodeGenerator.Tests\Expected\UML\AutoGenSql\schema.sql"
-                          LogicalName="Mycelium.SDK.Sql.schema.sql"/>
     </ItemGroup>
 
     <ItemGroup>
