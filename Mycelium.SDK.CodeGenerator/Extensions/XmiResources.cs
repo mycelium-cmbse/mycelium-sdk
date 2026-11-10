@@ -30,6 +30,16 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         public const string FunctionalDataPackageName = "Fabric";
 
         /// <summary>
+        /// The file name of the SysML v2 abstract syntax export, which imports the KerML one.
+        /// </summary>
+        public const string SysMLAbstractSyntaxFileName = "SysML_only_xmi.uml";
+
+        /// <summary>
+        /// The exact name of the model carrying the SysML v2 abstract syntax.
+        /// </summary>
+        public const string SysMLAbstractSyntaxModelName = "SysML";
+
+        /// <summary>
         /// The file name of the Systems Modeling API and Services PIM export.
         /// </summary>
         public const string SystemsModelingApiPimFileName = "ptc-25-02-29.xmi";

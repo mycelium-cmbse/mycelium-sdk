@@ -109,7 +109,9 @@ The generated SDK is verified at four independent levels; a template change — 
 
 `Mycelium.SDK.CodeGenerator.Tests/Expected/UML/AutoGen{DTO,POCO,Enum}/*.cs` hold a **representative, human-reviewed subset** of the generated output, compared byte-for-byte by the `[Category("Expected")]` tests (`VerifyThatRepresentativeDTOInterfaceMatchesReviewedGoldenFile`, `VerifyThatEveryGeneratedEnumerationMatchesItsGoldenExactly`, …). A companion test asserts that the golden set contains *exactly* the representative files, so a golden file cannot be quietly added or dropped.
 
-The two Fabric-targeted pipelines hold the **complete** output as goldens rather than a subset, because it is small and because there is no committed source in this repository to compare against — `Expected/OpenApi/AutoGenModules/` (9 modules), `Expected/Pim/AutoGenServices/` (6 service interfaces) and `Expected/Pim/AutoGenRepositories/` (7 repository interfaces). Their manifests are compared as ordered lists, so a generated file cannot appear or disappear unnoticed.
+The OpenAPI and PIM pipelines hold the **complete** output as goldens rather than a subset, because it is small and because there is no committed source in this repository to compare against — `Expected/OpenApi/AutoGenModules/` (9 modules), `Expected/Pim/AutoGenServices/` (6 service interfaces) and `Expected/Pim/AutoGenRepositories/` (7 repository interfaces). Their manifests are compared as ordered lists, so a generated file cannot appear or disappear unnoticed.
+
+The Core pipeline generates one interface per concrete SysML v2 / KerML metaclass, so `Expected/Core/AutoGenCoreServices/` holds only the representative subset listed in `Expected/RepresentativeCoreClasses.cs`: the concrete INTERESTING CLASSIFIERS of the uml4net model inspector report on the SysML and KerML packages.
 
 *A failure here means the generated contract changed.* It requires human review before the golden files are updated.
 
