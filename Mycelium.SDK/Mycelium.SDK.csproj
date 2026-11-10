@@ -17,6 +17,7 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <GenerateSBOM>true</GenerateSBOM>
+        <Nullable>disable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>

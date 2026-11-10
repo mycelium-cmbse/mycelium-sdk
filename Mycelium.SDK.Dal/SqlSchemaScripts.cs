@@ -45,7 +45,7 @@ namespace Mycelium.SDK.Dal
             return assembly.GetManifestResourceNames()
                 .Where(resourceName => resourceName.StartsWith(ResourcePrefix, StringComparison.Ordinal))
                 .OrderBy(resourceName => resourceName, StringComparer.Ordinal)
-                .Select(resourceName => (resourceName.Substring(ResourcePrefix.Length), ReadResource(assembly, resourceName)))
+                .Select(resourceName => (resourceName[ResourcePrefix.Length..], ReadResource(assembly, resourceName)))
                 .ToList();
         }
 
