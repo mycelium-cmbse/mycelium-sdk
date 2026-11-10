@@ -38,6 +38,11 @@
               Link="Resources\%(Filename)%(Extension)">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+
+        <None Include="..\Resources\*.uml"
+              Link="Resources\%(Filename)%(Extension)">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <ItemGroup>
@@ -60,6 +65,12 @@
         <Compile Remove="Expected\Pim\**\*.cs"/>
 
         <None Include="Expected\Pim\**\*.cs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+
+        <Compile Remove="Expected\Core\**\*.cs"/>
+
+        <None Include="Expected\Core\**\*.cs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>

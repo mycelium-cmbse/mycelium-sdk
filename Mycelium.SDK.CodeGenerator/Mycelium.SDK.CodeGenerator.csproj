@@ -108,6 +108,9 @@
         <None Update="Templates\Pim\repository-interface-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="Templates\Core\service-interface-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <Target Name="RecordSqlModelPackageVersions" BeforeTargets="GetAssemblyAttributes">

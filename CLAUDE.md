@@ -37,6 +37,8 @@ Test framework: **NUnit 4**. Test classes use `[TestFixture]` and `[Test]` attri
 
 - Favour duplicated code in code generation so that generated members are **statically defined** and dispatched at compile time, rather than resolved through reflection. Repetition in generated output is acceptable when it buys that performance.
 - Code generation is done by processing a UML model and rendering Handlebars templates.
+- **Use the existing data model; create as few intermediate objects as possible.** Pass the uml4net element itself (`IClass`, `IProperty`, `IPackage`, …) to the template and read its own features there (`{{ this.Name }}`, `QualifiedName`, `IsAbstract`, `Generalization`, …). uml4net and `uml4net.HandleBars` already cover most queries and type mappings (`QueryCSharpTypeName`, `QueryPackages`, …), so check them before writing anything. Do not introduce a payload, view-model or wrapper type, or a pipeline-specific helper object, to carry what the model already exposes. When a computation is genuinely missing, add it as an extension on the uml4net type in `Extensions/` and expose it through the general helper for that type (`NamedElement.*`, `Class.*`, `Property.*`), never through a new helper dedicated to one pipeline.
+- **Extension methods are grouped by the type they extend: one file per extended type.** Every `extension(IPackage …)` member lives in `Extensions/PackageExtensions.cs`, every `extension(IClass …)` member in `Extensions/ClassExtensions.cs`, and so on. Never create a file named after a pipeline or a concept (`CoreElementExtensions`, `Pim*Extensions`) that mixes several extended types.
 
 ### Code Generation Pipeline
 
@@ -54,7 +56,7 @@ The pipeline:
 2. **Generator**: `Mycelium.SDK.CodeGenerator` reads the XMI via `uml4net.xmi` (with the Enterprise Architect extender) and renders Handlebars templates from `Mycelium.SDK.CodeGenerator/Templates/Uml/*.hbs`.
 3. **Output**: `Mycelium.SDK/AutoGenDTO/`, `Mycelium.SDK/AutoGenPOCO/`, `Mycelium.SDK/AutoGenEnum/`.
 
-There are three independent pipelines: this UML one, the OpenAPI one (Carter route modules) and the PIM one (Fabric service interfaces). Both of the latter two target the `mycelium-fabric` repository and generate nothing into `Mycelium.SDK/`.
+There are four independent pipelines: this UML one, the OpenAPI one (Carter route modules), the PIM one (Fabric service and repository interfaces) and the Core one (Fabric per-metaclass service interfaces). The latter three target the `mycelium-fabric` repository and generate nothing into `Mycelium.SDK/`.
 
 Generator classes in `Mycelium.SDK.CodeGenerator/Generators/UmlHandleBarsGenerators/`:
 
@@ -129,6 +131,20 @@ Two pipeline invariants that must be preserved:
 
 - **Batch generation is all-or-nothing.** `UmlClassHandleBarsGenerator.GenerateAsync` renders and validates the *complete* batch — including the duplicate-filename check — **before** it creates the output directory, so a model that cannot be generated leaves no partial output behind. Keep that ordering; there is a test that proves it.
 - **Output is byte-for-byte deterministic on a given platform.** `Generator.CodeCleanup` Roslyn-formats the source and normalises line endings to `Environment.NewLine`, and `Generator.WriteAsync` writes UTF-8 **without** BOM. The line ending deliberately follows the platform rather than being pinned: a golden file is compared against output generated beside it, so both sides move together and the comparison holds on Windows and on `ubuntu-latest` with no `.gitattributes` entry to add for each new `AutoGen*` folder. Pinning CRLF leaves the generated side anchored while the checked-out golden follows the platform, which fails on Linux only. Deterministic ordering of properties and generalizations lives in `Mycelium.SDK.CodeGenerator/Extensions/ClassExtensions.cs` (`OrderProperties` puts `id` first, then orders case-insensitively, then ordinally, then by `XmiId`). Never introduce anything non-deterministic (timestamps, hash-ordered collections) into generated output — the whole verification model rests on exact comparison.
+
+### Core-driven generation (Fabric per-metaclass service interfaces)
+
+A fourth pipeline generates one service interface per concrete SysML v2 / KerML metaclass for the Fabric service layer.
+
+- **Input** (read-only): `Resources/SysML_only_xmi.uml`, which imports `Resources/KerML_only_xmi.uml` — the abstract-syntax exports SysML2.NET generates its `SysML2.NET.Core` types from, taken unchanged from the SysML2.NET release Fabric consumes. Loading is centralised in `Mycelium.SDK.CodeGenerator.Tests/Core/CoreXmiLoader.cs`.
+- **Generator**: `Generators/CoreHandleBarsGenerators/CoreServiceInterfaceGenerator.cs` renders `Templates/Core/service-interface-template.hbs`.
+- **Output**: staged only, into the test project's `bin/.../Core/_Mycelium.Fabric.AutoGenCoreServices/`. The committed destination is `Mycelium.Fabric.ConcurrentServer/Services/AutoGenCoreServices/` in `mycelium-fabric`, reached by the same reviewed manual copy.
+
+Rules specific to this pipeline:
+
+- **A generated metaclass is a concrete class that specializes `Element`**, in the SysML model or in a model it imports (`QueryConcreteElementClasses` in `Extensions/PackageExtensions.cs`). The set must equal the concrete DTO classes of SysML2.NET; a metaclass that has no DTO there would not compile in Fabric.
+- **The generated file is a marker, like the repositories.** Fabric hand-writes `ICoreDataService<TElement>` once and this pipeline emits `public partial interface IPartUsageService : ICoreDataService<IPartUsage> { }` per metaclass.
+- **The template works on the class itself**: names come from `{{ this.Name }}` and the DTO namespace is imported with `using SysML2.NET.Core.DTO.{{ NamedElement.WriteNamespace this }};`. The namespace is the qualified name less the model and the metaclass, the rule SysML2.NET applies to its own types.
 
 ### The UML model is READ-ONLY
 
@@ -223,6 +239,7 @@ Further `*.Tests` projects are expected; this list is not exhaustive. A new one 
 - **Generated code destined for another solution is never this agent's to compile.** When a generator here emits source for a different solution — the Carter modules for `mycelium-fabric`, for example — verifying that the emitted C# compiles is the consuming solution's responsibility. Do not create scratch projects, probe builds or compile harnesses to type-check generated output. What this repository guarantees is that generation is deterministic and matches its reviewed goldens; compilation is proven downstream.
 - **`Resources/ptc-25-02-29.xmi` is read-only** — the OMG Systems Modeling API and Services PIM export, on exactly the same footing as the other resources. Never edit it, not even to correct the `getQueryById` double return or to supply the missing `KerML Abstract Syntax.xml` references; both are handled in the template and documented above. A genuine defect is raised with OMG.
 - **`Resources/ptc-25-02-30.json` is read-only** — the OMG Systems Modeling API and Services OpenAPI document, on exactly the same footing as the XMI exports. Never edit it, not even to work around a specification quirk. A generator that cannot handle the document must fail loudly; a genuine defect in the specification is raised with OMG, not patched locally. (One such quirk is live today: `datatypeId` is typed `format: uri` yet sits in a single path segment, which cannot match a URI containing a slash. The route is generated unconstrained and the question left open deliberately.)
+- **`Resources/SysML_only_xmi.uml` and `Resources/KerML_only_xmi.uml` are read-only** — the SysML v2 / KerML abstract-syntax exports, on the same footing as the other resources. They are replaced only together with the SysML2.NET version Fabric consumes, never edited.
 
 ## Quality rules
 
