@@ -37,7 +37,7 @@ namespace Mycelium.SDK.Dal.Tests
                 foreach (var (name, sql) in scripts)
                 {
                     Assert.That(sql, Is.Not.Empty, $"Embedded script '{name}' is empty.");
-                    Assert.That(sql, Does.Not.StartWith("﻿"), $"Embedded script '{name}' starts with a byte-order mark.");
+                    Assert.That(sql[0], Is.Not.EqualTo('﻿'), $"Embedded script '{name}' starts with a byte-order mark.");
                     Assert.That(sql, Does.Not.Contain("\r"), $"Embedded script '{name}' must be returned with LF line endings only.");
                     Assert.That(sql, Does.Not.Contain("{{"), $"Embedded script '{name}' contains an unresolved Handlebars expression.");
                 }
