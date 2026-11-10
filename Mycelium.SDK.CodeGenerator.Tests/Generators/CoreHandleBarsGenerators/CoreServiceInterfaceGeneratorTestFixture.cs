@@ -17,8 +17,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.CoreHandleBarsGenerators
     [TestFixture]
     public class CoreServiceInterfaceGeneratorTestFixture
     {
-        private DirectoryInfo expectedDirectory = null!;
-        private DirectoryInfo stagingDirectory = null!;
+        private DirectoryInfo expectedDirectory;
+        private DirectoryInfo stagingDirectory;
 
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
