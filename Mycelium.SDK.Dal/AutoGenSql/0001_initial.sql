@@ -1,5 +1,5 @@
 -- ------------------------------------------------------------------------------------------------
--- <copyright file="schema.sql" company="Starion Group S.A.">
+-- <copyright company="Starion Group S.A.">
 --
 --   Copyright 2026 Starion Group S.A.
 --   SPDX-License-Identifier: Apache-2.0
