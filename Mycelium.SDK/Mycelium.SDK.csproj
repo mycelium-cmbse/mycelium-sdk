@@ -13,7 +13,7 @@
         <RepositoryType>Git</RepositoryType>
         <Authors>Sam Gerene, Antoine Théate, Régis André, Tanase-Marius Manafu, Omrane Haj Mohamed</Authors>
         <RequireLicenseAcceptance>true</RequireLicenseAcceptance>
-        <PackageReleaseNotes>DTOs, POCOs, interfaces and enumerations generated from Mycelium.Model.Fabric 0.3.0 (CommonPrimitives 0.4.0). Embeds the generated initial PostgreSQL schema as the assembly resource Mycelium.SDK.Sql.schema.sql.</PackageReleaseNotes>
+        <PackageReleaseNotes>DTOs, POCOs, interfaces and enumerations generated from Mycelium.Model.Fabric 0.3.0 (CommonPrimitives 0.4.0). The generated PostgreSQL schema ships in the separate Mycelium.SDK.Dal package.</PackageReleaseNotes>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <GenerateSBOM>true</GenerateSBOM>
@@ -25,11 +25,6 @@
 
     <ItemGroup>
         <None Include="..\README.md" Pack="true" PackagePath="\"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <EmbeddedResource Include="..\Mycelium.SDK.CodeGenerator.Tests\Expected\UML\AutoGenSql\schema.sql"
-                          LogicalName="Mycelium.SDK.Sql.schema.sql"/>
     </ItemGroup>
 
     <ItemGroup>

@@ -9,10 +9,10 @@
 
 namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 {
-    using System.Text;
     using System.Text.RegularExpressions;
 
     using Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators;
+    using Mycelium.SDK.Dal;
 
     using uml4net.Classification;
     using uml4net.Packages;
@@ -22,7 +22,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     [TestFixture]
     public partial class UmlSqlSchemaGeneratorTestFixture
     {
-        private const string SchemaResourceName = "Mycelium.SDK.Sql.schema.sql";
+        private const string DeliveredScriptName = "0001_initial.sql";
 
         private static readonly string[] ExpectedFileNames = ["schema.sql"];
 
@@ -72,7 +72,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 {
                     var stagedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
 
-                    var expectedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.expectedDirectory.FullName, fileName));
+                    var expectedSource = (await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.expectedDirectory.FullName, fileName))).ReplaceLineEndings("\n");
 
                     Assert.That(stagedSource, Is.EqualTo(expectedSource).Using(StringComparer.Ordinal),
                         $"Generated '{fileName}' differs from the complete reviewed SQL baseline. Review the entire SQL diff before replacing the expected file.");
@@ -81,21 +81,17 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         [Test]
-        public async Task VerifyThatSdkAssemblyEmbedsTheCompleteStagedSchema()
+        public async Task VerifyThatDalDeliversTheCompleteStagedSchemaAsTheInitialScript()
         {
             var stagedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.stagingDirectory.FullName, "schema.sql"));
 
-            await using var resourceStream = typeof(Mycelium.SDK.DTO.IThing).Assembly.GetManifestResourceStream(SchemaResourceName);
+            var deliveredScripts = SqlSchemaScripts.GetAll().Where(script => script.Name == DeliveredScriptName).ToList();
 
-            Assert.That(resourceStream, Is.Not.Null,
-                $"Mycelium.SDK must embed the reviewed expected schema as '{SchemaResourceName}'. Check the EmbeddedResource item in Mycelium.SDK/Mycelium.SDK.csproj.");
+            Assert.That(deliveredScripts, Has.Count.EqualTo(1),
+                $"Mycelium.SDK.Dal must embed exactly one '{DeliveredScriptName}'. Check Mycelium.SDK.Dal/AutoGenSql/ and the EmbeddedResource item in Mycelium.SDK.Dal/Mycelium.SDK.Dal.csproj.");
 
-            using var resourceReader = new StreamReader(resourceStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true), false);
-
-            var embeddedSource = await resourceReader.ReadToEndAsync();
-
-            Assert.That(embeddedSource, Is.EqualTo(stagedSource).Using(StringComparer.Ordinal),
-                "The schema embedded in Mycelium.SDK differs from the staged generation; review the SQL diff before replacing the expected file.");
+            Assert.That(deliveredScripts[0].Sql, Is.EqualTo(stagedSource).Using(StringComparer.Ordinal),
+                $"Mycelium.SDK.Dal/AutoGenSql/{DeliveredScriptName} differs from the staged generation. Review the entire SQL diff, then replace both the expected schema.sql and the delivered copy.");
         }
 
         [Test]
