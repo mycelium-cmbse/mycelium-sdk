@@ -220,6 +220,38 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             /// <summary>
+            /// Queries the name of the DAO parameter that carries the property's stored value: <c>&lt;table&gt;_&lt;column&gt;</c> for a scalar reference
+            /// column, and the link-table name for a link-table collection.
+            /// </summary>
+            /// <returns>
+            /// The parameter name, for example <c>auditable_thing_created_by</c> or <c>functional_project_branch_rules</c>.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the property is not owned by a class, or is a collection stored through its scalar opposite, which the DAO does not write.
+            /// </exception>
+            public string QuerySqlParameterName()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                if (property.Owner is not IClass owner)
+                {
+                    throw new InvalidOperationException($"Property '{property.Describe()}' is not owned by a class, so it has no DAO parameter.");
+                }
+
+                if (!property.QueryIsEnumerable())
+                {
+                    return $"{owner.QuerySqlIdentifier()}_{property.QuerySqlIdentifier()}";
+                }
+
+                return property.QuerySqlRequiresLinkTable()
+                    ? property.QuerySqlLinkTableName()
+                    : throw new InvalidOperationException($"Property '{owner.Name}.{property.Name}' is stored through its scalar opposite, so its DAO writes no parameter for it.");
+            }
+
+            /// <summary>
             /// Queries the legal C# property identifier with its first letter capitalized.
             /// </summary>
             /// <returns>

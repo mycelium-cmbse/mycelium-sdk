@@ -9,6 +9,7 @@
 
 namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 {
+    using Mycelium.SDK.CodeGenerator.Extensions;
     using Mycelium.SDK.CodeGenerator.HandleBarHelpers;
 
     using uml4net.StructuredClassifiers;
@@ -41,7 +42,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// Thrown when <paramref name="xmiReaderResult" /> or <paramref name="outputDirectory" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the model does not contain exactly one Fabric package.
+        /// Thrown when the model does not contain exactly one Fabric package, or when two parameters of one data access object would have the same
+        /// name; nothing is written in either case.
         /// </exception>
         public override async Task GenerateAsync(XmiReaderResult xmiReaderResult, DirectoryInfo outputDirectory)
         {
@@ -59,7 +61,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
-        /// Registers only the class and property helper groups used by the DAO template.
+        /// Registers the class, property, string and shared SQL-name helper groups used by the DAO template.
         /// </summary>
         /// <remarks>
         /// This method is invoked during base construction. Implementations
@@ -67,6 +69,10 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// </remarks>
         protected override void RegisterHelpers()
         {
+            uml4net.HandleBars.StringHelper.RegisterStringHelper(this.Handlebars);
+            uml4net.HandleBars.PropertyHelper.RegisterPropertyHelper(this.Handlebars);
+
+            this.Handlebars.RegisterSqlNameHelpers();
             this.Handlebars.RegisterDtoClassHelper();
             this.Handlebars.RegisterDaoClassHelper();
             this.Handlebars.RegisterJsonSerializerPropertyHelper();
@@ -91,8 +97,13 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// <returns>
         /// The <c>&lt;ConcreteClass&gt;Dao.cs</c> filename and its formatted source.
         /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when two parameters of the data access object would have the same name.
+        /// </exception>
         private GeneratedFile RenderDao(IClass umlClass)
         {
+            _ = umlClass.QuerySqlParameterNames();
+
             var generatedCode = this.CodeCleanup(this.Templates[DaoTemplateName](umlClass));
 
             return new GeneratedFile($"{umlClass.Name}Dao.cs", generatedCode);

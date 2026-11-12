@@ -214,11 +214,35 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 writer.WriteSafeString(property.QuerySqlIdentifier());
             });
 
+            handlebars.RegisterHelper("Property.QuerySqlRequiresLinkTable",
+                (_, arguments) => arguments.QuerySingle<IProperty>("{{Property.QuerySqlRequiresLinkTable}}").QuerySqlRequiresLinkTable());
+
             handlebars.RegisterHelper("Property.WriteSqlLinkTableName", (writer, _, arguments) =>
             {
                 var property = arguments.QuerySingle<IProperty>("{{Property.WriteSqlLinkTableName}}");
 
                 writer.WriteSafeString(property.QuerySqlLinkTableName());
+            });
+
+            handlebars.RegisterHelper("Property.WriteSqlParameterName", (writer, _, arguments) =>
+            {
+                var property = arguments.QuerySingle<IProperty>("{{Property.WriteSqlParameterName}}");
+
+                writer.WriteSafeString(property.QuerySqlParameterName());
+            });
+
+            handlebars.RegisterHelper("Property.WriteSqlOppositeTableName", (writer, _, arguments) =>
+            {
+                var property = arguments.QuerySingle<IProperty>("{{Property.WriteSqlOppositeTableName}}");
+
+                writer.WriteSafeString(((IClass)QuerySqlOpposite(property).Owner).QuerySqlIdentifier());
+            });
+
+            handlebars.RegisterHelper("Property.WriteSqlOppositeColumnName", (writer, _, arguments) =>
+            {
+                var property = arguments.QuerySingle<IProperty>("{{Property.WriteSqlOppositeColumnName}}");
+
+                writer.WriteSafeString(QuerySqlOpposite(property).QuerySqlIdentifier());
             });
         }
 
@@ -937,6 +961,24 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         private static string QueryCollectionInitializer(IProperty property, string propertyTypeName)
         {
             return property.QueryIsEnumerable() || propertyTypeName.StartsWith("Dictionary<", StringComparison.Ordinal) ? " = [];" : string.Empty;
+        }
+
+        /// <summary>
+        /// Queries the scalar opposite whose column stores a collection that has no link table.
+        /// </summary>
+        /// <param name="property">
+        /// The collection stored through its scalar opposite.
+        /// </param>
+        /// <returns>
+        /// The eligible scalar opposite, which is always owned by a class.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the property has no eligible scalar opposite.
+        /// </exception>
+        private static IProperty QuerySqlOpposite(IProperty property)
+        {
+            return property.QuerySqlScalarOpposite()
+                   ?? throw new InvalidOperationException($"Property '{property.Name}' has no eligible scalar opposite column that stores it.");
         }
 
         /// <summary>

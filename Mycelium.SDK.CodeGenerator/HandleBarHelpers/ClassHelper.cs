@@ -156,11 +156,24 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             handlebars.RegisterHelper("Class.QuerySqlLinkProperties",
                 (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlLinkProperties}}").QuerySqlLinkProperties());
 
+            handlebars.RegisterHelper("Class.QuerySqlReferenceProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlReferenceProperties}}").QuerySqlReferenceProperties());
+
+            handlebars.RegisterHelper("Class.QuerySqlChainReferenceProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlChainReferenceProperties}}").QuerySqlChainReferenceProperties());
+
             handlebars.RegisterHelper("Class.WriteSqlTableName", (writer, _, arguments) =>
             {
                 var umlClass = arguments.QuerySingle<IClass>("{{Class.WriteSqlTableName}}");
 
                 writer.WriteSafeString(umlClass.QuerySqlIdentifier());
+            });
+
+            handlebars.RegisterHelper("Class.WriteSqlRootTableName", (writer, _, arguments) =>
+            {
+                var umlClass = arguments.QuerySingle<IClass>("{{Class.WriteSqlRootTableName}}");
+
+                writer.WriteSafeString(umlClass.QuerySqlRootClass().QuerySqlIdentifier());
             });
         }
 

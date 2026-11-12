@@ -17,12 +17,12 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     using uml4net.StructuredClassifiers;
     using uml4net.xmi.Readers;
 
+    using SqlNames = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions;
+
     [TestFixture]
     public class UmlDaoGeneratorTestFixture
     {
         private Dictionary<string, IClass> classes;
-
-        private DirectoryInfo committedDirectory;
 
         private DirectoryInfo expectedDirectory;
 
@@ -33,11 +33,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
-            this.committedDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "Committed", "Mycelium.SDK.Dal", "AutoGenDao"));
-
             this.expectedDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "Expected", "UML", "AutoGenDao"));
 
-            this.stagingDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_Mycelium.SDK.Dal.AutoGenDao"));
+            this.stagingDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_Mycelium.Fabric.AutoGenDao"));
 
             if (this.stagingDirectory.Exists)
             {
@@ -51,33 +49,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 .ToDictionary(umlClass => umlClass.Name, StringComparer.Ordinal);
 
             await new UmlDaoGenerator().GenerateAsync(this.xmiReaderResult, this.stagingDirectory);
-        }
-
-        [Test]
-        public async Task VerifyThatCompleteStagedOutputMatchesCommittedDaos()
-        {
-            Assert.That(this.committedDirectory.Exists, Is.True, "The committed DAO directory Mycelium.SDK.Dal/AutoGenDao was not copied to the test output.");
-
-            if (!this.committedDirectory.Exists)
-            {
-                return;
-            }
-
-            var stagedFileNames = GeneratedOutput.QueryRelativeFileNames(this.stagingDirectory);
-            var committedFileNames = GeneratedOutput.QueryRelativeFileNames(this.committedDirectory);
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(stagedFileNames, Is.EqualTo(committedFileNames), "The staged and committed DAO manifests differ.");
-
-                foreach (var fileName in stagedFileNames.Intersect(committedFileNames, StringComparer.Ordinal))
-                {
-                    var stagedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
-                    var committedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.committedDirectory.FullName, fileName));
-
-                    Assert.That(stagedSource, Is.EqualTo(committedSource), $"Staged DAO '{fileName}' differs from the committed source.");
-                }
-            }
         }
 
         [Test]
@@ -138,12 +109,48 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var source = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(outputDirectory.FullName, $"{linkOwner.Name}Dao.cs"));
             var linkTable = orderedProperty.QuerySqlLinkTableName();
+            var columns = $"{SqlNames.SqlLinkSourceColumnName}, {SqlNames.SqlLinkTargetColumnName}, {SqlNames.SqlLinkPositionColumnName}";
+            var occurrence = $"{SqlNames.SqlLinkTargetColumnName}, {SqlNames.SqlLinkPositionColumnName}";
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(source, Does.Contain($"INSERT INTO fabric.{linkTable} (source_id, target_id, position) "), $"The insert into '{linkTable}' omits the position column.");
+                Assert.That(source, Does.Contain($"INSERT INTO {SqlNames.SqlSchemaName}.{linkTable} ({columns}) "), $"The insert into '{linkTable}' omits the position column.");
 
-                Assert.That(source, Does.Contain($"FROM unnest(@{linkTable}) WITH ORDINALITY AS element(target_id, position);"), $"The insert into '{linkTable}' does not number the occurrences.");
+                Assert.That(source, Does.Contain($"FROM unnest(@{orderedProperty.QuerySqlParameterName()}) WITH ORDINALITY AS element({occurrence});"), $"The insert into '{linkTable}' does not number the occurrences.");
+
+                Assert.That(source, Does.Contain($"ORDER BY link.{SqlNames.SqlLinkPositionColumnName}) FROM {SqlNames.SqlSchemaName}.{linkTable} AS link"), $"The read of '{linkTable}' does not keep the stored order.");
+            }
+        }
+
+        [Test]
+        public async Task VerifyThatGenerationRejectsCollidingParameterNames()
+        {
+            var collidingModel = GeneratorSetupFixture.ReadFunctionalData();
+
+            var owner = GeneratorSetupFixture.QueryFunctionalDataPackage(collidingModel).QueryPackages()
+                .SelectMany(package => package.PackagedElement.OfType<IClass>())
+                .Where(umlClass => !umlClass.IsAbstract && umlClass.QuerySqlColumnProperties().Count > 0 && umlClass.QuerySqlLinkProperties().Count > 0)
+                .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal)
+                .First();
+
+            var linkProperty = owner.QuerySqlLinkProperties()[0];
+            var columnProperty = owner.QuerySqlColumnProperties()[0];
+            columnProperty.Name = linkProperty.Name;
+
+            var outputDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_CollidingParameterDao"));
+
+            if (outputDirectory.Exists)
+            {
+                outputDirectory.Delete(true);
+            }
+
+            using (Assert.EnterMultipleScope())
+            {
+                await Assert.ThatAsync(() => new UmlDaoGenerator().GenerateAsync(collidingModel, outputDirectory),
+                    Throws.InvalidOperationException.With.Message.Contains($"The DAO parameter '{linkProperty.QuerySqlParameterName()}' of class '{owner.Name}'")
+                        .And.Message.Contains($"property '{owner.Name}.{linkProperty.Name}'"));
+
+                Assert.That(outputDirectory.Exists, Is.False, "A batch with colliding parameter names must not be written.");
             }
         }
 

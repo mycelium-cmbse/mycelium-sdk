@@ -155,6 +155,84 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             /// <summary>
+            /// Queries every SQL reference property of the class and its ancestors, which the DAO keeps out of the stored JSON document.
+            /// </summary>
+            /// <returns>
+            /// The SQL reference properties of each class of the inheritance chain, from the root down to the class.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QuerySqlChainReferenceProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QuerySqlInheritanceChain()
+                    .SelectMany(chainClass => chainClass.QuerySqlReferenceProperties())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the root class of the inheritance chain, whose table holds the identity, discriminator and JSON document of every object.
+            /// </summary>
+            /// <returns>
+            /// The topmost ancestor, or the class itself when it has no parent.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IClass QuerySqlRootClass()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QuerySqlInheritanceChain()[0];
+            }
+
+            /// <summary>
+            /// Queries the names of every parameter that the class's DAO sends, failing when two of them would be the same.
+            /// </summary>
+            /// <returns>
+            /// The identity, discriminator and document parameter names, followed by the scalar reference column and link-table collection parameter
+            /// names of the inheritance chain, from the root down to the class.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when two parameters of the DAO would have the same name; the message names both model elements.
+            /// </exception>
+            public IReadOnlyList<string> QuerySqlParameterNames()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                (string Name, string Element)[] fixedParameters =
+                [
+                    (NamedElementExtensions.SqlIdentityColumnName, "the identity"),
+                    (NamedElementExtensions.SqlClassKindColumnName, "the discriminator"),
+                    (NamedElementExtensions.SqlDataColumnName, "the JSON document")
+                ];
+
+                var referenceParameters = umlClass.QuerySqlInheritanceChain()
+                    .SelectMany(chainClass => chainClass.QuerySqlColumnProperties().Concat(chainClass.QuerySqlLinkProperties())
+                        .Select(property => (Name: property.QuerySqlParameterName(), Element: $"property '{chainClass.Name}.{property.Name}'")));
+
+                var parameters = fixedParameters.Concat(referenceParameters).ToArray();
+                var claims = new Dictionary<string, string>(StringComparer.Ordinal);
+
+                foreach (var parameter in parameters)
+                {
+                    if (!claims.TryAdd(parameter.Name, parameter.Element))
+                    {
+                        throw new InvalidOperationException(
+                            $"The DAO parameter '{parameter.Name}' of class '{umlClass.Name}' is generated for both {claims[parameter.Name]} and {parameter.Element}. " +
+                            "Rename one of them in the model; the generator does not add disambiguating suffixes.");
+                    }
+                }
+
+                return [.. parameters.Select(parameter => parameter.Name)];
+            }
+
+            /// <summary>
             /// Queries the properties declared directly by the class.
             /// </summary>
             /// <returns>
