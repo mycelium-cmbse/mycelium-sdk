@@ -230,16 +230,16 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                         .Select(property => (Name: property.QuerySqlParameterName(), Element: $"property '{chainClass.Name}.{property.Name}'")));
 
                 var parameters = fixedParameters.Concat(referenceParameters).ToArray();
-                var claims = new Dictionary<string, string>(StringComparer.Ordinal);
 
-                foreach (var parameter in parameters)
+                var collision = parameters.GroupBy(parameter => parameter.Name, StringComparer.Ordinal)
+                    .Select(group => group.ToArray())
+                    .FirstOrDefault(group => group.Length > 1);
+
+                if (collision != null)
                 {
-                    if (!claims.TryAdd(parameter.Name, parameter.Element))
-                    {
-                        throw new InvalidOperationException(
-                            $"The DAO parameter '{parameter.Name}' of class '{umlClass.Name}' is generated for both {claims[parameter.Name]} and {parameter.Element}. " +
-                            "Rename one of them in the model; the generator does not add disambiguating suffixes.");
-                    }
+                    throw new InvalidOperationException(
+                        $"The DAO parameter '{collision[0].Name}' of class '{umlClass.Name}' is generated for both {collision[0].Element} and {collision[1].Element}. " +
+                        "Rename one of them in the model; the generator does not add disambiguating suffixes.");
                 }
 
                 return [.. parameters.Select(parameter => parameter.Name)];
