@@ -33,29 +33,44 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         private const string LinkIdentityPrefix = "link:";
 
         /// <summary>
-        /// The fixed name of the root table.
+        /// The schema of every generated table and function, from the shared SQL names.
         /// </summary>
-        private const string RootTable = "thing";
+        private const string Schema = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlSchemaName;
 
         /// <summary>
-        /// The fixed identity column of every class table.
+        /// The identity column of every class table, from the shared SQL names.
         /// </summary>
-        private const string IdentityColumn = "id";
+        private const string IdentityColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlIdentityColumnName;
 
         /// <summary>
-        /// The fixed link-table column holding the owner object's identity.
+        /// The discriminator column of the root table, from the shared SQL names.
         /// </summary>
-        private const string SourceColumn = "source_id";
+        private const string ClassKindColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlClassKindColumnName;
 
         /// <summary>
-        /// The fixed link-table column holding the target object's identity.
+        /// The JSON document column of the root table, from the shared SQL names.
         /// </summary>
-        private const string TargetColumn = "target_id";
+        private const string DataColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlDataColumnName;
+
+        /// <summary>
+        /// The link-table column holding the owner object's identity, from the shared SQL names.
+        /// </summary>
+        private const string SourceColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlLinkSourceColumnName;
+
+        /// <summary>
+        /// The link-table column holding the target object's identity, from the shared SQL names.
+        /// </summary>
+        private const string TargetColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlLinkTargetColumnName;
+
+        /// <summary>
+        /// The link-table column holding an occurrence's position, from the shared SQL names.
+        /// </summary>
+        private const string PositionColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlLinkPositionColumnName;
 
         /// <summary>
         /// The scope in which PostgreSQL requires table and index names to be unique.
         /// </summary>
-        private const string SchemaScope = "relations of schema fabric";
+        private const string SchemaScope = $"relations of schema {Schema}";
 
         /// <summary>
         /// Registers only the relational-model helper consumed by the schema template.
@@ -70,9 +85,49 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
+            handlebars.RegisterSqlNameHelpers();
+
             handlebars.RegisterHelper("SQL.Model", (_, arguments) =>
                 QueryModel(arguments.QuerySingle<IReadOnlyCollection<IClass>>("{{SQL.Model}}")));
         }
+
+        /// <summary>
+        /// Registers the helpers that write the fixed SQL names shared by the schema and the DAO templates, so that neither template repeats them as
+        /// literals.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the helpers are registered.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
+        /// </exception>
+        public static void RegisterSqlNameHelpers(this IHandlebars handlebars)
+        {
+            ArgumentNullException.ThrowIfNull(handlebars);
+
+            RegisterName(handlebars, "SQL.WriteSchemaName", Schema);
+            RegisterName(handlebars, "SQL.WriteIdentityColumnName", IdentityColumn);
+            RegisterName(handlebars, "SQL.WriteClassKindColumnName", ClassKindColumn);
+            RegisterName(handlebars, "SQL.WriteDataColumnName", DataColumn);
+            RegisterName(handlebars, "SQL.WriteLinkSourceColumnName", SourceColumn);
+            RegisterName(handlebars, "SQL.WriteLinkTargetColumnName", TargetColumn);
+            RegisterName(handlebars, "SQL.WriteLinkPositionColumnName", PositionColumn);
+        }
+
+        /// <summary>
+        /// Registers a helper that writes one fixed SQL name.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the helper is registered.
+        /// </param>
+        /// <param name="helperName">
+        /// The helper name used in the templates.
+        /// </param>
+        /// <param name="sqlName">
+        /// The SQL name the helper writes.
+        /// </param>
+        private static void RegisterName(IHandlebars handlebars, string helperName, string sqlName) =>
+            handlebars.RegisterHelper(helperName, (writer, _, _) => writer.WriteSafeString(sqlName));
 
         /// <summary>
         /// Constructs deterministic table, inheritance and ownership descriptions, including every SQL object name, without rendering SQL statements.
@@ -105,7 +160,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             foreach (var umlClass in orderedClasses)
             {
-                var table = umlClass.XmiId == root.XmiId ? RootTable : umlClass.QuerySqlIdentifier();
+                var table = umlClass.QuerySqlIdentifier();
                 tableNames.Add(ClassIdentityPrefix + umlClass.XmiId, ClaimName(claims, $"the table of class '{umlClass.Name}'", table, SchemaScope));
             }
 
@@ -119,6 +174,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 }
             }
 
+            var rootTable = tableNames[ClassIdentityPrefix + root.XmiId];
             var tables = new List<object>();
             var roles = new List<OwnershipRole>();
 
@@ -126,7 +182,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             {
                 var table = tableNames[ClassIdentityPrefix + umlClass.XmiId];
                 var isRoot = umlClass.XmiId == root.XmiId;
-                string[] fixedColumns = isRoot ? [IdentityColumn, "class_kind", "data"] : [IdentityColumn];
+                string[] fixedColumns = isRoot ? [IdentityColumn, ClassKindColumn, DataColumn] : [IdentityColumn];
 
                 foreach (var fixedColumn in fixedColumns)
                 {
@@ -205,16 +261,17 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                 tables.Add(new
                 {
-                    Table = table, IsRoot = isRoot, Kinds = QueryConcreteKinds(orderedClasses, umlClass), Columns = columns, Links = links, Parents = parents,
+                    Table = table, RootTable = rootTable, IsRoot = isRoot, Kinds = QueryConcreteKinds(orderedClasses, umlClass), Columns = columns, Links = links,
+                    Parents = parents,
                     PrimaryKey = ClaimName(claims, $"the primary key of class '{umlClass.Name}'", ObjectName(table, "pkey"), SchemaScope, ConstraintScope(table)),
-                    ClassKindCheck = isRoot ? ClaimName(claims, "the discriminator check", ObjectName(table, "check", "class_kind"), ConstraintScope(table)) : null,
-                    DataCheck = isRoot ? ClaimName(claims, "the payload metadata check", ObjectName(table, "check", "data"), ConstraintScope(table)) : null
+                    ClassKindCheck = isRoot ? ClaimName(claims, "the discriminator check", ObjectName(table, "check", ClassKindColumn), ConstraintScope(table)) : null,
+                    DataCheck = isRoot ? ClaimName(claims, "the payload metadata check", ObjectName(table, "check", DataColumn), ConstraintScope(table)) : null
                 });
             }
 
             return new
             {
-                Tables = tables, Ownerships = QueryOwnerships(claims, roles),
+                Tables = tables, RootTable = rootTable, Ownerships = QueryOwnerships(claims, roles),
                 ConcreteKinds = string.Join(", ", orderedClasses.Where(umlClass => !umlClass.IsAbstract).Select(umlClass => SqlLiteral(umlClass.Name)))
             };
         }
@@ -390,7 +447,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// The column scope of <paramref name="table" />.
         /// </returns>
-        private static string ColumnScope(string table) => $"columns of table fabric.{table}";
+        private static string ColumnScope(string table) => $"columns of table {Schema}.{table}";
 
         /// <summary>
         /// Describes the scope in which a table's constraint names must be unique.
@@ -401,7 +458,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// The constraint scope of <paramref name="table" />.
         /// </returns>
-        private static string ConstraintScope(string table) => $"constraints of table fabric.{table}";
+        private static string ConstraintScope(string table) => $"constraints of table {Schema}.{table}";
 
         /// <summary>
         /// Describes the scope in which a table's trigger names must be unique.
@@ -412,7 +469,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// The trigger scope of <paramref name="table" />.
         /// </returns>
-        private static string TriggerScope(string table) => $"triggers of table fabric.{table}";
+        private static string TriggerScope(string table) => $"triggers of table {Schema}.{table}";
 
         /// <summary>
         /// Escapes a modeled discriminator as a PostgreSQL string literal without changing its value.

@@ -23,6 +23,41 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     public static partial class NamedElementExtensions
     {
         /// <summary>
+        /// The PostgreSQL schema that holds every generated table and function, shared by the schema and the DAO generators.
+        /// </summary>
+        public const string SqlSchemaName = "fabric";
+
+        /// <summary>
+        /// The identity column of every class table, also the name of the DAO identity parameter.
+        /// </summary>
+        public const string SqlIdentityColumnName = "id";
+
+        /// <summary>
+        /// The discriminator column of the root table, also the name of the DAO discriminator parameter.
+        /// </summary>
+        public const string SqlClassKindColumnName = "class_kind";
+
+        /// <summary>
+        /// The JSONB document column of the root table, also the name of the DAO document parameter.
+        /// </summary>
+        public const string SqlDataColumnName = "data";
+
+        /// <summary>
+        /// The link-table column holding the owner object's identity.
+        /// </summary>
+        public const string SqlLinkSourceColumnName = "source_id";
+
+        /// <summary>
+        /// The link-table column holding the target object's identity.
+        /// </summary>
+        public const string SqlLinkTargetColumnName = "target_id";
+
+        /// <summary>
+        /// The link-table column holding the position of an occurrence in an ordered or duplicate-permitting collection.
+        /// </summary>
+        public const string SqlLinkPositionColumnName = "position";
+
+        /// <summary>
         /// The PostgreSQL identifier limit in bytes; generated identifiers contain only ASCII characters.
         /// </summary>
         private const int MaximumSqlIdentifierBytes = 63;
