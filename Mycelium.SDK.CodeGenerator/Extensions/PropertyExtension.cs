@@ -180,6 +180,30 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             /// <summary>
+            /// Queries the name of the SQL link table that stores the collection, derived from its declaring class and its own name only.
+            /// </summary>
+            /// <returns>
+            /// The <c>&lt;owner&gt;_&lt;property&gt;</c> PostgreSQL identifier, for example <c>functional_project_branch_rules</c>.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the property is not owned by a class.
+            /// </exception>
+            public string QuerySqlLinkTableName()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                if (property.Owner is not IClass owner)
+                {
+                    throw new InvalidOperationException($"Property '{property.Describe()}' is not owned by a class, so it has no SQL link table.");
+                }
+
+                return NamedElementExtensions.ToSqlIdentifier($"{owner.Name}_{property.Name}");
+            }
+
+            /// <summary>
             /// Queries the legal C# property identifier with its first letter capitalized.
             /// </summary>
             /// <returns>

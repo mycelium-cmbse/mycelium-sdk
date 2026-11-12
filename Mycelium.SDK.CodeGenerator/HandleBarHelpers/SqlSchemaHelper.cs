@@ -9,13 +9,7 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
-    using System.Security.Cryptography;
-    using System.Text;
-    using System.Text.RegularExpressions;
-
     using HandlebarsDotNet;
-
-    using Humanizer;
 
     using Mycelium.SDK.CodeGenerator.Extensions;
 
@@ -26,18 +20,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     /// <summary>
     /// Provides model-derived SQL names and relational rendering data for the Fabric schema template.
     /// </summary>
-    public static partial class SqlSchemaHelper
+    public static class SqlSchemaHelper
     {
-        /// <summary>
-        /// The PostgreSQL identifier limit in bytes; generated identifiers contain only ASCII characters.
-        /// </summary>
-        private const int MaximumIdentifierBytes = 63;
-
-        /// <summary>
-        /// The number of hexadecimal hash characters appended to a name that exceeds the identifier limit.
-        /// </summary>
-        private const int IdentifierHashLength = 8;
-
         /// <summary>
         /// The prefix that keys a class table by the XMI identifier of its class.
         /// </summary>
@@ -72,25 +56,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// The scope in which PostgreSQL requires table and index names to be unique.
         /// </summary>
         private const string SchemaScope = "relations of schema fabric";
-
-        /// <summary>
-        /// The time allowed to replace unsupported identifier characters in one modeled name.
-        /// </summary>
-        private const int IdentifierRegexTimeoutMilliseconds = 1000;
-
-        /// <summary>
-        /// PostgreSQL 18 reserved identifiers, including keywords reserved for particular SQL contexts.
-        /// Source: https://www.postgresql.org/docs/18/sql-keywords-appendix.html.
-        /// </summary>
-        private static readonly HashSet<string> ReservedIdentifiers = (
-            "all analyse analyze and any array as asc asymmetric authorization binary both case cast check collate collation column concurrently " +
-            "constraint create cross current_catalog current_date current_role current_schema current_time current_timestamp current_user default " +
-            "deferrable desc distinct do else end except false fetch for foreign freeze from full grant group having ilike in initially inner " +
-            "intersect into is isnull join lateral leading left like limit localtime localtimestamp natural not notnull null offset on only or " +
-            "order outer overlaps placing primary references returning right select session_user similar some symmetric system_user table " +
-            "tablesample then to trailing true union unique user using variadic verbose when where window with")
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            .ToHashSet(StringComparer.Ordinal);
 
         /// <summary>
         /// Registers only the relational-model helper consumed by the schema template.
@@ -140,7 +105,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
             foreach (var umlClass in orderedClasses)
             {
-                var table = umlClass.XmiId == root.XmiId ? RootTable : QueryIdentifier(umlClass.Name);
+                var table = umlClass.XmiId == root.XmiId ? RootTable : umlClass.QuerySqlIdentifier();
                 tableNames.Add(ClassIdentityPrefix + umlClass.XmiId, ClaimName(claims, $"the table of class '{umlClass.Name}'", table, SchemaScope));
             }
 
@@ -148,7 +113,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             {
                 foreach (var property in references[umlClass.XmiId].Where(property => property.QuerySqlRequiresLinkTable()))
                 {
-                    var table = QueryIdentifier($"{umlClass.Name}_{property.Name}");
+                    var table = property.QuerySqlLinkTableName();
                     var element = $"the link table of property '{umlClass.Name}.{property.Name}'";
                     tableNames.Add(LinkIdentityPrefix + property.XmiId, ClaimName(claims, element, table, SchemaScope));
                 }
@@ -196,7 +161,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     else
                     {
                         storageTable = table;
-                        column = ClaimName(claims, $"the column of {element}", QueryIdentifier(property.Name), ColumnScope(table));
+                        column = ClaimName(claims, $"the column of {element}", property.QuerySqlIdentifier(), ColumnScope(table));
                         var exclusive = property.IsComposite;
 
                         columns.Add(new
@@ -325,8 +290,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             {
                 var relationshipColumn = string.Equals(role.Part, IdentityColumn, StringComparison.Ordinal) ? role.Owner : role.Part;
                 var suffix = role.IsLink ? string.Empty : "_" + relationshipColumn;
-                var trackTrigger = Shorten("t10_track_ownership" + suffix);
-                var validateTrigger = Shorten("t80_validate_ownership" + suffix);
+                var trackTrigger = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.ShortenSqlIdentifier("t10_track_ownership" + suffix);
+                var validateTrigger = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.ShortenSqlIdentifier("t80_validate_ownership" + suffix);
 
                 ownerships.Add(new
                 {
@@ -413,7 +378,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// The readable name, hashed only when it exceeds the identifier limit.
         /// </returns>
-        private static string ObjectName(string table, string suffix, params string[] columns) => Shorten(string.Join("_", [table, .. columns, suffix]));
+        private static string ObjectName(string table, string suffix, params string[] columns) =>
+            Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.ShortenSqlIdentifier(string.Join("_", [table, .. columns, suffix]));
 
         /// <summary>
         /// Describes the scope in which a table's column names must be unique.
@@ -449,48 +415,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         private static string TriggerScope(string table) => $"triggers of table fabric.{table}";
 
         /// <summary>
-        /// Converts a modeled name to a lowercase snake_case PostgreSQL identifier, mapping reserved and invalid names.
-        /// </summary>
-        /// <param name="name">
-        /// The modeled class, property or relationship name.
-        /// </param>
-        /// <returns>
-        /// A valid unquoted PostgreSQL identifier, hashed only when it exceeds the identifier limit.
-        /// </returns>
-        private static string QueryIdentifier(string name)
-        {
-            var identifier = UnsupportedIdentifierCharacters().Replace(name.Underscore(), "_");
-
-            if (identifier.Length == 0 || char.IsDigit(identifier[0]) || ReservedIdentifiers.Contains(identifier))
-            {
-                identifier = "model_" + identifier;
-            }
-
-            return Shorten(identifier);
-        }
-
-        /// <summary>
-        /// Keeps a readable name unchanged unless it exceeds PostgreSQL's identifier limit, in which case it is truncated and given a reproducible hash.
-        /// </summary>
-        /// <param name="readableName">
-        /// The full readable name.
-        /// </param>
-        /// <returns>
-        /// The readable name, or its truncated form followed by <c>_</c> and the first 8 lowercase hexadecimal characters of the SHA-256 of the full name.
-        /// </returns>
-        private static string Shorten(string readableName)
-        {
-            if (readableName.Length <= MaximumIdentifierBytes)
-            {
-                return readableName;
-            }
-
-            var hash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(readableName)))[..IdentifierHashLength];
-
-            return $"{readableName[..(MaximumIdentifierBytes - IdentifierHashLength - 1)]}_{hash}";
-        }
-
-        /// <summary>
         /// Escapes a modeled discriminator as a PostgreSQL string literal without changing its value.
         /// </summary>
         /// <param name="value">
@@ -500,15 +424,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// A SQL string literal with embedded apostrophes doubled.
         /// </returns>
         private static string SqlLiteral(string value) => "'" + value.Replace("'", "''", StringComparison.Ordinal) + "'";
-
-        /// <summary>
-        /// Matches every character that cannot appear in an unquoted lowercase PostgreSQL identifier.
-        /// </summary>
-        /// <returns>
-        /// A compile-time generated expression with a bounded match time.
-        /// </returns>
-        [GeneratedRegex("[^a-z0-9_]", RegexOptions.None, IdentifierRegexTimeoutMilliseconds)]
-        private static partial Regex UnsupportedIdentifierCharacters();
 
         /// <summary>
         /// One composition relationship as stored in a table, before its trigger names are assigned.
