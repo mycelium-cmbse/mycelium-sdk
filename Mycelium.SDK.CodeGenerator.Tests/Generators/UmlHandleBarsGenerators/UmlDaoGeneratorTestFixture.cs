@@ -75,7 +75,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                     var stagedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
                     var committedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.committedDirectory.FullName, fileName));
 
-                    Assert.That(string.Equals(stagedSource, committedSource, StringComparison.Ordinal), Is.True, $"Staged DAO '{fileName}' differs from the committed source.");
+                    Assert.That(stagedSource, Is.EqualTo(committedSource), $"Staged DAO '{fileName}' differs from the committed source.");
                 }
             }
         }
@@ -108,7 +108,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                     var stagedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
                     var goldenSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.expectedDirectory.FullName, fileName));
 
-                    Assert.That(string.Equals(stagedSource, goldenSource, StringComparison.Ordinal), Is.True, $"Generated DAO '{fileName}' differs from its reviewed golden.");
+                    Assert.That(stagedSource, Is.EqualTo(goldenSource), $"Generated DAO '{fileName}' differs from its reviewed golden.");
                 }
             }
         }
