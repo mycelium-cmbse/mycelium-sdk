@@ -427,14 +427,12 @@ namespace Mycelium.SDK.Dal
             {
                 Value = {{ #if (#Property.QueryIsNullable property) }}(object)dto.{{ #Property.WritePropertyName property }} ?? DBNull.Value{{ else }}dto.{{ #Property.WritePropertyName property }}{{ /if }}
             });
-
             {{ /each }}
             {{ #each (#Class.QuerySqlLinkProperties umlClass) as | property | }}
             command.Parameters.Add(new NpgsqlParameter("{{ #Property.WriteSqlLinkTableName property }}", NpgsqlDbType.Array | NpgsqlDbType.Uuid)
             {
                 Value = dto.{{ #Property.WritePropertyName property }} == null ? Array.Empty<Guid>() : dto.{{ #Property.WritePropertyName property }}.ToArray()
             });
-
             {{ /each }}
             {{ /each }}
         }
