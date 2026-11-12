@@ -125,13 +125,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\Mycelium.SDK.Dal\AutoGenDao\**\*"
-              Link="Committed\Mycelium.SDK.Dal\AutoGenDao\%(RecursiveDir)%(Filename)%(Extension)">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
-
-    <ItemGroup>
         <Folder Include="Committed\Mycelium.SDK.Extensions\AutoGenEnumProvider\"/>
     </ItemGroup>
 
