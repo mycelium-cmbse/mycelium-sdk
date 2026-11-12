@@ -18,7 +18,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     using uml4net.StructuredClassifiers;
 
     /// <summary>
-    /// Provides model-derived SQL names and relational rendering data for the Fabric schema template.
+    /// Provides model-derived SQL names and relational rendering data for the Fabric schema template, and the fixed SQL names that the schema and
+    /// DAO templates share.
     /// </summary>
     public static class SqlSchemaHelper
     {
@@ -130,6 +131,31 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             handlebars.RegisterHelper(helperName, (writer, _, _) => writer.WriteSafeString(sqlName));
 
         /// <summary>
+        /// Queries the single root class shared by every class, through the same class query the DAO generator uses rather than by name.
+        /// </summary>
+        /// <param name="classes">
+        /// The deterministically ordered model classes.
+        /// </param>
+        /// <returns>
+        /// The class at the top of every class's parent chain, whose table holds the identity, discriminator and JSON document.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the classes do not share exactly one root class; the message names the roots found.
+        /// </exception>
+        private static IClass QueryRootClass(IReadOnlyCollection<IClass> classes)
+        {
+            var roots = classes.Select(umlClass => umlClass.QuerySqlRootClass())
+                .DistinctBy(root => root.XmiId, StringComparer.Ordinal)
+                .ToArray();
+
+            return roots.Length == 1
+                ? roots[0]
+                : throw new InvalidOperationException(
+                    $"The SQL schema needs exactly one root class shared by every class, but found {roots.Length}: " +
+                    $"{string.Join(", ", roots.Select(root => root.Name))}.");
+        }
+
+        /// <summary>
         /// Constructs deterministic table, inheritance and ownership descriptions, including every SQL object name, without rendering SQL statements.
         /// </summary>
         /// <param name="classes">
@@ -142,7 +168,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// Thrown when <paramref name="classes" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the canonical class selection does not contain exactly one root Thing class, or when two modeled elements produce the same SQL name.
+        /// Thrown when the classes do not share exactly one root class, or when two modeled elements produce the same SQL name.
         /// </exception>
         private static object QueryModel(IReadOnlyCollection<IClass> classes)
         {
@@ -154,7 +180,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 .ToArray();
 
             var references = orderedClasses.ToDictionary(umlClass => umlClass.XmiId, umlClass => umlClass.QuerySqlReferenceProperties(), StringComparer.Ordinal);
-            var root = orderedClasses.Single(umlClass => string.Equals(umlClass.Name, "Thing", StringComparison.Ordinal));
+            var root = QueryRootClass(orderedClasses);
             var claims = new Dictionary<(string Scope, string Name), string>();
             var tableNames = new Dictionary<string, string>(StringComparer.Ordinal);
 

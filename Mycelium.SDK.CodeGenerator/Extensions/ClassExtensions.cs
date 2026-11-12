@@ -176,16 +176,29 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             /// Queries the root class of the inheritance chain, whose table holds the identity, discriminator and JSON document of every object.
             /// </summary>
             /// <returns>
-            /// The topmost ancestor, or the class itself when it has no parent.
+            /// The single ancestor without a parent, or the class itself when it has no parent.
             /// </returns>
             /// <exception cref="ArgumentNullException">
             /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the class's ancestors do not lead to exactly one class without a parent.
             /// </exception>
             public IClass QuerySqlRootClass()
             {
                 ArgumentNullException.ThrowIfNull(umlClass);
 
-                return umlClass.QuerySqlInheritanceChain()[0];
+                var roots = umlClass.QueryAllGeneralClassifiers()
+                    .OfType<IClass>()
+                    .Where(ancestor => ancestor.Generalization.Count == 0)
+                    .DistinctBy(ancestor => ancestor.XmiId, StringComparer.Ordinal)
+                    .ToArray();
+
+                return roots.Length == 1
+                    ? roots[0]
+                    : throw new InvalidOperationException(
+                        $"Class '{umlClass.Name}' must lead to exactly one root class, but its ancestors lead to {roots.Length}: " +
+                        $"{string.Join(", ", roots.Select(root => root.Name))}.");
             }
 
             /// <summary>
