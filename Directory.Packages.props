@@ -11,6 +11,7 @@
         Use lowest compatible library versions; update for required APIs or security fixes.
         Keep serialization/crypto current within approved compatibility.
         Deliberate floor: Microsoft.Extensions.Logging.Abstractions (.NET 8 LTS; sufficient APIs).
+        Deliberate floor: Npgsql (lowest netstandard2.1 release with the CVE-2024-32655 fix; Npgsql 10 targets net8.0+ only).
         Exclude floors only from outdated checks; retain deprecated/vulnerable checks.
     -->
     <ItemGroup>
@@ -28,6 +29,7 @@
         <PackageVersion Include="Microsoft.Sbom.Targets" Version="4.1.13" />
         <PackageVersion Include="Mycelium.Model.CommonPrimitives" Version="0.4.0" />
         <PackageVersion Include="Mycelium.Model.Fabric" Version="0.3.0" />
+        <PackageVersion Include="Npgsql" Version="8.0.3" />
         <PackageVersion Include="NUnit" Version="5.0.0" />
         <PackageVersion Include="NUnit.Console" Version="3.22.0" />
         <PackageVersion Include="NUnit3TestAdapter" Version="6.3.1" />
