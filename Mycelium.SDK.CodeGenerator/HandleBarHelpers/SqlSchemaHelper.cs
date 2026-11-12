@@ -245,7 +245,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// </exception>
         private static object QueryLink(Dictionary<(string Scope, string Name), string> claims, string element, IProperty property, string table, string targetTable)
         {
-            var position = property.IsOrdered || !property.IsUnique;
+            var position = property.QuerySqlLinkHasPosition();
             var pairUnique = position && property.IsUnique;
             var exclusive = property.IsComposite && property.IsUnique;
 

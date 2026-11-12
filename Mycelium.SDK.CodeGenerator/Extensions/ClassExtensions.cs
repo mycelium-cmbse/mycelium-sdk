@@ -99,6 +99,62 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             /// <summary>
+            /// Queries the scalar references declared directly by the class that are stored as UUID columns of its SQL table.
+            /// </summary>
+            /// <returns>
+            /// The single-valued SQL reference properties, in the deterministic order of <c>QuerySqlReferenceProperties</c>.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QuerySqlColumnProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QuerySqlReferenceProperties()
+                    .Where(property => !property.QueryIsEnumerable())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the collections declared directly by the class that are stored in their own SQL link tables.
+            /// </summary>
+            /// <returns>
+            /// The many-valued SQL reference properties without an eligible scalar opposite, in the deterministic order of
+            /// <c>QuerySqlReferenceProperties</c>.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QuerySqlLinkProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QuerySqlReferenceProperties()
+                    .Where(property => property.QuerySqlRequiresLinkTable())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the class and its ancestors in the order their SQL table rows are inserted, from the root down to the class.
+            /// </summary>
+            /// <returns>
+            /// The single-inheritance chain from the root class to this class, both included.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IClass> QuerySqlInheritanceChain()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryAllGeneralClassifiers()
+                    .OfType<IClass>()
+                    .Reverse()
+                    .ToArray();
+            }
+
+            /// <summary>
             /// Queries the properties declared directly by the class.
             /// </summary>
             /// <returns>

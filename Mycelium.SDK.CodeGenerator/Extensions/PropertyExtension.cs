@@ -204,6 +204,22 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             /// <summary>
+            /// Determines whether the SQL link table of a collection records the position of each occurrence.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the collection is ordered or permits duplicate occurrences.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            public bool QuerySqlLinkHasPosition()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return property.IsOrdered || !property.IsUnique;
+            }
+
+            /// <summary>
             /// Queries the legal C# property identifier with its first letter capitalized.
             /// </summary>
             /// <returns>

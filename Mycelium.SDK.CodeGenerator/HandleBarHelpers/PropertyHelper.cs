@@ -23,7 +23,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
     /// <summary>
     /// Provides Handlebars support for UML properties used to generate DTOs, POCOs,
-    /// JSON serializers, MessagePack formatters, and DTO validators.
+    /// JSON serializers, MessagePack formatters, DTO validators and DAOs.
     /// </summary>
     public static class PropertyHelper
     {
@@ -185,6 +185,40 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 var propertyName = property.QueryPropertyName();
 
                 writer.WriteSafeString($"public {propertyTypeName} {propertyName} " + QueryPocoImplementationSuffix(property, propertyName, propertyTypeName));
+            });
+        }
+
+        /// <summary>
+        /// Registers the property helpers that describe how a reference is stored in the PostgreSQL schema, for DAO generation.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the DAO property helpers are registered.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
+        /// </exception>
+        public static void RegisterDaoPropertyHelper(this IHandlebars handlebars)
+        {
+            ArgumentNullException.ThrowIfNull(handlebars);
+
+            handlebars.RegisterHelper("Property.QueryIsNullable",
+                (_, arguments) => arguments.QuerySingle<IProperty>("{{Property.QueryIsNullable}}").QueryIsNullable());
+
+            handlebars.RegisterHelper("Property.QuerySqlLinkHasPosition",
+                (_, arguments) => arguments.QuerySingle<IProperty>("{{Property.QuerySqlLinkHasPosition}}").QuerySqlLinkHasPosition());
+
+            handlebars.RegisterHelper("Property.WriteSqlColumnName", (writer, _, arguments) =>
+            {
+                var property = arguments.QuerySingle<IProperty>("{{Property.WriteSqlColumnName}}");
+
+                writer.WriteSafeString(property.QuerySqlIdentifier());
+            });
+
+            handlebars.RegisterHelper("Property.WriteSqlLinkTableName", (writer, _, arguments) =>
+            {
+                var property = arguments.QuerySingle<IProperty>("{{Property.WriteSqlLinkTableName}}");
+
+                writer.WriteSafeString(property.QuerySqlLinkTableName());
             });
         }
 
