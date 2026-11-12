@@ -201,9 +201,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
-            handlebars.RegisterHelper("Property.QueryIsNullable",
-                (_, arguments) => arguments.QuerySingle<IProperty>("{{Property.QueryIsNullable}}").QueryIsNullable());
-
             handlebars.RegisterHelper("Property.QuerySqlLinkHasPosition",
                 (_, arguments) => arguments.QuerySingle<IProperty>("{{Property.QuerySqlLinkHasPosition}}").QuerySqlLinkHasPosition());
 
