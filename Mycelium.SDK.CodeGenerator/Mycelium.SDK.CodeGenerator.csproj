@@ -99,6 +99,9 @@
         <None Update="Templates\Uml\sql-schema-uml-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="Templates\Uml\dao-uml-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
         <None Update="Templates\OpenApi\carter-module-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
