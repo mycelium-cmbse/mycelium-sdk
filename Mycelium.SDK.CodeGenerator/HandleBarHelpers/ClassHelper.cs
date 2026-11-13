@@ -16,7 +16,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     using uml4net.StructuredClassifiers;
 
     /// <summary>
-    /// Provides Handlebars support for UML classes used to generate DTOs, DTO validators and POCOs.
+    /// Provides Handlebars support for UML classes used to generate DTOs, DTO validators, POCOs and DAOs.
     /// </summary>
     public static class ClassHelper
     {
@@ -131,6 +131,49 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 {
                     writer.WriteSafeString($" : {inheritance}");
                 }
+            });
+        }
+
+        /// <summary>
+        /// Registers the class helpers that describe how a class is stored in the PostgreSQL schema, for DAO generation.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the DAO class helpers are registered.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
+        /// </exception>
+        public static void RegisterDaoClassHelper(this IHandlebars handlebars)
+        {
+            ArgumentNullException.ThrowIfNull(handlebars);
+
+            handlebars.RegisterHelper("Class.QuerySqlInheritanceChain",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlInheritanceChain}}").QuerySqlInheritanceChain());
+
+            handlebars.RegisterHelper("Class.QuerySqlColumnProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlColumnProperties}}").QuerySqlColumnProperties());
+
+            handlebars.RegisterHelper("Class.QuerySqlLinkProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlLinkProperties}}").QuerySqlLinkProperties());
+
+            handlebars.RegisterHelper("Class.QuerySqlReferenceProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlReferenceProperties}}").QuerySqlReferenceProperties());
+
+            handlebars.RegisterHelper("Class.QuerySqlChainReferenceProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlChainReferenceProperties}}").QuerySqlChainReferenceProperties());
+
+            handlebars.RegisterHelper("Class.WriteSqlTableName", (writer, _, arguments) =>
+            {
+                var umlClass = arguments.QuerySingle<IClass>("{{Class.WriteSqlTableName}}");
+
+                writer.WriteSafeString(umlClass.QuerySqlIdentifier());
+            });
+
+            handlebars.RegisterHelper("Class.WriteSqlRootTableName", (writer, _, arguments) =>
+            {
+                var umlClass = arguments.QuerySingle<IClass>("{{Class.WriteSqlRootTableName}}");
+
+                writer.WriteSafeString(umlClass.QuerySqlRootClass().QuerySqlIdentifier());
             });
         }
 

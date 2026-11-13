@@ -99,6 +99,153 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             /// <summary>
+            /// Queries the scalar references declared directly by the class that are stored as UUID columns of its SQL table.
+            /// </summary>
+            /// <returns>
+            /// The single-valued SQL reference properties, in the deterministic order of <c>QuerySqlReferenceProperties</c>.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QuerySqlColumnProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QuerySqlReferenceProperties()
+                    .Where(property => !property.QueryIsEnumerable())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the collections declared directly by the class that are stored in their own SQL link tables.
+            /// </summary>
+            /// <returns>
+            /// The many-valued SQL reference properties without an eligible scalar opposite, in the deterministic order of
+            /// <c>QuerySqlReferenceProperties</c>.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QuerySqlLinkProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QuerySqlReferenceProperties()
+                    .Where(property => property.QuerySqlRequiresLinkTable())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the class and its ancestors in the order their SQL table rows are inserted, from the root down to the class.
+            /// </summary>
+            /// <returns>
+            /// The single-inheritance chain from the root class to this class, both included.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IClass> QuerySqlInheritanceChain()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryAllGeneralClassifiers()
+                    .OfType<IClass>()
+                    .Reverse()
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries every SQL reference property of the class and its ancestors, which the DAO keeps out of the stored JSON document.
+            /// </summary>
+            /// <returns>
+            /// The SQL reference properties of each class of the inheritance chain, from the root down to the class.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QuerySqlChainReferenceProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QuerySqlInheritanceChain()
+                    .SelectMany(chainClass => chainClass.QuerySqlReferenceProperties())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the root class of the inheritance chain, whose table holds the identity, discriminator and JSON document of every object.
+            /// </summary>
+            /// <returns>
+            /// The single ancestor without a parent, or the class itself when it has no parent.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the class's ancestors do not lead to exactly one class without a parent.
+            /// </exception>
+            public IClass QuerySqlRootClass()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                var roots = umlClass.QueryAllGeneralClassifiers()
+                    .OfType<IClass>()
+                    .Where(ancestor => ancestor.Generalization.Count == 0)
+                    .DistinctBy(ancestor => ancestor.XmiId, StringComparer.Ordinal)
+                    .ToArray();
+
+                return roots.Length == 1
+                    ? roots[0]
+                    : throw new InvalidOperationException(
+                        $"Class '{umlClass.Name}' must lead to exactly one root class, but its ancestors lead to {roots.Length}: " +
+                        $"{string.Join(", ", roots.Select(root => root.Name))}.");
+            }
+
+            /// <summary>
+            /// Queries the names of every parameter that the class's DAO sends, failing when two of them would be the same.
+            /// </summary>
+            /// <returns>
+            /// The identity, discriminator and document parameter names, followed by the scalar reference column and link-table collection parameter
+            /// names of the inheritance chain, from the root down to the class.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when two parameters of the DAO would have the same name; the message names both model elements.
+            /// </exception>
+            public IReadOnlyList<string> QuerySqlParameterNames()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                (string Name, string Element)[] fixedParameters =
+                [
+                    (NamedElementExtensions.SqlIdentityColumnName, "the identity"),
+                    (NamedElementExtensions.SqlClassKindColumnName, "the discriminator"),
+                    (NamedElementExtensions.SqlDataColumnName, "the JSON document")
+                ];
+
+                var referenceParameters = umlClass.QuerySqlInheritanceChain()
+                    .SelectMany(chainClass => chainClass.QuerySqlColumnProperties().Concat(chainClass.QuerySqlLinkProperties())
+                        .Select(property => (Name: property.QuerySqlParameterName(), Element: $"property '{chainClass.Name}.{property.Name}'")));
+
+                var parameters = fixedParameters.Concat(referenceParameters).ToArray();
+
+                var collision = parameters.GroupBy(parameter => parameter.Name, StringComparer.Ordinal)
+                    .Select(group => group.ToArray())
+                    .FirstOrDefault(group => group.Length > 1);
+
+                if (collision != null)
+                {
+                    throw new InvalidOperationException(
+                        $"The DAO parameter '{collision[0].Name}' of class '{umlClass.Name}' is generated for both {collision[0].Element} and {collision[1].Element}. " +
+                        "Rename one of them in the model; the generator does not add disambiguating suffixes.");
+                }
+
+                return [.. parameters.Select(parameter => parameter.Name)];
+            }
+
+            /// <summary>
             /// Queries the properties declared directly by the class.
             /// </summary>
             /// <returns>

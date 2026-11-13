@@ -9,13 +9,7 @@
 
 namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 {
-    using System.Security.Cryptography;
-    using System.Text;
-    using System.Text.RegularExpressions;
-
     using HandlebarsDotNet;
-
-    using Humanizer;
 
     using Mycelium.SDK.CodeGenerator.Extensions;
 
@@ -24,20 +18,11 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
     using uml4net.StructuredClassifiers;
 
     /// <summary>
-    /// Provides model-derived SQL names and relational rendering data for the Fabric schema template.
+    /// Provides model-derived SQL names and relational rendering data for the Fabric schema template, and the fixed SQL names that the schema and
+    /// DAO templates share.
     /// </summary>
-    public static partial class SqlSchemaHelper
+    public static class SqlSchemaHelper
     {
-        /// <summary>
-        /// The PostgreSQL identifier limit in bytes; generated identifiers contain only ASCII characters.
-        /// </summary>
-        private const int MaximumIdentifierBytes = 63;
-
-        /// <summary>
-        /// The number of hexadecimal hash characters appended to a name that exceeds the identifier limit.
-        /// </summary>
-        private const int IdentifierHashLength = 8;
-
         /// <summary>
         /// The prefix that keys a class table by the XMI identifier of its class.
         /// </summary>
@@ -49,48 +34,44 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         private const string LinkIdentityPrefix = "link:";
 
         /// <summary>
-        /// The fixed name of the root table.
+        /// The schema of every generated table and function, from the shared SQL names.
         /// </summary>
-        private const string RootTable = "thing";
+        private const string Schema = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlSchemaName;
 
         /// <summary>
-        /// The fixed identity column of every class table.
+        /// The identity column of every class table, from the shared SQL names.
         /// </summary>
-        private const string IdentityColumn = "id";
+        private const string IdentityColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlIdentityColumnName;
 
         /// <summary>
-        /// The fixed link-table column holding the owner object's identity.
+        /// The discriminator column of the root table, from the shared SQL names.
         /// </summary>
-        private const string SourceColumn = "source_id";
+        private const string ClassKindColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlClassKindColumnName;
 
         /// <summary>
-        /// The fixed link-table column holding the target object's identity.
+        /// The JSON document column of the root table, from the shared SQL names.
         /// </summary>
-        private const string TargetColumn = "target_id";
+        private const string DataColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlDataColumnName;
+
+        /// <summary>
+        /// The link-table column holding the owner object's identity, from the shared SQL names.
+        /// </summary>
+        private const string SourceColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlLinkSourceColumnName;
+
+        /// <summary>
+        /// The link-table column holding the target object's identity, from the shared SQL names.
+        /// </summary>
+        private const string TargetColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlLinkTargetColumnName;
+
+        /// <summary>
+        /// The link-table column holding an occurrence's position, from the shared SQL names.
+        /// </summary>
+        private const string PositionColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlLinkPositionColumnName;
 
         /// <summary>
         /// The scope in which PostgreSQL requires table and index names to be unique.
         /// </summary>
-        private const string SchemaScope = "relations of schema fabric";
-
-        /// <summary>
-        /// The time allowed to replace unsupported identifier characters in one modeled name.
-        /// </summary>
-        private const int IdentifierRegexTimeoutMilliseconds = 1000;
-
-        /// <summary>
-        /// PostgreSQL 18 reserved identifiers, including keywords reserved for particular SQL contexts.
-        /// Source: https://www.postgresql.org/docs/18/sql-keywords-appendix.html.
-        /// </summary>
-        private static readonly HashSet<string> ReservedIdentifiers = (
-            "all analyse analyze and any array as asc asymmetric authorization binary both case cast check collate collation column concurrently " +
-            "constraint create cross current_catalog current_date current_role current_schema current_time current_timestamp current_user default " +
-            "deferrable desc distinct do else end except false fetch for foreign freeze from full grant group having ilike in initially inner " +
-            "intersect into is isnull join lateral leading left like limit localtime localtimestamp natural not notnull null offset on only or " +
-            "order outer overlaps placing primary references returning right select session_user similar some symmetric system_user table " +
-            "tablesample then to trailing true union unique user using variadic verbose when where window with")
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            .ToHashSet(StringComparer.Ordinal);
+        private const string SchemaScope = $"relations of schema {Schema}";
 
         /// <summary>
         /// Registers only the relational-model helper consumed by the schema template.
@@ -105,8 +86,73 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         {
             ArgumentNullException.ThrowIfNull(handlebars);
 
+            handlebars.RegisterSqlNameHelpers();
+
             handlebars.RegisterHelper("SQL.Model", (_, arguments) =>
                 QueryModel(arguments.QuerySingle<IReadOnlyCollection<IClass>>("{{SQL.Model}}")));
+        }
+
+        /// <summary>
+        /// Registers the helpers that write the fixed SQL names shared by the schema and the DAO templates, so that neither template repeats them as
+        /// literals.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the helpers are registered.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
+        /// </exception>
+        public static void RegisterSqlNameHelpers(this IHandlebars handlebars)
+        {
+            ArgumentNullException.ThrowIfNull(handlebars);
+
+            RegisterName(handlebars, "SQL.WriteSchemaName", Schema);
+            RegisterName(handlebars, "SQL.WriteIdentityColumnName", IdentityColumn);
+            RegisterName(handlebars, "SQL.WriteClassKindColumnName", ClassKindColumn);
+            RegisterName(handlebars, "SQL.WriteDataColumnName", DataColumn);
+            RegisterName(handlebars, "SQL.WriteLinkSourceColumnName", SourceColumn);
+            RegisterName(handlebars, "SQL.WriteLinkTargetColumnName", TargetColumn);
+            RegisterName(handlebars, "SQL.WriteLinkPositionColumnName", PositionColumn);
+        }
+
+        /// <summary>
+        /// Registers a helper that writes one fixed SQL name.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the helper is registered.
+        /// </param>
+        /// <param name="helperName">
+        /// The helper name used in the templates.
+        /// </param>
+        /// <param name="sqlName">
+        /// The SQL name the helper writes.
+        /// </param>
+        private static void RegisterName(IHandlebars handlebars, string helperName, string sqlName) =>
+            handlebars.RegisterHelper(helperName, (writer, _, _) => writer.WriteSafeString(sqlName));
+
+        /// <summary>
+        /// Queries the single root class shared by every class, through the same class query the DAO generator uses rather than by name.
+        /// </summary>
+        /// <param name="classes">
+        /// The deterministically ordered model classes.
+        /// </param>
+        /// <returns>
+        /// The class at the top of every class's parent chain, whose table holds the identity, discriminator and JSON document.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the classes do not share exactly one root class; the message names the roots found.
+        /// </exception>
+        private static IClass QueryRootClass(IReadOnlyCollection<IClass> classes)
+        {
+            var roots = classes.Select(umlClass => umlClass.QuerySqlRootClass())
+                .DistinctBy(root => root.XmiId, StringComparer.Ordinal)
+                .ToArray();
+
+            return roots.Length == 1
+                ? roots[0]
+                : throw new InvalidOperationException(
+                    $"The SQL schema needs exactly one root class shared by every class, but found {roots.Length}: " +
+                    $"{string.Join(", ", roots.Select(root => root.Name))}.");
         }
 
         /// <summary>
@@ -122,7 +168,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// Thrown when <paramref name="classes" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the canonical class selection does not contain exactly one root Thing class, or when two modeled elements produce the same SQL name.
+        /// Thrown when the classes do not share exactly one root class, or when two modeled elements produce the same SQL name.
         /// </exception>
         private static object QueryModel(IReadOnlyCollection<IClass> classes)
         {
@@ -134,13 +180,13 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                 .ToArray();
 
             var references = orderedClasses.ToDictionary(umlClass => umlClass.XmiId, umlClass => umlClass.QuerySqlReferenceProperties(), StringComparer.Ordinal);
-            var root = orderedClasses.Single(umlClass => string.Equals(umlClass.Name, "Thing", StringComparison.Ordinal));
+            var root = QueryRootClass(orderedClasses);
             var claims = new Dictionary<(string Scope, string Name), string>();
             var tableNames = new Dictionary<string, string>(StringComparer.Ordinal);
 
             foreach (var umlClass in orderedClasses)
             {
-                var table = umlClass.XmiId == root.XmiId ? RootTable : QueryIdentifier(umlClass.Name);
+                var table = umlClass.QuerySqlIdentifier();
                 tableNames.Add(ClassIdentityPrefix + umlClass.XmiId, ClaimName(claims, $"the table of class '{umlClass.Name}'", table, SchemaScope));
             }
 
@@ -148,12 +194,13 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             {
                 foreach (var property in references[umlClass.XmiId].Where(property => property.QuerySqlRequiresLinkTable()))
                 {
-                    var table = QueryIdentifier($"{umlClass.Name}_{property.Name}");
+                    var table = property.QuerySqlLinkTableName();
                     var element = $"the link table of property '{umlClass.Name}.{property.Name}'";
                     tableNames.Add(LinkIdentityPrefix + property.XmiId, ClaimName(claims, element, table, SchemaScope));
                 }
             }
 
+            var rootTable = tableNames[ClassIdentityPrefix + root.XmiId];
             var tables = new List<object>();
             var roles = new List<OwnershipRole>();
 
@@ -161,7 +208,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             {
                 var table = tableNames[ClassIdentityPrefix + umlClass.XmiId];
                 var isRoot = umlClass.XmiId == root.XmiId;
-                string[] fixedColumns = isRoot ? [IdentityColumn, "class_kind", "data"] : [IdentityColumn];
+                string[] fixedColumns = isRoot ? [IdentityColumn, ClassKindColumn, DataColumn] : [IdentityColumn];
 
                 foreach (var fixedColumn in fixedColumns)
                 {
@@ -196,7 +243,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     else
                     {
                         storageTable = table;
-                        column = ClaimName(claims, $"the column of {element}", QueryIdentifier(property.Name), ColumnScope(table));
+                        column = ClaimName(claims, $"the column of {element}", property.QuerySqlIdentifier(), ColumnScope(table));
                         var exclusive = property.IsComposite;
 
                         columns.Add(new
@@ -240,16 +287,17 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                 tables.Add(new
                 {
-                    Table = table, IsRoot = isRoot, Kinds = QueryConcreteKinds(orderedClasses, umlClass), Columns = columns, Links = links, Parents = parents,
+                    Table = table, RootTable = rootTable, IsRoot = isRoot, Kinds = QueryConcreteKinds(orderedClasses, umlClass), Columns = columns, Links = links,
+                    Parents = parents,
                     PrimaryKey = ClaimName(claims, $"the primary key of class '{umlClass.Name}'", ObjectName(table, "pkey"), SchemaScope, ConstraintScope(table)),
-                    ClassKindCheck = isRoot ? ClaimName(claims, "the discriminator check", ObjectName(table, "check", "class_kind"), ConstraintScope(table)) : null,
-                    DataCheck = isRoot ? ClaimName(claims, "the payload metadata check", ObjectName(table, "check", "data"), ConstraintScope(table)) : null
+                    ClassKindCheck = isRoot ? ClaimName(claims, "the discriminator check", ObjectName(table, "check", ClassKindColumn), ConstraintScope(table)) : null,
+                    DataCheck = isRoot ? ClaimName(claims, "the payload metadata check", ObjectName(table, "check", DataColumn), ConstraintScope(table)) : null
                 });
             }
 
             return new
             {
-                Tables = tables, Ownerships = QueryOwnerships(claims, roles),
+                Tables = tables, RootTable = rootTable, Ownerships = QueryOwnerships(claims, roles),
                 ConcreteKinds = string.Join(", ", orderedClasses.Where(umlClass => !umlClass.IsAbstract).Select(umlClass => SqlLiteral(umlClass.Name)))
             };
         }
@@ -280,7 +328,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// </exception>
         private static object QueryLink(Dictionary<(string Scope, string Name), string> claims, string element, IProperty property, string table, string targetTable)
         {
-            var position = property.IsOrdered || !property.IsUnique;
+            var position = property.QuerySqlLinkHasPosition();
             var pairUnique = position && property.IsUnique;
             var exclusive = property.IsComposite && property.IsUnique;
 
@@ -325,8 +373,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             {
                 var relationshipColumn = string.Equals(role.Part, IdentityColumn, StringComparison.Ordinal) ? role.Owner : role.Part;
                 var suffix = role.IsLink ? string.Empty : "_" + relationshipColumn;
-                var trackTrigger = Shorten("t10_track_ownership" + suffix);
-                var validateTrigger = Shorten("t80_validate_ownership" + suffix);
+                var trackTrigger = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.ShortenSqlIdentifier("t10_track_ownership" + suffix);
+                var validateTrigger = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.ShortenSqlIdentifier("t80_validate_ownership" + suffix);
 
                 ownerships.Add(new
                 {
@@ -413,7 +461,8 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// The readable name, hashed only when it exceeds the identifier limit.
         /// </returns>
-        private static string ObjectName(string table, string suffix, params string[] columns) => Shorten(string.Join("_", [table, .. columns, suffix]));
+        private static string ObjectName(string table, string suffix, params string[] columns) =>
+            Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.ShortenSqlIdentifier(string.Join("_", [table, .. columns, suffix]));
 
         /// <summary>
         /// Describes the scope in which a table's column names must be unique.
@@ -424,7 +473,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// The column scope of <paramref name="table" />.
         /// </returns>
-        private static string ColumnScope(string table) => $"columns of table fabric.{table}";
+        private static string ColumnScope(string table) => $"columns of table {Schema}.{table}";
 
         /// <summary>
         /// Describes the scope in which a table's constraint names must be unique.
@@ -435,7 +484,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// The constraint scope of <paramref name="table" />.
         /// </returns>
-        private static string ConstraintScope(string table) => $"constraints of table fabric.{table}";
+        private static string ConstraintScope(string table) => $"constraints of table {Schema}.{table}";
 
         /// <summary>
         /// Describes the scope in which a table's trigger names must be unique.
@@ -446,49 +495,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <returns>
         /// The trigger scope of <paramref name="table" />.
         /// </returns>
-        private static string TriggerScope(string table) => $"triggers of table fabric.{table}";
-
-        /// <summary>
-        /// Converts a modeled name to a lowercase snake_case PostgreSQL identifier, mapping reserved and invalid names.
-        /// </summary>
-        /// <param name="name">
-        /// The modeled class, property or relationship name.
-        /// </param>
-        /// <returns>
-        /// A valid unquoted PostgreSQL identifier, hashed only when it exceeds the identifier limit.
-        /// </returns>
-        private static string QueryIdentifier(string name)
-        {
-            var identifier = UnsupportedIdentifierCharacters().Replace(name.Underscore(), "_");
-
-            if (identifier.Length == 0 || char.IsDigit(identifier[0]) || ReservedIdentifiers.Contains(identifier))
-            {
-                identifier = "model_" + identifier;
-            }
-
-            return Shorten(identifier);
-        }
-
-        /// <summary>
-        /// Keeps a readable name unchanged unless it exceeds PostgreSQL's identifier limit, in which case it is truncated and given a reproducible hash.
-        /// </summary>
-        /// <param name="readableName">
-        /// The full readable name.
-        /// </param>
-        /// <returns>
-        /// The readable name, or its truncated form followed by <c>_</c> and the first 8 lowercase hexadecimal characters of the SHA-256 of the full name.
-        /// </returns>
-        private static string Shorten(string readableName)
-        {
-            if (readableName.Length <= MaximumIdentifierBytes)
-            {
-                return readableName;
-            }
-
-            var hash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(readableName)))[..IdentifierHashLength];
-
-            return $"{readableName[..(MaximumIdentifierBytes - IdentifierHashLength - 1)]}_{hash}";
-        }
+        private static string TriggerScope(string table) => $"triggers of table {Schema}.{table}";
 
         /// <summary>
         /// Escapes a modeled discriminator as a PostgreSQL string literal without changing its value.
@@ -500,15 +507,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// A SQL string literal with embedded apostrophes doubled.
         /// </returns>
         private static string SqlLiteral(string value) => "'" + value.Replace("'", "''", StringComparison.Ordinal) + "'";
-
-        /// <summary>
-        /// Matches every character that cannot appear in an unquoted lowercase PostgreSQL identifier.
-        /// </summary>
-        /// <returns>
-        /// A compile-time generated expression with a bounded match time.
-        /// </returns>
-        [GeneratedRegex("[^a-z0-9_]", RegexOptions.None, IdentifierRegexTimeoutMilliseconds)]
-        private static partial Regex UnsupportedIdentifierCharacters();
 
         /// <summary>
         /// One composition relationship as stored in a table, before its trigger names are assigned.
