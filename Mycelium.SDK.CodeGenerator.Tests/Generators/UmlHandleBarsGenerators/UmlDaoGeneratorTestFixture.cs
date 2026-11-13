@@ -114,7 +114,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(source, Does.Contain($"INSERT INTO {SqlNames.SqlSchemaName}.{linkTable} ({columns}) "), $"The insert into '{linkTable}' omits the position column.");
+                Assert.That(source, Does.Contain($"INSERT INTO {SqlNames.SqlSchemaName}.{linkTable} ({columns})"), $"The insert into '{linkTable}' omits the position column.");
 
                 Assert.That(source, Does.Contain($"FROM unnest(@{orderedProperty.QuerySqlParameterName()}) WITH ORDINALITY AS element({occurrence});"), $"The insert into '{linkTable}' does not number the occurrences.");
 

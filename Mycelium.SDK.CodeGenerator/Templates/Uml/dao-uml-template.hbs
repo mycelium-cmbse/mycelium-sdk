@@ -1,10 +1,9 @@
 {{#*inline "dao-link-insert"}}
-            "INSERT INTO {{ #SQL.WriteSchemaName }}.{{ #Property.WriteSqlLinkTableName this }} ({{ #SQL.WriteLinkSourceColumnName }}, {{ #SQL.WriteLinkTargetColumnName }}{{ #if (#Property.QuerySqlLinkHasPosition this) }}, {{ #SQL.WriteLinkPositionColumnName }}{{ /if }}) " +
-            {{ #if (#Property.QuerySqlLinkHasPosition this) }}
-            "SELECT @{{ #SQL.WriteIdentityColumnName }}, element.{{ #SQL.WriteLinkTargetColumnName }}, element.{{ #SQL.WriteLinkPositionColumnName }} FROM unnest(@{{ #Property.WriteSqlParameterName this }}) WITH ORDINALITY AS element({{ #SQL.WriteLinkTargetColumnName }}, {{ #SQL.WriteLinkPositionColumnName }});",
-            {{ else }}
-            "SELECT @{{ #SQL.WriteIdentityColumnName }}, element.{{ #SQL.WriteLinkTargetColumnName }} FROM unnest(@{{ #Property.WriteSqlParameterName this }}) AS element({{ #SQL.WriteLinkTargetColumnName }});",
-            {{ /if }}
+            """
+            INSERT INTO {{ #SQL.WriteSchemaName }}.{{ #Property.WriteSqlLinkTableName this }} ({{ #SQL.WriteLinkSourceColumnName }}, {{ #SQL.WriteLinkTargetColumnName }}{{ #if (#Property.QuerySqlLinkHasPosition this) }}, {{ #SQL.WriteLinkPositionColumnName }}{{ /if }})
+            SELECT @{{ #SQL.WriteIdentityColumnName }}, element.{{ #SQL.WriteLinkTargetColumnName }}{{ #if (#Property.QuerySqlLinkHasPosition this) }}, element.{{ #SQL.WriteLinkPositionColumnName }}{{ /if }}
+            FROM unnest(@{{ #Property.WriteSqlParameterName this }}){{ #if (#Property.QuerySqlLinkHasPosition this) }} WITH ORDINALITY{{ /if }} AS element({{ #SQL.WriteLinkTargetColumnName }}{{ #if (#Property.QuerySqlLinkHasPosition this) }}, {{ #SQL.WriteLinkPositionColumnName }}{{ /if }});
+            """,
 {{/inline}}
 {{#*inline "dao-data-value"}}
 @{{ #SQL.WriteDataColumnName }}{{ #if (#Class.QuerySqlChainReferenceProperties this) }} - ARRAY[{{ #each (#Class.QuerySqlChainReferenceProperties this) as | property | }}{{ #unless @first }}, {{ /unless }}'{{ #String.LowerCaseFirstLetter property.Name }}'{{ /each }}]{{ /if }}
@@ -58,58 +57,68 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         /// The query that rebuilds the complete JSON document of the stored objects of this class: the stored non-reference values, merged with
         /// every reference read from the class-table column, link table or opposite column that stores it.
         /// </summary>
-        private const string ReadSql =
-            "SELECT {{ #Class.WriteSqlRootTableName this }}.{{ #SQL.WriteDataColumnName }}" +
+        private const string ReadSql = """
+            SELECT {{ #Class.WriteSqlRootTableName this }}.{{ #SQL.WriteDataColumnName }}
             {{ #each (#Class.QuerySqlInheritanceChain this) as | umlClass | }}
             {{ #if (#Class.QuerySqlReferenceProperties umlClass) }}
-            " || jsonb_build_object(" +
+                || jsonb_build_object(
             {{ #each (#Class.QuerySqlReferenceProperties umlClass) as | property | }}
             {{ #if (#Property.QueryIsEnumerable property) }}
             {{ #if (#Property.QuerySqlRequiresLinkTable property) }}
-            "{{ #unless @first }}, {{ /unless }}'{{ #String.LowerCaseFirstLetter property.Name }}', COALESCE((SELECT jsonb_agg(link.{{ #SQL.WriteLinkTargetColumnName }} ORDER BY link.{{ #if (#Property.QuerySqlLinkHasPosition property) }}{{ #SQL.WriteLinkPositionColumnName }}{{ else }}{{ #SQL.WriteLinkTargetColumnName }}{{ /if }}) FROM {{ #SQL.WriteSchemaName }}.{{ #Property.WriteSqlLinkTableName property }} AS link WHERE link.{{ #SQL.WriteLinkSourceColumnName }} = {{ #Class.WriteSqlRootTableName umlClass }}.{{ #SQL.WriteIdentityColumnName }}), '[]'::jsonb)" +
+                    '{{ #String.LowerCaseFirstLetter property.Name }}', COALESCE((SELECT jsonb_agg(link.{{ #SQL.WriteLinkTargetColumnName }} ORDER BY link.{{ #if (#Property.QuerySqlLinkHasPosition property) }}{{ #SQL.WriteLinkPositionColumnName }}{{ else }}{{ #SQL.WriteLinkTargetColumnName }}{{ /if }}) FROM {{ #SQL.WriteSchemaName }}.{{ #Property.WriteSqlLinkTableName property }} AS link WHERE link.{{ #SQL.WriteLinkSourceColumnName }} = {{ #Class.WriteSqlRootTableName umlClass }}.{{ #SQL.WriteIdentityColumnName }}), '[]'::jsonb){{ #unless @last }},{{ /unless }}
             {{ else }}
-            "{{ #unless @first }}, {{ /unless }}'{{ #String.LowerCaseFirstLetter property.Name }}', COALESCE((SELECT jsonb_agg(opposite.{{ #SQL.WriteIdentityColumnName }} ORDER BY opposite.{{ #SQL.WriteIdentityColumnName }}) FROM {{ #SQL.WriteSchemaName }}.{{ #Property.WriteSqlOppositeTableName property }} AS opposite WHERE opposite.{{ #Property.WriteSqlOppositeColumnName property }} = {{ #Class.WriteSqlRootTableName umlClass }}.{{ #SQL.WriteIdentityColumnName }}), '[]'::jsonb)" +
+                    '{{ #String.LowerCaseFirstLetter property.Name }}', COALESCE((SELECT jsonb_agg(opposite.{{ #SQL.WriteIdentityColumnName }} ORDER BY opposite.{{ #SQL.WriteIdentityColumnName }}) FROM {{ #SQL.WriteSchemaName }}.{{ #Property.WriteSqlOppositeTableName property }} AS opposite WHERE opposite.{{ #Property.WriteSqlOppositeColumnName property }} = {{ #Class.WriteSqlRootTableName umlClass }}.{{ #SQL.WriteIdentityColumnName }}), '[]'::jsonb){{ #unless @last }},{{ /unless }}
             {{ /if }}
             {{ else }}
-            "{{ #unless @first }}, {{ /unless }}'{{ #String.LowerCaseFirstLetter property.Name }}', {{ #Class.WriteSqlTableName umlClass }}.{{ #Property.WriteSqlColumnName property }}" +
+                    '{{ #String.LowerCaseFirstLetter property.Name }}', {{ #Class.WriteSqlTableName umlClass }}.{{ #Property.WriteSqlColumnName property }}{{ #unless @last }},{{ /unless }}
             {{ /if }}
             {{ /each }}
-            ")" +
+                )
             {{ /if }}
             {{ /each }}
-            " FROM {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlRootTableName this }}" +
+            FROM {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlRootTableName this }}
             {{ #each (#Class.QuerySqlInheritanceChain this) as | umlClass | }}
             {{ #unless @first }}
             {{ #if (#Class.QuerySqlColumnProperties umlClass) }}
-            " JOIN {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlTableName umlClass }} ON {{ #Class.WriteSqlTableName umlClass }}.{{ #SQL.WriteIdentityColumnName }} = {{ #Class.WriteSqlRootTableName umlClass }}.{{ #SQL.WriteIdentityColumnName }}" +
+            JOIN {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlTableName umlClass }} ON {{ #Class.WriteSqlTableName umlClass }}.{{ #SQL.WriteIdentityColumnName }} = {{ #Class.WriteSqlRootTableName umlClass }}.{{ #SQL.WriteIdentityColumnName }}
             {{ /if }}
             {{ /unless }}
             {{ /each }}
-            " WHERE {{ #Class.WriteSqlRootTableName this }}.{{ #SQL.WriteClassKindColumnName }} = @{{ #SQL.WriteClassKindColumnName }}";
+            WHERE {{ #Class.WriteSqlRootTableName this }}.{{ #SQL.WriteClassKindColumnName }} = @{{ #SQL.WriteClassKindColumnName }}
+            """;
 
         /// <summary>
         /// The query that reads every stored object of this class, ordered by identifier.
         /// </summary>
-        private const string ReadAllSql = ReadSql + " ORDER BY {{ #Class.WriteSqlRootTableName this }}.{{ #SQL.WriteIdentityColumnName }};";
+        private const string ReadAllSql = $"""
+            {ReadSql}
+            ORDER BY {{ #Class.WriteSqlRootTableName this }}.{{ #SQL.WriteIdentityColumnName }};
+            """;
 
         /// <summary>
         /// The query that reads one stored object of this class.
         /// </summary>
-        private const string ReadByIdSql = ReadSql + " AND {{ #Class.WriteSqlRootTableName this }}.{{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }};";
+        private const string ReadByIdSql = $"""
+            {ReadSql}
+                AND {{ #Class.WriteSqlRootTableName this }}.{{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }};
+            """;
 
         /// <summary>
         /// The statement that replaces the JSON document of one stored object of this class, without its reference members.
         /// </summary>
-        private const string UpdateDataSql =
-            "UPDATE {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlRootTableName this }} SET {{ #SQL.WriteDataColumnName }} = {{> dao-data-value this }} " +
-            "WHERE {{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }} AND {{ #SQL.WriteClassKindColumnName }} = @{{ #SQL.WriteClassKindColumnName }};";
+        private const string UpdateDataSql = """
+            UPDATE {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlRootTableName this }}
+            SET {{ #SQL.WriteDataColumnName }} = {{> dao-data-value this }}
+            WHERE {{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }} AND {{ #SQL.WriteClassKindColumnName }} = @{{ #SQL.WriteClassKindColumnName }};
+            """;
 
         /// <summary>
         /// The statement that deletes one stored object of this class; the database's cascades and triggers remove its other rows.
         /// </summary>
-        private const string DeleteSql =
-            "DELETE FROM {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlRootTableName this }} " +
-            "WHERE {{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }} AND {{ #SQL.WriteClassKindColumnName }} = @{{ #SQL.WriteClassKindColumnName }};";
+        private const string DeleteSql = """
+            DELETE FROM {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlRootTableName this }}
+            WHERE {{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }} AND {{ #SQL.WriteClassKindColumnName }} = @{{ #SQL.WriteClassKindColumnName }};
+            """;
 
         /// <summary>
         /// The statements that store a new object: the root row with its JSON document without reference members, one row per class from the
@@ -119,13 +128,15 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         [
             {{ #with this as | daoClass | }}
             {{ #each (#Class.QuerySqlInheritanceChain daoClass) as | umlClass | }}
-            "INSERT INTO {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlTableName umlClass }} ({{ #SQL.WriteIdentityColumnName }}{{ #if @first }}, {{ #SQL.WriteClassKindColumnName }}, {{ #SQL.WriteDataColumnName }}{{ /if }}{{ #each (#Class.QuerySqlColumnProperties umlClass) as | property | }}, {{ #Property.WriteSqlColumnName property }}{{ /each }}) " +
-            "VALUES (@{{ #SQL.WriteIdentityColumnName }}{{ #if @first }}, @{{ #SQL.WriteClassKindColumnName }}, {{> dao-data-value daoClass }}{{ /if }}{{ #each (#Class.QuerySqlColumnProperties umlClass) as | property | }}, @{{ #Property.WriteSqlParameterName property }}{{ /each }});",
+            """
+            INSERT INTO {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlTableName umlClass }} ({{ #SQL.WriteIdentityColumnName }}{{ #if @first }}, {{ #SQL.WriteClassKindColumnName }}, {{ #SQL.WriteDataColumnName }}{{ /if }}{{ #each (#Class.QuerySqlColumnProperties umlClass) as | property | }}, {{ #Property.WriteSqlColumnName property }}{{ /each }})
+            VALUES (@{{ #SQL.WriteIdentityColumnName }}{{ #if @first }}, @{{ #SQL.WriteClassKindColumnName }}, {{> dao-data-value daoClass }}{{ /if }}{{ #each (#Class.QuerySqlColumnProperties umlClass) as | property | }}, @{{ #Property.WriteSqlParameterName property }}{{ /each }});
+            """,
             {{ /each }}
             {{ /with }}
             {{ #each (#Class.QuerySqlInheritanceChain this) as | umlClass | }}
             {{ #each (#Class.QuerySqlLinkProperties umlClass) as | property | }}
-            {{> dao-link-insert property}}
+{{> dao-link-insert property}}
             {{ /each }}
             {{ /each }}
         ];
@@ -137,15 +148,20 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         [
             {{ #each (#Class.QuerySqlInheritanceChain this) as | umlClass | }}
             {{ #if (#Class.QuerySqlColumnProperties umlClass) }}
-            "UPDATE {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlTableName umlClass }} SET " +
+            """
+            UPDATE {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlTableName umlClass }} SET
             {{ #each (#Class.QuerySqlColumnProperties umlClass) as | property | }}
-            "{{ #unless @first }}, {{ /unless }}{{ #Property.WriteSqlColumnName property }} = @{{ #Property.WriteSqlParameterName property }}" +
+                {{ #Property.WriteSqlColumnName property }} = @{{ #Property.WriteSqlParameterName property }}{{ #unless @last }},{{ /unless }}
             {{ /each }}
-            " WHERE {{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }};",
+            WHERE {{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }};
+            """,
             {{ /if }}
             {{ #each (#Class.QuerySqlLinkProperties umlClass) as | property | }}
-            "DELETE FROM {{ #SQL.WriteSchemaName }}.{{ #Property.WriteSqlLinkTableName property }} WHERE {{ #SQL.WriteLinkSourceColumnName }} = @{{ #SQL.WriteIdentityColumnName }};",
-            {{> dao-link-insert property}}
+            """
+            DELETE FROM {{ #SQL.WriteSchemaName }}.{{ #Property.WriteSqlLinkTableName property }}
+            WHERE {{ #SQL.WriteLinkSourceColumnName }} = @{{ #SQL.WriteIdentityColumnName }};
+            """,
+{{> dao-link-insert property}}
             {{ /each }}
             {{ /each }}
         ];
