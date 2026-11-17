@@ -245,9 +245,8 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                     (NamedElementExtensions.SqlDataColumnName, "the JSON document")
                 ];
 
-                var referenceParameters = umlClass.QuerySqlInheritanceChain()
-                    .SelectMany(chainClass => chainClass.QuerySqlColumnProperties().Concat(chainClass.QuerySqlLinkProperties())
-                        .Select(property => (Name: property.QuerySqlParameterName(), Element: $"property '{chainClass.Name}.{property.Name}'")));
+                var referenceParameters = umlClass.QuerySqlChainRelationProperties()
+                    .Select(property => (Name: property.QuerySqlParameterName(), Element: $"property '{((IClass)property.Owner).Name}.{property.Name}'"));
 
                 var parameters = fixedParameters.Concat(referenceParameters).ToArray();
 

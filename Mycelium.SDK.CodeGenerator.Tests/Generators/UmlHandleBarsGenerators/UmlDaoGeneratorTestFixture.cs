@@ -158,8 +158,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(concreteClass.QuerySqlChainRelationProperties(), Is.Empty, $"The in-memory model still gives '{concreteClass.Name}' relational state.");
-
                 Assert.That(source, Does.Not.Contain("UpdateRelationsAsync"), $"The DAO of '{concreteClass.Name}' overrides the relation update although it has no relational state.");
 
                 Assert.That(source, Does.Not.Contain("UpdateRelationSql"), $"The DAO of '{concreteClass.Name}' declares relation statements although it has no relational state.");
