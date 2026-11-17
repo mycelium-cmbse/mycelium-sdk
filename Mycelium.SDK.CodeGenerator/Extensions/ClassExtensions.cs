@@ -173,6 +173,26 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             /// <summary>
+            /// Queries every reference of the class and its ancestors that the class's DAO writes relationally: the scalar reference columns and the
+            /// link-table collections. Collections stored through a scalar opposite are excluded, because the DAO of the opposite class writes them.
+            /// </summary>
+            /// <returns>
+            /// The scalar column and link-table properties of each class of the inheritance chain, from the root down to the class; empty when the
+            /// DAO has no relational state to update.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QuerySqlChainRelationProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QuerySqlInheritanceChain()
+                    .SelectMany(chainClass => chainClass.QuerySqlColumnProperties().Concat(chainClass.QuerySqlLinkProperties()))
+                    .ToArray();
+            }
+
+            /// <summary>
             /// Queries the root class of the inheritance chain, whose table holds the identity, discriminator and JSON document of every object.
             /// </summary>
             /// <returns>

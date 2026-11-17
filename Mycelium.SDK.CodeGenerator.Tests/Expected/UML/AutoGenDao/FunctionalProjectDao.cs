@@ -371,10 +371,8 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
                 }
             }
 
-            if (UpdateRelationStatements.Length > 0)
+            using (var command = CreateCommand(transaction, string.Join(" ", UpdateRelationStatements)))
             {
-                using var command = CreateCommand(transaction, string.Join(" ", UpdateRelationStatements));
-
                 command.Parameters.Add(new NpgsqlParameter("id", NpgsqlDbType.Uuid)
                 {
                     Value = dto.Id

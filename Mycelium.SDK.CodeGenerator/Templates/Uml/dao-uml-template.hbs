@@ -140,6 +140,7 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             {{ /each }}
             {{ /each }}
         ];
+        {{ #if (#Class.QuerySqlChainRelationProperties this) }}
 
         /// <summary>
         /// The statements that replace the scalar reference columns and the link-table rows of a stored object.
@@ -165,6 +166,7 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             {{ /each }}
             {{ /each }}
         ];
+        {{ /if }}
 
         /// <summary>
         /// The serializer that produces the JSON document stored in the <c>data</c> column.
@@ -355,11 +357,10 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
                     return false;
                 }
             }
+            {{ #if (#Class.QuerySqlChainRelationProperties this) }}
 
-            if (UpdateRelationStatements.Length > 0)
+            using (var command = CreateCommand(transaction, string.Join(" ", UpdateRelationStatements)))
             {
-                using var command = CreateCommand(transaction, string.Join(" ", UpdateRelationStatements));
-
                 command.Parameters.Add(new NpgsqlParameter("{{ #SQL.WriteIdentityColumnName }}", NpgsqlDbType.Uuid)
                 {
                     Value = dto.Id
@@ -369,6 +370,7 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
 
                 await command.ExecuteNonQueryAsync(cancellationToken);
             }
+            {{ /if }}
 
             return true;
         }

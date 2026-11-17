@@ -123,6 +123,44 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
         }
 
         [Test]
+        public async Task VerifyThatDaosWithoutRelationalStateGenerateNoRelationUpdate()
+        {
+            var unrelatedModel = GeneratorSetupFixture.ReadFunctionalData();
+
+            var concreteClass = GeneratorSetupFixture.QueryFunctionalDataPackage(unrelatedModel).QueryPackages()
+                .SelectMany(package => package.PackagedElement.OfType<IClass>())
+                .Where(umlClass => !umlClass.IsAbstract)
+                .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal)
+                .First();
+
+            foreach (var property in concreteClass.QuerySqlChainRelationProperties())
+            {
+                property.IsDerived = true;
+            }
+
+            var outputDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_UnrelatedDao"));
+
+            if (outputDirectory.Exists)
+            {
+                outputDirectory.Delete(true);
+            }
+
+            await new UmlDaoGenerator().GenerateAsync(unrelatedModel, outputDirectory);
+
+            var source = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(outputDirectory.FullName, $"{concreteClass.Name}Dao.cs"));
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(concreteClass.QuerySqlChainRelationProperties(), Is.Empty, $"The in-memory model still gives '{concreteClass.Name}' relational state.");
+
+                Assert.That(source, Does.Not.Contain("UpdateRelation"), $"The DAO of '{concreteClass.Name}' updates relations although it has no relational state.");
+
+                Assert.That(source, Does.Contain($"void AddReferenceParameters(NpgsqlCommand command, I{concreteClass.Name} dto)"),
+                    $"The DAO of '{concreteClass.Name}' does not supply its reference parameters.");
+            }
+        }
+
+        [Test]
         public async Task VerifyThatGenerationRejectsCollidingParameterNames()
         {
             var collidingModel = GeneratorSetupFixture.ReadFunctionalData();
