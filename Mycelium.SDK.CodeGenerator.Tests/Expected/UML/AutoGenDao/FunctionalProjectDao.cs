@@ -30,7 +30,7 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
     /// <summary>
     /// Stores <see cref="IFunctionalProject" /> objects of the exact concrete class <c>FunctionalProject</c> in the PostgreSQL
     /// schema delivered in <c>0001_initial.sql</c>. The operations are implemented once by <see cref="DaoBase{TDto}" />; this class supplies the
-    /// discriminator, statements and reference parameters of its class.
+    /// statements of its class and binds all their parameters.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
     public partial class FunctionalProjectDao : DaoBase<IFunctionalProject>
@@ -112,11 +112,6 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         }
 
         /// <summary>
-        /// Gets the <c>class_kind</c> discriminator of the objects this data access object stores.
-        /// </summary>
-        protected override string ClassKind => "FunctionalProject";
-
-        /// <summary>
         /// Gets the query that reads every stored object of this class, ordered by identifier.
         /// </summary>
         protected override string ReadAllSql => $"""
@@ -189,6 +184,54 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         protected override Task UpdateRelationsAsync(NpgsqlTransaction transaction, IFunctionalProject dto, CancellationToken cancellationToken)
         {
             return this.ExecuteRelationStatementsAsync(transaction, UpdateRelationSql, dto, cancellationToken);
+        }
+
+        /// <summary>
+        /// Adds the identifier that selects one stored object.
+        /// </summary>
+        /// <param name="command">
+        /// The command that receives the parameter.
+        /// </param>
+        /// <param name="id">
+        /// The identifier of the object.
+        /// </param>
+        protected override void AddIdentityParameter(NpgsqlCommand command, Guid id)
+        {
+            command.Parameters.Add(new NpgsqlParameter("id", NpgsqlDbType.Uuid)
+            {
+                Value = id
+            });
+        }
+
+        /// <summary>
+        /// Adds the <c>class_kind</c> discriminator that restricts the statements to objects of the exact concrete class <c>FunctionalProject</c>.
+        /// </summary>
+        /// <param name="command">
+        /// The command that receives the parameter.
+        /// </param>
+        protected override void AddClassKindParameter(NpgsqlCommand command)
+        {
+            command.Parameters.Add(new NpgsqlParameter("class_kind", NpgsqlDbType.Text)
+            {
+                Value = "FunctionalProject"
+            });
+        }
+
+        /// <summary>
+        /// Adds the serialized JSON document stored in the <c>data</c> column.
+        /// </summary>
+        /// <param name="command">
+        /// The command that receives the parameter.
+        /// </param>
+        /// <param name="data">
+        /// The UTF-8 bytes of the serialized JSON document.
+        /// </param>
+        protected override void AddDataParameter(NpgsqlCommand command, ReadOnlyMemory<byte> data)
+        {
+            command.Parameters.Add(new NpgsqlParameter("data", NpgsqlDbType.Jsonb)
+            {
+                Value = data
+            });
         }
 
         /// <summary>
