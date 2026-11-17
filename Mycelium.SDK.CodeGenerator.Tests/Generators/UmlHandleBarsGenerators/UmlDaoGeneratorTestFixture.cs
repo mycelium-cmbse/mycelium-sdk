@@ -160,9 +160,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             {
                 Assert.That(concreteClass.QuerySqlChainRelationProperties(), Is.Empty, $"The in-memory model still gives '{concreteClass.Name}' relational state.");
 
-                Assert.That(source, Does.Not.Contain("UpdateRelation"), $"The DAO of '{concreteClass.Name}' updates relations although it has no relational state.");
+                Assert.That(source, Does.Not.Contain("UpdateRelationsAsync"), $"The DAO of '{concreteClass.Name}' overrides the relation update although it has no relational state.");
 
-                Assert.That(source, Does.Contain($"void AddReferenceParameters(NpgsqlCommand command, I{concreteClass.Name} dto)"),
+                Assert.That(source, Does.Not.Contain("UpdateRelationSql"), $"The DAO of '{concreteClass.Name}' declares relation statements although it has no relational state.");
+
+                Assert.That(source, Does.Contain($"protected override void AddReferenceParameters(NpgsqlCommand command, I{concreteClass.Name} dto)"),
                     $"The DAO of '{concreteClass.Name}' does not supply its reference parameters.");
             }
         }
