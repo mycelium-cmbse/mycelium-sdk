@@ -19,7 +19,6 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Text;
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
@@ -95,34 +94,24 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         /// The statements that store a new object: the root row with its JSON document without reference members, one row per class from the
         /// root down to this class with the scalar reference columns declared there, and the rows of every link-table collection.
         /// </summary>
-        private static readonly string[] CreateStatements =
-        [
-            """
+        private const string CreateSql = """
             INSERT INTO fabric.thing (id, class_kind, data)
             VALUES (@id, @class_kind, @data - ARRAY['createdBy', 'updatedBy']);
-            """,
-            """
             INSERT INTO fabric.auditable_thing (id, created_by, updated_by)
             VALUES (@id, @auditable_thing_created_by, @auditable_thing_updated_by);
-            """,
-            """
             INSERT INTO fabric.functional_project_policy (id)
             VALUES (@id);
-            """,
-        ];
+            """;
 
         /// <summary>
         /// The statements that replace the scalar reference columns and the link-table rows of a stored object.
         /// </summary>
-        private static readonly string[] UpdateRelationStatements =
-        [
-            """
+        private const string UpdateRelationSql = """
             UPDATE fabric.auditable_thing SET
                 created_by = @auditable_thing_created_by,
                 updated_by = @auditable_thing_updated_by
             WHERE id = @id;
-            """,
-        ];
+            """;
 
         /// <summary>
         /// The serializer that produces the JSON document stored in the <c>data</c> column.
@@ -187,7 +176,7 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
 
             while (await reader.ReadAsync(cancellationToken))
             {
-                dtos.Add(this.DeSerialize(reader.GetString(0)));
+                dtos.Add(this.DeSerialize(reader.GetFieldValue<byte[]>(0)));
             }
 
             return dtos;
@@ -224,7 +213,7 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
 
             using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
-            return await reader.ReadAsync(cancellationToken) ? this.DeSerialize(reader.GetString(0)) : null;
+            return await reader.ReadAsync(cancellationToken) ? this.DeSerialize(reader.GetFieldValue<byte[]>(0)) : null;
         }
 
         /// <summary>
@@ -260,7 +249,7 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
 
             var data = await this.SerializeAsync(dto, cancellationToken);
 
-            using var command = CreateCommand(transaction, string.Join(" ", CreateStatements));
+            using var command = CreateCommand(transaction, CreateSql);
 
             AddIdentityParameters(command, dto.Id);
             AddDataParameter(command, data);
@@ -314,7 +303,7 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
                 }
             }
 
-            using (var command = CreateCommand(transaction, string.Join(" ", UpdateRelationStatements)))
+            using (var command = CreateCommand(transaction, UpdateRelationSql))
             {
                 command.Parameters.Add(new NpgsqlParameter("id", NpgsqlDbType.Uuid)
                 {
@@ -408,9 +397,9 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         /// The command that receives the parameter.
         /// </param>
         /// <param name="data">
-        /// The serialized JSON document.
+        /// The UTF-8 bytes of the serialized JSON document.
         /// </param>
-        private static void AddDataParameter(NpgsqlCommand command, string data)
+        private static void AddDataParameter(NpgsqlCommand command, ReadOnlyMemory<byte> data)
         {
             command.Parameters.Add(new NpgsqlParameter("data", NpgsqlDbType.Jsonb)
             {
@@ -449,29 +438,29 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         /// The token that cancels the operation.
         /// </param>
         /// <returns>
-        /// The JSON document as text.
+        /// The UTF-8 bytes of the JSON document, read from the serializer's output buffer without a copy.
         /// </returns>
-        private async Task<string> SerializeAsync(IFunctionalProjectPolicy dto, CancellationToken cancellationToken)
+        private async Task<ReadOnlyMemory<byte>> SerializeAsync(IFunctionalProjectPolicy dto, CancellationToken cancellationToken)
         {
             using var stream = new MemoryStream();
 
             await this.serializer.SerializeAsync(dto, stream, new JsonWriterOptions(), cancellationToken);
 
-            return Encoding.UTF8.GetString(stream.ToArray());
+            return new ReadOnlyMemory<byte>(stream.GetBuffer(), 0, (int)stream.Length);
         }
 
         /// <summary>
         /// Deserializes a stored JSON document into a DTO of this class.
         /// </summary>
         /// <param name="data">
-        /// The stored JSON document.
+        /// The UTF-8 bytes of the stored JSON document.
         /// </param>
         /// <returns>
         /// The deserialized DTO.
         /// </returns>
-        private IFunctionalProjectPolicy DeSerialize(string data)
+        private IFunctionalProjectPolicy DeSerialize(byte[] data)
         {
-            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(data));
+            using var stream = new MemoryStream(data);
 
             return (IFunctionalProjectPolicy)this.deSerializer.DeSerialize(stream).Single();
         }
