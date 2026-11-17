@@ -114,23 +114,27 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             """;
 
         /// <summary>
-        /// The statements that replace the scalar reference columns and the link-table rows of a stored object.
+        /// The statements that write the relational state of a stored object that differs from its new state: each class row whose scalar reference
+        /// columns changed, and the link-table rows of each collection that are no longer listed or are new.
         /// </summary>
         private const string UpdateRelationSql = """
             UPDATE fabric.auditable_thing SET
                 created_by = @auditable_thing_created_by,
                 updated_by = @auditable_thing_updated_by
-            WHERE id = @id;
+            WHERE id = @id
+                AND (created_by, updated_by) IS DISTINCT FROM (@auditable_thing_created_by, @auditable_thing_updated_by);
             UPDATE fabric.project_member SET
                 active_ownership = @project_member_active_ownership,
                 is_part_of = @project_member_is_part_of,
                 model_user = @project_member_model_user
-            WHERE id = @id;
+            WHERE id = @id
+                AND (active_ownership, is_part_of, model_user) IS DISTINCT FROM (@project_member_active_ownership, @project_member_is_part_of, @project_member_model_user);
             DELETE FROM fabric.project_member_owns
-            WHERE source_id = @id;
+            WHERE source_id = @id AND target_id <> ALL(@project_member_owns);
             INSERT INTO fabric.project_member_owns (source_id, target_id)
             SELECT @id, element.target_id
-            FROM unnest(@project_member_owns) AS element(target_id);
+            FROM unnest(@project_member_owns) AS element(target_id)
+            ON CONFLICT (source_id, target_id) DO NOTHING;
             """;
 
         /// <summary>
@@ -279,8 +283,8 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         }
 
         /// <summary>
-        /// Replaces a stored object's JSON document, scalar reference columns and link-table rows with the values of
-        /// <paramref name="dto" />.
+        /// Replaces a stored object's JSON document with the values of <paramref name="dto" />, then writes only the scalar reference columns and
+        /// link-table rows that differ from them.
         /// </summary>
         /// <param name="transaction">
         /// The caller's open transaction, whose connection executes the statements.

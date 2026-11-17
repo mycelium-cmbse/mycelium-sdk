@@ -104,13 +104,15 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             """;
 
         /// <summary>
-        /// The statements that replace the scalar reference columns and the link-table rows of a stored object.
+        /// The statements that write the relational state of a stored object that differs from its new state: each class row whose scalar reference
+        /// columns changed, and the link-table rows of each collection that are no longer listed or are new.
         /// </summary>
         private const string UpdateRelationSql = """
             UPDATE fabric.auditable_thing SET
                 created_by = @auditable_thing_created_by,
                 updated_by = @auditable_thing_updated_by
-            WHERE id = @id;
+            WHERE id = @id
+                AND (created_by, updated_by) IS DISTINCT FROM (@auditable_thing_created_by, @auditable_thing_updated_by);
             """;
 
         /// <summary>
@@ -259,8 +261,8 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         }
 
         /// <summary>
-        /// Replaces a stored object's JSON document, scalar reference columns and link-table rows with the values of
-        /// <paramref name="dto" />.
+        /// Replaces a stored object's JSON document with the values of <paramref name="dto" />, then writes only the scalar reference columns and
+        /// link-table rows that differ from them.
         /// </summary>
         /// <param name="transaction">
         /// The caller's open transaction, whose connection executes the statements.

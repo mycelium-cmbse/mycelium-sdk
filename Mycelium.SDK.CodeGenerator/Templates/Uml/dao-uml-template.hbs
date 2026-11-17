@@ -3,6 +3,14 @@
             SELECT @{{ #SQL.WriteIdentityColumnName }}, element.{{ #SQL.WriteLinkTargetColumnName }}{{ #if (#Property.QuerySqlLinkHasPosition this) }}, element.{{ #SQL.WriteLinkPositionColumnName }}{{ /if }}
             FROM unnest(@{{ #Property.WriteSqlParameterName this }}){{ #if (#Property.QuerySqlLinkHasPosition this) }} WITH ORDINALITY{{ /if }} AS element({{ #SQL.WriteLinkTargetColumnName }}{{ #if (#Property.QuerySqlLinkHasPosition this) }}, {{ #SQL.WriteLinkPositionColumnName }}{{ /if }});
 {{/inline}}
+{{#*inline "dao-link-update"}}
+            DELETE FROM {{ #SQL.WriteSchemaName }}.{{ #Property.WriteSqlLinkTableName this }}
+            WHERE {{ #SQL.WriteLinkSourceColumnName }} = @{{ #SQL.WriteIdentityColumnName }} AND {{ #if (#Property.QuerySqlLinkHasPosition this) }}({{ #SQL.WriteLinkPositionColumnName }} > cardinality(@{{ #Property.WriteSqlParameterName this }}) OR {{ #SQL.WriteLinkTargetColumnName }} IS DISTINCT FROM (@{{ #Property.WriteSqlParameterName this }})[{{ #SQL.WriteLinkPositionColumnName }}]){{ else }}{{ #SQL.WriteLinkTargetColumnName }} <> ALL(@{{ #Property.WriteSqlParameterName this }}){{ /if }};
+            INSERT INTO {{ #SQL.WriteSchemaName }}.{{ #Property.WriteSqlLinkTableName this }} ({{ #SQL.WriteLinkSourceColumnName }}, {{ #SQL.WriteLinkTargetColumnName }}{{ #if (#Property.QuerySqlLinkHasPosition this) }}, {{ #SQL.WriteLinkPositionColumnName }}{{ /if }})
+            SELECT @{{ #SQL.WriteIdentityColumnName }}, element.{{ #SQL.WriteLinkTargetColumnName }}{{ #if (#Property.QuerySqlLinkHasPosition this) }}, element.{{ #SQL.WriteLinkPositionColumnName }}{{ /if }}
+            FROM unnest(@{{ #Property.WriteSqlParameterName this }}){{ #if (#Property.QuerySqlLinkHasPosition this) }} WITH ORDINALITY{{ /if }} AS element({{ #SQL.WriteLinkTargetColumnName }}{{ #if (#Property.QuerySqlLinkHasPosition this) }}, {{ #SQL.WriteLinkPositionColumnName }}{{ /if }})
+            ON CONFLICT ({{ #SQL.WriteLinkSourceColumnName }}, {{ #if (#Property.QuerySqlLinkHasPosition this) }}{{ #SQL.WriteLinkPositionColumnName }}{{ else }}{{ #SQL.WriteLinkTargetColumnName }}{{ /if }}) DO NOTHING;
+{{/inline}}
 {{#*inline "dao-data-value"}}
 @{{ #SQL.WriteDataColumnName }}{{ #if (#Class.QuerySqlChainReferenceProperties this) }} - ARRAY[{{ #each (#Class.QuerySqlChainReferenceProperties this) as | property | }}{{ #unless @first }}, {{ /unless }}'{{ #String.LowerCaseFirstLetter property.Name }}'{{ /each }}]{{ /if }}
 {{~/inline}}
@@ -137,7 +145,8 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         {{ #if (#Class.QuerySqlChainRelationProperties this) }}
 
         /// <summary>
-        /// The statements that replace the scalar reference columns and the link-table rows of a stored object.
+        /// The statements that write the relational state of a stored object that differs from its new state: each class row whose scalar reference
+        /// columns changed, and the link-table rows of each collection that are no longer listed or are new.
         /// </summary>
         private const string UpdateRelationSql = """
             {{ #each (#Class.QuerySqlInheritanceChain this) as | umlClass | }}
@@ -146,12 +155,11 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             {{ #each (#Class.QuerySqlColumnProperties umlClass) as | property | }}
                 {{ #Property.WriteSqlColumnName property }} = @{{ #Property.WriteSqlParameterName property }}{{ #unless @last }},{{ /unless }}
             {{ /each }}
-            WHERE {{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }};
+            WHERE {{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }}
+                AND ({{ #each (#Class.QuerySqlColumnProperties umlClass) as | property | }}{{ #unless @first }}, {{ /unless }}{{ #Property.WriteSqlColumnName property }}{{ /each }}) IS DISTINCT FROM ({{ #each (#Class.QuerySqlColumnProperties umlClass) as | property | }}{{ #unless @first }}, {{ /unless }}@{{ #Property.WriteSqlParameterName property }}{{ /each }});
             {{ /if }}
             {{ #each (#Class.QuerySqlLinkProperties umlClass) as | property | }}
-            DELETE FROM {{ #SQL.WriteSchemaName }}.{{ #Property.WriteSqlLinkTableName property }}
-            WHERE {{ #SQL.WriteLinkSourceColumnName }} = @{{ #SQL.WriteIdentityColumnName }};
-{{> dao-link-insert property}}
+{{> dao-link-update property}}
             {{ /each }}
             {{ /each }}
             """;
@@ -303,8 +311,8 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         }
 
         /// <summary>
-        /// Replaces a stored object's JSON document, scalar reference columns and link-table rows with the values of
-        /// <paramref name="dto" />.
+        /// Replaces a stored object's JSON document with the values of <paramref name="dto" />, then writes only the scalar reference columns and
+        /// link-table rows that differ from them.
         /// </summary>
         /// <param name="transaction">
         /// The caller's open transaction, whose connection executes the statements.
