@@ -164,6 +164,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
                 Assert.That(source, Does.Contain($"protected override void AddReferenceParameters(NpgsqlCommand command, I{concreteClass.Name} dto)"),
                     $"The DAO of '{concreteClass.Name}' does not supply its reference parameters.");
+
+                Assert.That(source, Does.Contain($"protected override string ClassKind => \"{concreteClass.Name}\";"), $"The DAO of '{concreteClass.Name}' does not supply its discriminator.");
             }
         }
 
