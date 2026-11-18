@@ -109,16 +109,61 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             var source = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(outputDirectory.FullName, $"{linkOwner.Name}Dao.cs"));
             var linkTable = orderedProperty.QuerySqlLinkTableName();
-            var columns = $"{SqlNames.SqlLinkSourceColumnName}, {SqlNames.SqlLinkTargetColumnName}, {SqlNames.SqlLinkPositionColumnName}";
-            var occurrence = $"{SqlNames.SqlLinkTargetColumnName}, {SqlNames.SqlLinkPositionColumnName}";
+            var parameter = orderedProperty.QuerySqlParameterName();
+            var position = SqlNames.SqlLinkPositionColumnName;
+            var columns = $"{SqlNames.SqlLinkSourceColumnName}, {SqlNames.SqlLinkTargetColumnName}, {position}";
+            var occurrence = $"{SqlNames.SqlLinkTargetColumnName}, {position}";
 
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(source, Does.Contain($"INSERT INTO {SqlNames.SqlSchemaName}.{linkTable} ({columns})"), $"The insert into '{linkTable}' omits the position column.");
 
-                Assert.That(source, Does.Contain($"FROM unnest(@{orderedProperty.QuerySqlParameterName()}) WITH ORDINALITY AS element({occurrence});"), $"The insert into '{linkTable}' does not number the occurrences.");
+                Assert.That(source, Does.Contain($"FROM unnest(@{parameter}) WITH ORDINALITY AS element({occurrence});"), $"The insert into '{linkTable}' does not number the occurrences.");
 
-                Assert.That(source, Does.Contain($"ORDER BY link.{SqlNames.SqlLinkPositionColumnName}) FROM {SqlNames.SqlSchemaName}.{linkTable} AS link"), $"The read of '{linkTable}' does not keep the stored order.");
+                Assert.That(source, Does.Contain($"ORDER BY link.{position}) FROM {SqlNames.SqlSchemaName}.{linkTable} AS link"), $"The read of '{linkTable}' does not keep the stored order.");
+
+                Assert.That(source, Does.Contain($"({position} > cardinality(@{parameter}) OR {SqlNames.SqlLinkTargetColumnName} IS DISTINCT FROM (@{parameter})[{position}]);"),
+                    $"The update of '{linkTable}' does not delete only the occurrences that moved or no longer exist.");
+
+                Assert.That(source, Does.Contain($"ON CONFLICT ({SqlNames.SqlLinkSourceColumnName}, {position}) DO NOTHING;"), $"The update of '{linkTable}' does not keep the unchanged occurrences.");
+            }
+        }
+
+        [Test]
+        public async Task VerifyThatDaosWithoutRelationalStateGenerateNoRelationUpdate()
+        {
+            var unrelatedModel = GeneratorSetupFixture.ReadFunctionalData();
+
+            var concreteClass = GeneratorSetupFixture.QueryFunctionalDataPackage(unrelatedModel).QueryPackages()
+                .SelectMany(package => package.PackagedElement.OfType<IClass>())
+                .Where(umlClass => !umlClass.IsAbstract)
+                .OrderBy(umlClass => umlClass.Name, StringComparer.Ordinal)
+                .First();
+
+            foreach (var property in concreteClass.QuerySqlChainRelationProperties())
+            {
+                property.IsDerived = true;
+            }
+
+            var outputDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_UnrelatedDao"));
+
+            if (outputDirectory.Exists)
+            {
+                outputDirectory.Delete(true);
+            }
+
+            await new UmlDaoGenerator().GenerateAsync(unrelatedModel, outputDirectory);
+
+            var source = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(outputDirectory.FullName, $"{concreteClass.Name}Dao.cs"));
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(source, Does.Not.Contain("UpdateRelationsAsync"), $"The DAO of '{concreteClass.Name}' overrides the relation update although it has no relational state.");
+
+                Assert.That(source, Does.Not.Contain("UpdateRelationSql"), $"The DAO of '{concreteClass.Name}' declares relation statements although it has no relational state.");
+
+                Assert.That(source, Does.Contain($"protected override void AddReferenceParameters(NpgsqlCommand command, I{concreteClass.Name} dto)"),
+                    $"The DAO of '{concreteClass.Name}' does not supply its reference parameters.");
             }
         }
 
