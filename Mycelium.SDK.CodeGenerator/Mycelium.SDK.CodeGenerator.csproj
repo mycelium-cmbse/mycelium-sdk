@@ -111,12 +111,6 @@
         <None Update="Templates\Pim\repository-interface-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
-        <None Update="Templates\Core\service-interface-template.hbs">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-        <None Update="Templates\Core\service-class-template.hbs">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
         <None Update="Templates\Core\service-provider-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>

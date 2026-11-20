@@ -33,7 +33,7 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
             new Dictionary<Type, Func<IServiceProvider, ICoreDataValidator>>
             {
             {{ #each this as | umlClass | }}
-                [typeof(SysML2.NET.Core.DTO.{{ NamedElement.WriteNamespace umlClass }}.{{ umlClass.Name }})] = serviceProvider => (ICoreDataValidator)serviceProvider.GetRequiredService<I{{ umlClass.Name }}Service>(),
+                [typeof(SysML2.NET.Core.DTO.{{ NamedElement.WriteNamespace umlClass }}.{{ umlClass.Name }})] = serviceProvider => (ICoreDataValidator)serviceProvider.GetRequiredService<ICoreDataService<SysML2.NET.Core.DTO.{{ NamedElement.WriteNamespace umlClass }}.I{{ umlClass.Name }}>>(),
             {{ /each }}
             };
 

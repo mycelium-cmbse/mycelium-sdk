@@ -56,7 +56,7 @@ The pipeline:
 2. **Generator**: `Mycelium.SDK.CodeGenerator` reads the XMI via `uml4net.xmi` (with the Enterprise Architect extender) and renders Handlebars templates from `Mycelium.SDK.CodeGenerator/Templates/Uml/*.hbs`.
 3. **Output**: `Mycelium.SDK/AutoGenDTO/`, `Mycelium.SDK/AutoGenPOCO/`, `Mycelium.SDK/AutoGenEnum/`.
 
-There are four independent pipelines: this UML one, the OpenAPI one (Carter route modules), the PIM one (Fabric service and repository interfaces) and the Core one (Fabric per-metaclass service interfaces and classes). The latter three target the `mycelium-fabric` repository and generate nothing into `Mycelium.SDK/`.
+There are four independent pipelines: this UML one, the OpenAPI one (Carter route modules), the PIM one (Fabric service and repository interfaces) and the Core one (Fabric core-data service provider). The latter three target the `mycelium-fabric` repository and generate nothing into `Mycelium.SDK/`.
 
 Generator classes in `Mycelium.SDK.CodeGenerator/Generators/UmlHandleBarsGenerators/`:
 
@@ -132,24 +132,19 @@ Two pipeline invariants that must be preserved:
 - **Batch generation is all-or-nothing.** `UmlClassHandleBarsGenerator.GenerateAsync` renders and validates the *complete* batch — including the duplicate-filename check — **before** it creates the output directory, so a model that cannot be generated leaves no partial output behind. Keep that ordering; there is a test that proves it.
 - **Output is byte-for-byte deterministic on a given platform.** `Generator.CodeCleanup` Roslyn-formats the source and normalises line endings to `Environment.NewLine`, and `Generator.WriteAsync` writes UTF-8 **without** BOM. The line ending deliberately follows the platform rather than being pinned: a golden file is compared against output generated beside it, so both sides move together and the comparison holds on Windows and on `ubuntu-latest` with no `.gitattributes` entry to add for each new `AutoGen*` folder. Pinning CRLF leaves the generated side anchored while the checked-out golden follows the platform, which fails on Linux only. Deterministic ordering of properties and generalizations lives in `Mycelium.SDK.CodeGenerator/Extensions/ClassExtensions.cs` (`OrderProperties` puts `id` first, then orders case-insensitively, then ordinally, then by `XmiId`). Never introduce anything non-deterministic (timestamps, hash-ordered collections) into generated output — the whole verification model rests on exact comparison.
 
-### Core-driven generation (Fabric per-metaclass services)
+### Core-driven generation (Fabric core-data service provider)
 
-A fourth pipeline generates one service interface and one service class per concrete SysML v2 / KerML metaclass for the Fabric service layer, plus the provider that maps a data type onto its service.
+A fourth pipeline generates, for the Fabric service layer, the provider that maps the data transfer object type of every concrete SysML v2 / KerML metaclass onto its core-data service.
 
 - **Input** (read-only): `Resources/SysML_only_xmi.uml`, which imports `Resources/KerML_only_xmi.uml` — the abstract-syntax exports SysML2.NET generates its `SysML2.NET.Core` types from, taken unchanged from the SysML2.NET release Fabric consumes. Loading is centralised in `Mycelium.SDK.CodeGenerator.Tests/Core/CoreXmiLoader.cs`.
-- **Generator**: `Generators/CoreHandleBarsGenerators/CoreServiceInterfaceGenerator.cs` renders `Templates/Core/service-interface-template.hbs`.
+- **Generator**: `Generators/CoreHandleBarsGenerators/CoreServiceProviderGenerator.cs` renders `Templates/Core/service-provider-template.hbs` once, over every metaclass.
 - **Output**: staged only, into the test project's `bin/.../Core/_Mycelium.Fabric.AutoGenCoreServices/`. The committed destination is `Mycelium.Fabric.ConcurrentServer/Services/AutoGenCoreServices/` in `mycelium-fabric`, reached by the same reviewed manual copy.
-- **Generator**: `Generators/CoreHandleBarsGenerators/CoreServiceClassGenerator.cs` renders `Templates/Core/service-class-template.hbs` per metaclass and `Templates/Core/service-provider-template.hbs` once, over every metaclass.
-- **Output**: staged only, into the test project's `bin/.../Core/_Mycelium.Fabric.AutoGenCoreServiceClasses/`. The committed destination is the same `Mycelium.Fabric.ConcurrentServer/Services/AutoGenCoreServices/` folder, reached by the same reviewed manual copy.
 
 Rules specific to this pipeline:
 
 - **A generated metaclass is a concrete class that specializes `Element`**, in the SysML model or in a model it imports (`QueryConcreteElementClasses` in `Extensions/PackageExtensions.cs`). The set must equal the concrete DTO classes of SysML2.NET; a metaclass that has no DTO there would not compile in Fabric.
-- **The generated interface is a marker, like the repositories.** Fabric hand-writes `ICoreDataService<TElement>` once and this pipeline emits `public partial interface IPartUsageService : ICoreDataService<IPartUsage> { }` per metaclass.
-- **The generated class is plumbing; the behaviour is hand-written in Fabric.** `PartUsageService` is a `sealed partial` specialization of Fabric's hand-written `CoreDataService<IPartUsage>` carrying only its constructor. Metaclass-specific validation goes in a hand-written partial in Fabric.
-- **The data type → service mapping is generated, not computed.** `CoreDataServiceProvider` (implementing Fabric's hand-written `ICoreDataServiceProvider`) holds a static map from each exact DTO class to the resolution of its service, the shape of the JSON `SerializationProvider`. It returns Fabric's untyped `ICoreDataValidator`, deliberately not an `IBaseService`, so that a scan by `IBaseService` resolves each class to its own interface only. Each DTO type is written fully qualified, because KerML has a metaclass named `Type`.
-- **Registration is not generated.** Fabric registers the classes with its `AddImplementationsOf<ICoreDataService>()` scan, each under its own interface and as the singleton that `CoreDataService<TElement>` declares with `[ServiceRegistration]`. The provider resolves that interface and casts it to `ICoreDataValidator`, so an override of `IPartUsageService` is what the commit pipeline uses too; a replacement must therefore also implement `ICoreDataValidator`.
-- **The template works on the class itself**: names come from `{{ this.Name }}` and the DTO namespace is imported with `using SysML2.NET.Core.DTO.{{ NamedElement.WriteNamespace this }};`. The namespace is the qualified name less the model and the metaclass, the rule SysML2.NET applies to its own types.
+- **No per-metaclass service is generated.** Every change goes through the commit pipeline and every read is by commit, so Fabric needs no per-metaclass object: its hand-written open generic `CoreDataService<TElement>` serves every metaclass, registered once as `ICoreDataService<>`, and metaclass-specific behaviour is written as rules and effects.
+- **The data type → service mapping is what is generated.** `CoreDataServiceProvider` (implementing Fabric's hand-written `ICoreDataServiceProvider`) holds a static map from each exact DTO class to the resolution of `ICoreDataService<I{Metaclass}>`, cast to Fabric's untyped `ICoreDataValidator` — the shape of the JSON `SerializationProvider`. Every DTO type is written fully qualified, because KerML has a metaclass named `Type`.
 
 ### The UML model is READ-ONLY
 

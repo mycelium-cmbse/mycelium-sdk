@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="CoreServiceClassGeneratorTestFixture.cs" company="Starion Group S.A.">
+//  <copyright file="CoreServiceProviderGeneratorTestFixture.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -11,11 +11,10 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.CoreHandleBarsGenerators
 {
     using Mycelium.SDK.CodeGenerator.Generators.CoreHandleBarsGenerators;
     using Mycelium.SDK.CodeGenerator.Tests.Core;
-    using Mycelium.SDK.CodeGenerator.Tests.Expected;
     using Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators;
 
     [TestFixture]
-    public class CoreServiceClassGeneratorTestFixture : UmlClassGeneratorTestFixtureBase
+    public class CoreServiceProviderGeneratorTestFixture : UmlClassGeneratorTestFixtureBase
     {
         private const string ProviderFileName = "CoreDataServiceProvider.cs";
 
@@ -25,29 +24,18 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.CoreHandleBarsGenerators
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
-            this.expectedDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "Expected", "Core", "AutoGenCoreServiceClasses"));
+            this.expectedDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "Expected", "Core", "AutoGenCoreServices"));
 
-            this.stagingDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "Core", "_Mycelium.Fabric.AutoGenCoreServiceClasses"));
+            this.stagingDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "Core", "_Mycelium.Fabric.AutoGenCoreServices"));
 
             if (this.stagingDirectory.Exists)
             {
                 this.stagingDirectory.Delete(true);
             }
 
-            var generator = new CoreServiceClassGenerator();
+            var generator = new CoreServiceProviderGenerator();
 
             await generator.GenerateAsync(CoreXmiLoader.ReadSysMLAbstractSyntaxModel(), this.stagingDirectory);
-        }
-
-        [Test]
-        [TestCaseSource(typeof(RepresentativeCoreClasses))]
-        [Category("Expected")]
-        public async Task VerifyThatRepresentativeClassesMatchTheirGoldenFiles(string className)
-        {
-            var fileName = $"{className}Service.cs";
-
-            await AssertFilesMatchAsync(Path.Combine(this.stagingDirectory.FullName, fileName), Path.Combine(this.expectedDirectory.FullName, fileName),
-                $"Generated '{fileName}'", "its reviewed golden");
         }
 
         [Test]
