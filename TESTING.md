@@ -111,7 +111,7 @@ The generated SDK is verified at four independent levels; a template change — 
 
 The OpenAPI and PIM pipelines hold the **complete** output as goldens rather than a subset, because it is small and because there is no committed source in this repository to compare against — `Expected/OpenApi/AutoGenModules/` (9 modules), `Expected/Pim/AutoGenServices/` (6 service interfaces) and `Expected/Pim/AutoGenRepositories/` (7 repository interfaces). Their manifests are compared as ordered lists, so a generated file cannot appear or disappear unnoticed.
 
-The Core pipeline generates one interface per concrete SysML v2 / KerML metaclass, so `Expected/Core/AutoGenCoreServices/` holds only the representative subset listed in `Expected/RepresentativeCoreClasses.cs`: the concrete INTERESTING CLASSIFIERS of the uml4net model inspector report on the SysML and KerML packages.
+The Core pipeline generates one interface and one class per concrete SysML v2 / KerML metaclass, so `Expected/Core/AutoGenCoreServices/` and `Expected/Core/AutoGenCoreServiceClasses/` hold only the representative subset listed in `Expected/RepresentativeCoreClasses.cs`: the concrete INTERESTING CLASSIFIERS of the uml4net model inspector report on the SysML and KerML packages. The provider `CoreDataServiceProvider.cs` is held in full, so it pins the complete set of generated metaclasses.
 
 *A failure here means the generated contract changed.* It requires human review before the golden files are updated.
 
