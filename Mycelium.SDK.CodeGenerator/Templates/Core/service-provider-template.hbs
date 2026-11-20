@@ -29,11 +29,11 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
         /// <summary>
         /// Maps each concrete data transfer object type to the resolution of its core-data service.
         /// </summary>
-        private static readonly IReadOnlyDictionary<Type, Func<IServiceProvider, ICoreDataValidator>> ServiceMap =
-            new Dictionary<Type, Func<IServiceProvider, ICoreDataValidator>>
+        private static readonly IReadOnlyDictionary<Type, Func<IServiceProvider, ICoreDataService>> ServiceMap =
+            new Dictionary<Type, Func<IServiceProvider, ICoreDataService>>
             {
             {{ #each this as | umlClass | }}
-                [typeof(SysML2.NET.Core.DTO.{{ NamedElement.WriteNamespace umlClass }}.{{ umlClass.Name }})] = serviceProvider => (ICoreDataValidator)serviceProvider.GetRequiredService<ICoreDataService<SysML2.NET.Core.DTO.{{ NamedElement.WriteNamespace umlClass }}.I{{ umlClass.Name }}>>(),
+                [typeof(SysML2.NET.Core.DTO.{{ NamedElement.WriteNamespace umlClass }}.{{ umlClass.Name }})] = serviceProvider => serviceProvider.GetRequiredService<ICoreDataService<SysML2.NET.Core.DTO.{{ NamedElement.WriteNamespace umlClass }}.I{{ umlClass.Name }}>>(),
             {{ /each }}
             };
 
@@ -59,13 +59,13 @@ namespace Mycelium.Fabric.ConcurrentServer.Services
         /// <returns>The core-data service of <paramref name="dataType" />.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="dataType" /> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException"><paramref name="dataType" /> is not a concrete SysML v2 or KerML data transfer object type.</exception>
-        public ICoreDataValidator Resolve(Type dataType)
+        public ICoreDataService Resolve(Type dataType)
         {
             ArgumentNullException.ThrowIfNull(dataType);
 
             return ServiceMap.TryGetValue(dataType, out var resolve)
                 ? resolve(this.ServiceProvider)
-                : throw new ArgumentException($"No core-data service validates {dataType.FullName}.", nameof(dataType));
+                : throw new ArgumentException($"No core-data service handles {dataType.FullName}.", nameof(dataType));
         }
     }
 }

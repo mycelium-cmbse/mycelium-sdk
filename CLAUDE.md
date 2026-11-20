@@ -144,7 +144,7 @@ Rules specific to this pipeline:
 
 - **A generated metaclass is a concrete class that specializes `Element`**, in the SysML model or in a model it imports (`QueryConcreteElementClasses` in `Extensions/PackageExtensions.cs`). The set must equal the concrete DTO classes of SysML2.NET; a metaclass that has no DTO there would not compile in Fabric.
 - **No per-metaclass service is generated.** Every change goes through the commit pipeline and every read is by commit, so Fabric needs no per-metaclass object: its hand-written open generic `CoreDataService<TElement>` serves every metaclass, registered once as `ICoreDataService<>`, and metaclass-specific behaviour is written as rules and effects.
-- **The data type → service mapping is what is generated.** `CoreDataServiceProvider` (implementing Fabric's hand-written `ICoreDataServiceProvider`) holds a static map from each exact DTO class to the resolution of `ICoreDataService<I{Metaclass}>`, cast to Fabric's untyped `ICoreDataValidator` — the shape of the JSON `SerializationProvider`. Every DTO type is written fully qualified, because KerML has a metaclass named `Type`.
+- **The data type → service mapping is what is generated.** `CoreDataServiceProvider` (implementing Fabric's hand-written `ICoreDataServiceProvider`) holds a static map from each exact DTO class to the resolution of `ICoreDataService<I{Metaclass}>`, returned as Fabric's untyped `ICoreDataService` that the generic interface specializes — the shape of the JSON `SerializationProvider`. Every DTO type is written fully qualified, because KerML has a metaclass named `Type`.
 
 ### The UML model is READ-ONLY
 
