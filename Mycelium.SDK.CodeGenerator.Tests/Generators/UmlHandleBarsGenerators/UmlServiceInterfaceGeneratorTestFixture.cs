@@ -18,7 +18,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     using uml4net.xmi.Readers;
 
     [TestFixture]
-    public class UmlServiceInterfaceGeneratorTestFixture
+    public class UmlServiceInterfaceGeneratorTestFixture : UmlClassGeneratorTestFixtureBase
     {
         private Dictionary<string, IClass> classes;
 
@@ -74,10 +74,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
                 foreach (var fileName in representativeFileNames.Intersect(goldenFileNames, StringComparer.Ordinal))
                 {
-                    var stagedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
-                    var goldenSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.expectedDirectory.FullName, fileName));
-
-                    Assert.That(stagedSource, Is.EqualTo(goldenSource), $"Generated service interface '{fileName}' differs from its reviewed golden.");
+                    await AssertFilesMatchAsync(
+                        Path.Combine(this.stagingDirectory.FullName, fileName),
+                        Path.Combine(this.expectedDirectory.FullName, fileName),
+                        $"Generated service interface '{fileName}'",
+                        "its reviewed golden");
                 }
             }
         }
