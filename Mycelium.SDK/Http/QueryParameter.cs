@@ -53,7 +53,8 @@ namespace Mycelium.SDK.Http
         /// Thrown when <paramref name="query"/> is <c>null</c>
         /// </exception>
         /// <exception cref="FormatException">
-        /// Thrown when a known parameter is repeated, has no value or has a value other than <c>true</c> or <c>false</c>
+        /// Thrown when a known parameter is repeated, has no value or has a value other than <c>true</c> or <c>false</c>,
+        /// compared ignoring case and surrounding white space
         /// </exception>
         public static QueryParameter FromString(string query)
         {
@@ -82,16 +83,17 @@ namespace Mycelium.SDK.Http
 
                 if (!bool.TryParse(value, out var flag))
                 {
-                    throw new FormatException($"The '{name}' query parameter must be 'true' or 'false', but was '{value}'.");
+                    throw new FormatException($"The '{name}' query parameter must be 'true' or 'false' (case-insensitive), but was '{value}'.");
                 }
 
-                if (name == IncludeReferencedParameterName)
+                switch (name)
                 {
-                    queryParameter.IncludeReferenced = flag;
-                }
-                else
-                {
-                    queryParameter.IncludeComposed = flag;
+                    case IncludeReferencedParameterName:
+                        queryParameter.IncludeReferenced = flag;
+                        break;
+                    case IncludeComposedParameterName:
+                        queryParameter.IncludeComposed = flag;
+                        break;
                 }
             }
 
