@@ -57,14 +57,9 @@ namespace Mycelium.SDK.Http
         /// </exception>
         public static QueryParameter FromString(string query)
         {
-            if (query == null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
+            var text = (query ?? throw new ArgumentNullException(nameof(query))).Trim();
 
-            var text = query.Trim();
-
-            if (text.StartsWith("?", StringComparison.Ordinal))
+            if (text.StartsWith('?'))
             {
                 text = text.Substring(1);
             }
@@ -138,11 +133,9 @@ namespace Mycelium.SDK.Http
         /// </returns>
         private static (string Name, string Value) SplitPair(string pair)
         {
-            var separatorIndex = pair.IndexOf('=');
+            var parts = pair.Split('=', 2);
 
-            return separatorIndex < 0
-                ? (Uri.UnescapeDataString(pair), null)
-                : (Uri.UnescapeDataString(pair.Substring(0, separatorIndex)), Uri.UnescapeDataString(pair.Substring(separatorIndex + 1)));
+            return (Uri.UnescapeDataString(parts[0]), parts.Length == 1 ? null : Uri.UnescapeDataString(parts[1]));
         }
 
         /// <summary>
