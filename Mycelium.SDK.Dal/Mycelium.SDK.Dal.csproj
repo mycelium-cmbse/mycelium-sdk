@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
         <LangVersion>14.0</LangVersion>
-        <Version>0.2.0</Version>
+        <Version>0.3.0</Version>
         <Description>The data access layer of the Mycelium SDK: the generated PostgreSQL schema scripts.</Description>
         <PackageId>Mycelium.SDK.Dal</PackageId>
         <Company>Starion Group S.A.</Company>
@@ -13,7 +13,7 @@
         <RepositoryType>Git</RepositoryType>
         <Authors>Sam Gerene, Antoine Théate, Régis André, Tanase-Marius Manafu, Omrane Haj Mohamed</Authors>
         <RequireLicenseAcceptance>true</RequireLicenseAcceptance>
-        <PackageReleaseNotes>Initial release. Embeds the generated initial PostgreSQL schema 0001_initial.sql (Mycelium.Model.Fabric 0.3.0, CommonPrimitives 0.4.0), exposed through SqlSchemaScripts.GetAll().</PackageReleaseNotes>
+        <PackageReleaseNotes>Version aligned with Mycelium.SDK 0.3.0; the schema is unchanged. Embeds the generated initial PostgreSQL schema 0001_initial.sql (Mycelium.Model.Fabric 0.3.0, CommonPrimitives 0.4.0), exposed through SqlSchemaScripts.GetAll().</PackageReleaseNotes>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <GenerateSBOM>true</GenerateSBOM>
