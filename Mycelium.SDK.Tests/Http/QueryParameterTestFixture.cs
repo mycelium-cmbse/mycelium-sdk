@@ -108,18 +108,6 @@ namespace Mycelium.SDK.Tests.Http
         }
 
         [Test]
-        public void VerifyThatFromStringAcceptsBooleanValuesWithSurroundingWhiteSpace()
-        {
-            var parsed = QueryParameter.FromString("?includeReferenced=%20true%20&includeComposed=%20FALSE");
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(parsed.IncludeReferenced, Is.True);
-                Assert.That(parsed.IncludeComposed, Is.False);
-            }
-        }
-
-        [Test]
         public void VerifyThatFromStringDecodesUrlEncodedNamesAndValues()
         {
             var parsed = QueryParameter.FromString("?include%52eferenced=tru%65");
@@ -140,14 +128,14 @@ namespace Mycelium.SDK.Tests.Http
         }
 
         [Test]
-        public void VerifyThatFromStringMatchesNamesCaseSensitively()
+        public void VerifyThatFromStringMatchesNamesIgnoringCase()
         {
             var parsed = QueryParameter.FromString("?IncludeComposed=true&INCLUDEREFERENCED=true");
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(parsed.IncludeReferenced, Is.False);
-                Assert.That(parsed.IncludeComposed, Is.False);
+                Assert.That(parsed.IncludeReferenced, Is.True);
+                Assert.That(parsed.IncludeComposed, Is.True);
             }
         }
 

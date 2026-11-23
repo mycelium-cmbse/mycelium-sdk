@@ -11,7 +11,9 @@ namespace Mycelium.SDK.Http
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Specialized;
     using System.Linq;
+    using System.Web;
 
     /// <summary>
     /// Holds the query parameters defined by the OpenAPI file of the Functional Data service, and writes them to and
@@ -47,7 +49,7 @@ namespace Mycelium.SDK.Http
         /// </param>
         /// <returns>
         /// The <see cref="QueryParameter"/> carrying the parsed values; an absent parameter keeps its default <c>false</c>
-        /// and an unknown parameter is ignored
+        /// and an unknown parameter is ignored; names are matched ignoring case
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="query"/> is <c>null</c>
@@ -58,46 +60,13 @@ namespace Mycelium.SDK.Http
         /// </exception>
         public static QueryParameter FromString(string query)
         {
-            var text = (query ?? throw new ArgumentNullException(nameof(query))).Trim();
+            var parameters = HttpUtility.ParseQueryString((query ?? throw new ArgumentNullException(nameof(query))).Trim());
 
-            if (text.StartsWith('?'))
+            return new QueryParameter
             {
-                text = text.Substring(1);
-            }
-
-            var queryParameter = new QueryParameter();
-
-            var readParameterNames = new HashSet<string>(StringComparer.Ordinal);
-
-            foreach (var (name, value) in text.Split(['&'], StringSplitOptions.RemoveEmptyEntries).Select(SplitPair).Where(pair => IsKnownParameterName(pair.Name)))
-            {
-                if (!readParameterNames.Add(name))
-                {
-                    throw new FormatException($"The '{name}' query parameter is repeated.");
-                }
-
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new FormatException($"The '{name}' query parameter has no value.");
-                }
-
-                if (!bool.TryParse(value, out var flag))
-                {
-                    throw new FormatException($"The '{name}' query parameter must be 'true' or 'false' (case-insensitive), but was '{value}'.");
-                }
-
-                switch (name)
-                {
-                    case IncludeReferencedParameterName:
-                        queryParameter.IncludeReferenced = flag;
-                        break;
-                    case IncludeComposedParameterName:
-                        queryParameter.IncludeComposed = flag;
-                        break;
-                }
-            }
-
-            return queryParameter;
+                IncludeReferenced = ReadFlag(parameters, IncludeReferencedParameterName),
+                IncludeComposed = ReadFlag(parameters, IncludeComposedParameterName)
+            };
         }
 
         /// <summary>
@@ -125,33 +94,48 @@ namespace Mycelium.SDK.Http
         }
 
         /// <summary>
-        /// Splits one <c>name=value</c> pair of a query string at its first <c>=</c> and URL-decodes both parts
+        /// Reads one boolean query parameter from the parsed query string
         /// </summary>
-        /// <param name="pair">
-        /// The pair to split
+        /// <param name="parameters">
+        /// The query string parsed by <see cref="HttpUtility.ParseQueryString(string)"/>, which files a name written
+        /// without <c>=</c> as a value under the <c>null</c> key
         /// </param>
-        /// <returns>
-        /// The decoded name, and the decoded value or <c>null</c> when the pair has no <c>=</c>
-        /// </returns>
-        private static (string Name, string Value) SplitPair(string pair)
-        {
-            var parts = pair.Split('=', 2);
-
-            return (Uri.UnescapeDataString(parts[0]), parts.Length == 1 ? null : Uri.UnescapeDataString(parts[1]));
-        }
-
-        /// <summary>
-        /// Determines whether a name is one of the query parameters defined by the OpenAPI file, using ordinal comparison
-        /// </summary>
         /// <param name="name">
-        /// The decoded parameter name
+        /// The name of the query parameter to read
         /// </param>
         /// <returns>
-        /// <c>true</c> when <paramref name="name"/> is a known query parameter; otherwise <c>false</c>
+        /// The parsed value, or <c>false</c> when the parameter is absent
         /// </returns>
-        private static bool IsKnownParameterName(string name)
+        /// <exception cref="FormatException">
+        /// Thrown when the parameter is repeated, has no value or has a value other than <c>true</c> or <c>false</c>
+        /// </exception>
+        private static bool ReadFlag(NameValueCollection parameters, string name)
         {
-            return name == IncludeReferencedParameterName || name == IncludeComposedParameterName;
+            var values = parameters.GetValues(name) ?? [];
+
+            var valuelessCount = (parameters.GetValues(null) ?? []).Count(valueless => string.Equals(valueless, name, StringComparison.OrdinalIgnoreCase));
+
+            if (values.Length + valuelessCount > 1)
+            {
+                throw new FormatException($"The '{name}' query parameter is repeated.");
+            }
+
+            if (valuelessCount == 1 || (values.Length == 1 && string.IsNullOrEmpty(values[0])))
+            {
+                throw new FormatException($"The '{name}' query parameter has no value.");
+            }
+
+            if (values.Length == 0)
+            {
+                return false;
+            }
+
+            if (!bool.TryParse(values[0], out var flag))
+            {
+                throw new FormatException($"The '{name}' query parameter must be 'true' or 'false' (case-insensitive), but was '{values[0]}'.");
+            }
+
+            return flag;
         }
     }
 }
