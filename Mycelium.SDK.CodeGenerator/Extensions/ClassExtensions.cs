@@ -225,7 +225,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             /// Queries the names of every parameter that the class's DAO sends, failing when two of them would be the same.
             /// </summary>
             /// <returns>
-            /// The identity, discriminator and document parameter names, followed by the scalar reference column and link-table collection parameter
+            /// The identity, identifier-list, discriminator and document parameter names, followed by the scalar reference column and link-table collection parameter
             /// names of the inheritance chain, from the root down to the class.
             /// </returns>
             /// <exception cref="ArgumentNullException">
@@ -241,6 +241,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 (string Name, string Element)[] fixedParameters =
                 [
                     (NamedElementExtensions.SqlIdentityColumnName, "the identity"),
+                    (NamedElementExtensions.SqlIdentitiesParameterName, "the identifier list"),
                     (NamedElementExtensions.SqlClassKindColumnName, "the discriminator"),
                     (NamedElementExtensions.SqlDataColumnName, "the JSON document")
                 ];

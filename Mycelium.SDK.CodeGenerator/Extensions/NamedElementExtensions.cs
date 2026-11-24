@@ -43,6 +43,11 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         public const string SqlDataColumnName = "data";
 
         /// <summary>
+        /// The name of the DAO parameter holding the identifiers that a read by several identifiers matches.
+        /// </summary>
+        public const string SqlIdentitiesParameterName = "ids";
+
+        /// <summary>
         /// The link-table column holding the owner object's identity.
         /// </summary>
         public const string SqlLinkSourceColumnName = "source_id";
