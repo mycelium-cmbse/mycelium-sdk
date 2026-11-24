@@ -22,13 +22,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     [TestFixture]
     public class UmlDaoGeneratorTestFixture
     {
-        private Dictionary<string, IClass> classes;
-
         private const string DaoProviderFileName = "DaoProvider.cs";
 
-        private DirectoryInfo expectedDirectory;
+        private Dictionary<string, IClass> classes;
 
-        private DirectoryInfo providerStagingDirectory;
+        private DirectoryInfo expectedDirectory;
 
         private DirectoryInfo stagingDirectory;
 
@@ -41,13 +39,9 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             this.stagingDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_Mycelium.Fabric.AutoGenDao"));
 
-            this.providerStagingDirectory = new DirectoryInfo(Path.Combine(TestContext.CurrentContext.TestDirectory, "UML", "_RepresentativeDaoProvider"));
-
-            DirectoryInfo[] stagingDirectories = [this.stagingDirectory, this.providerStagingDirectory];
-
-            foreach (var directory in stagingDirectories.Where(directory => directory.Exists))
+            if (this.stagingDirectory.Exists)
             {
-                directory.Delete(true);
+                this.stagingDirectory.Delete(true);
             }
 
             this.xmiReaderResult = GeneratorSetupFixture.ReadFunctionalData();
@@ -56,16 +50,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 .SelectMany(package => package.PackagedElement.OfType<IClass>())
                 .ToDictionary(umlClass => umlClass.Name, StringComparer.Ordinal);
 
-            var generator = new UmlDaoGenerator();
-
-            await generator.GenerateAsync(this.xmiReaderResult, this.stagingDirectory);
-
-            var representativeClasses = new RepresentativeClasses()
-                .Where(this.classes.ContainsKey)
-                .Select(className => this.classes[className])
-                .ToArray();
-
-            await generator.GenerateDaoProviderAsync(this.providerStagingDirectory, representativeClasses);
+            await new UmlDaoGenerator().GenerateAsync(this.xmiReaderResult, this.stagingDirectory);
         }
 
         [Test]
@@ -79,7 +64,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var representativeFileNames = new RepresentativeClasses()
+            var expectedFileNames = new RepresentativeClasses()
                 .Where(className => this.classes.TryGetValue(className, out var umlClass) && !umlClass.IsAbstract)
                 .Select(className => $"{className}Dao.cs")
                 .Append(DaoProviderFileName)
@@ -90,36 +75,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(goldenFileNames, Is.EqualTo(representativeFileNames),
-                    "The DAO golden set must contain exactly the concrete representative classes and the representative DAO provider.");
+                Assert.That(goldenFileNames, Is.EqualTo(expectedFileNames), "The DAO golden set must contain exactly the concrete representative classes and the DAO provider.");
 
-                foreach (var fileName in representativeFileNames.Intersect(goldenFileNames, StringComparer.Ordinal))
+                foreach (var fileName in expectedFileNames.Intersect(goldenFileNames, StringComparer.Ordinal))
                 {
-                    var stagedDirectory = fileName == DaoProviderFileName ? this.providerStagingDirectory : this.stagingDirectory;
-                    var stagedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(stagedDirectory.FullName, fileName));
+                    var stagedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
                     var goldenSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.expectedDirectory.FullName, fileName));
 
                     Assert.That(stagedSource, Is.EqualTo(goldenSource), $"Generated DAO file '{fileName}' differs from its reviewed golden.");
-                }
-            }
-        }
-
-        [Test]
-        public async Task VerifyThatAbstractRepresentativeClassesHaveNoDaoProviderEntry()
-        {
-            var abstractClassNames = new RepresentativeClasses()
-                .Where(className => this.classes.TryGetValue(className, out var umlClass) && umlClass.IsAbstract)
-                .ToArray();
-
-            var source = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.stagingDirectory.FullName, DaoProviderFileName));
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(abstractClassNames, Is.Not.Empty, "The representative class selection must contain an abstract class for this check to be meaningful.");
-
-                foreach (var className in abstractClassNames)
-                {
-                    Assert.That(source, Does.Not.Contain($"[\"{className}\"]"), $"The abstract class '{className}' must have no entry in the DAO provider.");
                 }
             }
         }
@@ -248,12 +211,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             {
                 await Assert.ThatAsync(() => generator.GenerateAsync((XmiReaderResult)null, this.stagingDirectory), Throws.ArgumentNullException);
 
-                await Assert.ThatAsync(() => generator.GenerateAsync(this.xmiReaderResult, null), Throws.ArgumentNullException);
-
-                await Assert.ThatAsync(() => generator.GenerateDaoProviderAsync(null, this.classes.Values), Throws.ArgumentNullException);
-
-                await Assert.ThatAsync(() => generator.GenerateDaoProviderAsync(this.providerStagingDirectory, null), Throws.ArgumentNullException);
-            }
+                await Assert.ThatAsync(() => generator.GenerateAsync(this.xmiReaderResult, null), Throws.ArgumentNullException);            }
         }
     }
 }

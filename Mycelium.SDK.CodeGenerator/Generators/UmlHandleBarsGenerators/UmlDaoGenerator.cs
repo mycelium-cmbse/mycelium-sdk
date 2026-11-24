@@ -74,33 +74,6 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
-        /// Generates the data access object provider for the concrete classes among the supplied classes.
-        /// </summary>
-        /// <param name="outputDirectory">
-        /// The directory to which <c>DaoProvider.cs</c> is written.
-        /// </param>
-        /// <param name="classes">
-        /// The classes whose concrete members receive an entry; abstract classes receive none.
-        /// </param>
-        /// <returns>
-        /// The generated provider source.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="outputDirectory" /> or <paramref name="classes" /> is <see langword="null" />.
-        /// </exception>
-        public async Task<string> GenerateDaoProviderAsync(DirectoryInfo outputDirectory, IEnumerable<IClass> classes)
-        {
-            ArgumentNullException.ThrowIfNull(outputDirectory);
-            ArgumentNullException.ThrowIfNull(classes);
-
-            var generatedFile = this.RenderDaoProvider(QueryConcreteClasses(classes));
-
-            await WriteAsync([generatedFile], outputDirectory);
-
-            return generatedFile.Source;
-        }
-
-        /// <summary>
         /// Registers the class, property, string and shared SQL-name helper groups used by the DAO and DAO provider templates.
         /// </summary>
         /// <remarks>

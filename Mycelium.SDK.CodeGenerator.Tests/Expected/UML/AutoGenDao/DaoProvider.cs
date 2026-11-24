@@ -36,9 +36,16 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             new Dictionary<string, Func<IServiceProvider, IBaseDao>>(StringComparer.Ordinal)
             {
                 ["BranchProtectionRule"] = serviceProvider => serviceProvider.GetRequiredService<IDao<IBranchProtectionRule>>(),
+                ["Comment"] = serviceProvider => serviceProvider.GetRequiredService<IDao<IComment>>(),
                 ["FunctionalProject"] = serviceProvider => serviceProvider.GetRequiredService<IDao<IFunctionalProject>>(),
                 ["FunctionalProjectPolicy"] = serviceProvider => serviceProvider.GetRequiredService<IDao<IFunctionalProjectPolicy>>(),
+                ["Organization"] = serviceProvider => serviceProvider.GetRequiredService<IDao<IOrganization>>(),
+                ["OrganizationMember"] = serviceProvider => serviceProvider.GetRequiredService<IDao<IOrganizationMember>>(),
+                ["OrganizationPolicy"] = serviceProvider => serviceProvider.GetRequiredService<IDao<IOrganizationPolicy>>(),
+                ["Ownership"] = serviceProvider => serviceProvider.GetRequiredService<IDao<IOwnership>>(),
                 ["ProjectMember"] = serviceProvider => serviceProvider.GetRequiredService<IDao<IProjectMember>>(),
+                ["Reply"] = serviceProvider => serviceProvider.GetRequiredService<IDao<IReply>>(),
+                ["Review"] = serviceProvider => serviceProvider.GetRequiredService<IDao<IReview>>(),
                 ["User"] = serviceProvider => serviceProvider.GetRequiredService<IDao<IUser>>(),
             };
 
