@@ -22,6 +22,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     [TestFixture]
     public class UmlDaoGeneratorTestFixture
     {
+        private const string DaoProviderFileName = "DaoProvider.cs";
+
         private Dictionary<string, IClass> classes;
 
         private DirectoryInfo expectedDirectory;
@@ -62,9 +64,10 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 return;
             }
 
-            var representativeFileNames = new RepresentativeClasses()
+            var expectedFileNames = new RepresentativeClasses()
                 .Where(className => this.classes.TryGetValue(className, out var umlClass) && !umlClass.IsAbstract)
                 .Select(className => $"{className}Dao.cs")
+                .Append(DaoProviderFileName)
                 .OrderBy(fileName => fileName, StringComparer.Ordinal)
                 .ToArray();
 
@@ -72,14 +75,14 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(goldenFileNames, Is.EqualTo(representativeFileNames), "The DAO golden set must contain exactly the concrete representative classes.");
+                Assert.That(goldenFileNames, Is.EqualTo(expectedFileNames), "The DAO golden set must contain exactly the concrete representative classes and the DAO provider.");
 
-                foreach (var fileName in representativeFileNames.Intersect(goldenFileNames, StringComparer.Ordinal))
+                foreach (var fileName in expectedFileNames.Intersect(goldenFileNames, StringComparer.Ordinal))
                 {
                     var stagedSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.stagingDirectory.FullName, fileName));
                     var goldenSource = await GeneratorSetupFixture.ReadSourceAsync(Path.Combine(this.expectedDirectory.FullName, fileName));
 
-                    Assert.That(stagedSource, Is.EqualTo(goldenSource), $"Generated DAO '{fileName}' differs from its reviewed golden.");
+                    Assert.That(stagedSource, Is.EqualTo(goldenSource), $"Generated DAO file '{fileName}' differs from its reviewed golden.");
                 }
             }
         }
@@ -208,8 +211,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
             {
                 await Assert.ThatAsync(() => generator.GenerateAsync((XmiReaderResult)null, this.stagingDirectory), Throws.ArgumentNullException);
 
-                await Assert.ThatAsync(() => generator.GenerateAsync(this.xmiReaderResult, null), Throws.ArgumentNullException);
-            }
+                await Assert.ThatAsync(() => generator.GenerateAsync(this.xmiReaderResult, null), Throws.ArgumentNullException);            }
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
     /// <summary>
     /// Generates one data access object per concrete Fabric class, performing create, read, update and delete operations against the
-    /// PostgreSQL schema delivered in <c>0001_initial.sql</c>.
+    /// PostgreSQL schema delivered in <c>0001_initial.sql</c>, and the provider that resolves the data access object of a class kind.
     /// </summary>
     public sealed class UmlDaoGenerator : UmlHandleBarsGenerator
     {
@@ -27,13 +27,23 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         private const string DaoTemplateName = "dao-uml-template";
 
         /// <summary>
-        /// Renders the complete batch of data access objects and only then writes it to the output directory.
+        /// The registered template used for the data access object provider.
+        /// </summary>
+        private const string DaoProviderTemplateName = "dao-provider-uml-template";
+
+        /// <summary>
+        /// The filename of the data access object provider.
+        /// </summary>
+        private const string DaoProviderFileName = "DaoProvider.cs";
+
+        /// <summary>
+        /// Renders the complete batch of data access objects and their provider and only then writes it to the output directory.
         /// </summary>
         /// <param name="xmiReaderResult">
         /// The parsed UML model from which the Fabric package is selected.
         /// </param>
         /// <param name="outputDirectory">
-        /// The staging directory to which one <c>&lt;ConcreteClass&gt;Dao.cs</c> per concrete class is written.
+        /// The staging directory to which one <c>&lt;ConcreteClass&gt;Dao.cs</c> per concrete class and <c>DaoProvider.cs</c> are written.
         /// </param>
         /// <returns>
         /// A task representing the asynchronous generation operation.
@@ -52,8 +62,11 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var payload = CreateHandlebarsPayload(xmiReaderResult);
 
-            var generatedFiles = QueryConcreteClasses(payload.Classes)
+            var concreteClasses = QueryConcreteClasses(payload.Classes);
+
+            var generatedFiles = concreteClasses
                 .Select(this.RenderDao)
+                .Append(this.RenderDaoProvider(concreteClasses))
                 .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
                 .ToArray();
 
@@ -61,7 +74,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
-        /// Registers the class, property, string and shared SQL-name helper groups used by the DAO template.
+        /// Registers the class, property, string and shared SQL-name helper groups used by the DAO and DAO provider templates.
         /// </summary>
         /// <remarks>
         /// This method is invoked during base construction. Implementations
@@ -80,13 +93,17 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         }
 
         /// <summary>
-        /// Registers the template used to render each data access object.
+        /// Registers the templates used to render each data access object and their provider.
         /// </summary>
         /// <remarks>
         /// This method is invoked during base construction. Implementations
         /// must not depend on fields initialized by a derived constructor.
         /// </remarks>
-        protected override void RegisterTemplates() => this.RegisterTemplate(DaoTemplateName);
+        protected override void RegisterTemplates()
+        {
+            this.RegisterTemplate(DaoTemplateName);
+            this.RegisterTemplate(DaoProviderTemplateName);
+        }
 
         /// <summary>
         /// Renders the data access object of one concrete class without writing it.
@@ -107,6 +124,22 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             var generatedCode = this.CodeCleanup(this.Templates[DaoTemplateName](umlClass));
 
             return new GeneratedFile($"{umlClass.Name}Dao.cs", generatedCode);
+        }
+
+        /// <summary>
+        /// Renders the data access object provider without writing it.
+        /// </summary>
+        /// <param name="concreteClasses">
+        /// The ordered concrete UML classes that each receive one provider entry.
+        /// </param>
+        /// <returns>
+        /// The <c>DaoProvider.cs</c> filename and its formatted source.
+        /// </returns>
+        private GeneratedFile RenderDaoProvider(IReadOnlyCollection<IClass> concreteClasses)
+        {
+            var generatedCode = this.CodeCleanup(this.Templates[DaoProviderTemplateName](concreteClasses));
+
+            return new GeneratedFile(DaoProviderFileName, generatedCode);
         }
     }
 }
