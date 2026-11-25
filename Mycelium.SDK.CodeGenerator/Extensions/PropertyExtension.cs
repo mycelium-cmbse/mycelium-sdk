@@ -9,16 +9,11 @@
 
 namespace Mycelium.SDK.CodeGenerator.Extensions
 {
-    using System.Text.RegularExpressions;
-
-    using HandlebarsDotNet.Helpers.Utils;
-
     using uml4net.Classification;
     using uml4net.Extensions;
     using uml4net.Profiling;
     using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
-    using uml4net.Values;
 
     using EnterpriseArchitectAttribute = uml4net.xmi.Extensions.EnterpriseArchitect.Structure.IAttribute;
     using EnterpriseArchitectConnector = uml4net.xmi.Extensions.EnterpriseArchitect.Structure.IConnector;
@@ -27,7 +22,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     /// <summary>
     /// Provides artifact-specific name, type, multiplicity, relational-storage and Mycelium profile queries for UML properties.
     /// </summary>
-    public static partial class PropertyExtension
+    public static class PropertyExtension
     {
         /// <summary>
         /// Maps a referenced UML class to its generated POCO interface identifier.
@@ -214,40 +209,32 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         }
 
         /// <summary>
-        /// Determines whether an OCL invariant body is exactly <c>&lt;Class&gt;.allInstances()-&gt;isUnique(v | v.&lt;property&gt;)</c> for the
-        /// property and the class that declares it. The body is compared as text; no OCL is parsed or evaluated.
+        /// Determines which value the server assigns to a managed property that has an <c>onAction</c> value: the acting user's identifier for a
+        /// single reference, or the transaction time for a single date and time value.
         /// </summary>
-        /// <param name="body">
-        /// The decoded invariant body, possibly preceded by OCL comment lines.
-        /// </param>
-        /// <param name="className">
-        /// The name of the class that declares the property and owns the invariant.
-        /// </param>
-        /// <param name="propertyName">
-        /// The name of the property.
+        /// <param name="property">
+        /// The managed UML property that has an <c>onAction</c> value.
         /// </param>
         /// <returns>
-        /// <see langword="true" /> when the body states the uniqueness of the property's value across every instance of its class.
+        /// <see langword="true" /> for a single reference; <see langword="false" /> for a single date and time value.
         /// </returns>
-        private static bool QueryIsUniquenessInvariant(string body, string className, string propertyName)
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the property is a collection, or is neither a reference nor a date and time value, so that the server has no value to
+        /// assign.
+        /// </exception>
+        private static bool QueryAssignsActingUser(IProperty property)
         {
-            return body.Split('\n')
-                .Select(line => line.Trim())
-                .Where(line => line.Length > 0 && !line.StartsWith("--", StringComparison.Ordinal))
-                .Select(line => UniquenessInvariantPattern().Match(line))
-                .Any(match => match.Success &&
-                    string.Equals(match.Groups["class"].Value, className, StringComparison.Ordinal) &&
-                    string.Equals(match.Groups["property"].Value, propertyName, StringComparison.Ordinal));
-        }
+            var isSingle = !property.QueryIsEnumerable();
 
-        /// <summary>
-        /// Matches one OCL invariant of the form <c>inv &lt;name&gt;: &lt;Class&gt;.allInstances()-&gt;isUnique(v | v.&lt;property&gt;)</c>.
-        /// </summary>
-        /// <returns>
-        /// The compiled pattern, with the <c>class</c> and <c>property</c> groups.
-        /// </returns>
-        [GeneratedRegex(@"^inv\s+\w+\s*:\s*(?<class>\w+)\.allInstances\(\)\s*->\s*isUnique\(\s*(?<variable>\w+)\s*\|\s*\k<variable>\.(?<property>\w+)\s*\)$", RegexOptions.CultureInvariant)]
-        private static partial Regex UniquenessInvariantPattern();
+            return property.Type switch
+            {
+                IClass when isSingle => true,
+                IPrimitiveType primitiveType when isSingle && primitiveType.QueryCSharpTypeName() == "DateTime" => false,
+                _ => throw new InvalidOperationException(
+                    $"Managed property '{property.Describe()}' has an {XmiResources.OnActionTaggedValueName} value, but the server assigns only a single " +
+                    "reference or a single date and time value.")
+            };
+        }
 
         /// <param name="property">
         /// The UML property that is queried.
@@ -345,9 +332,50 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             /// <summary>
-            /// Determines whether the SQL index of an indexed property is unique: its declaring class owns an invariant of the exact form
-            /// <c>&lt;Class&gt;.allInstances()-&gt;isUnique(v | v.&lt;property&gt;)</c>. The invariant body is decoded once, as documentation is,
-            /// and compared as text; no OCL is parsed or evaluated.
+            /// Determines whether the server assigns the acting user's identifier to the managed property: it has an <c>onAction</c> value and
+            /// is a single reference.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the generated DAO assigns the acting user's identifier to the property.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the <c>onAction</c> tagged value names an unsupported action, or when the property has an <c>onAction</c> value but
+            /// is neither a single reference nor a single date and time value.
+            /// </exception>
+            public bool QueryIsAssignedReference()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return QueryOnActions(property).Length > 0 && QueryAssignsActingUser(property);
+            }
+
+            /// <summary>
+            /// Determines whether the database assigns the transaction time to the managed property: it has an <c>onAction</c> value and is a
+            /// single date and time value.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the generated DAO statements assign the transaction time to the property.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the <c>onAction</c> tagged value names an unsupported action, or when the property has an <c>onAction</c> value but
+            /// is neither a single reference nor a single date and time value.
+            /// </exception>
+            public bool QueryIsAssignedTimestamp()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return QueryOnActions(property).Length > 0 && !QueryAssignsActingUser(property);
+            }
+
+            /// <summary>
+            /// Determines whether the SQL index of an indexed property is unique: the class declaring it owns an invariant that states the
+            /// uniqueness of its value across every instance of that class, as <c>QueryUniquelyIndexedProperties</c> recognizes it.
             /// </summary>
             /// <returns>
             /// <see langword="true" /> when the property is indexed and its declaring class states its uniqueness.
@@ -355,19 +383,15 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             /// <exception cref="ArgumentNullException">
             /// Thrown when the property is <see langword="null" />.
             /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when a uniqueness invariant of the declaring class does not resolve to an «index» property that the class declares.
+            /// </exception>
             public bool QueryIsUniquelyIndexed()
             {
                 ArgumentNullException.ThrowIfNull(property);
 
-                if (!property.QueryIsIndexed() || property.Owner is not IClass owner)
-                {
-                    return false;
-                }
-
-                return owner.OwnedRule
-                    .SelectMany(constraint => constraint.Specification.OfType<IOpaqueExpression>())
-                    .SelectMany(expression => expression.Body)
-                    .Any(body => QueryIsUniquenessInvariant(HtmlUtils.HtmlDecode(body), owner.Name, property.Name));
+                return property.QueryIsIndexed() && property.Owner is IClass owner &&
+                    owner.QueryUniquelyIndexedProperties().Any(uniqueProperty => string.Equals(uniqueProperty.XmiId, property.XmiId, StringComparison.Ordinal));
             }
 
             /// <summary>

@@ -84,8 +84,14 @@ CREATE INDEX {{TargetIndexName}} ON {{ #SQL.WriteSchemaName }}.{{Table}} ({{Targ
 
 {{/each}}
 {{#each Indexes}}
-CREATE {{#if Unique}}UNIQUE {{/if}}INDEX {{Name}} ON {{ #SQL.WriteSchemaName }}.{{owner.RootTable}} (({{ #SQL.WriteDataColumnName }} ->> {{{Member}}}))
+{{#if Unique}}
+ALTER TABLE {{ #SQL.WriteSchemaName }}.{{owner.RootTable}}
+    ADD CONSTRAINT {{Name}} EXCLUDE USING btree (({{ #SQL.WriteDataColumnName }} ->> {{{Member}}}) WITH =)
+    WHERE ({{ #SQL.WriteClassKindColumnName }} IN ({{{owner.Kinds}}})) DEFERRABLE INITIALLY DEFERRED;
+{{else}}
+CREATE INDEX {{Name}} ON {{ #SQL.WriteSchemaName }}.{{owner.RootTable}} (({{ #SQL.WriteDataColumnName }} ->> {{{Member}}}))
     WHERE {{ #SQL.WriteClassKindColumnName }} IN ({{{owner.Kinds}}});
+{{/if}}
 
 {{/each}}
 {{/with}}
@@ -343,6 +349,17 @@ CREATE SCHEMA IF NOT EXISTS {{ #SQL.WriteSchemaName }};
 {{#each Tables}}
 {{> sql-constraints this}}
 {{/each}}
+-- The start time of the current transaction as the UTC text stored for a date and
+-- time value. The DAO statements assign it to managed values, so every object
+-- written in one transaction receives the same instant.
+CREATE FUNCTION {{ #SQL.WriteSchemaName }}.{{ #SQL.WriteTransactionTimeFunctionName }}()
+RETURNS text
+LANGUAGE sql
+STABLE
+AS $mycelium$
+    SELECT to_char(transaction_timestamp() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"');
+$mycelium$;
+
 -- Updating a non-key root column serializes writers for this object and forces
 -- a snapshot-conflict failure at repeatable-read isolation instead of a stale check.
 -- It preserves the payload value and avoids a database-wide graph lock.

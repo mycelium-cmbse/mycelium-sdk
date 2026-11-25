@@ -171,8 +171,17 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             handlebars.RegisterHelper("Class.QuerySqlChainUpdatableRelationProperties",
                 (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlChainUpdatableRelationProperties}}").QuerySqlChainUpdatableRelationProperties());
 
-            handlebars.RegisterHelper("Class.QuerySqlChainPreservedValueProperties",
-                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlChainPreservedValueProperties}}").QuerySqlChainPreservedValueProperties());
+            handlebars.RegisterHelper("Class.QueryManagedReferencesAssignedOnCreate",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryManagedReferencesAssignedOnCreate}}").QueryManagedReferencesAssignedOnCreate());
+
+            handlebars.RegisterHelper("Class.QueryManagedReferencesAssignedOnUpdate",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryManagedReferencesAssignedOnUpdate}}").QueryManagedReferencesAssignedOnUpdate());
+
+            handlebars.RegisterHelper("Class.QueryManagedTimestampsAssignedOnCreate",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryManagedTimestampsAssignedOnCreate}}").QueryManagedTimestampsAssignedOnCreate());
+
+            handlebars.RegisterHelper("Class.QueryManagedTimestamps",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryManagedTimestamps}}").QueryManagedTimestamps());
 
             handlebars.RegisterHelper("Class.WriteSqlTableName", (writer, _, arguments) =>
             {

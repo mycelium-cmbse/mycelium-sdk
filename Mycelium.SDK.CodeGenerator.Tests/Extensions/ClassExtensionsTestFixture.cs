@@ -13,6 +13,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
     using Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators;
 
     using uml4net.Classification;
+    using uml4net.CommonStructure;
     using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
     using uml4net.Values;
@@ -22,6 +23,20 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
     {
         private static readonly string[] ExpectedRegularPropertyNames = ["regular"];
         private static readonly string[] ExpectedAllPocoPropertyNames = ["regular", "derived", "derivedUnion"];
+        private static readonly string[] ExpectedUniqueOrganizationPropertyNames = ["name"];
+
+        private static readonly string[] RecognizedUniquenessInvariantBodies =
+        [
+            "inv uniqueName: Organization.allInstances()->isUnique(name)",
+            "-- Source: focused test\ninv uniqueName:\n    Organization.allInstances()\n        ->isUnique(o | o.name)"
+        ];
+
+        private static readonly object[] UnresolvedUniquenessInvariants =
+        [
+            new[] { "BranchProtectionRule", "inv unresolvedUniqueness: BranchProtectionRule.allInstances()->isUnique(r | r.name)" },
+            new[] { "Organization", "inv unresolvedUniqueness: User.allInstances()->isUnique(u | u.name)" },
+            new[] { "Organization", "inv unresolvedUniqueness: Organization.allInstances()->isUnique(o | o.name.size())" }
+        ];
         private IClass[] classes = [];
 
         [OneTimeSetUp]
@@ -330,6 +345,88 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
                     "user"
                 ]));
             }
+        }
+
+        [TestCaseSource(nameof(RecognizedUniquenessInvariantBodies))]
+        public void VerifyThatImplicitIteratorAndMultiLineUniquenessInvariantsAreRecognized(string body)
+        {
+            var organization = QueryFreshClass("Organization");
+
+            organization.OwnedRule.Single(constraint => constraint.Name == "uniqueName")
+                .Specification.OfType<IOpaqueExpression>()
+                .Single()
+                .Body = [body];
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(organization.QueryUniquelyIndexedProperties().Select(property => property.Name), Is.EqualTo(ExpectedUniqueOrganizationPropertyNames),
+                    $"The invariant '{body}' must resolve to the «index» property 'Organization.name'.");
+
+                Assert.That(organization.OwnedAttribute.Single(property => property.Name == "name").QueryIsUniquelyIndexed(), Is.True);
+            }
+        }
+
+        [TestCaseSource(nameof(UnresolvedUniquenessInvariants))]
+        public void VerifyThatUniquenessInvariantNotResolvingToAnIndexPropertyOfItsClassFailsNamingTheConstraint(string className, string body)
+        {
+            var umlClass = QueryFreshClass(className);
+            var expression = new OpaqueExpression { XmiId = "unresolved-uniqueness-expression" };
+
+            expression.Body.Add(body);
+
+            var constraint = new Constraint { XmiId = "unresolved-uniqueness-constraint", Name = "unresolvedUniqueness" };
+
+            constraint.Specification.Add(expression);
+            umlClass.OwnedRule.Add(constraint);
+
+            Assert.That(() => umlClass.QueryUniquelyIndexedProperties(), Throws.TypeOf<InvalidOperationException>()
+                .With.Message.Contains("'unresolvedUniqueness'")
+                .And.Message.Contains($"'{className}'"));
+        }
+
+        [Test]
+        public void VerifyThatManagedValueWithOnActionThatIsNeitherAReferenceNorADateAndTimeFailsNamingTheProperty()
+        {
+            var auditableThing = QueryFreshClass("AuditableThing");
+            var createdOn = auditableThing.OwnedAttribute.Single(property => property.Name == "createdOn");
+
+            createdOn.Type = new PrimitiveType { XmiId = "unsupported-managed-type", Name = "String" };
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(() => auditableThing.QueryManagedTimestamps(), Throws.TypeOf<InvalidOperationException>()
+                    .With.Message.Contains("'createdOn'"));
+
+                Assert.That(() => auditableThing.QueryManagedTimestampsAssignedOnCreate(), Throws.TypeOf<InvalidOperationException>()
+                    .With.Message.Contains("'createdOn'"));
+
+                Assert.That(() => auditableThing.QueryManagedReferencesAssignedOnCreate(), Throws.TypeOf<InvalidOperationException>()
+                    .With.Message.Contains("'createdOn'"));
+            }
+        }
+
+        [Test]
+        public void VerifyThatManagedValueAndUniquenessQueriesRejectNullClasses()
+        {
+            IClass umlClass = null;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(() => umlClass.QueryManagedReferencesAssignedOnCreate(), Throws.ArgumentNullException);
+                Assert.That(() => umlClass.QueryManagedReferencesAssignedOnUpdate(), Throws.ArgumentNullException);
+                Assert.That(() => umlClass.QueryManagedTimestampsAssignedOnCreate(), Throws.ArgumentNullException);
+                Assert.That(() => umlClass.QueryManagedTimestamps(), Throws.ArgumentNullException);
+                Assert.That(() => umlClass.QueryUniquelyIndexedProperties(), Throws.ArgumentNullException);
+            }
+        }
+
+        private static IClass QueryFreshClass(string className)
+        {
+            var result = GeneratorSetupFixture.ReadFunctionalData();
+
+            return GeneratorSetupFixture.QueryFunctionalDataPackage(result)
+                .PackagedElement.OfType<IClass>()
+                .Single(umlClass => umlClass.Name == className);
         }
     }
 }

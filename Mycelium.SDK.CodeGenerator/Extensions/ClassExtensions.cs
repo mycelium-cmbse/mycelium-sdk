@@ -9,15 +9,130 @@
 
 namespace Mycelium.SDK.CodeGenerator.Extensions
 {
+    using System.Text.RegularExpressions;
+
+    using HandlebarsDotNet.Helpers.Utils;
+
     using uml4net.Classification;
+    using uml4net.CommonStructure;
     using uml4net.Extensions;
     using uml4net.StructuredClassifiers;
+    using uml4net.Values;
 
     /// <summary>
     /// Provides artifact-specific queries for UML classes.
     /// </summary>
-    public static class ClassExtensions
+    public static partial class ClassExtensions
     {
+        /// <summary>
+        /// The OCL operation that, together with <see cref="IsUniqueOperation" />, marks an invariant as stating uniqueness across every instance
+        /// of a class.
+        /// </summary>
+        private const string AllInstancesOperation = "allInstances()";
+
+        /// <summary>
+        /// The OCL operation that, together with <see cref="AllInstancesOperation" />, marks an invariant as stating uniqueness across every
+        /// instance of a class.
+        /// </summary>
+        private const string IsUniqueOperation = "isUnique";
+
+        /// <summary>
+        /// Matches one uniqueness invariant in either recognized form: the explicit iterator
+        /// <c>inv &lt;name&gt;: &lt;Class&gt;.allInstances()-&gt;isUnique(v | v.&lt;property&gt;)</c> or the implicit iterator
+        /// <c>inv &lt;name&gt;: &lt;Class&gt;.allInstances()-&gt;isUnique(&lt;property&gt;)</c>.
+        /// </summary>
+        /// <returns>
+        /// The compiled pattern, with the <c>class</c> and <c>property</c> groups.
+        /// </returns>
+        [GeneratedRegex(@"^inv\s+\w+\s*:\s*(?<class>\w+)\.allInstances\(\)\s*->\s*isUnique\(\s*" +
+            @"(?:(?<variable>\w+)\s*\|\s*\k<variable>\.)?(?<property>\w+)\s*\)$", RegexOptions.CultureInvariant)]
+        private static partial Regex UniquenessInvariantPattern();
+
+        /// <summary>
+        /// Matches the position at which each invariant of an OCL body starts, so that a body holding several invariants is read one invariant
+        /// at a time.
+        /// </summary>
+        /// <returns>
+        /// The compiled zero-width pattern.
+        /// </returns>
+        [GeneratedRegex(@"(?=\binv\s+\w+\s*:)", RegexOptions.CultureInvariant)]
+        private static partial Regex InvariantStartPattern();
+
+        /// <summary>
+        /// Queries the invariants of a constraint that state uniqueness across every instance of a class: those containing both
+        /// <c>allInstances()</c> and <c>isUnique</c>. Each body is decoded once, as documentation is; its OCL comment lines are removed and its
+        /// remaining lines are joined, so an invariant may span several lines. The text is only compared; no OCL is parsed or evaluated.
+        /// </summary>
+        /// <param name="constraint">
+        /// The constraint whose opaque-expression bodies are read.
+        /// </param>
+        /// <returns>
+        /// The text of each uniqueness invariant, on one line.
+        /// </returns>
+        private static IEnumerable<string> QueryUniquenessInvariants(IConstraint constraint)
+        {
+            return constraint.Specification.OfType<IOpaqueExpression>()
+                .SelectMany(expression => expression.Body)
+                .SelectMany(QueryInvariants)
+                .Where(invariant => invariant.Contains(AllInstancesOperation, StringComparison.Ordinal) && invariant.Contains(IsUniqueOperation, StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// Splits an OCL body into its invariants, each on one line and without comment lines.
+        /// </summary>
+        /// <param name="body">
+        /// The body as exported, possibly holding OCL comment lines and invariants that span several lines.
+        /// </param>
+        /// <returns>
+        /// The text of each invariant of the body.
+        /// </returns>
+        private static IEnumerable<string> QueryInvariants(string body)
+        {
+            var statementLines = HtmlUtils.HtmlDecode(body)
+                .Split('\n')
+                .Select(line => line.Trim())
+                .Where(line => line.Length > 0 && !line.StartsWith("--", StringComparison.Ordinal));
+
+            return InvariantStartPattern()
+                .Split(string.Join(" ", statementLines))
+                .Select(invariant => invariant.Trim())
+                .Where(invariant => invariant.Length > 0);
+        }
+
+        /// <summary>
+        /// Resolves a uniqueness invariant to the «index» property whose uniqueness it states.
+        /// </summary>
+        /// <param name="umlClass">
+        /// The class that owns the invariant.
+        /// </param>
+        /// <param name="constraint">
+        /// The constraint that holds the invariant, named in the failure message.
+        /// </param>
+        /// <param name="invariant">
+        /// The text of the uniqueness invariant, on one line.
+        /// </param>
+        /// <returns>
+        /// The «index» property declared by <paramref name="umlClass" /> that the invariant names.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the invariant has neither recognized form, names another class, or names a property that is not an «index» property
+        /// declared by <paramref name="umlClass" />.
+        /// </exception>
+        private static IProperty QueryUniquelyIndexedProperty(IClass umlClass, IConstraint constraint, string invariant)
+        {
+            var match = UniquenessInvariantPattern().Match(invariant);
+
+            var property = match.Success && string.Equals(match.Groups["class"].Value, umlClass.Name, StringComparison.Ordinal)
+                ? umlClass.QueryDtoInterfaceProperties()
+                    .FirstOrDefault(candidate => string.Equals(candidate.Name, match.Groups["property"].Value, StringComparison.Ordinal) && candidate.QueryIsIndexed())
+                : null;
+
+            return property ?? throw new InvalidOperationException(
+                $"Invariant '{constraint.Describe()}' of class '{umlClass.Describe()}' states uniqueness across all instances ('{invariant}'), but does not " +
+                $"resolve to an «index» property declared by that class. The recognized forms are '{umlClass.Name}.allInstances()->isUnique(v | v.<property>)' " +
+                $"and '{umlClass.Name}.allInstances()->isUnique(<property>)'.");
+        }
+
         /// <summary>
         /// Deduplicates and deterministically orders resolved direct UML generalizations.
         /// </summary>
@@ -232,21 +347,117 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             /// <summary>
-            /// Queries the managed values of the class and its ancestors that are stored in the JSON document and assigned on creation only, so
-            /// that an update keeps their stored value.
+            /// Queries the managed references of the class and its ancestors to which the server assigns the acting user's identifier when an
+            /// object is created.
             /// </summary>
             /// <returns>
-            /// The non-reference managed properties assigned on creation only, deduplicated and deterministically ordered.
+            /// The single managed references whose <c>onAction</c> includes <c>OnCreate</c>, deduplicated and deterministically ordered.
             /// </returns>
             /// <exception cref="ArgumentNullException">
             /// Thrown when the class is <see langword="null" />.
             /// </exception>
-            public IReadOnlyList<IProperty> QuerySqlChainPreservedValueProperties()
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when a managed property with an <c>onAction</c> value is neither a single reference nor a single date and time value.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryManagedReferencesAssignedOnCreate()
             {
                 ArgumentNullException.ThrowIfNull(umlClass);
 
                 return umlClass.QueryDtoImplementationProperties()
-                    .Where(property => property.Type is not IClass && property.QueryIsAssignedOnCreateOnly())
+                    .Where(property => property.QueryIsAssignedOnCreate() && property.QueryIsAssignedReference())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the managed references of the class and its ancestors to which the server assigns the acting user's identifier when an
+            /// object is updated.
+            /// </summary>
+            /// <returns>
+            /// The single managed references whose <c>onAction</c> includes <c>OnUpdate</c>, deduplicated and deterministically ordered.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when a managed property with an <c>onAction</c> value is neither a single reference nor a single date and time value.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryManagedReferencesAssignedOnUpdate()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryDtoImplementationProperties()
+                    .Where(property => property.QueryIsAssignedOnUpdate() && property.QueryIsAssignedReference())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the managed date and time values of the class and its ancestors to which the database assigns the transaction time when an
+            /// object is created.
+            /// </summary>
+            /// <returns>
+            /// The single managed date and time values whose <c>onAction</c> includes <c>OnCreate</c>, deduplicated and deterministically ordered.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when a managed property with an <c>onAction</c> value is neither a single reference nor a single date and time value.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryManagedTimestampsAssignedOnCreate()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryDtoImplementationProperties()
+                    .Where(property => property.QueryIsAssignedOnCreate() && property.QueryIsAssignedTimestamp())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the managed date and time values of the class and its ancestors that have an <c>onAction</c> value. An update writes each of
+            /// them in the JSON document: the transaction time when the value is assigned on update, and its stored value when it is assigned on
+            /// creation only.
+            /// </summary>
+            /// <returns>
+            /// The single managed date and time values that have an <c>onAction</c> value, deduplicated and deterministically ordered.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when a managed property with an <c>onAction</c> value is neither a single reference nor a single date and time value.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryManagedTimestamps()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryDtoImplementationProperties()
+                    .Where(property => property.QueryIsAssignedTimestamp())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the «index» properties declared by the class whose uniqueness one of its invariants states across every instance of the
+            /// class. Every invariant of the class that contains both <c>allInstances()</c> and <c>isUnique</c> must resolve to such a property,
+            /// in the explicit form <c>&lt;Class&gt;.allInstances()-&gt;isUnique(v | v.&lt;property&gt;)</c> or the implicit form
+            /// <c>&lt;Class&gt;.allInstances()-&gt;isUnique(&lt;property&gt;)</c>. The invariant is compared as text; no OCL is parsed or evaluated.
+            /// </summary>
+            /// <returns>
+            /// The uniquely indexed properties, in the order of the invariants that name them; empty when the class states no such uniqueness.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when a uniqueness invariant of the class has neither recognized form, names another class, or names a property that is not
+            /// an «index» property declared by the class.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryUniquelyIndexedProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.OwnedRule
+                    .SelectMany(constraint => QueryUniquenessInvariants(constraint)
+                        .Select(invariant => QueryUniquelyIndexedProperty(umlClass, constraint, invariant)))
                     .ToArray();
             }
 

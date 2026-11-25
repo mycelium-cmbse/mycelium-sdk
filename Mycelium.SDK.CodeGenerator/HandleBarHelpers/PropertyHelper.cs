@@ -214,6 +214,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             handlebars.RegisterHelper("Property.QuerySqlRequiresLinkTable",
                 (_, arguments) => arguments.QuerySingle<IProperty>("{{Property.QuerySqlRequiresLinkTable}}").QuerySqlRequiresLinkTable());
 
+            handlebars.RegisterHelper("Property.QueryIsAssignedOnUpdate",
+                (_, arguments) => arguments.QuerySingle<IProperty>("{{Property.QueryIsAssignedOnUpdate}}").QueryIsAssignedOnUpdate());
+
             handlebars.RegisterHelper("Property.WriteSqlLinkTableName", (writer, _, arguments) =>
             {
                 var property = arguments.QuerySingle<IProperty>("{{Property.WriteSqlLinkTableName}}");

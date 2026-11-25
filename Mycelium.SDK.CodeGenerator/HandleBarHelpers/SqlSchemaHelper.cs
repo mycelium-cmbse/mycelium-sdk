@@ -74,6 +74,11 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         private const string PositionColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlLinkPositionColumnName;
 
         /// <summary>
+        /// The schema function that returns the transaction time as stored UTC text, from the shared SQL names.
+        /// </summary>
+        private const string TransactionTimeFunction = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlTransactionTimeFunctionName;
+
+        /// <summary>
         /// The scope in which PostgreSQL requires table and index names to be unique.
         /// </summary>
         private const string SchemaScope = $"relations of schema {Schema}";
@@ -119,6 +124,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             RegisterName(handlebars, "SQL.WriteLinkSourceColumnName", SourceColumn);
             RegisterName(handlebars, "SQL.WriteLinkTargetColumnName", TargetColumn);
             RegisterName(handlebars, "SQL.WriteLinkPositionColumnName", PositionColumn);
+            RegisterName(handlebars, "SQL.WriteTransactionTimeFunctionName", TransactionTimeFunction);
         }
 
         /// <summary>
@@ -359,8 +365,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// <summary>
         /// Describes the value-search index of every «index» property declared by a class. A non-reference value is stored in the root table's JSON
         /// document, so its index is a partial expression index on the root table over the property's JSON member, restricted to the concrete classes
-        /// that include the declaring class. It is unique when the declaring class states the property's uniqueness through an
-        /// <c>allInstances()-&gt;isUnique</c> invariant.
+        /// that include the declaring class. It is a deferrable uniqueness constraint instead when the declaring class states the property's
+        /// uniqueness through an <c>allInstances()-&gt;isUnique</c> invariant. The uniqueness invariants of the class are resolved for every
+        /// class, including one without an «index» property, so that an invariant that resolves to no «index» property stops generation.
         /// </summary>
         /// <param name="claims">
         /// The SQL names already generated, keyed by uniqueness scope and name.
@@ -381,12 +388,14 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         /// Rendering data for each index, in the deterministic property order.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when an indexed property is a reference or a collection, when the declaring class has no concrete class, or when a generated name
-        /// collides with a name generated for another modeled element.
+        /// Thrown when an indexed property is a reference or a collection, when the declaring class has no concrete class, when a uniqueness
+        /// invariant of the class does not resolve to an «index» property it declares, or when a generated name collides with a name generated
+        /// for another modeled element.
         /// </exception>
         private static object[] QueryValueIndexes(Dictionary<(string Scope, string Name), string> claims, IClass umlClass, string table, string rootTable, string kinds)
         {
             var indexes = new List<object>();
+            var uniquePropertyIds = umlClass.QueryUniquelyIndexedProperties().Select(property => property.XmiId).ToHashSet(StringComparer.Ordinal);
 
             foreach (var property in umlClass.QueryDtoInterfaceProperties().Where(property => property.QueryIsIndexed()))
             {
@@ -403,12 +412,13 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     throw new InvalidOperationException($"Property '{property.Describe()}' carries «index», but class '{umlClass.Name}' has no concrete class to index.");
                 }
 
-                var unique = property.QueryIsUniquelyIndexed();
+                var unique = uniquePropertyIds.Contains(property.XmiId);
                 var name = ObjectName(rootTable, unique ? "key" : "idx", table, property.QuerySqlIdentifier());
 
                 indexes.Add(new
                 {
-                    Name = ClaimName(claims, element, name, SchemaScope), Unique = unique, Member = SqlLiteral(property.Name.LowerCaseFirstLetter())
+                    Name = unique ? ClaimName(claims, element, name, SchemaScope, ConstraintScope(rootTable)) : ClaimName(claims, element, name, SchemaScope),
+                    Unique = unique, Member = SqlLiteral(property.Name.LowerCaseFirstLetter())
                 });
             }
 

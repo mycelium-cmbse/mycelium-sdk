@@ -480,8 +480,9 @@ ALTER TABLE fabric.organization
 ALTER TABLE fabric.organization
     ADD CONSTRAINT organization_policy_key UNIQUE (policy) DEFERRABLE INITIALLY DEFERRED;
 
-CREATE UNIQUE INDEX thing_organization_name_key ON fabric.thing ((data ->> 'name'))
-    WHERE class_kind IN ('Organization');
+ALTER TABLE fabric.thing
+    ADD CONSTRAINT thing_organization_name_key EXCLUDE USING btree ((data ->> 'name') WITH =)
+    WHERE (class_kind IN ('Organization')) DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE fabric.organization_invitation
     ADD CONSTRAINT organization_invitation_id_fkey FOREIGN KEY (id) REFERENCES fabric.invitation (id)
@@ -605,11 +606,23 @@ ALTER TABLE fabric.model_user
 CREATE INDEX thing_model_user_email_idx ON fabric.thing ((data ->> 'email'))
     WHERE class_kind IN ('User');
 
-CREATE UNIQUE INDEX thing_model_user_external_identifier_key ON fabric.thing ((data ->> 'externalIdentifier'))
-    WHERE class_kind IN ('User');
+ALTER TABLE fabric.thing
+    ADD CONSTRAINT thing_model_user_external_identifier_key EXCLUDE USING btree ((data ->> 'externalIdentifier') WITH =)
+    WHERE (class_kind IN ('User')) DEFERRABLE INITIALLY DEFERRED;
 
 CREATE INDEX thing_model_user_user_name_idx ON fabric.thing ((data ->> 'userName'))
     WHERE class_kind IN ('User');
+
+-- The start time of the current transaction as the UTC text stored for a date and
+-- time value. The DAO statements assign it to managed values, so every object
+-- written in one transaction receives the same instant.
+CREATE FUNCTION fabric.now_utc()
+RETURNS text
+LANGUAGE sql
+STABLE
+AS $mycelium$
+    SELECT to_char(transaction_timestamp() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"');
+$mycelium$;
 
 -- Updating a non-key root column serializes writers for this object and forces
 -- a snapshot-conflict failure at repeatable-read isolation instead of a stale check.
