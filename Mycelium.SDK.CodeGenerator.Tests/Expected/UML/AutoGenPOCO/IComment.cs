@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="AuditableThingValidator.cs" company="Starion Group S.A.">
+//  <copyright file="IComment.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -11,30 +11,34 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.Validation
+namespace Mycelium.SDK.POCO
 {
     using System;
     using System.CodeDom.Compiler;
-
-    using FluentValidation;
+    using System.Collections.Generic;
 
     /// <summary>
-    /// Validates local data for objects implementing <see cref="Mycelium.SDK.DTO.IAuditableThing" />.
+    /// Represents a user comment attached to a <see cref="Review" />, targeting a specific model element.
+    /// Supports threaded replies.
     /// </summary>
-    /// <typeparam name="T">
-    /// The DTO interface or implementation whose data is validated.
-    /// </typeparam>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public abstract partial class AuditableThingValidator<T> : ThingValidator<T>
-        where T : Mycelium.SDK.DTO.IAuditableThing
+    public partial interface IComment : IMessage
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="AuditableThingValidator{T}" /> class
-        /// and registers the generated data-validation rules declared by this model class.
+        /// Contains threaded reply instances nested under this comment.
         /// </summary>
-        protected AuditableThingValidator()
-        {
-        }
+        List<IReply> Replies { get; set; }
+
+        /// <summary>
+        /// Defines the current status of the current Comment.
+        /// </summary>
+        CommentStatus Status { get; set; }
+
+        /// <summary>
+        /// The <see cref="Guid" /> of the SysML v2 model element this comment is attached to in the Concurrent
+        /// Server.
+        /// </summary>
+        Guid TargetElementId { get; set; }
     }
 }
 

@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="IAuditableThing.cs" company="Starion Group S.A.">
+//  <copyright file="CommentValidator.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -11,38 +11,28 @@
 // --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
 // ------------------------------------------------------------------------------------------------
 
-namespace Mycelium.SDK.POCO
+namespace Mycelium.SDK.Validation
 {
     using System;
     using System.CodeDom.Compiler;
-    using System.Collections.Generic;
+
+    using FluentValidation;
 
     /// <summary>
-    /// Any <see cref="IThing" /> that shall record creation and update date and authority.
+    /// Validates local data for objects implementing <see cref="Mycelium.SDK.DTO.IComment" />.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial interface IAuditableThing : IThing
+    public partial class CommentValidator : MessageValidator<Mycelium.SDK.DTO.IComment>
     {
         /// <summary>
-        /// References the <see cref="User" /> that created the current <see cref="IAuditableThing" />.
+        /// Initializes a new instance of the <see cref="CommentValidator" /> class
+        /// and registers its generated and handwritten data-validation rules.
         /// </summary>
-        IUser CreatedBy { get; set; }
-
-        /// <summary>
-        /// Provides the creation <see cref="DateTime" /> of the current <see cref="IAuditableThing" />
-        /// </summary>
-        DateTime CreatedOn { get; set; }
-
-        /// <summary>
-        /// References the <see cref="User" /> that provide the last update on the current
-        /// <see cref="IAuditableThing" />.
-        /// </summary>
-        IUser UpdatedBy { get; set; }
-
-        /// <summary>
-        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="IAuditableThing" />
-        /// </summary>
-        DateTime UpdatedOn { get; set; }
+        public CommentValidator()
+        {
+            this.RuleForEach(dto => dto.Replies).NotEmpty();
+            this.RuleFor(dto => dto.TargetElementId).NotEmpty();
+        }
     }
 }
 
