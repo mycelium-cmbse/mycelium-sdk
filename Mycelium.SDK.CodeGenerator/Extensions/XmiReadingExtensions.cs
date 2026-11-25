@@ -19,6 +19,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     using uml4net.xmi.Extensions.EnterpriseArchitect.Extender;
     using uml4net.xmi.Extensions.EnterpriseArchitect.Structure.Readers;
     using uml4net.xmi.Readers;
+    using uml4net.xmi.Resources;
     using uml4net.xmi.Settings;
 
     /// <summary>
@@ -26,6 +27,11 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     /// </summary>
     public static class XmiReadingExtensions
     {
+        /// <summary>
+        /// The file to which uml4net's embedded UML primitive types are written once, so that the Eclipse path map can point at them.
+        /// </summary>
+        private static readonly Lazy<string> EmbeddedPrimitiveTypesPath = new(WriteEmbeddedPrimitiveTypes);
+
         /// <summary>
         /// Registers the shared C# mappings for the model's UUID and URI value types.
         /// </summary>
@@ -47,7 +53,8 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             /// <see langword="false" /> to ignore it and log a warning.
             /// </param>
             /// <returns>
-            /// Reader settings with empty path maps that resolve XMI dependencies from local files or embedded resources.
+            /// Reader settings that resolve XMI dependencies from local files or embedded resources, mapping the Eclipse UML primitive library onto
+            /// uml4net's embedded <c>PrimitiveTypes.xmi</c>.
             /// </returns>
             /// <exception cref="ArgumentNullException">
             /// Thrown when the resources directory is <see langword="null" />.
@@ -56,7 +63,15 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             {
                 ArgumentNullException.ThrowIfNull(resourcesDirectory);
 
-                return new DefaultSettings { LocalReferenceBasePath = resourcesDirectory.FullName, UseStrictReading = useStrictReading };
+                return new DefaultSettings
+                {
+                    LocalReferenceBasePath = resourcesDirectory.FullName,
+                    UseStrictReading = useStrictReading,
+                    PathMaps = new Dictionary<string, string>
+                    {
+                        [XmiResources.UmlPrimitiveTypesPathMap] = EmbeddedPrimitiveTypesPath.Value
+                    }
+                };
             }
 
             /// <summary>
@@ -146,6 +161,33 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 return xmiReaderResult.Packages.SelectMany(package => package.QueryPackages())
                     .Single(package => string.Equals(package.Name, packageName, StringComparison.Ordinal));
             }
+        }
+
+        /// <summary>
+        /// Writes uml4net's embedded UML primitive types to a file of this process, since uml4net resolves a path map only to a file.
+        /// </summary>
+        /// <returns>
+        /// The path of the written file.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when uml4net does not embed the UML primitive types.
+        /// </exception>
+        private static string WriteEmbeddedPrimitiveTypes()
+        {
+            if (!new ResourceLoader().TryLoadKnownResource(XmiResources.UmlPrimitiveTypesUri, out var primitiveTypes) || primitiveTypes is null)
+            {
+                throw new InvalidOperationException($"uml4net embeds no '{XmiResources.UmlPrimitiveTypesUri}'.");
+            }
+
+            var path = Path.Combine(Path.GetTempPath(), $"uml4net-PrimitiveTypes-{Environment.ProcessId}.xmi");
+
+            using (primitiveTypes)
+            using (var file = File.Create(path))
+            {
+                primitiveTypes.CopyTo(file);
+            }
+
+            return path;
         }
     }
 }

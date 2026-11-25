@@ -68,6 +68,31 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             }
 
             /// <summary>
+            /// Queries the two arguments supplied to a helper.
+            /// </summary>
+            /// <typeparam name="TFirst">
+            /// The type the first argument must have.
+            /// </typeparam>
+            /// <typeparam name="TSecond">
+            /// The type the second argument must have.
+            /// </typeparam>
+            /// <param name="helperName">
+            /// The helper name used in validation messages.
+            /// </param>
+            /// <returns>
+            /// The supplied arguments, in order.
+            /// </returns>
+            /// <exception cref="HandlebarsException">
+            /// Thrown when exactly two arguments of types <typeparamref name="TFirst" /> and <typeparamref name="TSecond" /> were not supplied.
+            /// </exception>
+            public (TFirst First, TSecond Second) QueryPair<TFirst, TSecond>(string helperName)
+            {
+                return arguments.Length == 2 && arguments[0] is TFirst first && arguments[1] is TSecond second
+                    ? (first, second)
+                    : throw new HandlebarsException($"{helperName} requires {DescribeExpectedType<TFirst>()} and {DescribeExpectedType<TSecond>()} argument.");
+            }
+
+            /// <summary>
             /// Queries the arguments from a position onwards, each of which must be a string.
             /// </summary>
             /// <param name="index">

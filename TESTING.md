@@ -111,7 +111,7 @@ The generated SDK is verified at four independent levels; a template change — 
 
 The OpenAPI and PIM pipelines hold the **complete** output as goldens rather than a subset, because it is small and because there is no committed source in this repository to compare against — `Expected/OpenApi/AutoGenModules/` (9 modules), `Expected/Pim/AutoGenServices/` (6 service interfaces) and `Expected/Pim/AutoGenRepositories/` (7 repository interfaces). Their manifests are compared as ordered lists, so a generated file cannot appear or disappear unnoticed.
 
-The Core pipeline generates a single file, so `Expected/Core/AutoGenCoreServices/CoreDataServiceProvider.cs` holds it in full; it pins the complete set of generated metaclasses.
+The Core pipeline's service provider is a single file, so `Expected/Core/AutoGenCoreServices/CoreDataServiceProvider.cs` holds it in full; it pins the complete set of generated metaclasses. Its element DAOs are a representative subset instead: `Expected/Core/AutoGenElementDao/` holds `ElementDaoProvider.cs`, which pins the complete set, and the DAO of each concrete metaclass of `Expected/RepresentativeElementClasses.cs` — the INTERESTING CLASSES of the uml4net model inspector report of `SysML_only_xmi.uml`.
 
 *A failure here means the generated contract changed.* It requires human review before the golden files are updated.
 

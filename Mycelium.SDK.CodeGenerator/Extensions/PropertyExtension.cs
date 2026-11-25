@@ -400,6 +400,34 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             /// <summary>
+            /// Queries the PostgreSQL type of a value of the property in the SysML v2 schema of <c>SysML2.NET.Dal</c>.
+            /// </summary>
+            /// <returns>
+            /// <c>uuid</c> for a reference, the unqualified snake_case enum type for an enumeration, and the SQL counterpart of a primitive.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the property type is unresolved or has no PostgreSQL counterpart.
+            /// </exception>
+            public string QueryPostgreSqlTypeName()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return property.Type switch
+                {
+                    IClass => "uuid",
+                    IEnumeration enumeration => enumeration.QuerySnakeCaseName(),
+                    IPrimitiveType { Name: "Boolean" } => "boolean",
+                    IPrimitiveType { Name: "Integer" } => "integer",
+                    IPrimitiveType { Name: "Real" } => "double precision",
+                    IPrimitiveType { Name: "String" } => "text",
+                    _ => throw new InvalidOperationException($"Property '{property.Describe()}' has the type '{property.Type?.Name}', which has no PostgreSQL counterpart.")
+                };
+            }
+
+            /// <summary>
             /// Queries the C# DTO element type before multiplicity and nullability
             /// syntax are applied.
             /// </summary>

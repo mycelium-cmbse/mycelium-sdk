@@ -214,6 +214,28 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 
                 return ToSqlIdentifier(namedElement.Name);
             }
+
+            /// <summary>
+            /// Queries the snake_case form of the element's modeled name, as the SysML v2 schema of <c>SysML2.NET.Dal</c> names its tables and columns.
+            /// </summary>
+            /// <returns>
+            /// The name in lowercase with an underscore before every uppercase letter but the first - for example <c>occurrence_usage</c>.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the named element is <see langword="null"/>.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the element has no name.
+            /// </exception>
+            public string QuerySnakeCaseName()
+            {
+                ArgumentNullException.ThrowIfNull(namedElement);
+
+                return string.IsNullOrWhiteSpace(namedElement.Name)
+                    ? throw new InvalidOperationException($"'{namedElement.XmiId}' has no name, so it has no SQL name.")
+                    : string.Concat(namedElement.Name.Select((character, characterIndex) =>
+                        char.IsUpper(character) && characterIndex > 0 ? $"_{char.ToLowerInvariant(character)}" : $"{char.ToLowerInvariant(character)}"));
+            }
         }
     }
 }

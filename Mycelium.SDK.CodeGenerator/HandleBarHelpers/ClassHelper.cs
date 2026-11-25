@@ -181,6 +181,46 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         }
 
         /// <summary>
+        /// Registers the class helpers that describe how an element is stored in the SysML v2 schema of <c>SysML2.NET.Dal</c>, for element DAO generation.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the element DAO class helpers are registered.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
+        /// </exception>
+        public static void RegisterCoreDaoClassHelper(this IHandlebars handlebars)
+        {
+            ArgumentNullException.ThrowIfNull(handlebars);
+
+            handlebars.RegisterHelper("Class.QueryStorageClasses",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryStorageClasses}}").QueryStorageClasses());
+
+            handlebars.RegisterHelper("Class.QueryStoredScalarOwnProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryStoredScalarOwnProperties}}").QueryStoredScalarOwnProperties());
+
+            handlebars.RegisterHelper("Class.QueryStoredMultiOwnProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryStoredMultiOwnProperties}}").QueryStoredMultiOwnProperties());
+
+            handlebars.RegisterHelper("Class.QueryJsonExcludedProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryJsonExcludedProperties}}").QueryJsonExcludedProperties());
+
+            handlebars.RegisterHelper("Class.QueryWrittenScalarProperties", (_, arguments) =>
+            {
+                var (umlClass, storageClass) = arguments.QueryPair<IClass, IClass>("{{Class.QueryWrittenScalarProperties}}");
+
+                return umlClass.QueryWrittenScalarProperties(storageClass);
+            });
+
+            handlebars.RegisterHelper("Class.QueryWrittenMultiProperties", (_, arguments) =>
+            {
+                var (umlClass, storageClass) = arguments.QueryPair<IClass, IClass>("{{Class.QueryWrittenMultiProperties}}");
+
+                return umlClass.QueryWrittenMultiProperties(storageClass);
+            });
+        }
+
+        /// <summary>
         /// Queries the legal generated C# interface identifier for a UML class.
         /// </summary>
         /// <param name="umlClass">

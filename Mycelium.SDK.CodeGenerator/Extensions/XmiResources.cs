@@ -48,5 +48,15 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         /// The exact name of the model carrying the Systems Modeling API and Services PIM.
         /// </summary>
         public const string SystemsModelingApiPimModelName = "Systems Modeling API and Services PIM";
+
+        /// <summary>
+        /// The OMG URI under which uml4net embeds the UML primitive types that the SysML v2 and KerML exports reference.
+        /// </summary>
+        public const string UmlPrimitiveTypesUri = "http://www.omg.org/spec/UML/20161101/PrimitiveTypes.xmi";
+
+        /// <summary>
+        /// The Eclipse path map under which the SysML v2 and KerML exports reference the UML primitive types.
+        /// </summary>
+        public const string UmlPrimitiveTypesPathMap = "pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml";
     }
 }
