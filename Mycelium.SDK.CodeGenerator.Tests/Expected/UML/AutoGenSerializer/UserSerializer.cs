@@ -88,14 +88,14 @@ namespace Mycelium.SDK.Serializer.Json
             }
 
             writer.WriteEndArray();
-            writer.WritePropertyName("name"u8);
-            writer.WriteStringValue(dto.Name);
             writer.WritePropertyName("status"u8);
             writer.WriteStringValue(Mycelium.SDK.Extensions.ActivationStatusProvider.Format(dto.Status).ToUpperInvariant());
             writer.WritePropertyName("updatedBy"u8);
             writer.WriteStringValue(dto.UpdatedBy);
             writer.WritePropertyName("updatedOn"u8);
             writer.WriteStringValue(dto.UpdatedOn.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WritePropertyName("userName"u8);
+            writer.WriteStringValue(dto.UserName);
             writer.WriteStartObject("userPreferences"u8);
 
             foreach (var entry in dto.UserPreferences)

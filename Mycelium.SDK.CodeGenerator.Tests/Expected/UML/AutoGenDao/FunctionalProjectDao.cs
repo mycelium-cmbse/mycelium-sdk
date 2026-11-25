@@ -59,15 +59,14 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             """;
 
         /// <summary>
-        /// The statements that write the relational state of a stored object that differs from its new state: each class row whose scalar reference
-        /// columns changed, and the link-table rows of each collection that are no longer listed or are new.
+        /// The statements that write the relational state of a stored object that differs from its new state: each class row whose updatable scalar
+        /// reference columns changed, and the link-table rows of each collection that are no longer listed or are new.
         /// </summary>
         private const string UpdateRelationSql = """
             UPDATE fabric.auditable_thing SET
-                created_by = @auditable_thing_created_by,
                 updated_by = @auditable_thing_updated_by
             WHERE id = @id
-                AND (created_by, updated_by) IS DISTINCT FROM (@auditable_thing_created_by, @auditable_thing_updated_by);
+                AND (updated_by) IS DISTINCT FROM (@auditable_thing_updated_by);
             UPDATE fabric.functional_project SET
                 belongs_to = @functional_project_belongs_to,
                 policy = @functional_project_policy
@@ -102,11 +101,15 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         /// <param name="deSerializer">
         /// The deserializer that turns a stored JSON document back into a DTO.
         /// </param>
+        /// <param name="managedValueProvider">
+        /// The provider of the values the server assigns to managed properties: the instant of the operation and the acting user's identifier.
+        /// </param>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="serializer" /> or <paramref name="deSerializer" /> is <see langword="null" />.
+        /// Thrown when <paramref name="serializer" />, <paramref name="deSerializer" /> or <paramref name="managedValueProvider" /> is
+        /// <see langword="null" />.
         /// </exception>
-        public FunctionalProjectDao(ISerializer serializer, IDeSerializer deSerializer)
-            : base(serializer, deSerializer)
+        public FunctionalProjectDao(ISerializer serializer, IDeSerializer deSerializer, IManagedValueProvider managedValueProvider)
+            : base(serializer, deSerializer, managedValueProvider)
         {
         }
 
@@ -163,10 +166,12 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
 
         /// <summary>
         /// Gets the statement that replaces the JSON document of one stored object of this class, without its reference members.
+        /// The stored managed values assigned on creation only are kept.
         /// </summary>
         protected override string UpdateDataSql => """
             UPDATE fabric.thing
             SET data = @data - ARRAY['createdBy', 'updatedBy', 'belongsTo', 'branchRules', 'defines', 'involves', 'policy', 'reviews']
+                || jsonb_build_object('createdOn', data -> 'createdOn')
             WHERE id = @id AND class_kind = @class_kind;
             """;
 
@@ -177,6 +182,44 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             DELETE FROM fabric.thing
             WHERE id = @id AND class_kind = @class_kind;
             """;
+
+        /// <summary>
+        /// Assigns the managed values that the server sets when an object of this class is created.
+        /// </summary>
+        /// <param name="dto">
+        /// The object about to be stored, whose managed values are assigned.
+        /// </param>
+        /// <param name="timestamp">
+        /// The instant of the operation, assigned to managed date and time values.
+        /// </param>
+        /// <param name="actingUserId">
+        /// The identifier of the acting user, assigned to managed references.
+        /// </param>
+        protected override void AssignManagedValuesOnCreate(IFunctionalProject dto, DateTime timestamp, Guid actingUserId)
+        {
+            dto.CreatedBy = actingUserId;
+            dto.CreatedOn = timestamp;
+            dto.UpdatedBy = actingUserId;
+            dto.UpdatedOn = timestamp;
+        }
+
+        /// <summary>
+        /// Assigns the managed values that the server sets when an object of this class is updated.
+        /// </summary>
+        /// <param name="dto">
+        /// The new state of the object, whose managed values are assigned.
+        /// </param>
+        /// <param name="timestamp">
+        /// The instant of the operation, assigned to managed date and time values.
+        /// </param>
+        /// <param name="actingUserId">
+        /// The identifier of the acting user, assigned to managed references.
+        /// </param>
+        protected override void AssignManagedValuesOnUpdate(IFunctionalProject dto, DateTime timestamp, Guid actingUserId)
+        {
+            dto.UpdatedBy = actingUserId;
+            dto.UpdatedOn = timestamp;
+        }
 
         /// <summary>
         /// Writes the scalar reference columns and link-table rows of a stored object that differ from <paramref name="dto" />.

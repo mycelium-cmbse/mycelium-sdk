@@ -67,10 +67,10 @@ namespace Mycelium.SDK.Serializer.Json
             var hasExternalIdentifier = false;
             var hasIsPartOfOrganizations = false;
             var hasIsPartOfProjects = false;
-            var hasName = false;
             var hasStatus = false;
             var hasUpdatedBy = false;
             var hasUpdatedOn = false;
+            var hasUserName = false;
             var hasUserPreferences = false;
 
             while (reader.Read())
@@ -211,15 +211,6 @@ namespace Mycelium.SDK.Serializer.Json
                     hasIsPartOfProjects = true;
                     continue;
                 }
-                if (reader.ValueTextEquals("name"u8))
-                {
-                    Utf8JsonReaderHelper.ReadNext(ref reader);
-
-                    dto.Name = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
-
-                    hasName = true;
-                    continue;
-                }
                 if (reader.ValueTextEquals("status"u8))
                 {
                     Utf8JsonReaderHelper.ReadNext(ref reader);
@@ -245,6 +236,15 @@ namespace Mycelium.SDK.Serializer.Json
                     dto.UpdatedOn = Utf8JsonReaderHelper.ReadDateTime(ref reader);
 
                     hasUpdatedOn = true;
+                    continue;
+                }
+                if (reader.ValueTextEquals("userName"u8))
+                {
+                    Utf8JsonReaderHelper.ReadNext(ref reader);
+
+                    dto.UserName = Utf8JsonReaderHelper.ReadRequiredString(ref reader);
+
+                    hasUserName = true;
                     continue;
                 }
                 if (reader.ValueTextEquals("userPreferences"u8))
@@ -324,14 +324,6 @@ namespace Mycelium.SDK.Serializer.Json
                     "User",
                     dto.Id);
             }
-            if (!hasName)
-            {
-                logger.LogDebug(
-                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
-                    "name",
-                    "User",
-                    dto.Id);
-            }
             if (!hasStatus)
             {
                 logger.LogDebug(
@@ -353,6 +345,14 @@ namespace Mycelium.SDK.Serializer.Json
                 logger.LogDebug(
                     "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
                     "updatedOn",
+                    "User",
+                    dto.Id);
+            }
+            if (!hasUserName)
+            {
+                logger.LogDebug(
+                    "The {PropertyName} JSON property was not found in {DtoType}: {Id}. The construction default is retained.",
+                    "userName",
                     "User",
                     dto.Id);
             }

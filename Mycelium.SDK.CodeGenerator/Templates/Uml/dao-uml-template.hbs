@@ -83,21 +83,21 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             {{ /each }}
             WHERE {{ #Class.WriteSqlRootTableName this }}.{{ #SQL.WriteClassKindColumnName }} = @{{ #SQL.WriteClassKindColumnName }}
             """;
-        {{ #if (#Class.QuerySqlChainRelationProperties this) }}
+        {{ #if (#Class.QuerySqlChainUpdatableRelationProperties this) }}
 
         /// <summary>
-        /// The statements that write the relational state of a stored object that differs from its new state: each class row whose scalar reference
-        /// columns changed, and the link-table rows of each collection that are no longer listed or are new.
+        /// The statements that write the relational state of a stored object that differs from its new state: each class row whose updatable scalar
+        /// reference columns changed, and the link-table rows of each collection that are no longer listed or are new.
         /// </summary>
         private const string UpdateRelationSql = """
             {{ #each (#Class.QuerySqlInheritanceChain this) as | umlClass | }}
-            {{ #if (#Class.QuerySqlColumnProperties umlClass) }}
+            {{ #if (#Class.QuerySqlUpdatableColumnProperties umlClass) }}
             UPDATE {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlTableName umlClass }} SET
-            {{ #each (#Class.QuerySqlColumnProperties umlClass) as | property | }}
+            {{ #each (#Class.QuerySqlUpdatableColumnProperties umlClass) as | property | }}
                 {{ #Property.WriteSqlColumnName property }} = @{{ #Property.WriteSqlParameterName property }}{{ #unless @last }},{{ /unless }}
             {{ /each }}
             WHERE {{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }}
-                AND ({{ #each (#Class.QuerySqlColumnProperties umlClass) as | property | }}{{ #unless @first }}, {{ /unless }}{{ #Property.WriteSqlColumnName property }}{{ /each }}) IS DISTINCT FROM ({{ #each (#Class.QuerySqlColumnProperties umlClass) as | property | }}{{ #unless @first }}, {{ /unless }}@{{ #Property.WriteSqlParameterName property }}{{ /each }});
+                AND ({{ #each (#Class.QuerySqlUpdatableColumnProperties umlClass) as | property | }}{{ #unless @first }}, {{ /unless }}{{ #Property.WriteSqlColumnName property }}{{ /each }}) IS DISTINCT FROM ({{ #each (#Class.QuerySqlUpdatableColumnProperties umlClass) as | property | }}{{ #unless @first }}, {{ /unless }}@{{ #Property.WriteSqlParameterName property }}{{ /each }});
             {{ /if }}
             {{ #each (#Class.QuerySqlLinkProperties umlClass) as | property | }}
 {{> dao-link-update property}}
@@ -115,11 +115,15 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
         /// <param name="deSerializer">
         /// The deserializer that turns a stored JSON document back into a DTO.
         /// </param>
+        /// <param name="managedValueProvider">
+        /// The provider of the values the server assigns to managed properties: the instant of the operation and the acting user's identifier.
+        /// </param>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="serializer" /> or <paramref name="deSerializer" /> is <see langword="null" />.
+        /// Thrown when <paramref name="serializer" />, <paramref name="deSerializer" /> or <paramref name="managedValueProvider" /> is
+        /// <see langword="null" />.
         /// </exception>
-        public {{ this.Name }}Dao(ISerializer serializer, IDeSerializer deSerializer)
-            : base(serializer, deSerializer)
+        public {{ this.Name }}Dao(ISerializer serializer, IDeSerializer deSerializer, IManagedValueProvider managedValueProvider)
+            : base(serializer, deSerializer, managedValueProvider)
         {
         }
 
@@ -172,10 +176,16 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
 
         /// <summary>
         /// Gets the statement that replaces the JSON document of one stored object of this class, without its reference members.
+        {{ #if (#Class.QuerySqlChainPreservedValueProperties this) }}
+        /// The stored managed values assigned on creation only are kept.
+        {{ /if }}
         /// </summary>
         protected override string UpdateDataSql => """
             UPDATE {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlRootTableName this }}
             SET {{ #SQL.WriteDataColumnName }} = {{> dao-data-value this }}
+            {{ #if (#Class.QuerySqlChainPreservedValueProperties this) }}
+                || jsonb_build_object({{ #each (#Class.QuerySqlChainPreservedValueProperties this) as | property | }}{{ #unless @first }}, {{ /unless }}'{{ #String.LowerCaseFirstLetter property.Name }}', {{ #SQL.WriteDataColumnName }} -> '{{ #String.LowerCaseFirstLetter property.Name }}'{{ /each }})
+            {{ /if }}
             WHERE {{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }} AND {{ #SQL.WriteClassKindColumnName }} = @{{ #SQL.WriteClassKindColumnName }};
             """;
 
@@ -186,7 +196,49 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             DELETE FROM {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlRootTableName this }}
             WHERE {{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }} AND {{ #SQL.WriteClassKindColumnName }} = @{{ #SQL.WriteClassKindColumnName }};
             """;
-        {{ #if (#Class.QuerySqlChainRelationProperties this) }}
+        {{ #if (#Class.QueryManagedPropertiesAssignedOnCreate this) }}
+
+        /// <summary>
+        /// Assigns the managed values that the server sets when an object of this class is created.
+        /// </summary>
+        /// <param name="dto">
+        /// The object about to be stored, whose managed values are assigned.
+        /// </param>
+        /// <param name="{{ #Property.WriteManagedTimestampName }}">
+        /// The instant of the operation, assigned to managed date and time values.
+        /// </param>
+        /// <param name="{{ #Property.WriteManagedActingUserIdName }}">
+        /// The identifier of the acting user, assigned to managed references.
+        /// </param>
+        protected override void AssignManagedValuesOnCreate({{ #Class.WriteDtoInterfaceIdentifier this }} dto, DateTime {{ #Property.WriteManagedTimestampName }}, Guid {{ #Property.WriteManagedActingUserIdName }})
+        {
+            {{ #each (#Class.QueryManagedPropertiesAssignedOnCreate this) as | property | }}
+            {{ #Property.WriteManagedValueAssignment property }}
+            {{ /each }}
+        }
+        {{ /if }}
+        {{ #if (#Class.QueryManagedPropertiesAssignedOnUpdate this) }}
+
+        /// <summary>
+        /// Assigns the managed values that the server sets when an object of this class is updated.
+        /// </summary>
+        /// <param name="dto">
+        /// The new state of the object, whose managed values are assigned.
+        /// </param>
+        /// <param name="{{ #Property.WriteManagedTimestampName }}">
+        /// The instant of the operation, assigned to managed date and time values.
+        /// </param>
+        /// <param name="{{ #Property.WriteManagedActingUserIdName }}">
+        /// The identifier of the acting user, assigned to managed references.
+        /// </param>
+        protected override void AssignManagedValuesOnUpdate({{ #Class.WriteDtoInterfaceIdentifier this }} dto, DateTime {{ #Property.WriteManagedTimestampName }}, Guid {{ #Property.WriteManagedActingUserIdName }})
+        {
+            {{ #each (#Class.QueryManagedPropertiesAssignedOnUpdate this) as | property | }}
+            {{ #Property.WriteManagedValueAssignment property }}
+            {{ /each }}
+        }
+        {{ /if }}
+        {{ #if (#Class.QuerySqlChainUpdatableRelationProperties this) }}
 
         /// <summary>
         /// Writes the scalar reference columns and link-table rows of a stored object that differ from <paramref name="dto" />.

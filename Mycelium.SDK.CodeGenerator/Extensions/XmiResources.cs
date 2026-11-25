@@ -30,6 +30,36 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         public const string FunctionalDataPackageName = "Fabric";
 
         /// <summary>
+        /// The name of the UML profile, applied in the Fabric export, whose stereotypes carry generation semantics.
+        /// </summary>
+        public const string MyceliumProfileName = "Mycelium";
+
+        /// <summary>
+        /// The name of the stereotype that marks a property needing a dedicated index in the generated SQL schema.
+        /// </summary>
+        public const string IndexStereotypeName = "index";
+
+        /// <summary>
+        /// The name of the stereotype that marks a property whose value the server sets.
+        /// </summary>
+        public const string ManagedStereotypeName = "managed";
+
+        /// <summary>
+        /// The name of the tagged value, exported only in the Enterprise Architect extension, that states when the server assigns a managed value.
+        /// </summary>
+        public const string OnActionTaggedValueName = "onAction";
+
+        /// <summary>
+        /// The <c>onAction</c> value that assigns a managed value when an object is created.
+        /// </summary>
+        public const string OnCreateAction = "OnCreate";
+
+        /// <summary>
+        /// The <c>onAction</c> value that assigns a managed value when an object is updated.
+        /// </summary>
+        public const string OnUpdateAction = "OnUpdate";
+
+        /// <summary>
         /// The file name of the SysML v2 abstract syntax export, which imports the KerML one.
         /// </summary>
         public const string SysMLAbstractSyntaxFileName = "SysML_only_xmi.uml";

@@ -291,10 +291,12 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     });
                 }
 
+                var kinds = QueryConcreteKinds(orderedClasses, umlClass);
+
                 tables.Add(new
                 {
-                    Table = table, RootTable = rootTable, IsRoot = isRoot, Kinds = QueryConcreteKinds(orderedClasses, umlClass), Columns = columns, Links = links,
-                    Parents = parents,
+                    Table = table, RootTable = rootTable, IsRoot = isRoot, Kinds = kinds, Columns = columns, Links = links,
+                    Parents = parents, Indexes = QueryValueIndexes(claims, umlClass, table, rootTable, kinds),
                     PrimaryKey = ClaimName(claims, $"the primary key of class '{umlClass.Name}'", ObjectName(table, "pkey"), SchemaScope, ConstraintScope(table)),
                     ClassKindCheck = isRoot ? ClaimName(claims, "the discriminator check", ObjectName(table, "check", ClassKindColumn), ConstraintScope(table)) : null,
                     DataCheck = isRoot ? ClaimName(claims, "the payload metadata check", ObjectName(table, "check", DataColumn), ConstraintScope(table)) : null
@@ -352,6 +354,65 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
                     : null,
                 TargetIndexName = exclusive ? null : ClaimName(claims, $"the target index of {element}", ObjectName(table, "idx", TargetColumn), SchemaScope)
             };
+        }
+
+        /// <summary>
+        /// Describes the value-search index of every «index» property declared by a class. A non-reference value is stored in the root table's JSON
+        /// document, so its index is a partial expression index on the root table over the property's JSON member, restricted to the concrete classes
+        /// that include the declaring class. It is unique when the declaring class states the property's uniqueness through an
+        /// <c>allInstances()-&gt;isUnique</c> invariant.
+        /// </summary>
+        /// <param name="claims">
+        /// The SQL names already generated, keyed by uniqueness scope and name.
+        /// </param>
+        /// <param name="umlClass">
+        /// The class that declares the indexed properties.
+        /// </param>
+        /// <param name="table">
+        /// The table of the declaring class.
+        /// </param>
+        /// <param name="rootTable">
+        /// The root table holding the JSON document.
+        /// </param>
+        /// <param name="kinds">
+        /// SQL string literals of the concrete classes that include the declaring class.
+        /// </param>
+        /// <returns>
+        /// Rendering data for each index, in the deterministic property order.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when an indexed property is a reference or a collection, when the declaring class has no concrete class, or when a generated name
+        /// collides with a name generated for another modeled element.
+        /// </exception>
+        private static object[] QueryValueIndexes(Dictionary<(string Scope, string Name), string> claims, IClass umlClass, string table, string rootTable, string kinds)
+        {
+            var indexes = new List<object>();
+
+            foreach (var property in umlClass.QueryDtoInterfaceProperties().Where(property => property.QueryIsIndexed()))
+            {
+                var element = $"the «index» of property '{umlClass.Name}.{property.Name}'";
+
+                if (property.Type is IClass || property.QueryIsEnumerable())
+                {
+                    throw new InvalidOperationException(
+                        $"Property '{property.Describe()}' carries «index», but only a single non-reference value stored in the JSON document can be indexed.");
+                }
+
+                if (string.IsNullOrWhiteSpace(kinds))
+                {
+                    throw new InvalidOperationException($"Property '{property.Describe()}' carries «index», but class '{umlClass.Name}' has no concrete class to index.");
+                }
+
+                var unique = property.QueryIsUniquelyIndexed();
+                var name = ObjectName(rootTable, unique ? "key" : "idx", table, property.QuerySqlIdentifier());
+
+                indexes.Add(new
+                {
+                    Name = ClaimName(claims, element, name, SchemaScope), Unique = unique, Member = SqlLiteral(property.Name.LowerCaseFirstLetter())
+                });
+            }
+
+            return [.. indexes];
         }
 
         /// <summary>

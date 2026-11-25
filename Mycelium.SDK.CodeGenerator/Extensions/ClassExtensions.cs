@@ -193,6 +193,100 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             /// <summary>
+            /// Queries the scalar reference columns declared directly by the class that an update writes: every column except those of managed
+            /// references assigned on creation only, which keep their stored value.
+            /// </summary>
+            /// <returns>
+            /// The updatable column properties, in the deterministic order of <c>QuerySqlColumnProperties</c>.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QuerySqlUpdatableColumnProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QuerySqlColumnProperties()
+                    .Where(property => !property.QueryIsAssignedOnCreateOnly())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries every reference of the class and its ancestors that the class's DAO writes relationally on update: the updatable scalar
+            /// reference columns and the link-table collections.
+            /// </summary>
+            /// <returns>
+            /// The updatable column and link-table properties of each class of the inheritance chain, from the root down to the class; empty when
+            /// an update has no relational state to write.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QuerySqlChainUpdatableRelationProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QuerySqlInheritanceChain()
+                    .SelectMany(chainClass => chainClass.QuerySqlUpdatableColumnProperties().Concat(chainClass.QuerySqlLinkProperties()))
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the managed values of the class and its ancestors that are stored in the JSON document and assigned on creation only, so
+            /// that an update keeps their stored value.
+            /// </summary>
+            /// <returns>
+            /// The non-reference managed properties assigned on creation only, deduplicated and deterministically ordered.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QuerySqlChainPreservedValueProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryDtoImplementationProperties()
+                    .Where(property => property.Type is not IClass && property.QueryIsAssignedOnCreateOnly())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the managed properties of the class and its ancestors that the server assigns when an object is created.
+            /// </summary>
+            /// <returns>
+            /// The managed properties whose <c>onAction</c> includes <c>OnCreate</c>, deduplicated and deterministically ordered.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryManagedPropertiesAssignedOnCreate()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryDtoImplementationProperties()
+                    .Where(property => property.QueryIsAssignedOnCreate())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the managed properties of the class and its ancestors that the server assigns when an object is updated.
+            /// </summary>
+            /// <returns>
+            /// The managed properties whose <c>onAction</c> includes <c>OnUpdate</c>, deduplicated and deterministically ordered.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryManagedPropertiesAssignedOnUpdate()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryDtoImplementationProperties()
+                    .Where(property => property.QueryIsAssignedOnUpdate())
+                    .ToArray();
+            }
+
+            /// <summary>
             /// Queries the root class of the inheritance chain, whose table holds the identity, discriminator and JSON document of every object.
             /// </summary>
             /// <returns>

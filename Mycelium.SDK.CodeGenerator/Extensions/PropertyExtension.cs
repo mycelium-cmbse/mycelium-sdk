@@ -9,15 +9,25 @@
 
 namespace Mycelium.SDK.CodeGenerator.Extensions
 {
+    using System.Text.RegularExpressions;
+
+    using HandlebarsDotNet.Helpers.Utils;
+
     using uml4net.Classification;
     using uml4net.Extensions;
+    using uml4net.Profiling;
     using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
+    using uml4net.Values;
+
+    using EnterpriseArchitectAttribute = uml4net.xmi.Extensions.EnterpriseArchitect.Structure.IAttribute;
+    using EnterpriseArchitectConnector = uml4net.xmi.Extensions.EnterpriseArchitect.Structure.IConnector;
+    using EnterpriseArchitectTag = uml4net.xmi.Extensions.EnterpriseArchitect.Structure.ITag;
 
     /// <summary>
-    /// Provides artifact-specific name, type, multiplicity and relational-storage queries for UML properties.
+    /// Provides artifact-specific name, type, multiplicity, relational-storage and Mycelium profile queries for UML properties.
     /// </summary>
-    public static class PropertyExtension
+    public static partial class PropertyExtension
     {
         /// <summary>
         /// Maps a referenced UML class to its generated POCO interface identifier.
@@ -120,11 +130,246 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             return ReservedCSharpNameMapper.Map(typeName);
         }
 
+        /// <summary>
+        /// Determines whether a property carries a stereotype of the Mycelium profile.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property whose stereotype applications are examined.
+        /// </param>
+        /// <param name="stereotypeName">
+        /// The name of the Mycelium stereotype.
+        /// </param>
+        /// <returns>
+        /// <see langword="true" /> when the export applies the named Mycelium stereotype to the property.
+        /// </returns>
+        private static bool QueryHasMyceliumStereotype(IProperty property, string stereotypeName)
+        {
+            return property.QueryStereoTypeApplication(stereotypeName) is { ProfileName: XmiResources.MyceliumProfileName };
+        }
+
+        /// <summary>
+        /// Queries the Enterprise Architect tags of a property: those of its attribute, and those of its end of the connector that exports its
+        /// association. A connector end is matched to its member end by the <c>src</c> / <c>dst</c> identifier convention of the export, as uml4net
+        /// matches documentation.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property whose extension tags are queried.
+        /// </param>
+        /// <returns>
+        /// The tags exported for the property.
+        /// </returns>
+        private static IEnumerable<EnterpriseArchitectTag> QueryExtensionTags(IProperty property)
+        {
+            IReadOnlyCollection<object> attributeExtenders = [];
+            IReadOnlyCollection<object> connectorExtenders = [];
+
+            property.Cache?.TryGetExtenders(property, out attributeExtenders);
+
+            if (property.Association is { } association)
+            {
+                association.Cache?.TryGetExtenders(association, out connectorExtenders);
+            }
+
+            var attributeTags = (attributeExtenders ?? []).OfType<EnterpriseArchitectAttribute>()
+                .SelectMany(attribute => attribute.Tags ?? []);
+
+            var connectorEndTags = (connectorExtenders ?? []).OfType<EnterpriseArchitectConnector>()
+                .Select(connector => property.XmiId.Contains("src", StringComparison.Ordinal) ? connector.Source : connector.Target)
+                .SelectMany(connectorEnd => connectorEnd?.Tags ?? []);
+
+            return attributeTags.Concat(connectorEndTags);
+        }
+
+        /// <summary>
+        /// Queries the <c>onAction</c> values of a managed property.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property whose <c>onAction</c> tagged value is read.
+        /// </param>
+        /// <returns>
+        /// The actions on which the server assigns the value; empty for a property that is not managed or whose value business logic sets.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the tagged value names an action other than <c>OnCreate</c> and <c>OnUpdate</c>.
+        /// </exception>
+        private static string[] QueryOnActions(IProperty property)
+        {
+            if (!QueryHasMyceliumStereotype(property, XmiResources.ManagedStereotypeName))
+            {
+                return [];
+            }
+
+            var actions = QueryExtensionTags(property)
+                .Where(tag => string.Equals(tag.Name, XmiResources.OnActionTaggedValueName, StringComparison.Ordinal))
+                .SelectMany(tag => (tag.Value ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                .ToArray();
+
+            var unknownAction = actions.FirstOrDefault(action => action is not (XmiResources.OnCreateAction or XmiResources.OnUpdateAction));
+
+            return unknownAction is null
+                ? actions
+                : throw new InvalidOperationException(
+                    $"Property '{property.Describe()}' has the {XmiResources.OnActionTaggedValueName} value '{unknownAction}'; only " +
+                    $"'{XmiResources.OnCreateAction}' and '{XmiResources.OnUpdateAction}' are supported.");
+        }
+
+        /// <summary>
+        /// Determines whether an OCL invariant body is exactly <c>&lt;Class&gt;.allInstances()-&gt;isUnique(v | v.&lt;property&gt;)</c> for the
+        /// property and the class that declares it. The body is compared as text; no OCL is parsed or evaluated.
+        /// </summary>
+        /// <param name="body">
+        /// The decoded invariant body, possibly preceded by OCL comment lines.
+        /// </param>
+        /// <param name="className">
+        /// The name of the class that declares the property and owns the invariant.
+        /// </param>
+        /// <param name="propertyName">
+        /// The name of the property.
+        /// </param>
+        /// <returns>
+        /// <see langword="true" /> when the body states the uniqueness of the property's value across every instance of its class.
+        /// </returns>
+        private static bool QueryIsUniquenessInvariant(string body, string className, string propertyName)
+        {
+            return body.Split('\n')
+                .Select(line => line.Trim())
+                .Where(line => line.Length > 0 && !line.StartsWith("--", StringComparison.Ordinal))
+                .Select(line => UniquenessInvariantPattern().Match(line))
+                .Any(match => match.Success &&
+                    string.Equals(match.Groups["class"].Value, className, StringComparison.Ordinal) &&
+                    string.Equals(match.Groups["property"].Value, propertyName, StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// Matches one OCL invariant of the form <c>inv &lt;name&gt;: &lt;Class&gt;.allInstances()-&gt;isUnique(v | v.&lt;property&gt;)</c>.
+        /// </summary>
+        /// <returns>
+        /// The compiled pattern, with the <c>class</c> and <c>property</c> groups.
+        /// </returns>
+        [GeneratedRegex(@"^inv\s+\w+\s*:\s*(?<class>\w+)\.allInstances\(\)\s*->\s*isUnique\(\s*(?<variable>\w+)\s*\|\s*\k<variable>\.(?<property>\w+)\s*\)$", RegexOptions.CultureInvariant)]
+        private static partial Regex UniquenessInvariantPattern();
+
         /// <param name="property">
         /// The UML property that is queried.
         /// </param>
         extension(IProperty property)
         {
+            /// <summary>
+            /// Determines whether the property carries the «index» stereotype of the Mycelium profile, which asks for a dedicated SQL index.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the property is indexed.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            public bool QueryIsIndexed()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return QueryHasMyceliumStereotype(property, XmiResources.IndexStereotypeName);
+            }
+
+            /// <summary>
+            /// Determines whether the property carries the «managed» stereotype of the Mycelium profile: the server sets its value, so it is excluded
+            /// from data validation.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the property is managed.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            public bool QueryIsManaged()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return QueryHasMyceliumStereotype(property, XmiResources.ManagedStereotypeName);
+            }
+
+            /// <summary>
+            /// Determines whether the server assigns the managed property when an object is created.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the property is managed and its <c>onAction</c> tagged value includes <c>OnCreate</c>.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the <c>onAction</c> tagged value names an unsupported action.
+            /// </exception>
+            public bool QueryIsAssignedOnCreate()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return QueryOnActions(property).Contains(XmiResources.OnCreateAction, StringComparer.Ordinal);
+            }
+
+            /// <summary>
+            /// Determines whether the server assigns the managed property when an object is updated.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the property is managed and its <c>onAction</c> tagged value includes <c>OnUpdate</c>.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the <c>onAction</c> tagged value names an unsupported action.
+            /// </exception>
+            public bool QueryIsAssignedOnUpdate()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return QueryOnActions(property).Contains(XmiResources.OnUpdateAction, StringComparer.Ordinal);
+            }
+
+            /// <summary>
+            /// Determines whether the server assigns the managed property on creation only, so that an update keeps its stored value.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the property is assigned on creation and not on update.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the <c>onAction</c> tagged value names an unsupported action.
+            /// </exception>
+            public bool QueryIsAssignedOnCreateOnly()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return property.QueryIsAssignedOnCreate() && !property.QueryIsAssignedOnUpdate();
+            }
+
+            /// <summary>
+            /// Determines whether the SQL index of an indexed property is unique: its declaring class owns an invariant of the exact form
+            /// <c>&lt;Class&gt;.allInstances()-&gt;isUnique(v | v.&lt;property&gt;)</c>. The invariant body is decoded once, as documentation is,
+            /// and compared as text; no OCL is parsed or evaluated.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the property is indexed and its declaring class states its uniqueness.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            public bool QueryIsUniquelyIndexed()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                if (!property.QueryIsIndexed() || property.Owner is not IClass owner)
+                {
+                    return false;
+                }
+
+                return owner.OwnedRule
+                    .SelectMany(constraint => constraint.Specification.OfType<IOpaqueExpression>())
+                    .SelectMany(expression => expression.Body)
+                    .Any(body => QueryIsUniquenessInvariant(HtmlUtils.HtmlDecode(body), owner.Name, property.Name));
+            }
+
             /// <summary>
             /// Queries the eligible navigable scalar opposite that can store a SQL association.
             /// </summary>

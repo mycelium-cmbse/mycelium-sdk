@@ -31,11 +31,10 @@ namespace Mycelium.SDK.Validation
         public UserValidator()
         {
             this.RuleFor(dto => dto.Email).Must(value => !string.IsNullOrWhiteSpace(value));
-            this.RuleFor(dto => dto.ExternalIdentifier).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleFor(dto => dto.IsPartOfOrganizations).Must(value => (value?.Count ?? 0) >= 1);
             this.RuleForEach(dto => dto.IsPartOfOrganizations).NotEmpty();
             this.RuleForEach(dto => dto.IsPartOfProjects).NotEmpty();
-            this.RuleFor(dto => dto.Name).Must(value => !string.IsNullOrWhiteSpace(value));
+            this.RuleFor(dto => dto.UserName).Must(value => !string.IsNullOrWhiteSpace(value));
             this.RuleFor(dto => dto.UserPreferences).NotNull();
         }
     }

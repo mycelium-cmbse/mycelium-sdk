@@ -83,6 +83,11 @@ CREATE INDEX {{TargetIndexName}} ON {{ #SQL.WriteSchemaName }}.{{Table}} ({{Targ
 {{/if}}
 
 {{/each}}
+{{#each Indexes}}
+CREATE {{#if Unique}}UNIQUE {{/if}}INDEX {{Name}} ON {{ #SQL.WriteSchemaName }}.{{owner.RootTable}} (({{ #SQL.WriteDataColumnName }} ->> {{{Member}}}))
+    WHERE {{ #SQL.WriteClassKindColumnName }} IN ({{{owner.Kinds}}});
+
+{{/each}}
 {{/with}}
 {{/inline}}
 {{#*inline "sql-triggers"}}

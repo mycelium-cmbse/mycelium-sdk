@@ -165,6 +165,21 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             handlebars.RegisterHelper("Class.QuerySqlChainRelationProperties",
                 (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlChainRelationProperties}}").QuerySqlChainRelationProperties());
 
+            handlebars.RegisterHelper("Class.QuerySqlUpdatableColumnProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlUpdatableColumnProperties}}").QuerySqlUpdatableColumnProperties());
+
+            handlebars.RegisterHelper("Class.QuerySqlChainUpdatableRelationProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlChainUpdatableRelationProperties}}").QuerySqlChainUpdatableRelationProperties());
+
+            handlebars.RegisterHelper("Class.QuerySqlChainPreservedValueProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlChainPreservedValueProperties}}").QuerySqlChainPreservedValueProperties());
+
+            handlebars.RegisterHelper("Class.QueryManagedPropertiesAssignedOnCreate",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryManagedPropertiesAssignedOnCreate}}").QueryManagedPropertiesAssignedOnCreate());
+
+            handlebars.RegisterHelper("Class.QueryManagedPropertiesAssignedOnUpdate",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryManagedPropertiesAssignedOnUpdate}}").QueryManagedPropertiesAssignedOnUpdate());
+
             handlebars.RegisterHelper("Class.WriteSqlTableName", (writer, _, arguments) =>
             {
                 var umlClass = arguments.QuerySingle<IClass>("{{Class.WriteSqlTableName}}");

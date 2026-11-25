@@ -34,8 +34,6 @@ namespace Mycelium.SDK.Validation
         /// </summary>
         protected AuditableThingValidator()
         {
-            this.RuleFor(dto => dto.CreatedBy).NotEmpty();
-            this.RuleFor(dto => dto.UpdatedBy).NotEmpty();
         }
     }
 }

@@ -87,10 +87,10 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.IsPartOfProjects[i], options);
                 }
             }
-            WriteRequiredString(ref writer, dto.Name, "Name");
             ActivationStatusMessagePackFormatter.Instance.Serialize(ref writer, dto.Status, options);
             GuidMessagePackFormatter.Instance.Serialize(ref writer, dto.UpdatedBy, options);
             WriteRoundTripDateTime(ref writer, dto.UpdatedOn);
+            WriteRequiredString(ref writer, dto.UserName, "UserName");
             if (dto.UserPreferences == null)
             {
                 writer.WriteNil();
@@ -180,10 +180,10 @@ namespace Mycelium.SDK.Serializer.MessagePack
                         dto.IsPartOfProjects.Add(GuidMessagePackFormatter.Instance.Deserialize(ref reader, options));
                     }
                 }
-                dto.Name = ReadRequiredString(ref reader, "Name");
                 dto.Status = ActivationStatusMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedBy = GuidMessagePackFormatter.Instance.Deserialize(ref reader, options);
                 dto.UpdatedOn = ReadRoundTripDateTime(ref reader, "UpdatedOn");
+                dto.UserName = ReadRequiredString(ref reader, "UserName");
                 if (reader.TryReadNil())
                 {
                     dto.UserPreferences = null;
