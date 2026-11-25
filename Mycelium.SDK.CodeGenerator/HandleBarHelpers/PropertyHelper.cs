@@ -244,6 +244,27 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         }
 
         /// <summary>
+        /// Registers the property helpers that describe how a stored value is held in the SysML v2 schema of <c>SysML2.NET.Dal</c>, for element DAO generation.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the element DAO property helpers are registered.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
+        /// </exception>
+        public static void RegisterCoreDaoPropertyHelper(this IHandlebars handlebars)
+        {
+            ArgumentNullException.ThrowIfNull(handlebars);
+
+            handlebars.RegisterHelper("Property.WritePostgreSqlTypeName", (writer, _, arguments) =>
+            {
+                var property = arguments.QuerySingle<IProperty>("{{Property.WritePostgreSqlTypeName}}");
+
+                writer.WriteSafeString(property.QueryPostgreSqlTypeName());
+            });
+        }
+
+        /// <summary>
         /// Renders local DTO data-validation rules from the property's mapped type and modeled multiplicity.
         /// </summary>
         /// <param name="property">

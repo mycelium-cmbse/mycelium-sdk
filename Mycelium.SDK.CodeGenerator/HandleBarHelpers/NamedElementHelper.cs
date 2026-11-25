@@ -46,6 +46,13 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                 writer.WriteSafeString(namedElement.QueryNamespace());
             });
+
+            handlebars.RegisterHelper("NamedElement.WriteSnakeCaseName", (writer, _, arguments) =>
+            {
+                var namedElement = arguments.QuerySingle<INamedElement>("{{NamedElement.WriteSnakeCaseName}}");
+
+                writer.WriteSafeString(namedElement.QuerySnakeCaseName());
+            });
         }
     }
 }

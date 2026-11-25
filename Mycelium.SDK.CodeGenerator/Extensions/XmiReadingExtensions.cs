@@ -47,7 +47,8 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             /// <see langword="false" /> to ignore it and log a warning.
             /// </param>
             /// <returns>
-            /// Reader settings with empty path maps that resolve XMI dependencies from local files or embedded resources.
+            /// Reader settings that resolve XMI dependencies from local files or embedded resources, mapping the Eclipse UML primitive library onto
+            /// <c>PrimitiveTypes.xmi</c>.
             /// </returns>
             /// <exception cref="ArgumentNullException">
             /// Thrown when the resources directory is <see langword="null" />.
@@ -56,7 +57,15 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             {
                 ArgumentNullException.ThrowIfNull(resourcesDirectory);
 
-                return new DefaultSettings { LocalReferenceBasePath = resourcesDirectory.FullName, UseStrictReading = useStrictReading };
+                return new DefaultSettings
+                {
+                    LocalReferenceBasePath = resourcesDirectory.FullName,
+                    UseStrictReading = useStrictReading,
+                    PathMaps = new Dictionary<string, string>
+                    {
+                        [XmiResources.UmlPrimitiveTypesPathMap] = Path.Combine(resourcesDirectory.FullName, XmiResources.UmlPrimitiveTypesFileName)
+                    }
+                };
             }
 
             /// <summary>

@@ -39,6 +39,25 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         }
 
         /// <summary>
+        /// Removes the properties whose value a class derives.
+        /// </summary>
+        /// <param name="properties">
+        /// The stored properties to filter.
+        /// </param>
+        /// <param name="umlClass">
+        /// The class whose derived redefinitions are removed.
+        /// </param>
+        /// <returns>
+        /// The properties the class stores, in their order.
+        /// </returns>
+        private static IProperty[] ExceptDerived(IEnumerable<IProperty> properties, IClass umlClass)
+        {
+            return properties
+                .Where(property => !property.QueryIsDerivedByRedefinition(umlClass))
+                .ToArray();
+        }
+
+        /// <summary>
         /// Determines whether a property belongs to the generated DTO contract.
         /// </summary>
         /// <param name="property">
@@ -390,6 +409,158 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 ArgumentNullException.ThrowIfNull(umlClass);
 
                 return umlClass.QueryNonDerivedAttributes().FirstOrDefault(property => string.Equals(property.Name, attributeName, StringComparison.Ordinal));
+            }
+
+            /// <summary>
+            /// Queries the stored properties the class declares itself, which the SysML v2 schema of <c>SysML2.NET.Dal</c> gives a column or link table.
+            /// </summary>
+            /// <returns>
+            /// The non-derived properties of the class that none of its direct generalizations carries, without same-name redefinitions, ordered by name.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            /// <remarks>
+            /// The properties are not read from <c>OwnedAttribute</c>, because an association end such as <c>Membership::memberElement</c> is owned by its association.
+            /// </remarks>
+            public IReadOnlyList<IProperty> QueryStoredOwnProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryIntroducedNonDerivedProperties()
+                    .OrderBy(property => property.Name, StringComparer.Ordinal)
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the single-valued stored properties the class declares itself, which are the columns of its version table.
+            /// </summary>
+            /// <returns>
+            /// The single-valued properties of <c>QueryStoredOwnProperties</c>, in its order.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryStoredScalarOwnProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryStoredOwnProperties()
+                    .Where(property => !property.QueryIsEnumerable())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the multi-valued stored properties the class declares itself, each of which is stored in an ordered link table.
+            /// </summary>
+            /// <returns>
+            /// The multi-valued properties of <c>QueryStoredOwnProperties</c>, in its order.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryStoredMultiOwnProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryStoredOwnProperties()
+                    .Where(property => property.QueryIsEnumerable())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the classes, among the class and its generalizations, that declare stored properties of an instance of the class.
+            /// </summary>
+            /// <returns>
+            /// The classes with stored properties of their own, the root class first, then from the shallowest to the deepest and by name.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the root class of the class declares no stored property, so that a version of it would have no core row.
+            /// </exception>
+            public IReadOnlyList<IClass> QueryStorageClasses()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                var storageClasses = umlClass.QueryAllGeneralClassifiers()
+                    .OfType<IClass>()
+                    .Append(umlClass)
+                    .DistinctBy(storageClass => storageClass.XmiId, StringComparer.Ordinal)
+                    .Where(storageClass => storageClass.QueryStoredOwnProperties().Count != 0)
+                    .OrderBy(storageClass => storageClass.QueryAllGeneralClassifiers().Count)
+                    .ThenBy(storageClass => storageClass.Name, StringComparer.Ordinal)
+                    .ToArray();
+
+                return storageClasses.Length != 0 && storageClasses[0].Generalization.Count == 0
+                    ? storageClasses
+                    : throw new InvalidOperationException($"The root class of '{umlClass.Describe()}' declares no stored property, so a version of it has no core row.");
+            }
+
+            /// <summary>
+            /// Queries the single-valued properties an instance of the class stores in the version table of one of its storage classes.
+            /// </summary>
+            /// <param name="storageClass">
+            /// The class of <c>QueryStorageClasses</c> whose version table is written.
+            /// </param>
+            /// <returns>
+            /// The <c>QueryStoredScalarOwnProperties</c> of <paramref name="storageClass" /> whose value the class does not derive, in their order.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class or <paramref name="storageClass" /> is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryWrittenScalarProperties(IClass storageClass)
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+                ArgumentNullException.ThrowIfNull(storageClass);
+
+                return ExceptDerived(storageClass.QueryStoredScalarOwnProperties(), umlClass);
+            }
+
+            /// <summary>
+            /// Queries the multi-valued properties an instance of the class stores in the link tables of one of its storage classes.
+            /// </summary>
+            /// <param name="storageClass">
+            /// The class of <c>QueryStorageClasses</c> whose link tables are written.
+            /// </param>
+            /// <returns>
+            /// The <c>QueryStoredMultiOwnProperties</c> of <paramref name="storageClass" /> whose value the class does not derive, in their order.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class or <paramref name="storageClass" /> is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryWrittenMultiProperties(IClass storageClass)
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+                ArgumentNullException.ThrowIfNull(storageClass);
+
+                return ExceptDerived(storageClass.QueryStoredMultiOwnProperties(), umlClass);
+            }
+
+            /// <summary>
+            /// Queries the stored properties of an instance of the class that its stored JSON document must not hold: every reference, which the
+            /// relations hold, and every property whose value the class derives.
+            /// </summary>
+            /// <returns>
+            /// The matching properties declared by the classes of <c>QueryStorageClasses</c>, one per name, ordered by name.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the root class of the class declares no stored property.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryJsonExcludedProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryStorageClasses()
+                    .SelectMany(storageClass => storageClass.QueryStoredOwnProperties())
+                    .Where(property => property.QueryIsReferenceType() || property.QueryIsDerivedByRedefinition(umlClass))
+                    .DistinctBy(property => property.Name, StringComparer.Ordinal)
+                    .OrderBy(property => property.Name, StringComparer.Ordinal)
+                    .ToArray();
             }
         }
     }
