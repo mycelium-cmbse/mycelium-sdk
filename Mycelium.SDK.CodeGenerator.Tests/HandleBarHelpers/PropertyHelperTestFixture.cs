@@ -529,17 +529,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
         }
 
         [Test]
-        public void Verify_that_a_managed_property_keeps_no_validation_rule()
-        {
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(RenderDtoValidationRules(this.QueryProperty("AuditableThing", "createdBy")), Is.Empty);
-                Assert.That(RenderDtoValidationRules(this.QueryProperty("User", "externalIdentifier")), Is.Empty);
-                Assert.That(RenderDtoValidationRules(this.QueryProperty("User", "email")), Is.Not.Empty);
-            }
-        }
-
-        [Test]
         public void VerifyThatZeroUpperBoundValidationRequiresAnAbsentScalar()
         {
             var property = CreateValidationProperty("Integer", 0, "0");

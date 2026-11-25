@@ -251,42 +251,6 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             }
 
             /// <summary>
-            /// Queries the managed properties of the class and its ancestors that the server assigns when an object is created.
-            /// </summary>
-            /// <returns>
-            /// The managed properties whose <c>onAction</c> includes <c>OnCreate</c>, deduplicated and deterministically ordered.
-            /// </returns>
-            /// <exception cref="ArgumentNullException">
-            /// Thrown when the class is <see langword="null" />.
-            /// </exception>
-            public IReadOnlyList<IProperty> QueryManagedPropertiesAssignedOnCreate()
-            {
-                ArgumentNullException.ThrowIfNull(umlClass);
-
-                return umlClass.QueryDtoImplementationProperties()
-                    .Where(property => property.QueryIsAssignedOnCreate())
-                    .ToArray();
-            }
-
-            /// <summary>
-            /// Queries the managed properties of the class and its ancestors that the server assigns when an object is updated.
-            /// </summary>
-            /// <returns>
-            /// The managed properties whose <c>onAction</c> includes <c>OnUpdate</c>, deduplicated and deterministically ordered.
-            /// </returns>
-            /// <exception cref="ArgumentNullException">
-            /// Thrown when the class is <see langword="null" />.
-            /// </exception>
-            public IReadOnlyList<IProperty> QueryManagedPropertiesAssignedOnUpdate()
-            {
-                ArgumentNullException.ThrowIfNull(umlClass);
-
-                return umlClass.QueryDtoImplementationProperties()
-                    .Where(property => property.QueryIsAssignedOnUpdate())
-                    .ToArray();
-            }
-
-            /// <summary>
             /// Queries the root class of the inheritance chain, whose table holds the identity, discriminator and JSON document of every object.
             /// </summary>
             /// <returns>

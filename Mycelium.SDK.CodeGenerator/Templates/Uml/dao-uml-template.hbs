@@ -196,48 +196,6 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             DELETE FROM {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlRootTableName this }}
             WHERE {{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }} AND {{ #SQL.WriteClassKindColumnName }} = @{{ #SQL.WriteClassKindColumnName }};
             """;
-        {{ #if (#Class.QueryManagedPropertiesAssignedOnCreate this) }}
-
-        /// <summary>
-        /// Assigns the managed values that the server sets when an object of this class is created.
-        /// </summary>
-        /// <param name="dto">
-        /// The object about to be stored, whose managed values are assigned.
-        /// </param>
-        /// <param name="{{ #Property.WriteManagedTimestampName }}">
-        /// The instant of the operation, assigned to managed date and time values.
-        /// </param>
-        /// <param name="{{ #Property.WriteManagedActingUserIdName }}">
-        /// The identifier of the acting user, assigned to managed references.
-        /// </param>
-        protected override void AssignManagedValuesOnCreate({{ #Class.WriteDtoInterfaceIdentifier this }} dto, DateTime {{ #Property.WriteManagedTimestampName }}, Guid {{ #Property.WriteManagedActingUserIdName }})
-        {
-            {{ #each (#Class.QueryManagedPropertiesAssignedOnCreate this) as | property | }}
-            {{ #Property.WriteManagedValueAssignment property }}
-            {{ /each }}
-        }
-        {{ /if }}
-        {{ #if (#Class.QueryManagedPropertiesAssignedOnUpdate this) }}
-
-        /// <summary>
-        /// Assigns the managed values that the server sets when an object of this class is updated.
-        /// </summary>
-        /// <param name="dto">
-        /// The new state of the object, whose managed values are assigned.
-        /// </param>
-        /// <param name="{{ #Property.WriteManagedTimestampName }}">
-        /// The instant of the operation, assigned to managed date and time values.
-        /// </param>
-        /// <param name="{{ #Property.WriteManagedActingUserIdName }}">
-        /// The identifier of the acting user, assigned to managed references.
-        /// </param>
-        protected override void AssignManagedValuesOnUpdate({{ #Class.WriteDtoInterfaceIdentifier this }} dto, DateTime {{ #Property.WriteManagedTimestampName }}, Guid {{ #Property.WriteManagedActingUserIdName }})
-        {
-            {{ #each (#Class.QueryManagedPropertiesAssignedOnUpdate this) as | property | }}
-            {{ #Property.WriteManagedValueAssignment property }}
-            {{ /each }}
-        }
-        {{ /if }}
         {{ #if (#Class.QuerySqlChainUpdatableRelationProperties this) }}
 
         /// <summary>

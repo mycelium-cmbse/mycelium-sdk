@@ -43,16 +43,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         private const string MessagePackTryReadNilCondition = "if (reader.TryReadNil())";
 
         /// <summary>
-        /// The name of the generated DAO parameter carrying the instant of the operation, assigned to managed date and time values.
-        /// </summary>
-        private const string ManagedTimestamp = "timestamp";
-
-        /// <summary>
-        /// The name of the generated DAO parameter carrying the acting user's identifier, assigned to managed references.
-        /// </summary>
-        private const string ManagedActingUserIdentifier = "actingUserId";
-
-        /// <summary>
         /// Registers the DTO property helpers.
         /// </summary>
         /// <param name="handlebars">
@@ -251,53 +241,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                 writer.WriteSafeString(QuerySqlOpposite(property).QuerySqlIdentifier());
             });
-
-            handlebars.RegisterHelper("Property.WriteManagedTimestampName", (writer, _, _) => writer.WriteSafeString(ManagedTimestamp));
-
-            handlebars.RegisterHelper("Property.WriteManagedActingUserIdName", (writer, _, _) => writer.WriteSafeString(ManagedActingUserIdentifier));
-
-            handlebars.RegisterHelper("Property.WriteManagedValueAssignment", (writer, _, arguments) =>
-            {
-                var property = arguments.QuerySingle<IProperty>("{{Property.WriteManagedValueAssignment}}");
-
-                writer.WriteSafeString(RenderManagedValueAssignment(property));
-            });
-        }
-
-        /// <summary>
-        /// Renders the statement that assigns a managed value on the DTO from the values the server supplies: the operation's timestamp for a
-        /// date and time value, and the acting user's identifier for a reference.
-        /// </summary>
-        /// <param name="property">
-        /// The managed property whose value is assigned.
-        /// </param>
-        /// <returns>
-        /// The assignment statement.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="property" /> is <see langword="null" />.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the managed property is a collection, or is neither a date and time value nor a reference, so that the server has no value
-        /// to assign.
-        /// </exception>
-        private static string RenderManagedValueAssignment(IProperty property)
-        {
-            ArgumentNullException.ThrowIfNull(property);
-
-            var value = property.QueryIsEnumerable()
-                ? null
-                : property.Type switch
-                {
-                    IClass => ManagedActingUserIdentifier,
-                    IPrimitiveType primitiveType when primitiveType.QueryCSharpTypeName() == "DateTime" => ManagedTimestamp,
-                    _ => null
-                };
-
-            return value is null
-                ? throw new InvalidOperationException(
-                    $"Managed property '{property.Describe()}' has an onAction value, but the server assigns only a single date and time value or a single reference.")
-                : $"dto.{property.QueryPropertyName()} = {value};{Environment.NewLine}";
         }
 
         /// <summary>

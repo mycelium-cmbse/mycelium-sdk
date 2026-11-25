@@ -118,36 +118,6 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         }
 
         [Test]
-        public void Verify_that_an_index_is_unique_only_with_a_matching_isUnique_invariant()
-        {
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(this.QueryProperty("User", "externalIdentifier").QueryIsUniquelyIndexed(), Is.True);
-                Assert.That(this.QueryProperty("Organization", "name").QueryIsUniquelyIndexed(), Is.True);
-                Assert.That(this.QueryProperty("User", "email").QueryIsIndexed(), Is.True);
-                Assert.That(this.QueryProperty("User", "email").QueryIsUniquelyIndexed(), Is.False);
-                Assert.That(this.QueryProperty("FunctionalProject", "name").QueryIsUniquelyIndexed(), Is.False);
-                Assert.That(this.QueryProperty("BranchProtectionRule", "name").QueryIsIndexed(), Is.False);
-            }
-        }
-
-        [Test]
-        public void Verify_that_onAction_is_read_from_attributes_and_association_ends_and_absent_without_a_tagged_value()
-        {
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(this.QueryProperty("AuditableThing", "createdOn").QueryIsAssignedOnCreateOnly(), Is.True);
-                Assert.That(this.QueryProperty("AuditableThing", "createdBy").QueryIsAssignedOnCreateOnly(), Is.True);
-                Assert.That(this.QueryProperty("AuditableThing", "updatedBy").QueryIsAssignedOnCreate(), Is.True);
-                Assert.That(this.QueryProperty("AuditableThing", "updatedBy").QueryIsAssignedOnUpdate(), Is.True);
-                Assert.That(this.QueryProperty("Invitation", "status").QueryIsManaged(), Is.True);
-                Assert.That(this.QueryProperty("Invitation", "status").QueryIsAssignedOnCreate(), Is.False);
-                Assert.That(this.QueryProperty("Invitation", "status").QueryIsAssignedOnUpdate(), Is.False);
-                Assert.That(this.QueryProperty("User", "email").QueryIsManaged(), Is.False);
-            }
-        }
-
-        [Test]
         public void Verify_that_QueryPropertyName_preserves_the_FunctionalData_contract() => Assert.That(this.roleProperty.QueryPropertyName(), Is.EqualTo("Role"));
 
         [Test]

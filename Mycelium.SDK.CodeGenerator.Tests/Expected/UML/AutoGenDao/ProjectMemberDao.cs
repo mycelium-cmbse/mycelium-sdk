@@ -165,44 +165,6 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             """;
 
         /// <summary>
-        /// Assigns the managed values that the server sets when an object of this class is created.
-        /// </summary>
-        /// <param name="dto">
-        /// The object about to be stored, whose managed values are assigned.
-        /// </param>
-        /// <param name="timestamp">
-        /// The instant of the operation, assigned to managed date and time values.
-        /// </param>
-        /// <param name="actingUserId">
-        /// The identifier of the acting user, assigned to managed references.
-        /// </param>
-        protected override void AssignManagedValuesOnCreate(IProjectMember dto, DateTime timestamp, Guid actingUserId)
-        {
-            dto.CreatedBy = actingUserId;
-            dto.CreatedOn = timestamp;
-            dto.UpdatedBy = actingUserId;
-            dto.UpdatedOn = timestamp;
-        }
-
-        /// <summary>
-        /// Assigns the managed values that the server sets when an object of this class is updated.
-        /// </summary>
-        /// <param name="dto">
-        /// The new state of the object, whose managed values are assigned.
-        /// </param>
-        /// <param name="timestamp">
-        /// The instant of the operation, assigned to managed date and time values.
-        /// </param>
-        /// <param name="actingUserId">
-        /// The identifier of the acting user, assigned to managed references.
-        /// </param>
-        protected override void AssignManagedValuesOnUpdate(IProjectMember dto, DateTime timestamp, Guid actingUserId)
-        {
-            dto.UpdatedBy = actingUserId;
-            dto.UpdatedOn = timestamp;
-        }
-
-        /// <summary>
         /// Writes the scalar reference columns and link-table rows of a stored object that differ from <paramref name="dto" />.
         /// </summary>
         /// <param name="transaction">

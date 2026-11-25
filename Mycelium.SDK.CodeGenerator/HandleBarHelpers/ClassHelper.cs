@@ -174,12 +174,6 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             handlebars.RegisterHelper("Class.QuerySqlChainPreservedValueProperties",
                 (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QuerySqlChainPreservedValueProperties}}").QuerySqlChainPreservedValueProperties());
 
-            handlebars.RegisterHelper("Class.QueryManagedPropertiesAssignedOnCreate",
-                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryManagedPropertiesAssignedOnCreate}}").QueryManagedPropertiesAssignedOnCreate());
-
-            handlebars.RegisterHelper("Class.QueryManagedPropertiesAssignedOnUpdate",
-                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryManagedPropertiesAssignedOnUpdate}}").QueryManagedPropertiesAssignedOnUpdate());
-
             handlebars.RegisterHelper("Class.WriteSqlTableName", (writer, _, arguments) =>
             {
                 var umlClass = arguments.QuerySingle<IClass>("{{Class.WriteSqlTableName}}");
