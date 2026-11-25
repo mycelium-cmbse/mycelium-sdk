@@ -4,7 +4,7 @@
         <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
         <LangVersion>14.0</LangVersion>
         <Version>0.3.0</Version>
-        <Description>The data access layer of the Mycelium SDK: the generated PostgreSQL schema scripts.</Description>
+        <Description>The data access layer of the Mycelium SDK: the generated PostgreSQL schema scripts and the session to a Systems Modeling API server.</Description>
         <PackageId>Mycelium.SDK.Dal</PackageId>
         <Company>Starion Group S.A.</Company>
         <Copyright>Copyright © Starion Group S.A.</Copyright>
@@ -21,7 +21,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="ErrorOr"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
         <PackageReference Include="Microsoft.Sbom.Targets"/>
+        <PackageReference Include="SysML2.NET.REST"/>
     </ItemGroup>
 
     <ItemGroup>
