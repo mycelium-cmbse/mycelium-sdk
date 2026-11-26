@@ -51,6 +51,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
 
             var payload = CreateHandlebarsPayload(xmiReaderResult);
 
+            this.ConfigureDocumentationSymbols(payload);
+
             var generatedFiles = payload.Enumerations
                 .Select(this.RenderEnumeration)
                 .OrderBy(generatedFile => generatedFile.FileName, StringComparer.Ordinal)
@@ -80,6 +82,8 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
             ArgumentNullException.ThrowIfNull(outputDirectory);
             ArgumentNullException.ThrowIfNull(enumeration);
 
+            this.ClearDocumentationSymbols();
+
             var generatedFile = this.RenderEnumeration(enumeration);
 
             await WriteAsync([generatedFile], outputDirectory);
@@ -96,7 +100,7 @@ namespace Mycelium.SDK.CodeGenerator.Generators.UmlHandleBarsGenerators
         /// </remarks>
         protected override void RegisterHelpers()
         {
-            DocumentationHelper.RegisterDocumentationHelper(this.Handlebars);
+            DocumentationHelper.RegisterDocumentationHelper(this.Handlebars, this.ResolveDocumentationCref);
             EnumHelper.RegisterEnumHelper(this.Handlebars);
 
             this.Handlebars.RegisterEnumerationHelper();

@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="IAuditableThing.cs" company="Starion Group S.A.">
+//  <copyright file="IInvitation.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -18,31 +18,39 @@ namespace Mycelium.SDK.DTO
     using System.Collections.Generic;
 
     /// <summary>
-    /// Any <see cref="IThing" /> that shall record creation and update date and authority.
+    /// Abstract base of an invitation sent by a <see cref="User" /> to join a target with a given role,
+    /// taking effect only once the invitee accepts it. The sender is the inherited createdBy.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial interface IAuditableThing : IThing
+    public partial interface IInvitation : IAuditableThing
     {
         /// <summary>
-        /// References the <see cref="User" /> that created the current <see cref="IAuditableThing" />.
+        /// The <see cref="DateTime" /> after which a Pending invitation can no longer be accepted, computed
+        /// from the configured invitation lifetime.
         /// </summary>
-        Guid CreatedBy { get; set; }
+        DateTime ExpiresOn { get; set; }
 
         /// <summary>
-        /// Provides the creation <see cref="DateTime" /> of the current <see cref="IAuditableThing" />
+        /// References the invited <see cref="User" /> when the invitee already holds an account.
         /// </summary>
-        DateTime CreatedOn { get; set; }
+        Guid? Invitee { get; set; }
 
         /// <summary>
-        /// References the <see cref="User" /> that provide the last update on the current
-        /// <see cref="IAuditableThing" />.
+        /// The email address the invitation was sent to when the invitee is not yet identified as a
+        /// <see cref="User" />; matched against a user's verified email at first sign-in.
         /// </summary>
-        Guid UpdatedBy { get; set; }
+        string InviteeEmail { get; set; }
 
         /// <summary>
-        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="IAuditableThing" />
+        /// The <see cref="DateTime" /> at which the invitation was accepted, declined or revoked.
         /// </summary>
-        DateTime UpdatedOn { get; set; }
+        DateTime? RespondedOn { get; set; }
+
+        /// <summary>
+        /// The current <see cref="InvitationStatus" />, changed only by the accept, decline and revoke
+        /// operations.
+        /// </summary>
+        InvitationStatus Status { get; set; }
     }
 }
 

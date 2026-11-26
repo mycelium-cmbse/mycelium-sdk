@@ -13,7 +13,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
 
     /// <summary>
     /// Supplies the class names selected for representative generated-source golden comparisons.
-    /// The selection mirrors the INTERESTING CLASSIFIERS section of Fabric-0.3.0.ModelInspector.txt.
+    /// The selection mirrors the INTERESTING CLASSIFIERS section of Fabric-0.4.1.ModelInspector.txt.
     /// </summary>
     public sealed class RepresentativeClasses : IEnumerable<string>
     {
@@ -22,10 +22,11 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Expected
         /// </summary>
         private static readonly string[] Names =
         [
-            "AuditableThing",
             "BranchProtectionRule",
+            "Comment",
             "FunctionalProject",
             "FunctionalProjectPolicy",
+            "Invitation",
             "ProjectMember",
             "User"
         ];

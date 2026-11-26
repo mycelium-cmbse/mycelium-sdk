@@ -88,6 +88,12 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     continue;
                 }
 
+                if (runtimeType == typeof(OrganizationInvitation))
+                {
+                    payload.OrganizationInvitation.Add((OrganizationInvitation)dataItem);
+                    continue;
+                }
+
                 if (runtimeType == typeof(OrganizationMember))
                 {
                     payload.OrganizationMember.Add((OrganizationMember)dataItem);
@@ -103,6 +109,12 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 if (runtimeType == typeof(Ownership))
                 {
                     payload.Ownership.Add((Ownership)dataItem);
+                    continue;
+                }
+
+                if (runtimeType == typeof(ProjectInvitation))
+                {
+                    payload.ProjectInvitation.Add((ProjectInvitation)dataItem);
                     continue;
                 }
 
@@ -207,6 +219,16 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 dataItems.Add(dataItem);
             }
 
+            foreach (var dataItem in payload.OrganizationInvitation)
+            {
+                if (dataItem == null)
+                {
+                    throw new ArgumentNullException(nameof(payload), "A payload group contains a null DTO.");
+                }
+
+                dataItems.Add(dataItem);
+            }
+
             foreach (var dataItem in payload.OrganizationMember)
             {
                 if (dataItem == null)
@@ -228,6 +250,16 @@ namespace Mycelium.SDK.Serializer.MessagePack
             }
 
             foreach (var dataItem in payload.Ownership)
+            {
+                if (dataItem == null)
+                {
+                    throw new ArgumentNullException(nameof(payload), "A payload group contains a null DTO.");
+                }
+
+                dataItems.Add(dataItem);
+            }
+
+            foreach (var dataItem in payload.ProjectInvitation)
             {
                 if (dataItem == null)
                 {

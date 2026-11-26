@@ -63,6 +63,11 @@ namespace Mycelium.SDK.Serializer.MessagePack
         internal List<Organization> Organization { get; } = new();
 
         /// <summary>
+        /// Gets the OrganizationInvitation DTO group.
+        /// </summary>
+        internal List<OrganizationInvitation> OrganizationInvitation { get; } = new();
+
+        /// <summary>
         /// Gets the OrganizationMember DTO group.
         /// </summary>
         internal List<OrganizationMember> OrganizationMember { get; } = new();
@@ -76,6 +81,11 @@ namespace Mycelium.SDK.Serializer.MessagePack
         /// Gets the Ownership DTO group.
         /// </summary>
         internal List<Ownership> Ownership { get; } = new();
+
+        /// <summary>
+        /// Gets the ProjectInvitation DTO group.
+        /// </summary>
+        internal List<ProjectInvitation> ProjectInvitation { get; } = new();
 
         /// <summary>
         /// Gets the ProjectMember DTO group.

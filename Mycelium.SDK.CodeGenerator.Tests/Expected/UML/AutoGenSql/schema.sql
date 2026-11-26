@@ -8,7 +8,7 @@
 -- ------------------------------------------------------------------------------------------------
 -- THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!
 -- Fabric #33: initial PostgreSQL 18 schema; the consumer owns the transaction.
--- Mycelium.Model.Fabric 0.3.0
+-- Mycelium.Model.Fabric 0.4.1
 -- Mycelium.Model.CommonPrimitives 0.4.0
 
 CREATE SCHEMA IF NOT EXISTS fabric;
@@ -63,7 +63,9 @@ WITH (
 CREATE TABLE fabric.comment_replies (
     source_id uuid NOT NULL,
     target_id uuid NOT NULL,
-    CONSTRAINT comment_replies_pkey PRIMARY KEY (source_id, target_id)
+    position bigint NOT NULL,
+    CONSTRAINT comment_replies_pkey PRIMARY KEY (source_id, position),
+    CONSTRAINT comment_replies_source_id_target_id_key UNIQUE (source_id, target_id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -132,6 +134,18 @@ WITH (
     autovacuum_analyze_threshold = 2500
 );
 
+CREATE TABLE fabric.invitation (
+    id uuid NOT NULL,
+    invitee uuid,
+    CONSTRAINT invitation_pkey PRIMARY KEY (id)
+)
+WITH (
+    autovacuum_vacuum_scale_factor = 0.0,
+    autovacuum_vacuum_threshold = 2500,
+    autovacuum_analyze_scale_factor = 0.0,
+    autovacuum_analyze_threshold = 2500
+);
+
 CREATE TABLE fabric.message (
     id uuid NOT NULL,
     quotes uuid,
@@ -148,6 +162,18 @@ CREATE TABLE fabric.organization (
     id uuid NOT NULL,
     policy uuid NOT NULL,
     CONSTRAINT organization_pkey PRIMARY KEY (id)
+)
+WITH (
+    autovacuum_vacuum_scale_factor = 0.0,
+    autovacuum_vacuum_threshold = 2500,
+    autovacuum_analyze_scale_factor = 0.0,
+    autovacuum_analyze_threshold = 2500
+);
+
+CREATE TABLE fabric.organization_invitation (
+    id uuid NOT NULL,
+    organization uuid NOT NULL,
+    CONSTRAINT organization_invitation_pkey PRIMARY KEY (id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -183,6 +209,30 @@ WITH (
 CREATE TABLE fabric.ownership (
     id uuid NOT NULL,
     CONSTRAINT ownership_pkey PRIMARY KEY (id)
+)
+WITH (
+    autovacuum_vacuum_scale_factor = 0.0,
+    autovacuum_vacuum_threshold = 2500,
+    autovacuum_analyze_scale_factor = 0.0,
+    autovacuum_analyze_threshold = 2500
+);
+
+CREATE TABLE fabric.project_invitation (
+    id uuid NOT NULL,
+    project uuid NOT NULL,
+    CONSTRAINT project_invitation_pkey PRIMARY KEY (id)
+)
+WITH (
+    autovacuum_vacuum_scale_factor = 0.0,
+    autovacuum_vacuum_threshold = 2500,
+    autovacuum_analyze_scale_factor = 0.0,
+    autovacuum_analyze_threshold = 2500
+);
+
+CREATE TABLE fabric.project_invitation_ownerships (
+    source_id uuid NOT NULL,
+    target_id uuid NOT NULL,
+    CONSTRAINT project_invitation_ownerships_pkey PRIMARY KEY (source_id, target_id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -242,7 +292,9 @@ WITH (
 CREATE TABLE fabric.review_comments (
     source_id uuid NOT NULL,
     target_id uuid NOT NULL,
-    CONSTRAINT review_comments_pkey PRIMARY KEY (source_id, target_id)
+    position bigint NOT NULL,
+    CONSTRAINT review_comments_pkey PRIMARY KEY (source_id, position),
+    CONSTRAINT review_comments_source_id_target_id_key UNIQUE (source_id, target_id)
 )
 WITH (
     autovacuum_vacuum_scale_factor = 0.0,
@@ -267,7 +319,7 @@ CREATE TABLE fabric.thing (
     id uuid NOT NULL,
     class_kind text NOT NULL,
     data jsonb NOT NULL,
-    CONSTRAINT thing_class_kind_check CHECK (class_kind IN ('BranchProtectionRule', 'Comment', 'FunctionalProject', 'FunctionalProjectPolicy', 'Organization', 'OrganizationMember', 'OrganizationPolicy', 'Ownership', 'ProjectMember', 'Reply', 'Review', 'User')),
+    CONSTRAINT thing_class_kind_check CHECK (class_kind IN ('BranchProtectionRule', 'Comment', 'FunctionalProject', 'FunctionalProjectPolicy', 'Organization', 'OrganizationInvitation', 'OrganizationMember', 'OrganizationPolicy', 'Ownership', 'ProjectInvitation', 'ProjectMember', 'Reply', 'Review', 'User')),
     CONSTRAINT thing_data_check CHECK ((
         jsonb_typeof(data) = 'object'
         AND jsonb_typeof(data -> '@id') = 'string'
@@ -390,9 +442,22 @@ ALTER TABLE fabric.functional_project_reviews
 ALTER TABLE fabric.functional_project_reviews
     ADD CONSTRAINT functional_project_reviews_target_id_key UNIQUE (target_id) DEFERRABLE INITIALLY DEFERRED;
 
+CREATE INDEX thing_functional_project_name_idx ON fabric.thing ((data ->> 'name'))
+    WHERE class_kind IN ('FunctionalProject');
+
 ALTER TABLE fabric.functional_project_policy
     ADD CONSTRAINT functional_project_policy_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE fabric.invitation
+    ADD CONSTRAINT invitation_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
+    ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE fabric.invitation
+    ADD CONSTRAINT invitation_invitee_fkey FOREIGN KEY (invitee) REFERENCES fabric.model_user (id)
+    ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;
+
+CREATE INDEX invitation_invitee_idx ON fabric.invitation (invitee);
 
 ALTER TABLE fabric.message
     ADD CONSTRAINT message_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
@@ -414,6 +479,20 @@ ALTER TABLE fabric.organization
 
 ALTER TABLE fabric.organization
     ADD CONSTRAINT organization_policy_key UNIQUE (policy) DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE fabric.thing
+    ADD CONSTRAINT thing_organization_name_key EXCLUDE USING btree ((data ->> 'name') WITH =)
+    WHERE (class_kind IN ('Organization')) DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE fabric.organization_invitation
+    ADD CONSTRAINT organization_invitation_id_fkey FOREIGN KEY (id) REFERENCES fabric.invitation (id)
+    ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE fabric.organization_invitation
+    ADD CONSTRAINT organization_invitation_organization_fkey FOREIGN KEY (organization) REFERENCES fabric.organization (id)
+    ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+CREATE INDEX organization_invitation_organization_idx ON fabric.organization_invitation (organization);
 
 ALTER TABLE fabric.organization_member
     ADD CONSTRAINT organization_member_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
@@ -438,6 +517,26 @@ ALTER TABLE fabric.organization_policy
 ALTER TABLE fabric.ownership
     ADD CONSTRAINT ownership_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE fabric.project_invitation
+    ADD CONSTRAINT project_invitation_id_fkey FOREIGN KEY (id) REFERENCES fabric.invitation (id)
+    ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE fabric.project_invitation
+    ADD CONSTRAINT project_invitation_project_fkey FOREIGN KEY (project) REFERENCES fabric.functional_project (id)
+    ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+CREATE INDEX project_invitation_project_idx ON fabric.project_invitation (project);
+
+ALTER TABLE fabric.project_invitation_ownerships
+    ADD CONSTRAINT project_invitation_ownerships_source_id_fkey FOREIGN KEY (source_id) REFERENCES fabric.project_invitation (id)
+    ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE fabric.project_invitation_ownerships
+    ADD CONSTRAINT project_invitation_ownerships_target_id_fkey FOREIGN KEY (target_id) REFERENCES fabric.ownership (id)
+    ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+CREATE INDEX project_invitation_ownerships_target_id_idx ON fabric.project_invitation_ownerships (target_id);
 
 ALTER TABLE fabric.project_member
     ADD CONSTRAINT project_member_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
@@ -503,6 +602,27 @@ CREATE INDEX review_reviewers_target_id_idx ON fabric.review_reviewers (target_i
 ALTER TABLE fabric.model_user
     ADD CONSTRAINT model_user_id_fkey FOREIGN KEY (id) REFERENCES fabric.auditable_thing (id)
     ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
+
+CREATE INDEX thing_model_user_email_idx ON fabric.thing ((data ->> 'email'))
+    WHERE class_kind IN ('User');
+
+ALTER TABLE fabric.thing
+    ADD CONSTRAINT thing_model_user_external_identifier_key EXCLUDE USING btree ((data ->> 'externalIdentifier') WITH =)
+    WHERE (class_kind IN ('User')) DEFERRABLE INITIALLY DEFERRED;
+
+CREATE INDEX thing_model_user_user_name_idx ON fabric.thing ((data ->> 'userName'))
+    WHERE class_kind IN ('User');
+
+-- The start time of the current transaction as the UTC text stored for a date and
+-- time value. The DAO statements assign it to managed values, so every object
+-- written in one transaction receives the same instant.
+CREATE FUNCTION fabric.now_utc()
+RETURNS text
+LANGUAGE sql
+STABLE
+AS $mycelium$
+    SELECT to_char(transaction_timestamp() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"');
+$mycelium$;
 
 -- Updating a non-key root column serializes writers for this object and forces
 -- a snapshot-conflict failure at repeatable-read isolation instead of a stale check.
@@ -580,6 +700,14 @@ AS $mycelium$
     SELECT relationship.id
     FROM fabric.organization AS relationship
     WHERE relationship.policy = p_part AND relationship.id IS NOT NULL
+    UNION ALL
+    SELECT relationship.organization
+    FROM fabric.organization_invitation AS relationship
+    WHERE relationship.id = p_part AND relationship.organization IS NOT NULL
+    UNION ALL
+    SELECT relationship.project
+    FROM fabric.project_invitation AS relationship
+    WHERE relationship.id = p_part AND relationship.project IS NOT NULL
     UNION ALL
     SELECT relationship.is_part_of
     FROM fabric.project_member AS relationship
@@ -779,6 +907,24 @@ CREATE CONSTRAINT TRIGGER t80_validate_ownership_policy
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('policy', 'id');
 
+CREATE TRIGGER t10_track_ownership_organization
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.organization_invitation
+    FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('id', 'organization');
+
+CREATE CONSTRAINT TRIGGER t80_validate_ownership_organization
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.organization_invitation
+    DEFERRABLE INITIALLY DEFERRED
+    FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('id', 'organization');
+
+CREATE TRIGGER t10_track_ownership_project
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.project_invitation
+    FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('id', 'project');
+
+CREATE CONSTRAINT TRIGGER t80_validate_ownership_project
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.project_invitation
+    DEFERRABLE INITIALLY DEFERRED
+    FOR EACH ROW EXECUTE FUNCTION fabric.validate_ownership('id', 'project');
+
 CREATE TRIGGER t10_track_ownership_is_part_of
     AFTER INSERT OR UPDATE OR DELETE ON fabric.project_member
     FOR EACH ROW EXECUTE FUNCTION fabric.track_ownership('id', 'is_part_of');
@@ -812,7 +958,7 @@ BEGIN
         RETURN;
     END IF;
 
-    IF ((kind IN ('BranchProtectionRule', 'Comment', 'FunctionalProject', 'FunctionalProjectPolicy', 'Organization', 'OrganizationMember', 'OrganizationPolicy', 'Ownership', 'ProjectMember', 'Reply', 'Review', 'User')) IS TRUE)
+    IF ((kind IN ('BranchProtectionRule', 'Comment', 'FunctionalProject', 'FunctionalProjectPolicy', 'Organization', 'OrganizationInvitation', 'OrganizationMember', 'OrganizationPolicy', 'Ownership', 'ProjectInvitation', 'ProjectMember', 'Reply', 'Review', 'User')) IS TRUE)
         IS DISTINCT FROM (EXISTS (SELECT 1 FROM fabric.auditable_thing WHERE id = p_id)) THEN
         RAISE EXCEPTION 'Inheritance rows do not match type % for %', kind, p_id USING ERRCODE = '23514';
     END IF;
@@ -837,6 +983,11 @@ BEGIN
         RAISE EXCEPTION 'Inheritance rows do not match type % for %', kind, p_id USING ERRCODE = '23514';
     END IF;
 
+    IF ((kind IN ('OrganizationInvitation', 'ProjectInvitation')) IS TRUE)
+        IS DISTINCT FROM (EXISTS (SELECT 1 FROM fabric.invitation WHERE id = p_id)) THEN
+        RAISE EXCEPTION 'Inheritance rows do not match type % for %', kind, p_id USING ERRCODE = '23514';
+    END IF;
+
     IF ((kind IN ('Comment', 'Reply')) IS TRUE)
         IS DISTINCT FROM (EXISTS (SELECT 1 FROM fabric.message WHERE id = p_id)) THEN
         RAISE EXCEPTION 'Inheritance rows do not match type % for %', kind, p_id USING ERRCODE = '23514';
@@ -844,6 +995,11 @@ BEGIN
 
     IF ((kind IN ('Organization')) IS TRUE)
         IS DISTINCT FROM (EXISTS (SELECT 1 FROM fabric.organization WHERE id = p_id)) THEN
+        RAISE EXCEPTION 'Inheritance rows do not match type % for %', kind, p_id USING ERRCODE = '23514';
+    END IF;
+
+    IF ((kind IN ('OrganizationInvitation')) IS TRUE)
+        IS DISTINCT FROM (EXISTS (SELECT 1 FROM fabric.organization_invitation WHERE id = p_id)) THEN
         RAISE EXCEPTION 'Inheritance rows do not match type % for %', kind, p_id USING ERRCODE = '23514';
     END IF;
 
@@ -859,6 +1015,11 @@ BEGIN
 
     IF ((kind IN ('Ownership')) IS TRUE)
         IS DISTINCT FROM (EXISTS (SELECT 1 FROM fabric.ownership WHERE id = p_id)) THEN
+        RAISE EXCEPTION 'Inheritance rows do not match type % for %', kind, p_id USING ERRCODE = '23514';
+    END IF;
+
+    IF ((kind IN ('ProjectInvitation')) IS TRUE)
+        IS DISTINCT FROM (EXISTS (SELECT 1 FROM fabric.project_invitation WHERE id = p_id)) THEN
         RAISE EXCEPTION 'Inheritance rows do not match type % for %', kind, p_id USING ERRCODE = '23514';
     END IF;
 
@@ -934,6 +1095,22 @@ BEGIN
         AND NOT EXISTS (
             SELECT 1 FROM fabric.organization AS relationship
             WHERE relationship.policy = p_id AND relationship.id IS NOT NULL
+        ) THEN
+        RAISE EXCEPTION 'Part % is missing a mandatory composite owner', p_id USING ERRCODE = '23514';
+    END IF;
+
+    IF (kind IN ('OrganizationInvitation')) IS TRUE
+        AND NOT EXISTS (
+            SELECT 1 FROM fabric.organization_invitation AS relationship
+            WHERE relationship.id = p_id AND relationship.organization IS NOT NULL
+        ) THEN
+        RAISE EXCEPTION 'Part % is missing a mandatory composite owner', p_id USING ERRCODE = '23514';
+    END IF;
+
+    IF (kind IN ('ProjectInvitation')) IS TRUE
+        AND NOT EXISTS (
+            SELECT 1 FROM fabric.project_invitation AS relationship
+            WHERE relationship.id = p_id AND relationship.project IS NOT NULL
         ) THEN
         RAISE EXCEPTION 'Part % is missing a mandatory composite owner', p_id USING ERRCODE = '23514';
     END IF;
@@ -1040,6 +1217,19 @@ CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
 CREATE TRIGGER t20_delete_root
+    AFTER DELETE ON fabric.invitation
+    FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
+
+CREATE TRIGGER t30_serialize_object
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.invitation
+    FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
+
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.invitation
+    DEFERRABLE INITIALLY DEFERRED
+    FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
+
+CREATE TRIGGER t20_delete_root
     AFTER DELETE ON fabric.message
     FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
 
@@ -1062,6 +1252,19 @@ CREATE TRIGGER t30_serialize_object
 
 CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.organization
+    DEFERRABLE INITIALLY DEFERRED
+    FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
+
+CREATE TRIGGER t20_delete_root
+    AFTER DELETE ON fabric.organization_invitation
+    FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
+
+CREATE TRIGGER t30_serialize_object
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.organization_invitation
+    FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
+
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.organization_invitation
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 
@@ -1101,6 +1304,19 @@ CREATE TRIGGER t30_serialize_object
 
 CREATE CONSTRAINT TRIGGER t90_validate_inheritance
     AFTER INSERT OR UPDATE OR DELETE ON fabric.ownership
+    DEFERRABLE INITIALLY DEFERRED
+    FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
+
+CREATE TRIGGER t20_delete_root
+    AFTER DELETE ON fabric.project_invitation
+    FOR EACH ROW EXECUTE FUNCTION fabric.thing_delete();
+
+CREATE TRIGGER t30_serialize_object
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.project_invitation
+    FOR EACH ROW EXECUTE FUNCTION fabric.serialize_object();
+
+CREATE CONSTRAINT TRIGGER t90_validate_inheritance
+    AFTER INSERT OR UPDATE OR DELETE ON fabric.project_invitation
     DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW EXECUTE FUNCTION fabric.validate_inheritance();
 

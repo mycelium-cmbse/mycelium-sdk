@@ -95,8 +95,6 @@ namespace Mycelium.SDK.Validation.Tests
 
             Assert.That(result.Errors.Select(failure => failure.PropertyName), Is.EquivalentTo(new[]
             {
-                nameof(Comment.CreatedBy),
-                nameof(Comment.UpdatedBy),
                 nameof(Comment.Quotes),
                 $"{nameof(Comment.Replies)}[1]"
             }));

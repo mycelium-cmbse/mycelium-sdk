@@ -214,6 +214,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             handlebars.RegisterHelper("Property.QuerySqlRequiresLinkTable",
                 (_, arguments) => arguments.QuerySingle<IProperty>("{{Property.QuerySqlRequiresLinkTable}}").QuerySqlRequiresLinkTable());
 
+            handlebars.RegisterHelper("Property.QueryIsAssignedOnUpdate",
+                (_, arguments) => arguments.QuerySingle<IProperty>("{{Property.QueryIsAssignedOnUpdate}}").QueryIsAssignedOnUpdate());
+
             handlebars.RegisterHelper("Property.WriteSqlLinkTableName", (writer, _, arguments) =>
             {
                 var property = arguments.QuerySingle<IProperty>("{{Property.WriteSqlLinkTableName}}");
@@ -244,13 +247,14 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         }
 
         /// <summary>
-        /// Renders local DTO data-validation rules from the property's mapped type and modeled multiplicity.
+        /// Renders local DTO data-validation rules from the property's mapped type and modeled multiplicity. A «managed» property, whose value the
+        /// server sets, is excluded from data validation and receives no rule.
         /// </summary>
         /// <param name="property">
         /// The property whose multiplicity and represented values are validated.
         /// </param>
         /// <returns>
-        /// The generated FluentValidation statements, or an empty string when no rule is required.
+        /// The generated FluentValidation statements, or an empty string when no rule is required or the property is managed.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="property" /> is <see langword="null" />.
@@ -266,6 +270,11 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             ArgumentNullException.ThrowIfNull(property);
 
             _ = property.QueryDtoTypeName();
+
+            if (property.QueryIsManaged())
+            {
+                return string.Empty;
+            }
 
             var builder = new StringBuilder();
             var propertyName = property.QueryPropertyName();

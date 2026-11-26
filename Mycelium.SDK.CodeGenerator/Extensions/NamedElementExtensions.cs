@@ -63,6 +63,12 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         public const string SqlLinkPositionColumnName = "position";
 
         /// <summary>
+        /// The schema function that returns the start time of the current transaction as the UTC text stored for a date and time value. The
+        /// schema generator creates it and the DAO statements call it to assign managed date and time values.
+        /// </summary>
+        public const string SqlTransactionTimeFunctionName = "now_utc";
+
+        /// <summary>
         /// The PostgreSQL identifier limit in bytes; generated identifiers contain only ASCII characters.
         /// </summary>
         private const int MaximumSqlIdentifierBytes = 63;

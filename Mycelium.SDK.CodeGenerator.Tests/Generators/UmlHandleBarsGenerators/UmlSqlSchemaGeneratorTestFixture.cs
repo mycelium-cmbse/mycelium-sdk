@@ -15,6 +15,7 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     using Mycelium.SDK.Dal;
 
     using uml4net.Classification;
+    using uml4net.CommonStructure;
     using uml4net.Packages;
     using uml4net.StructuredClassifiers;
     using uml4net.Values;
@@ -202,6 +203,32 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
                 Assert.That(failure, Does.Contain("'storage_child_id_fkey'"), "Both parents would claim the same parent foreign-key name.");
                 Assert.That(failure, Does.Contain("'StorageParentA'"), "The message must name the first generalization.");
                 Assert.That(failure, Does.Contain("'StorageParentB'"), "The message must name the second generalization.");
+            }
+        }
+
+        [Test]
+        public async Task VerifyThatUniquenessInvariantWithoutAnIndexPropertyFailsGenerationNamingTheConstraint()
+        {
+            var failure = await RenderFailureAsync(package =>
+            {
+                var expression = new OpaqueExpression { XmiId = "sql-regression-unique-label-expression" };
+
+                expression.Body.Add("inv uniqueLabel: StorageLabel.allInstances()->isUnique(label)");
+
+                var constraint = new Constraint { XmiId = "sql-regression-unique-label", Name = "uniqueLabel" };
+
+                constraint.Specification.Add(expression);
+
+                AddModelClass(package, "StorageLabel").OwnedRule.Add(constraint);
+            });
+
+            Assert.That(failure, Is.Not.Null, "A uniqueness invariant that resolves to no «index» property must stop generation instead of being dropped.");
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(failure, Does.Contain(nameof(InvalidOperationException)), "An unresolved uniqueness invariant is a model problem reported as an invalid operation.");
+                Assert.That(failure, Does.Contain("'uniqueLabel'"), "The message must name the constraint.");
+                Assert.That(failure, Does.Contain("'StorageLabel'"), "The message must name the class that owns the constraint.");
             }
         }
 

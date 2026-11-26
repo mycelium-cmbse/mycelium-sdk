@@ -118,6 +118,33 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Extensions
         }
 
         [Test]
+        public void VerifyThatTheValueAssignedToAManagedPropertyFollowsItsOnActionAndItsType()
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(this.QueryProperty("AuditableThing", "createdOn").QueryIsAssignedTimestamp(), Is.True);
+                Assert.That(this.QueryProperty("AuditableThing", "createdOn").QueryIsAssignedReference(), Is.False);
+                Assert.That(this.QueryProperty("AuditableThing", "updatedBy").QueryIsAssignedReference(), Is.True);
+                Assert.That(this.QueryProperty("AuditableThing", "updatedBy").QueryIsAssignedTimestamp(), Is.False);
+                Assert.That(this.QueryProperty("Invitation", "status").QueryIsAssignedReference(), Is.False);
+                Assert.That(this.QueryProperty("Invitation", "status").QueryIsAssignedTimestamp(), Is.False);
+            }
+        }
+
+        [Test]
+        public void VerifyThatAssignedValueAndUniquenessQueriesRejectNullProperties()
+        {
+            IProperty property = null;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(() => property.QueryIsAssignedReference(), Throws.ArgumentNullException);
+                Assert.That(() => property.QueryIsAssignedTimestamp(), Throws.ArgumentNullException);
+                Assert.That(() => property.QueryIsUniquelyIndexed(), Throws.ArgumentNullException);
+            }
+        }
+
+        [Test]
         public void Verify_that_QueryPropertyName_preserves_the_FunctionalData_contract() => Assert.That(this.roleProperty.QueryPropertyName(), Is.EqualTo("Role"));
 
         [Test]

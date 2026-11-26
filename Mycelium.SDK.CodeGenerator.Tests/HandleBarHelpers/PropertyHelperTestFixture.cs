@@ -523,8 +523,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.HandleBarHelpers
                 Assert.That(RenderDtoValidationRules(CreateValidationProperty("UUID", 0, "1")), Is.Empty);
                 Assert.That(RenderDtoValidationRules(CreateValidationProperty("UUID", 1, "*")),
                     Is.EqualTo("this.RuleFor(dto => dto.Value).Must(value => (value?.Count ?? 0) >= 1);" + Environment.NewLine));
-                Assert.That(RenderDtoValidationRules(this.QueryProperty("AuditableThing", "createdBy")),
-                    Is.EqualTo("this.RuleFor(dto => dto.CreatedBy).NotEmpty();" + Environment.NewLine));
+                Assert.That(RenderDtoValidationRules(this.QueryProperty("OrganizationMember", "user")),
+                    Is.EqualTo("this.RuleFor(dto => dto.User).NotEmpty();" + Environment.NewLine));
             }
         }
 

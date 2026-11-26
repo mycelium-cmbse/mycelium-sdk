@@ -48,15 +48,15 @@ namespace Mycelium.SDK.DTO
         List<Guid> IsPartOfProjects { get; set; }
 
         /// <summary>
-        /// The display name of the user, cached from Keycloak for UI rendering.
-        /// </summary>
-        string Name { get; set; }
-
-        /// <summary>
-        /// The current <see cref="ActivationStatus" /> of the user. Set to Deleted when Keycloak publishes a
-        /// user removal event, preserving referential integrity before cascade cleanup.
+        /// The current <see cref="ActivationStatus" /> of the user.
         /// </summary>
         ActivationStatus Status { get; set; }
+
+        /// <summary>
+        /// The name displayed for the user, initialised from Keycloak at first sign-in and editable afterwards
+        /// through the platform.
+        /// </summary>
+        string UserName { get; set; }
 
         /// <summary>
         /// Collects all preferences of the current <see cref="User" /> to create custom views.

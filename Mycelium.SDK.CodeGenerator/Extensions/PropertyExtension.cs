@@ -11,11 +11,16 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
 {
     using uml4net.Classification;
     using uml4net.Extensions;
+    using uml4net.Profiling;
     using uml4net.SimpleClassifiers;
     using uml4net.StructuredClassifiers;
 
+    using EnterpriseArchitectAttribute = uml4net.xmi.Extensions.EnterpriseArchitect.Structure.IAttribute;
+    using EnterpriseArchitectConnector = uml4net.xmi.Extensions.EnterpriseArchitect.Structure.IConnector;
+    using EnterpriseArchitectTag = uml4net.xmi.Extensions.EnterpriseArchitect.Structure.ITag;
+
     /// <summary>
-    /// Provides artifact-specific name, type, multiplicity and relational-storage queries for UML properties.
+    /// Provides artifact-specific name, type, multiplicity, relational-storage and Mycelium profile queries for UML properties.
     /// </summary>
     public static class PropertyExtension
     {
@@ -120,11 +125,275 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             return ReservedCSharpNameMapper.Map(typeName);
         }
 
+        /// <summary>
+        /// Determines whether a property carries a stereotype of the Mycelium profile.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property whose stereotype applications are examined.
+        /// </param>
+        /// <param name="stereotypeName">
+        /// The name of the Mycelium stereotype.
+        /// </param>
+        /// <returns>
+        /// <see langword="true" /> when the export applies the named Mycelium stereotype to the property.
+        /// </returns>
+        private static bool QueryHasMyceliumStereotype(IProperty property, string stereotypeName)
+        {
+            return property.QueryStereoTypeApplication(stereotypeName) is { ProfileName: XmiResources.MyceliumProfileName };
+        }
+
+        /// <summary>
+        /// Queries the Enterprise Architect tags of a property: those of its attribute, and those of its end of the connector that exports its
+        /// association. A connector end is matched to its member end by the <c>src</c> / <c>dst</c> identifier convention of the export, as uml4net
+        /// matches documentation.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property whose extension tags are queried.
+        /// </param>
+        /// <returns>
+        /// The tags exported for the property.
+        /// </returns>
+        private static IEnumerable<EnterpriseArchitectTag> QueryExtensionTags(IProperty property)
+        {
+            IReadOnlyCollection<object> attributeExtenders = [];
+            IReadOnlyCollection<object> connectorExtenders = [];
+
+            property.Cache?.TryGetExtenders(property, out attributeExtenders);
+
+            if (property.Association is { } association)
+            {
+                association.Cache?.TryGetExtenders(association, out connectorExtenders);
+            }
+
+            var attributeTags = (attributeExtenders ?? []).OfType<EnterpriseArchitectAttribute>()
+                .SelectMany(attribute => attribute.Tags ?? []);
+
+            var connectorEndTags = (connectorExtenders ?? []).OfType<EnterpriseArchitectConnector>()
+                .Select(connector => property.XmiId.Contains("src", StringComparison.Ordinal) ? connector.Source : connector.Target)
+                .SelectMany(connectorEnd => connectorEnd?.Tags ?? []);
+
+            return attributeTags.Concat(connectorEndTags);
+        }
+
+        /// <summary>
+        /// Queries the <c>onAction</c> values of a managed property.
+        /// </summary>
+        /// <param name="property">
+        /// The UML property whose <c>onAction</c> tagged value is read.
+        /// </param>
+        /// <returns>
+        /// The actions on which the server assigns the value; empty for a property that is not managed or whose value business logic sets.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the tagged value names an action other than <c>OnCreate</c> and <c>OnUpdate</c>.
+        /// </exception>
+        private static string[] QueryOnActions(IProperty property)
+        {
+            if (!QueryHasMyceliumStereotype(property, XmiResources.ManagedStereotypeName))
+            {
+                return [];
+            }
+
+            var actions = QueryExtensionTags(property)
+                .Where(tag => string.Equals(tag.Name, XmiResources.OnActionTaggedValueName, StringComparison.Ordinal))
+                .SelectMany(tag => (tag.Value ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                .ToArray();
+
+            var unknownAction = actions.FirstOrDefault(action => action is not (XmiResources.OnCreateAction or XmiResources.OnUpdateAction));
+
+            return unknownAction is null
+                ? actions
+                : throw new InvalidOperationException(
+                    $"Property '{property.Describe()}' has the {XmiResources.OnActionTaggedValueName} value '{unknownAction}'; only " +
+                    $"'{XmiResources.OnCreateAction}' and '{XmiResources.OnUpdateAction}' are supported.");
+        }
+
+        /// <summary>
+        /// Determines which value the server assigns to a managed property that has an <c>onAction</c> value: the acting user's identifier for a
+        /// single reference, or the transaction time for a single date and time value.
+        /// </summary>
+        /// <param name="property">
+        /// The managed UML property that has an <c>onAction</c> value.
+        /// </param>
+        /// <returns>
+        /// <see langword="true" /> for a single reference; <see langword="false" /> for a single date and time value.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the property is a collection, or is neither a reference nor a date and time value, so that the server has no value to
+        /// assign.
+        /// </exception>
+        private static bool QueryAssignsActingUser(IProperty property)
+        {
+            var isSingle = !property.QueryIsEnumerable();
+
+            return property.Type switch
+            {
+                IClass when isSingle => true,
+                IPrimitiveType primitiveType when isSingle && primitiveType.QueryCSharpTypeName() == "DateTime" => false,
+                _ => throw new InvalidOperationException(
+                    $"Managed property '{property.Describe()}' has an {XmiResources.OnActionTaggedValueName} value, but the server assigns only a single " +
+                    "reference or a single date and time value.")
+            };
+        }
+
         /// <param name="property">
         /// The UML property that is queried.
         /// </param>
         extension(IProperty property)
         {
+            /// <summary>
+            /// Determines whether the property carries the «index» stereotype of the Mycelium profile, which asks for a dedicated SQL index.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the property is indexed.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            public bool QueryIsIndexed()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return QueryHasMyceliumStereotype(property, XmiResources.IndexStereotypeName);
+            }
+
+            /// <summary>
+            /// Determines whether the property carries the «managed» stereotype of the Mycelium profile: the server sets its value, so it is excluded
+            /// from data validation.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the property is managed.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            public bool QueryIsManaged()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return QueryHasMyceliumStereotype(property, XmiResources.ManagedStereotypeName);
+            }
+
+            /// <summary>
+            /// Determines whether the server assigns the managed property when an object is created.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the property is managed and its <c>onAction</c> tagged value includes <c>OnCreate</c>.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the <c>onAction</c> tagged value names an unsupported action.
+            /// </exception>
+            public bool QueryIsAssignedOnCreate()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return QueryOnActions(property).Contains(XmiResources.OnCreateAction, StringComparer.Ordinal);
+            }
+
+            /// <summary>
+            /// Determines whether the server assigns the managed property when an object is updated.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the property is managed and its <c>onAction</c> tagged value includes <c>OnUpdate</c>.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the <c>onAction</c> tagged value names an unsupported action.
+            /// </exception>
+            public bool QueryIsAssignedOnUpdate()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return QueryOnActions(property).Contains(XmiResources.OnUpdateAction, StringComparer.Ordinal);
+            }
+
+            /// <summary>
+            /// Determines whether the server assigns the managed property on creation only, so that an update keeps its stored value.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the property is assigned on creation and not on update.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the <c>onAction</c> tagged value names an unsupported action.
+            /// </exception>
+            public bool QueryIsAssignedOnCreateOnly()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return property.QueryIsAssignedOnCreate() && !property.QueryIsAssignedOnUpdate();
+            }
+
+            /// <summary>
+            /// Determines whether the server assigns the acting user's identifier to the managed property: it has an <c>onAction</c> value and
+            /// is a single reference.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the generated DAO assigns the acting user's identifier to the property.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the <c>onAction</c> tagged value names an unsupported action, or when the property has an <c>onAction</c> value but
+            /// is neither a single reference nor a single date and time value.
+            /// </exception>
+            public bool QueryIsAssignedReference()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return QueryOnActions(property).Length > 0 && QueryAssignsActingUser(property);
+            }
+
+            /// <summary>
+            /// Determines whether the database assigns the transaction time to the managed property: it has an <c>onAction</c> value and is a
+            /// single date and time value.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the generated DAO statements assign the transaction time to the property.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the <c>onAction</c> tagged value names an unsupported action, or when the property has an <c>onAction</c> value but
+            /// is neither a single reference nor a single date and time value.
+            /// </exception>
+            public bool QueryIsAssignedTimestamp()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return QueryOnActions(property).Length > 0 && !QueryAssignsActingUser(property);
+            }
+
+            /// <summary>
+            /// Determines whether the SQL index of an indexed property is unique: the class declaring it owns an invariant that states the
+            /// uniqueness of its value across every instance of that class, as <c>QueryUniquelyIndexedProperties</c> recognizes it.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when the property is indexed and its declaring class states its uniqueness.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when a uniqueness invariant of the declaring class does not resolve to an «index» property that the class declares.
+            /// </exception>
+            public bool QueryIsUniquelyIndexed()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return property.QueryIsIndexed() && property.Owner is IClass owner &&
+                    owner.QueryUniquelyIndexedProperties().Any(uniqueProperty => string.Equals(uniqueProperty.XmiId, property.XmiId, StringComparison.Ordinal));
+            }
+
             /// <summary>
             /// Queries the eligible navigable scalar opposite that can store a SQL association.
             /// </summary>

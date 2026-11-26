@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------
-//  <copyright file="IAuditableThing.cs" company="Starion Group S.A.">
+//  <copyright file="IComment.cs" company="Starion Group S.A.">
 //
 //    Copyright 2026 Starion Group S.A.
 //    SPDX-License-Identifier: Apache-2.0
@@ -18,31 +18,27 @@ namespace Mycelium.SDK.POCO
     using System.Collections.Generic;
 
     /// <summary>
-    /// Any <see cref="IThing" /> that shall record creation and update date and authority.
+    /// Represents a user comment attached to a <see cref="Review" />, targeting a specific model element.
+    /// Supports threaded replies.
     /// </summary>
     [GeneratedCode("Mycelium.SDK", "latest")]
-    public partial interface IAuditableThing : IThing
+    public partial interface IComment : IMessage
     {
         /// <summary>
-        /// References the <see cref="User" /> that created the current <see cref="IAuditableThing" />.
+        /// Contains threaded reply instances nested under this comment.
         /// </summary>
-        IUser CreatedBy { get; set; }
+        List<IReply> Replies { get; set; }
 
         /// <summary>
-        /// Provides the creation <see cref="DateTime" /> of the current <see cref="IAuditableThing" />
+        /// Defines the current status of the current Comment.
         /// </summary>
-        DateTime CreatedOn { get; set; }
+        CommentStatus Status { get; set; }
 
         /// <summary>
-        /// References the <see cref="User" /> that provide the last update on the current
-        /// <see cref="IAuditableThing" />.
+        /// The <see cref="Guid" /> of the SysML v2 model element this comment is attached to in the Concurrent
+        /// Server.
         /// </summary>
-        IUser UpdatedBy { get; set; }
-
-        /// <summary>
-        /// Provides the last modification <see cref="DateTime" /> of the current <see cref="IAuditableThing" />
-        /// </summary>
-        DateTime UpdatedOn { get; set; }
+        Guid TargetElementId { get; set; }
     }
 }
 

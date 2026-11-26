@@ -3,8 +3,8 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
         <LangVersion>14.0</LangVersion>
-        <Version>0.3.0</Version>
-        <PackageReleaseNotes>Enumeration providers rebuilt against Mycelium.SDK 0.3.0; no functional changes.</PackageReleaseNotes>
+        <Version>0.4.0</Version>
+        <PackageReleaseNotes>Adds the InvitationStatus enumeration provider; enumeration providers rebuilt against Mycelium.SDK 0.4.0.</PackageReleaseNotes>
         <Description>Enumeration providers and extension methods for the Mycelium SDK.</Description>
         <PackageId>Mycelium.SDK.Extensions</PackageId>
         <Company>Starion Group S.A.</Company>

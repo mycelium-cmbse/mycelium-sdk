@@ -28,8 +28,8 @@ namespace Mycelium.SDK.CodeGenerator.Tests.Generators.UmlHandleBarsGenerators
     [TestFixture]
     public class UmlDtoValidatorGeneratorTestFixture : UmlClassGeneratorTestFixtureBase
     {
-        private static readonly string[] ExpectedParentFailureProperties = ["Id", "ActiveOwnership", "CreatedBy", "User"];
-        private static readonly string[] ExpectedChildFailureProperties = ["Id", "ActiveOwnership", "CreatedBy", "User", "Label"];
+        private static readonly string[] ExpectedParentFailureProperties = ["Id", "ActiveOwnership", "User"];
+        private static readonly string[] ExpectedChildFailureProperties = ["Id", "ActiveOwnership", "User", "Label"];
 
         private Dictionary<string, IClass> classes = [];
         private DirectoryInfo committedDirectory;

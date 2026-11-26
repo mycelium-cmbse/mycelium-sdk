@@ -52,7 +52,7 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 throw new ArgumentNullException(nameof(payload));
             }
 
-            writer.WriteArrayHeader(13);
+            writer.WriteArrayHeader(15);
             WriteRoundTripDateTime(ref writer, payload.Created);
 
             writer.WriteArrayHeader(payload.BranchProtectionRule.Count);
@@ -120,6 +120,19 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     .Serialize(ref writer, dataItem, options);
             }
 
+            writer.WriteArrayHeader(payload.OrganizationInvitation.Count);
+
+            foreach (var dataItem in payload.OrganizationInvitation)
+            {
+                if (dataItem == null)
+                {
+                    throw new ArgumentNullException(nameof(payload), "A payload group contains a null DTO.");
+                }
+
+                options.Resolver.GetFormatterWithVerify<OrganizationInvitation>()
+                    .Serialize(ref writer, dataItem, options);
+            }
+
             writer.WriteArrayHeader(payload.OrganizationMember.Count);
 
             foreach (var dataItem in payload.OrganizationMember)
@@ -156,6 +169,19 @@ namespace Mycelium.SDK.Serializer.MessagePack
                 }
 
                 options.Resolver.GetFormatterWithVerify<Ownership>()
+                    .Serialize(ref writer, dataItem, options);
+            }
+
+            writer.WriteArrayHeader(payload.ProjectInvitation.Count);
+
+            foreach (var dataItem in payload.ProjectInvitation)
+            {
+                if (dataItem == null)
+                {
+                    throw new ArgumentNullException(nameof(payload), "A payload group contains a null DTO.");
+                }
+
+                options.Resolver.GetFormatterWithVerify<ProjectInvitation>()
                     .Serialize(ref writer, dataItem, options);
             }
 
@@ -242,9 +268,9 @@ namespace Mycelium.SDK.Serializer.MessagePack
             {
                 var fieldCount = reader.ReadArrayHeader();
 
-                if (fieldCount != 13)
+                if (fieldCount != 15)
                 {
-                    throw new MessagePackSerializationException($"The payload contains {fieldCount} fields; exactly 13 fields are required.");
+                    throw new MessagePackSerializationException($"The payload contains {fieldCount} fields; exactly 15 fields are required.");
                 }
 
                 var payload = new Payload
@@ -327,6 +353,21 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     payload.Organization.Add(dataItem);
                 }
 
+                var organizationInvitationCount = reader.ReadArrayHeader();
+
+                for (var index = 0; index < organizationInvitationCount; index++)
+                {
+                    var dataItem = options.Resolver.GetFormatterWithVerify<OrganizationInvitation>()
+                        .Deserialize(ref reader, options);
+
+                    if (dataItem == null)
+                    {
+                        throw new MessagePackSerializationException("The OrganizationInvitation group contains a null DTO.");
+                    }
+
+                    payload.OrganizationInvitation.Add(dataItem);
+                }
+
                 var organizationMemberCount = reader.ReadArrayHeader();
 
                 for (var index = 0; index < organizationMemberCount; index++)
@@ -370,6 +411,21 @@ namespace Mycelium.SDK.Serializer.MessagePack
                     }
 
                     payload.Ownership.Add(dataItem);
+                }
+
+                var projectInvitationCount = reader.ReadArrayHeader();
+
+                for (var index = 0; index < projectInvitationCount; index++)
+                {
+                    var dataItem = options.Resolver.GetFormatterWithVerify<ProjectInvitation>()
+                        .Deserialize(ref reader, options);
+
+                    if (dataItem == null)
+                    {
+                        throw new MessagePackSerializationException("The ProjectInvitation group contains a null DTO.");
+                    }
+
+                    payload.ProjectInvitation.Add(dataItem);
                 }
 
                 var projectMemberCount = reader.ReadArrayHeader();
