@@ -173,14 +173,13 @@ namespace Mycelium.SDK.REST
                 return SessionErrors.NotOpen;
             }
 
-            return await this.RequestAsync(
-                async token =>
-                {
-                    await run(this.session, token);
-                    return Result.Success;
-                },
-                Timeout.InfiniteTimeSpan,
-                cancellationToken);
+            async Task<Success> RunAsync(CancellationToken token)
+            {
+                await run(this.session, token);
+                return Result.Success;
+            }
+
+            return await this.RequestAsync(RunAsync, Timeout.InfiniteTimeSpan, cancellationToken);
         }
 
         /// <summary>
