@@ -88,7 +88,7 @@ namespace Mycelium.SDK.REST
         /// Puts the exception that caused an error in its metadata.
         /// </summary>
         /// <param name="exception">The exception, or <see langword="null" />.</param>
-        /// <returns>The metadata, or <see langword="null" /> without an exception.</returns>
-        private static Dictionary<string, object> Metadata(Exception exception) => exception == null ? null : new Dictionary<string, object> { [ExceptionKey] = exception };
+        /// <returns>The metadata, empty without an exception.</returns>
+        private static Dictionary<string, object> Metadata(Exception exception) => exception == null ? [] : new Dictionary<string, object> { [ExceptionKey] = exception };
     }
 }

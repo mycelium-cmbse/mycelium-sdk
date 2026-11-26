@@ -146,7 +146,7 @@ namespace Mycelium.SDK.REST
                 return SessionErrors.NotOpen;
             }
 
-            var read = await this.RequestAsync(token => this.session.Client.GetProjectByIdAsync(projectId, token), cancellationToken, this.options.RequestTimeout);
+            var read = await this.RequestAsync(token => this.session.Client.GetProjectByIdAsync(projectId, token), this.options.RequestTimeout, cancellationToken);
 
             if (read.IsError && read.FirstError.Metadata?.TryGetValue(SessionErrors.ExceptionKey, out var cause) == true && cause is PsmApiException { StatusCode: HttpStatusCode.NotFound } notFound)
             {
@@ -179,8 +179,8 @@ namespace Mycelium.SDK.REST
                     await run(this.session, token);
                     return Result.Success;
                 },
-                cancellationToken,
-                Timeout.InfiniteTimeSpan);
+                Timeout.InfiniteTimeSpan,
+                cancellationToken);
         }
 
         /// <summary>
@@ -230,7 +230,7 @@ namespace Mycelium.SDK.REST
         /// <returns>The records of every page, or the error of the first page that failed.</returns>
         private async Task<ErrorOr<IReadOnlyList<T>>> ReadPagesAsync<T>(Func<CancellationToken, Task<PagedResult<T>>> firstPage, Func<QueryParameters, CancellationToken, Task<PagedResult<T>>> nextPage, QueryParameters queryParameters, CancellationToken cancellationToken)
         {
-            var page = await this.RequestAsync(firstPage, cancellationToken, this.options.RequestTimeout);
+            var page = await this.RequestAsync(firstPage, this.options.RequestTimeout, cancellationToken);
             var records = new List<T>();
             var readCursors = new HashSet<string>(StringComparer.Ordinal);
 
@@ -249,7 +249,7 @@ namespace Mycelium.SDK.REST
                 }
 
                 var parameters = new QueryParameters { PageSize = queryParameters?.PageSize ?? 0, PageAfter = cursor };
-                page = await this.RequestAsync(token => nextPage(parameters, token), cancellationToken, this.options.RequestTimeout);
+                page = await this.RequestAsync(token => nextPage(parameters, token), this.options.RequestTimeout, cancellationToken);
             }
 
             return page.Errors;
@@ -260,10 +260,10 @@ namespace Mycelium.SDK.REST
         /// </summary>
         /// <typeparam name="T">The type of the answer.</typeparam>
         /// <param name="request">The request, which receives the token that cancels it.</param>
-        /// <param name="cancellationToken">The token of the caller.</param>
         /// <param name="timeout">The time the server has to answer, or <see cref="Timeout.InfiniteTimeSpan" />.</param>
+        /// <param name="cancellationToken">The token of the caller.</param>
         /// <returns>The answer, or the error.</returns>
-        private async Task<ErrorOr<T>> RequestAsync<T>(Func<CancellationToken, Task<T>> request, CancellationToken cancellationToken, TimeSpan timeout)
+        private async Task<ErrorOr<T>> RequestAsync<T>(Func<CancellationToken, Task<T>> request, TimeSpan timeout, CancellationToken cancellationToken)
         {
             using (var limit = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
             {
