@@ -3,8 +3,8 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
         <LangVersion>14.0</LangVersion>
-        <Version>0.3.0</Version>
-        <PackageReleaseNotes>System.Text.Json DTO serialization and deserialization rebuilt against Mycelium.SDK 0.3.0, aligned with Mycelium.Model.Fabric 0.3.0.</PackageReleaseNotes>
+        <Version>0.4.0</Version>
+        <PackageReleaseNotes>System.Text.Json DTO serialization and deserialization aligned with Mycelium.Model.Fabric 0.4.1: adds OrganizationInvitation, ProjectInvitation and InvitationStatus. Breaking: User is written and read with the userName member instead of name.</PackageReleaseNotes>
         <Description>System.Text.Json serialization for Mycelium SDK DTOs.</Description>
         <PackageId>Mycelium.SDK.Serializer.Json</PackageId>
         <Company>Starion Group S.A.</Company>
