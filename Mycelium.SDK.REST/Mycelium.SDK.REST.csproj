@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
+        <LangVersion>14.0</LangVersion>
+        <Version>0.3.0</Version>
+        <Description>The REST layer of the Mycelium SDK: the session of a client to a Systems Modeling API server.</Description>
+        <PackageId>Mycelium.SDK.REST</PackageId>
+        <Company>Starion Group S.A.</Company>
+        <Copyright>Copyright © Starion Group S.A.</Copyright>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/mycelium-cmbse/mycelium-sdk.git</RepositoryUrl>
+        <RepositoryType>Git</RepositoryType>
+        <Authors>Sam Gerene, Antoine Théate, Régis André, Tanase-Marius Manafu, Omrane Haj Mohamed</Authors>
+        <RequireLicenseAcceptance>true</RequireLicenseAcceptance>
+        <PackageReleaseNotes>First version: the session service that opens and closes the SysML2.NET session, reads the projects and runs operations on the open session.</PackageReleaseNotes>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <GenerateSBOM>true</GenerateSBOM>
+        <Nullable>disable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="ErrorOr"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
+        <PackageReference Include="Microsoft.Extensions.Options"/>
+        <PackageReference Include="Microsoft.Sbom.Targets"/>
+        <PackageReference Include="SysML2.NET.REST"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+
+</Project>
