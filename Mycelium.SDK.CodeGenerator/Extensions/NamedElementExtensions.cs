@@ -48,6 +48,11 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
         public const string SqlIdentitiesParameterName = "ids";
 
         /// <summary>
+        /// The name of the DAO parameter holding the stored text value that a read by index matches.
+        /// </summary>
+        public const string SqlIndexValueParameterName = "value";
+
+        /// <summary>
         /// The link-table column holding the owner object's identity.
         /// </summary>
         public const string SqlLinkSourceColumnName = "source_id";
