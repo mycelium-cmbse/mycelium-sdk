@@ -247,6 +247,33 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         }
 
         /// <summary>
+        /// Registers the property helpers that describe the parts a generated service creates for its required composite properties.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the service property helpers are registered.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
+        /// </exception>
+        public static void RegisterServicePropertyHelper(this IHandlebars handlebars)
+        {
+            ArgumentNullException.ThrowIfNull(handlebars);
+
+            handlebars.RegisterHelper("Property.QueryCreatedPartOwnerReference",
+                (_, arguments) => arguments.QuerySingle<IProperty>("{{Property.QueryCreatedPartOwnerReference}}").QueryCreatedPartOwnerReference());
+
+            handlebars.RegisterHelper("Property.QueryCreatedPartValueProperties",
+                (_, arguments) => arguments.QuerySingle<IProperty>("{{Property.QueryCreatedPartValueProperties}}").QueryCreatedPartValueProperties());
+
+            handlebars.RegisterHelper("Property.WriteCreatedPartValue", (writer, _, arguments) =>
+            {
+                var property = arguments.QuerySingle<IProperty>("{{Property.WriteCreatedPartValue}}");
+
+                writer.WriteSafeString(property.QueryCreatedPartValue());
+            });
+        }
+
+        /// <summary>
         /// Renders local DTO data-validation rules from the property's mapped type and modeled multiplicity. A «managed» property, whose value the
         /// server sets, is excluded from data validation and receives no rule.
         /// </summary>

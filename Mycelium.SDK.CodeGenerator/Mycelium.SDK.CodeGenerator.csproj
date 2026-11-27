@@ -108,6 +108,12 @@
         <None Update="Templates\Uml\service-interface-uml-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="Templates\Uml\service-uml-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Templates\Uml\service-provider-uml-template.hbs">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
         <None Update="Templates\OpenApi\carter-module-template.hbs">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>

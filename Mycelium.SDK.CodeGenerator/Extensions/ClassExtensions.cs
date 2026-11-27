@@ -16,6 +16,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
     using uml4net.Classification;
     using uml4net.CommonStructure;
     using uml4net.Extensions;
+    using uml4net.Packages;
     using uml4net.StructuredClassifiers;
     using uml4net.Values;
 
@@ -131,6 +132,66 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 $"Invariant '{constraint.Describe()}' of class '{umlClass.Describe()}' states uniqueness across all instances ('{invariant}'), but does not " +
                 $"resolve to an «index» property declared by that class. The recognized forms are '{umlClass.Name}.allInstances()->isUnique(v | v.<property>)' " +
                 $"and '{umlClass.Name}.allInstances()->isUnique(<property>)'.");
+        }
+
+        /// <summary>
+        /// Queries every class of the model that contains an element, by walking up to the outermost package and through its nested packages.
+        /// </summary>
+        /// <param name="element">
+        /// An element of the model whose classes are queried.
+        /// </param>
+        /// <returns>
+        /// The classes of every package of the model; empty when the element is not contained in a package.
+        /// </returns>
+        private static IEnumerable<IClass> QueryModelClasses(IElement element)
+        {
+            var root = element;
+
+            while (root.Owner != null)
+            {
+                root = root.Owner;
+            }
+
+            return root is IPackage package
+                ? package.QueryPackages().SelectMany(nestedPackage => nestedPackage.PackagedElement.OfType<IClass>())
+                : [];
+        }
+
+        /// <summary>
+        /// Determines whether a reference declared by a class makes the objects of an inheritance chain require a composite owner, by the rule
+        /// of the schema's mandatory-owner check: a part-held reference to a composite owner is mandatory when it is not optional, and an
+        /// owner-held composite reference stored in a column or a link table is mandatory when its owner end has a lower bound of at least one.
+        /// </summary>
+        /// <param name="declaringClass">
+        /// The class that declares the reference.
+        /// </param>
+        /// <param name="property">
+        /// The reference declared by <paramref name="declaringClass" />.
+        /// </param>
+        /// <param name="chain">
+        /// The inheritance chain of the class whose ownership is queried.
+        /// </param>
+        /// <returns>
+        /// <see langword="true" /> when the reference is a mandatory ownership whose part type belongs to <paramref name="chain" />.
+        /// </returns>
+        private static bool QueryIsMandatoryOwnership(IClass declaringClass, IProperty property, IReadOnlyList<IClass> chain)
+        {
+            if (property.QueryIsEnumerable() && !property.QuerySqlRequiresLinkTable())
+            {
+                return false;
+            }
+
+            var ownerEnd = property.QueryIsOwnerEnd();
+
+            if (!ownerEnd && !property.IsComposite)
+            {
+                return false;
+            }
+
+            var partType = ownerEnd ? declaringClass : property.Type;
+            var required = ownerEnd ? !property.QueryIsNullable() : property.Opposite is { Lower: > 0 };
+
+            return required && chain.Any(chainClass => string.Equals(chainClass.XmiId, partType?.XmiId, StringComparison.Ordinal));
         }
 
         /// <summary>
@@ -494,7 +555,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             /// Queries the names of every parameter that the class's DAO sends, failing when two of them would be the same.
             /// </summary>
             /// <returns>
-            /// The identity, identifier-list, discriminator and document parameter names, followed by the scalar reference column and link-table collection parameter
+            /// The identity, identifier-list, index-value, discriminator and document parameter names, followed by the scalar reference column and link-table collection parameter
             /// names of the inheritance chain, from the root down to the class.
             /// </returns>
             /// <exception cref="ArgumentNullException">
@@ -511,6 +572,7 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 [
                     (NamedElementExtensions.SqlIdentityColumnName, "the identity"),
                     (NamedElementExtensions.SqlIdentitiesParameterName, "the identifier list"),
+                    (NamedElementExtensions.SqlIndexValueParameterName, "the searched index value"),
                     (NamedElementExtensions.SqlClassKindColumnName, "the discriminator"),
                     (NamedElementExtensions.SqlDataColumnName, "the JSON document")
                 ];
@@ -532,6 +594,129 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
                 }
 
                 return [.. parameters.Select(parameter => parameter.Name)];
+            }
+
+            /// <summary>
+            /// Queries the «index» properties of the class and its ancestors, which a read by index searches by their modeled name.
+            /// </summary>
+            /// <returns>
+            /// The indexed properties, deduplicated and deterministically ordered; empty when the class has none.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryIndexedProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryDtoImplementationProperties()
+                    .Where(property => property.QueryIsIndexed())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the references of the class and its ancestors that point to a composite owner: the single navigable opposites of composite
+            /// properties.
+            /// </summary>
+            /// <returns>
+            /// The owner references, deduplicated and deterministically ordered; empty when the class has none.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryOwnerReferenceProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryDtoImplementationProperties()
+                    .Where(property => property.Type is IClass && property.QueryIsOwnerEnd())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the composite properties of the class and its ancestors, which hold the class's parts.
+            /// </summary>
+            /// <returns>
+            /// The composite references, scalar or collection, deduplicated and deterministically ordered; empty when the class has none.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryPartProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryDtoImplementationProperties()
+                    .Where(property => property.Type is IClass && property.IsComposite)
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Queries the references of the class and its ancestors that are neither composite nor a reference to a composite owner.
+            /// </summary>
+            /// <returns>
+            /// The other references, deduplicated and deterministically ordered; empty when the class has none.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryNonCompositionReferenceProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                return umlClass.QueryDtoImplementationProperties()
+                    .Where(property => property.Type is IClass && !property.IsComposite && !property.QueryIsOwnerEnd())
+                    .ToArray();
+            }
+
+            /// <summary>
+            /// Determines whether an object of the class is required by modeled multiplicity to have a composite owner, by the rule of the schema's
+            /// mandatory-owner check applied to every reference of the model.
+            /// </summary>
+            /// <returns>
+            /// <see langword="true" /> when a mandatory ownership of the model has the class or one of its ancestors as part type.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            public bool QueryRequiresOwner()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                var chain = umlClass.QuerySqlInheritanceChain();
+
+                return QueryModelClasses(umlClass)
+                    .Any(modelClass => modelClass.QuerySqlReferenceProperties().Any(property => QueryIsMandatoryOwnership(modelClass, property, chain)));
+            }
+
+            /// <summary>
+            /// Queries the composite properties of the class and its ancestors whose lower bound requires at least one part, which the server
+            /// creates when an object is created without them. Every required value of each part must have a source.
+            /// </summary>
+            /// <returns>
+            /// The required composite properties, deduplicated and deterministically ordered; empty when the class has none.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the class is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when a required composite property has an abstract type, or when a required value of its part has no source; the message names
+            /// the property.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryRequiredPartProperties()
+            {
+                ArgumentNullException.ThrowIfNull(umlClass);
+
+                var requiredParts = umlClass.QueryPartProperties()
+                    .Where(property => property.Lower > 0)
+                    .ToArray();
+
+                foreach (var property in requiredParts)
+                {
+                    _ = property.QueryCreatedPartValueProperties();
+                }
+
+                return requiredParts;
             }
 
             /// <summary>

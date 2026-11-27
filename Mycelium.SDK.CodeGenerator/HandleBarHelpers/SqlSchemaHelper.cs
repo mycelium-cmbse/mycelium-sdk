@@ -59,6 +59,11 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
         private const string IdentitiesParameter = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlIdentitiesParameterName;
 
         /// <summary>
+        /// The DAO parameter holding the stored text value of a read by index, from the shared SQL names.
+        /// </summary>
+        private const string IndexValueParameter = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlIndexValueParameterName;
+
+        /// <summary>
         /// The link-table column holding the owner object's identity, from the shared SQL names.
         /// </summary>
         private const string SourceColumn = Mycelium.SDK.CodeGenerator.Extensions.NamedElementExtensions.SqlLinkSourceColumnName;
@@ -121,6 +126,7 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             RegisterName(handlebars, "SQL.WriteClassKindColumnName", ClassKindColumn);
             RegisterName(handlebars, "SQL.WriteDataColumnName", DataColumn);
             RegisterName(handlebars, "SQL.WriteIdentitiesParameterName", IdentitiesParameter);
+            RegisterName(handlebars, "SQL.WriteIndexValueParameterName", IndexValueParameter);
             RegisterName(handlebars, "SQL.WriteLinkSourceColumnName", SourceColumn);
             RegisterName(handlebars, "SQL.WriteLinkTargetColumnName", TargetColumn);
             RegisterName(handlebars, "SQL.WriteLinkPositionColumnName", PositionColumn);

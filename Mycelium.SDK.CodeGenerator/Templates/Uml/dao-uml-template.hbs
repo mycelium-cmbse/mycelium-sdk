@@ -200,6 +200,36 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             DELETE FROM {{ #SQL.WriteSchemaName }}.{{ #Class.WriteSqlRootTableName this }}
             WHERE {{ #SQL.WriteIdentityColumnName }} = @{{ #SQL.WriteIdentityColumnName }} AND {{ #SQL.WriteClassKindColumnName }} = @{{ #SQL.WriteClassKindColumnName }};
             """;
+        {{ #if (#Class.QueryIndexedProperties this) }}
+
+        /// <summary>
+        /// Queries the statement that reads the stored objects of this class whose «index» property has the searched stored text value, ordered
+        /// by identifier. The class kind and the JSON member are written as literals so that PostgreSQL can use the value index of the property.
+        /// </summary>
+        /// <param name="indexName">
+        /// The modeled name of the «index» property.
+        /// </param>
+        /// <returns>
+        /// The statement, or <see langword="null" /> when the class has no «index» property named <paramref name="indexName" />.
+        /// </returns>
+        protected override string QueryReadByIndexSql(string indexName)
+        {
+            return indexName switch
+            {
+                {{ #with this as | daoClass | }}
+                {{ #each (#Class.QueryIndexedProperties daoClass) as | property | }}
+                "{{ property.Name }}" => $"""
+                    {ReadSql}
+                        AND {{ #Class.WriteSqlRootTableName daoClass }}.{{ #SQL.WriteClassKindColumnName }} = '{{ daoClass.Name }}'
+                        AND {{ #Class.WriteSqlRootTableName daoClass }}.{{ #SQL.WriteDataColumnName }} ->> '{{ #String.LowerCaseFirstLetter property.Name }}' = @{{ #SQL.WriteIndexValueParameterName }}
+                    ORDER BY {{ #Class.WriteSqlRootTableName daoClass }}.{{ #SQL.WriteIdentityColumnName }};
+                    """,
+                {{ /each }}
+                {{ /with }}
+                _ => null
+            };
+        }
+        {{ /if }}
         {{ #if (#Class.QueryManagedReferencesAssignedOnCreate this) }}
 
         /// <summary>

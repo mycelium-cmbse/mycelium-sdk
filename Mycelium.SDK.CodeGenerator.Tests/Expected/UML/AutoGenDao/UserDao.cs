@@ -149,6 +149,42 @@ namespace Mycelium.Fabric.FunctionalDataServer.Persistence
             """;
 
         /// <summary>
+        /// Queries the statement that reads the stored objects of this class whose «index» property has the searched stored text value, ordered
+        /// by identifier. The class kind and the JSON member are written as literals so that PostgreSQL can use the value index of the property.
+        /// </summary>
+        /// <param name="indexName">
+        /// The modeled name of the «index» property.
+        /// </param>
+        /// <returns>
+        /// The statement, or <see langword="null" /> when the class has no «index» property named <paramref name="indexName" />.
+        /// </returns>
+        protected override string QueryReadByIndexSql(string indexName)
+        {
+            return indexName switch
+            {
+                "email" => $"""
+                    {ReadSql}
+                        AND thing.class_kind = 'User'
+                        AND thing.data ->> 'email' = @value
+                    ORDER BY thing.id;
+                    """,
+                "externalIdentifier" => $"""
+                    {ReadSql}
+                        AND thing.class_kind = 'User'
+                        AND thing.data ->> 'externalIdentifier' = @value
+                    ORDER BY thing.id;
+                    """,
+                "userName" => $"""
+                    {ReadSql}
+                        AND thing.class_kind = 'User'
+                        AND thing.data ->> 'userName' = @value
+                    ORDER BY thing.id;
+                    """,
+                _ => null
+            };
+        }
+
+        /// <summary>
         /// Assigns the acting user to the managed references that the server sets when an object of this class is created.
         /// </summary>
         /// <param name="dto">

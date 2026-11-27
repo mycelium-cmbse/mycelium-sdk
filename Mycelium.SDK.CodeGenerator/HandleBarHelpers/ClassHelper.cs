@@ -183,6 +183,9 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
             handlebars.RegisterHelper("Class.QueryManagedTimestamps",
                 (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryManagedTimestamps}}").QueryManagedTimestamps());
 
+            handlebars.RegisterHelper("Class.QueryIndexedProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryIndexedProperties}}").QueryIndexedProperties());
+
             handlebars.RegisterHelper("Class.WriteSqlTableName", (writer, _, arguments) =>
             {
                 var umlClass = arguments.QuerySingle<IClass>("{{Class.WriteSqlTableName}}");
@@ -196,6 +199,35 @@ namespace Mycelium.SDK.CodeGenerator.HandleBarHelpers
 
                 writer.WriteSafeString(umlClass.QuerySqlRootClass().QuerySqlIdentifier());
             });
+        }
+
+        /// <summary>
+        /// Registers the class helpers that select the ownership, reference and required-part content of a generated service.
+        /// </summary>
+        /// <param name="handlebars">
+        /// The Handlebars environment in which the service class helpers are registered.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="handlebars" /> is <see langword="null" />.
+        /// </exception>
+        public static void RegisterServiceClassHelper(this IHandlebars handlebars)
+        {
+            ArgumentNullException.ThrowIfNull(handlebars);
+
+            handlebars.RegisterHelper("Class.QueryOwnerReferenceProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryOwnerReferenceProperties}}").QueryOwnerReferenceProperties());
+
+            handlebars.RegisterHelper("Class.QueryPartProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryPartProperties}}").QueryPartProperties());
+
+            handlebars.RegisterHelper("Class.QueryNonCompositionReferenceProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryNonCompositionReferenceProperties}}").QueryNonCompositionReferenceProperties());
+
+            handlebars.RegisterHelper("Class.QueryRequiresOwner",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryRequiresOwner}}").QueryRequiresOwner());
+
+            handlebars.RegisterHelper("Class.QueryRequiredPartProperties",
+                (_, arguments) => arguments.QuerySingle<IClass>("{{Class.QueryRequiredPartProperties}}").QueryRequiredPartProperties());
         }
 
         /// <summary>

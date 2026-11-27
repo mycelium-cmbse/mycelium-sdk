@@ -236,11 +236,133 @@ namespace Mycelium.SDK.CodeGenerator.Extensions
             };
         }
 
+        /// <summary>
+        /// Queries the C# expression of a property's modeled default value.
+        /// </summary>
+        /// <param name="property">
+        /// The property that has a modeled default value.
+        /// </param>
+        /// <returns>
+        /// The C# expression of the default value.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the default value is of a type whose C# expression is not supported.
+        /// </exception>
+        private static string QueryCSharpDefaultValue(IProperty property)
+        {
+            var defaultValue = property.QueryDefaultValueAsString();
+
+            return property.Type switch
+            {
+                IEnumeration enumeration => $"{MapNamedType(enumeration.Name, property)}.{ReservedCSharpNameMapper.Map(defaultValue)}",
+                IPrimitiveType primitiveType when primitiveType.QueryCSharpTypeName() is "bool" or "int" or "long" or "double" => defaultValue,
+                IPrimitiveType primitiveType when primitiveType.QueryCSharpTypeName() == "string" => Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatLiteral(defaultValue, true),
+                _ => throw new InvalidOperationException($"Property '{property.Describe()}' has a default value of type '{property.Type?.Name}', which cannot be written as C#.")
+            };
+        }
+
         /// <param name="property">
         /// The UML property that is queried.
         /// </param>
         extension(IProperty property)
         {
+            /// <summary>
+            /// Queries the reference that a part created for this required composite property has back to its owner: the opposite end, when the
+            /// part's type or one of its ancestors declares it.
+            /// </summary>
+            /// <returns>
+            /// The part's reference to its owner, or <see langword="null" /> when the part has none.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            public IProperty QueryCreatedPartOwnerReference()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                return property.Opposite is { } opposite && property.Type is IClass partClass &&
+                    partClass.QueryDtoImplementationProperties().Any(partProperty => string.Equals(partProperty.XmiId, opposite.XmiId, StringComparison.Ordinal))
+                    ? opposite
+                    : null;
+            }
+
+            /// <summary>
+            /// Queries the properties of a part created for this required composite property that receive a value other than their C# default:
+            /// those with a modeled default value, and required enumerations, which take their first literal. Every other required value of the
+            /// part must have a source: the identifier, a «managed» value, a Boolean value, the reference back to the owner or a required part
+            /// that is itself created.
+            /// </summary>
+            /// <returns>
+            /// The part's properties that receive a value, deduplicated and deterministically ordered.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the property's type is abstract or is not a class, or when a required value of the part has no source; the message names
+            /// the property.
+            /// </exception>
+            public IReadOnlyList<IProperty> QueryCreatedPartValueProperties()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                if (property.Type is not IClass { IsAbstract: false } partClass)
+                {
+                    throw new InvalidOperationException(
+                        $"Required composite property '{property.Describe()}' has the abstract or non-class type '{property.Type?.Name}', so the server " +
+                        "cannot create its part.");
+                }
+
+                var ownerReference = property.QueryCreatedPartOwnerReference();
+
+                bool QueryHasImplicitSource(IProperty partProperty) =>
+                    string.Equals(partProperty.Name, "id", StringComparison.Ordinal) ||
+                    string.Equals(partProperty.XmiId, ownerReference?.XmiId, StringComparison.Ordinal) ||
+                    partProperty.QueryIsManaged() || partProperty.Lower == 0 || partProperty.IsComposite ||
+                    (!partProperty.QueryIsEnumerable() && partProperty.Type is IPrimitiveType booleanType && booleanType.QueryCSharpTypeName() == "bool");
+
+                var valueProperties = partClass.QueryDtoImplementationProperties()
+                    .Where(partProperty => partProperty.QueryHasDefaultValue() || !QueryHasImplicitSource(partProperty))
+                    .ToArray();
+
+                var unsourcedProperty = valueProperties.FirstOrDefault(partProperty =>
+                    !partProperty.QueryHasDefaultValue() && (partProperty.QueryIsEnumerable() || partProperty.Type is not IEnumeration));
+
+                return unsourcedProperty is null
+                    ? valueProperties
+                    : throw new InvalidOperationException(
+                        $"The server creates the part of required composite property '{property.Describe()}', but its required property " +
+                        $"'{unsourcedProperty.Describe()}' has no modeled default value and no other source.");
+            }
+
+            /// <summary>
+            /// Queries the C# expression of the value that a created part receives for this property: its modeled default value or, for a required
+            /// enumeration without one, the enumeration's first literal.
+            /// </summary>
+            /// <returns>
+            /// The C# expression of the value.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when the property is <see langword="null" />.
+            /// </exception>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown when the property has no modeled default value and is not an enumeration with a literal, or when its default value cannot be
+            /// written as C#.
+            /// </exception>
+            public string QueryCreatedPartValue()
+            {
+                ArgumentNullException.ThrowIfNull(property);
+
+                if (property.QueryHasDefaultValue())
+                {
+                    return QueryCSharpDefaultValue(property);
+                }
+
+                return property.Type is IEnumeration enumeration && enumeration.OwnedLiteral.FirstOrDefault() is { } firstLiteral
+                    ? $"{MapNamedType(enumeration.Name, property)}.{ReservedCSharpNameMapper.Map(firstLiteral.Name)}"
+                    : throw new InvalidOperationException($"Property '{property.Describe()}' has no modeled default value and no first enumeration literal.");
+            }
+
             /// <summary>
             /// Determines whether the property carries the «index» stereotype of the Mycelium profile, which asks for a dedicated SQL index.
             /// </summary>
