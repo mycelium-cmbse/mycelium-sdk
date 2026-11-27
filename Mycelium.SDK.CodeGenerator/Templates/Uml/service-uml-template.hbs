@@ -53,6 +53,8 @@ namespace Mycelium.Fabric.FunctionalDataServer.Services
 
     using FluentValidation;
 
+    using Microsoft.Extensions.Logging;
+
     using Mycelium.Fabric.FunctionalDataServer.Persistence;
     using Mycelium.SDK;
     using Mycelium.SDK.DTO;
@@ -86,14 +88,18 @@ namespace Mycelium.Fabric.FunctionalDataServer.Services
         /// <param name="managedValueProvider">
         /// The provider of the acting user's identifier.
         /// </param>
+        /// <param name="logger">
+        /// The logger that records the operations of this service and their failures.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="dao" />, <paramref name="validator" />, <paramref name="databaseHandler" />,
-        /// <paramref name="thingRepository" />, <paramref name="thingServiceProvider" /> or <paramref name="managedValueProvider" /> is
-        /// <see langword="null" />.
+        /// <paramref name="thingRepository" />, <paramref name="thingServiceProvider" />, <paramref name="managedValueProvider" /> or
+        /// <paramref name="logger" /> is <see langword="null" />.
         /// </exception>
         public {{ this.Name }}Service(IDao<{{ #Class.WriteDtoInterfaceIdentifier this }}> dao, IValidator<{{ #Class.WriteDtoInterfaceIdentifier this }}> validator, IDatabaseHandler databaseHandler,
-            IThingRepository thingRepository, IThingServiceProvider thingServiceProvider, IManagedValueProvider managedValueProvider)
-            : base(dao, validator, databaseHandler, thingRepository, thingServiceProvider, managedValueProvider)
+            IThingRepository thingRepository, IThingServiceProvider thingServiceProvider, IManagedValueProvider managedValueProvider,
+            ILogger<{{ this.Name }}Service> logger)
+            : base(dao, validator, databaseHandler, thingRepository, thingServiceProvider, managedValueProvider, logger)
         {
         }
         {{ #if (#Class.QueryRequiresOwner this) }}
